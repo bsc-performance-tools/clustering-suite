@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CodeLite_Project Name="ClusteringSuite" InternalType="Console">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00010001N0005Debug000000000000]]>
+    </Plugin>
+  </Plugins>
+  <VirtualDirectory Name="src">
+    <VirtualDirectory Name="libANN">
+      <VirtualDirectory Name="ANN">
+        <File Name="src/libANN/ANN/ANN.h"/>
+        <File Name="src/libANN/ANN/ANNx.h"/>
+        <File Name="src/libANN/ANN/ANNperf.h"/>
+      </VirtualDirectory>
+      <File Name="src/libANN/bd_tree.cpp"/>
+      <File Name="src/libANN/brute.cpp"/>
+      <File Name="src/libANN/perf.cpp"/>
+      <File Name="src/libANN/kd_split.h"/>
+      <File Name="src/libANN/bd_pr_search.cpp"/>
+      <File Name="src/libANN/pr_queue_k.h"/>
+      <File Name="src/libANN/kd_tree.h"/>
+      <File Name="src/libANN/kd_split.cpp"/>
+      <File Name="src/libANN/bd_tree.h"/>
+      <File Name="src/libANN/bd_fix_rad_search.cpp"/>
+      <File Name="src/libANN/kd_search.cpp"/>
+      <File Name="src/libANN/kd_util.cpp"/>
+      <File Name="src/libANN/ANN.cpp"/>
+      <File Name="src/libANN/kd_pr_search.cpp"/>
+      <File Name="src/libANN/kd_util.h"/>
+      <File Name="src/libANN/kd_dump.cpp"/>
+      <File Name="src/libANN/bd_search.cpp"/>
+      <File Name="src/libANN/kd_search.h"/>
+      <File Name="src/libANN/kd_fix_rad_search.cpp"/>
+      <File Name="src/libANN/kd_pr_search.h"/>
+      <File Name="src/libANN/kd_fix_rad_search.h"/>
+      <File Name="src/libANN/kd_tree.cpp"/>
+      <File Name="src/libANN/pr_queue.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="libClustering">
+      <File Name="src/libClustering/libClustering.hpp"/>
+      <File Name="src/libClustering/ClusteringDefinition.cpp"/>
+      <File Name="src/libClustering/DataSet.hpp"/>
+      <File Name="src/libClustering/DataPoint.cpp"/>
+      <File Name="src/libClustering/Utilities.hpp"/>
+      <File Name="src/libClustering/GNUPlotScriptsWriter.hpp"/>
+      <File Name="src/libClustering/DataPoint.hpp"/>
+      <File Name="src/libClustering/libClustering.cpp"/>
+      <File Name="src/libClustering/ClusteringDefinition.hpp"/>
+      <File Name="src/libClustering/GNUPlotScriptsWriter.cpp"/>
+      <File Name="src/libClustering/Utilities.cpp"/>
+      <File Name="src/libClustering/DataSet.cpp"/>
+      <File Name="src/libClustering/ClusteringParameter.hpp"/>
+      <File Name="src/libClustering/ClusteringParameter.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="libClusteringAlgorithms">
+      <File Name="src/libClusteringAlgorithms/ClusteringAlgorithm.hpp"/>
+      <File Name="src/libClusteringAlgorithms/ClusteringAlgorithmsFactory.cpp"/>
+      <File Name="src/libClusteringAlgorithms/DBSCAN.hpp"/>
+      <File Name="src/libClusteringAlgorithms/ClusteringAlgorithmsFactory.hpp"/>
+      <File Name="src/libClusteringAlgorithms/DBSCAN.cpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="BurstClustering">
+      <File Name="src/BurstClustering/main.cpp"/>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <Description/>
+  <Dependencies/>
+  <VirtualDirectory Name="include">
+    <File Name="include/Macros.h"/>
+    <File Name="include/types.h"/>
+    <File Name="include/Error.hpp"/>
+  </VirtualDirectory>
+  <Settings Type="Executable">
+    <Configuration Name="Debug" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-g" Required="yes" PreCompiledHeader="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(ProjectName)" CommandArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="yes">
+        <Target Name="Configure with Debug">./configure --enable-debug</Target>
+        <Target Name="Configure Project">./configure</Target>
+        <RebuildCommand>gmake</RebuildCommand>
+        <CleanCommand>gmake clean</CleanCommand>
+        <BuildCommand>gmake</BuildCommand>
+        <PreprocessFileCommand/>
+        <SingleFileCommand>gmake $(CurrentFile).o</SingleFileCommand>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory>$(IntermediateDirectory)</WorkingDirectory>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+    </Configuration>
+    <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="" Required="yes" PreCompiledHeader="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="-O2" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Release" Command="./$(ProjectName)" CommandArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="no">
+        <RebuildCommand/>
+        <CleanCommand/>
+        <BuildCommand/>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory/>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+    </Configuration>
+    <GlobalSettings>
+      <Compiler Options="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="">
+        <LibraryPath Value="."/>
+      </Linker>
+      <ResourceCompiler Options=""/>
+    </GlobalSettings>
+  </Settings>
+</CodeLite_Project>

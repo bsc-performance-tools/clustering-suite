@@ -1,0 +1,41 @@
+common_filesdir = @common_filesdir@
+INCLUDES = \
+    -I $(top_srcdir)/include \
+	-I$(common_filesdir)
+
+noinst_LTLIBRARIES = \
+	libClusteringSuiteUtils.la
+
+#libClusteringSuiteUtils_la_CFLAGS = @XML2_CFLAGS@
+
+#libClusteringSuiteUtils_la_CXXFLAGS = @XML2_CFLAGS@
+
+libClusteringSuiteUtils_la_SOURCES = \
+	Error.hpp \
+	Error.cpp \
+	TraceDataSet.hpp \
+	Constants.hpp \
+	Constants.cpp \
+	GlobalSettings.hpp \
+	GlobalSettings.cpp \
+	State.hpp \
+	State.cpp \
+	XMLParser.hpp \
+	XMLParser.cpp \
+	ClusteringConfiguration.hpp \
+	ClusteringConfiguration.cpp \
+	ClusteringParameter.hpp \
+	ClusteringParameter.cpp \
+	ClusteringTypes.h \
+	ParametersManager.hpp \
+	ParametersManager.cpp \
+	CPIStackModel.hpp \
+	PlottingManager.hpp \
+	PlottingManager.cpp \
+	FileNameManipulator.cpp \
+	FileNameManipulator.hpp \
+	Utilities.cpp \
+	Utilities.hpp \
+	Point.hpp \
+	Point.cpp
+

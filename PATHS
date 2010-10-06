@@ -1,0 +1,7 @@
+BASE_DIR             = $(top_srcdir)
+SRC_DIR              = $(BASE_DIR)/src
+COMMON_FILES_DIR     = $(BASE_DIR)/../common-files
+CLUSTERING_DIR       = $(SRC_DIR)/libClustering
+CLUSTERING_ALG_DIR   = $(SRC_DIR)/libClusteringAlgorithms
+PARAVER_PARSER_DIR    = $(SRC_DIR)/libParaverTraceParser
+ANN_DIR              = $(SRC_DIR)/libANN

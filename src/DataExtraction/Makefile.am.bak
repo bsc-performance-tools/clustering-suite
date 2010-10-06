@@ -1,0 +1,37 @@
+lib_LTLIBRARIES = \
+	libDataExtraction.la
+
+common_filesdir = @common_filesdir@
+INCLUDES = \
+	-I$(top_srcdir)/include \
+	-I$(common_filesdir) \
+	-I$(top_srcdir)/src/SharedComponents/ \
+	-I$(top_srcdir)/src/libParaverTraceParser/
+
+libDataExtraction_la_CFLAGS = @XML2_CFLAGS@
+
+libDataExtraction_la_CXXFLAGS = @XML2_CFLAGS@
+
+libDataExtraction_la_SOURCES = \
+	DataExtractionXMLParser.hpp\
+	DataExtractionXMLParser.cpp \
+	ClusteringParameter.hpp \
+	ClusteringParameter.cpp \
+	DataExtractionManager.cpp \
+	DataExtractionManager.hpp \
+	DataExtractor.cpp \
+	DataExtractor.hpp \
+	PRVDataExtractor.cpp \
+	PRVDataExtractor.hpp \
+	TRFDataExtractor.cpp \
+	TRFDataExtractor.hpp \
+	DataExtractionLibrary.hpp \
+	DataExtractionLibrary.cpp \
+	ClusteringDataExtraction.hpp \
+	ClusteringDataExtraction.cpp \
+	DataExtractorFactory.cpp
+
+
+libDataExtraction_la_LIBADD = \
+	$(top_srcdir)/src/SharedComponents/libClusteringSuiteUtils.la \
+	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la
