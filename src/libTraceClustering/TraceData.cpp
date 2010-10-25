@@ -34,10 +34,15 @@
 
 #include <trace_clustering_types.h>
 
+#include <SystemMessages.hpp>
+using cepba_tools::system_messages;
+
+#include <ParametersManager.hpp>
+
 #include "TraceData.hpp"
 #include "CPUBurst.hpp"
 
-#include <ParametersManager.hpp>
+
 
 #include <iostream>
 using std::cerr;
@@ -696,18 +701,23 @@ bool TraceData::FlushPoints(ostream& str, vector<cluster_id_t> Cluster_IDs)
 
   str << ", ClusterID" << endl;
 
+  /* DEBUG
   cout << "Clustering Bursts = " << ClusteringBursts.size() << endl;
   cout << "All Bursts = "        << AllBursts.size() << endl;
+  */
 
+  system_messages::show_progress("Writing point to disc", 0, AllBursts.size());
   for (BurstsIterator  = AllBursts.begin(), ClusteringBurstsCounter = 0, TotalPoints = 0;
        BurstsIterator != AllBursts.end();
        ++BurstsIterator)
   {
     cluster_id_t CurrentClusterId;
 
+    /* DEBUG
     cout << "Bursts = " << TotalPoints;
     cout << " Dimensions = " << (*BurstsIterator)->size();
     cout << " Burst Type = " << (*BurstsIterator)->GetBurstType();
+    */
     ++TotalPoints;
     
     switch((*BurstsIterator)->GetBurstType())
@@ -715,19 +725,19 @@ bool TraceData::FlushPoints(ostream& str, vector<cluster_id_t> Cluster_IDs)
       case CompleteBurst:
         CurrentClusterId = Cluster_IDs[ClusteringBurstsCounter]+PARAVER_OFFSET;
         ++ClusteringBurstsCounter;
-        cout << " Complete" << endl;
+        // cout << " Complete" << endl;
         break;
       case DurationFilteredBurst:
         CurrentClusterId = DURATION_FILTERED_CLUSTERID;
-        cout << " Duration Filtered" << endl;
+        // cout << " Duration Filtered" << endl;
         break;
       case RangeFilteredBurst:
         CurrentClusterId = RANGE_FILTERED_CLUSTERID;
-        cout << " Range Filtered" << endl;
+        // cout << " Range Filtered" << endl;
         break;
       default:
         /* This bursts should not be printed */
-        cout << " Unknown!" << endl;
+        // cout << " Unknown!" << endl;
         continue;
     }
 
@@ -736,7 +746,11 @@ bool TraceData::FlushPoints(ostream& str, vector<cluster_id_t> Cluster_IDs)
                              ClusteringParametersPrecision,
                              ExtrapolationParametersPrecision,
                              CurrentClusterId);
+
+    system_messages::show_progress("Writing point to disc", TotalPoints, AllBursts.size());
   }
+
+  system_messages::show_progress_end("Writing point to disc", AllBursts.size());
 
   
   

@@ -49,8 +49,7 @@ DataExtractorFactory::DataExtractorFactory(void)
   this->FileType = UndefinedInputFile;
 }
 
-DataExtractorFactory*
-DataExtractorFactory::GetInstance(void)
+DataExtractorFactory* DataExtractorFactory::GetInstance(void)
 {
   if (DataExtractorFactory::Instance == NULL)
   {
@@ -60,9 +59,8 @@ DataExtractorFactory::GetInstance(void)
   return (DataExtractorFactory::Instance);
 }
 
-bool
-DataExtractorFactory::GetExtractor(string          InputFileName,
-                                   DataExtractor *&DataExtractorObject)
+bool DataExtractorFactory::GetExtractor(string          InputFileName,
+                                        DataExtractor *&DataExtractorObject)
 {
   if (!CheckFileType(InputFileName))
   {
@@ -90,8 +88,7 @@ DataExtractorFactory::GetExtractor(string          InputFileName,
   return true;
 }
 
-bool
-DataExtractorFactory::CheckFileType(string InputTraceName)
+bool DataExtractorFactory::CheckFileType(string InputTraceName)
 {
   FILE* InputTraceFile;
   char  Magic[10];

@@ -38,23 +38,27 @@
 #include <string>
 #include <Error.hpp>
 using cepba_tools::Error;
-
-class FileNameManipulator: public Error
+namespace cepba_tools
 {
+  class FileNameManipulator: public Error
+  {
 
-  private:
-    string OriginalFileName;
-    string ChoppedFileName;
-    string Extension;
+    private:
+      string OriginalFileName;
+      string ChoppedFileName;
+      string Extension;
 
-  public:
-    FileNameManipulator(string OriginalFileName, string Extension);
+    public:
+      FileNameManipulator(string OriginalFileName, string Extension);
 
-    string AppendString(string Append);
+      string AppendString(string Append);
 
-    string AppendStringAndExtension(string Append, string Extension);
-    
-    string GetChoppedFileName(void);
-};
+      string AppendStringAndExtension(string Append, string Extension);
+      
+      string GetChoppedFileName(void);
+
+      static string GetExtension(string FileName);
+  };
+}
 
 #endif // _FILENAMEMANIPULATOR_H_

@@ -109,7 +109,7 @@ libTraceClustering::ExtractData(string InputFileName)
  * \return True if data extraction and output file generation worked properly. False otherwise
  */
 bool
-libTraceClustering::ExtractData(string InputFileName, string OutputFileName)
+libTraceClustering::ExtractData(string InputFileName, string OutputCSVFileName)
 {
   /* Extract data to memory */
   if (!Implementation->ExtractData(InputFileName))
@@ -127,7 +127,7 @@ libTraceClustering::ExtractData(string InputFileName, string OutputFileName)
  *
  * \result True if the analysis finished correctly, false otherwise
  */
-bool libTraceClustering::ClusterAnalysis(void)
+bool libTraceClustering::ClusterAnalysis()
 {
   if (!Implementation->ClusterAnalysis())
   {
@@ -140,12 +140,13 @@ bool libTraceClustering::ClusterAnalysis(void)
 }
 
 /**
- * Write data to output file
+ * Write data to output file (trace or CSV)
+ *
  * \param OutputFileName Name of the output file where data will be written
+ *
  * \result True if output file is written correctly, false otherwise
  */
-bool
-libTraceClustering::FlushData(string OutputFileName)
+bool libTraceClustering::FlushData(string OutputFileName)
 {
   if (!Implementation->FlushData(OutputFileName))
   {
@@ -158,6 +159,25 @@ libTraceClustering::FlushData(string OutputFileName)
 }
 
 /**
+ * Generates an output trace adding the cluster analysis information to the input trace
+ *
+ * \param OutputTraceName Name of the output trace file
+ *
+ * \result True if reconstruction worked properly, false otherwise
+ */
+bool libTraceClustering::ReconstructInputTrace(string OutputTraceName)
+{
+  if (!Implementation->ReconstructInputTrace(OutputTraceName))
+  {
+    Error = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+  
+  return true;
+}
+
+/**
  * Print the plot scripts for GNUPlot defined in the XML
  * 
  * \param DataFileName Name of the file containg the data to plot
@@ -165,8 +185,7 @@ libTraceClustering::FlushData(string OutputFileName)
  *
  * \result True if the scripts where printed correctly, false otherwise
  */
-bool
-libTraceClustering::PrintPlotScripts(string DataFileName, string ScriptsFileNamePrefix)
+bool libTraceClustering::PrintPlotScripts(string DataFileName, string ScriptsFileNamePrefix)
 {
   if (!Implementation->PrintPlotScripts(DataFileName, ScriptsFileNamePrefix))
   {

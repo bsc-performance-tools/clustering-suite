@@ -49,7 +49,7 @@ CPUBurst::CPUBurst(task_id_t           TaskId,
                    bool                ToClassify)
 :Point (ClusteringProcessedData)
 {
-  this->Instance                = (++CPUBurst::InstanceNumber);
+  this->Instance                = (CPUBurst::InstanceNumber++);
   this->TaskId                  = TaskId;
   this->ThreadId                = ThreadId;
   this->Line                    = Line;

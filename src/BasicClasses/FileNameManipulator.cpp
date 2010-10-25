@@ -33,6 +33,7 @@
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include "FileNameManipulator.hpp"
+using cepba_tools::FileNameManipulator;
 
 FileNameManipulator::FileNameManipulator(string OriginalFileName,
                                          string Extension)
@@ -54,20 +55,33 @@ FileNameManipulator::FileNameManipulator(string OriginalFileName,
   }
 }
 
-string
-FileNameManipulator::AppendString(string Append)
+string FileNameManipulator::AppendString(string Append)
 {
   return (ChoppedFileName+"."+Append+"."+Extension);
 }
 
-string
-FileNameManipulator::AppendStringAndExtension(string Append, string Extension)
+string FileNameManipulator::AppendStringAndExtension(string Append, string Extension)
 {
   return (ChoppedFileName+"."+Append+"."+Extension);
 }
 
-string
-FileNameManipulator::GetChoppedFileName(void)
+string FileNameManipulator::GetChoppedFileName(void)
 {
   return this->ChoppedFileName;
+}
+
+string FileNameManipulator::GetExtension(string FileName)
+{
+  size_t LastPointPosition;
+
+  LastPointPosition = FileName.find_last_of(".");
+
+  if (LastPointPosition == string::npos)
+  {
+    return string("");
+  }
+  else
+  {
+    return FileName.substr(LastPointPosition+1);
+  }
 }

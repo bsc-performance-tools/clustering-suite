@@ -34,13 +34,20 @@
 
 #include "libTraceClusteringImplementation.hpp"
 
-#include <ClusteringConfiguration.hpp>
-#include <DataExtractor.hpp>
-#include <DataExtractorFactory.hpp>
-#include <PlottingManager.hpp>
-#include <FileNameManipulator.hpp>
-
 #include <SystemMessages.hpp>
+using cepba_tools::system_messages;
+#include <FileNameManipulator.hpp>
+using cepba_tools::FileNameManipulator;
+
+
+#include <ClusteringConfiguration.hpp>
+#include "DataExtractor.hpp"
+#include "DataExtractorFactory.hpp"
+#include "ClusteredTraceGenerator.hpp"
+#include "ClusteredPRVGenerator.hpp"
+#include "ClusteredTRFGenerator.hpp"
+#include "PlottingManager.hpp"
+
 
 #include <cerrno>
 #include <cstring>
@@ -60,8 +67,10 @@ libTraceClusteringImplementation::libTraceClusteringImplementation(bool verbose)
 /**
  * Initialize the clustering library. Loads the XML and initializes the configuration
  * object, core of the application
+ *
  * \param ClusteringDefinitionXML Name of the XML file where the XML is defined
  * \param ApplyCPIStack Boolean indicating if PPC970MP CPI stack counters should be extrapolated
+ *
  * \return True if initialization has been done properly. False otherwise
  */
 bool
@@ -115,7 +124,7 @@ libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDe
       Plots = PlottingManager::GetInstance(true);
     }
     else
-    {
+    { /* Tracing mode */
       Plots = PlottingManager::GetInstance(false);
     }
 
@@ -133,7 +142,9 @@ libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDe
  * Loads data from an input file. It could be a Paraver trace, Dimemas trace or
  * a previously generated CSV file. This method doesn't generate an output file
  * and should be used to later run an analysis.
+ *
  * \param InputFileName The name of the input file where data is located
+ *
  * \return True if the data extraction work properly. False otherwise
  */
 bool
@@ -154,13 +165,15 @@ libTraceClusteringImplementation::ExtractData(string InputFileName)
     return false;
   }
 
+  this->InputFileName = InputFileName;
+  InputFileType       = Extractor->GetFileType();
+  
   if (!Extractor->ExtractData(Data))
   {
     SetError(true);
     SetErrorMessage(Extractor->GetLastError());
     return false;
   }
-  
   
   /*
   DataExtractionManager* ExtractionManager;
@@ -202,7 +215,6 @@ libTraceClusteringImplementation::ExtractData(string InputFileName)
 bool
 libTraceClusteringImplementation::FlushData(string OutputFileName)
 {
-
   ofstream OutputStream (OutputFileName.c_str(), ios_base::trunc);
 
   if (Data == NULL)
@@ -269,11 +281,67 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
 
   vector<const Point*>& ClusteringPoints = Data->GetClusteringPoints();
 
+  /* DEBUG
   cout << "Clustering Points size = " << ClusteringPoints.size() << endl;
+  */
   
   if (!ClusteringCore->ExecuteClustering(ClusteringPoints, LastPartition))
   {
     SetErrorMessage(ClusteringCore->GetErrorMessage());
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Reconstruct the input trace using the information of the clustering analysis
+ * 
+ * \param OutputTraceName Name of the output trace file
+ *
+ * \result True if the scripts where printed correctly, false otherwise
+ */ 
+bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceName)
+{
+  /* to lowercase a string
+  std::transform(str.begin(), str.end(), str.begin(),
+  std:tr_fun(std::tolower)); */
+
+  ClusteredTraceGenerator* TraceReconstructor;
+
+  vector<cluster_id_t>& IDs = LastPartition.GetAssignmentVector();
+
+  if (IDs.size() == 0)
+  {
+    SetErrorMessage("no cluster analysis data available to reconstruct the input trace");
+    return false;
+  }
+
+  switch(InputFileType)
+  {
+    case ParaverTrace:
+      TraceReconstructor = new ClusteredPRVGenerator(InputFileName, OutputTraceName);
+      break;
+    case DimemasTrace:
+      /* TBI -> Dimemas Cluster blocks not implemented */
+      TraceReconstructor = new ClusteredTRFGenerator (InputFileName, OutputTraceName);
+      break;
+    default:
+      SetErrorMessage("unable to reconstruct an input file which is not a trace");
+      return false;
+  }
+
+  if (TraceReconstructor->GetError())
+  {
+    SetErrorMessage(TraceReconstructor->GetLastError());
+    return false;
+  }
+
+  if (!TraceReconstructor->Run(Data->GetAllBursts(),
+                               IDs,
+                               LastPartition.GetNumberOfClusters()))
+  {
+    SetErrorMessage(TraceReconstructor->GetLastError());
     return false;
   }
   
@@ -288,9 +356,8 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
  *
  * \result True if the scripts where printed correctly, false otherwise
  */
-bool
-libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
-                                                   string ScriptsFileNamePrefix)
+bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
+                                                        string ScriptsFileNamePrefix)
 {
   PlottingManager *Plots;
   string Prefix;

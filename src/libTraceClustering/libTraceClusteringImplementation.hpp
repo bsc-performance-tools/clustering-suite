@@ -46,9 +46,13 @@ using cepba_tools::Error;
 class libTraceClusteringImplementation: public Error
 {
   private:
+    
     TraceData     *Data;
     libClustering *ClusteringCore;
     Partition      LastPartition;
+
+    string         InputFileName;
+    input_file_t   InputFileType;
     
   public:
     libTraceClusteringImplementation(bool verbose);
@@ -57,7 +61,6 @@ class libTraceClusteringImplementation: public Error
                              bool          ApplyCPIStack,
                              unsigned char UseFlags);
 
-
     bool ExtractData(string InputFileName);
 
     bool FlushData(string OutputFileName);
@@ -65,6 +68,8 @@ class libTraceClusteringImplementation: public Error
     bool ClusterAnalysis(void);
 
     bool HierarchicalAnalysis(void);
+
+    bool ReconstructInputTrace(string OutputTraceName);
 
     bool PrintPlotScripts(string DataFileName,
                           string ScriptsFileNamePrefix);

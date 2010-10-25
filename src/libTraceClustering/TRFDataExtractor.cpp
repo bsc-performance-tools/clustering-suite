@@ -32,10 +32,13 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
+#include <SystemMessages.hpp>
+using cepba_tools::system_messages;
+
 #include "TRFDataExtractor.hpp"
 
-#include <string.h>
-#include <errno.h>
+#include <cstring>
+#include <cerrno>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -43,8 +46,6 @@
 #include <iostream>
 using std::cout;
 using std::endl;
-
-#include <SystemMessages.hpp>
 
 TRFDataExtractor::TRFDataExtractor(string InputTraceName)
 :DataExtractor(InputTraceName)
@@ -84,7 +85,8 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
   INT32         FirstsBursts = -1;
   event_type_t  CurrentEventType;
   event_value_t CurrentEventValue;
-  duration_t    BurstDuration, LastBurstDuration;
+  double        ReadBurstDuration;
+  duration_t    LastBurstDuration;
   line_t        CurrentLine, LastBurstLine;
   
   map<event_type_t, event_value_t> EventsData;
@@ -109,8 +111,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
     return false;
   }
   
-  system_messages::show_percentage_progress(stdout,
-                                            "Parsing Input Trace",
+  system_messages::show_percentage_progress("Parsing Dimemas Input Trace",
                                             CurrentPercentage);
   CurrentLine = 0;
   EventsData.clear();
@@ -148,7 +149,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
                "\"CPU burst\" { %d, %d, %le };;\n",
                &TaskId,
                &ThreadId,
-               &BurstDuration) == 3)
+               &ReadBurstDuration) == 3)
     {
       if (OngoingBurst)
       { /* Store current burst information */
@@ -190,7 +191,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
       if (!InIdleBlock)
       { /* Save current 'CPU burst' information */
         LastBurstLine     = CurrentLine;
-        LastBurstDuration = (UINT64) llround(BurstDuration*1e9);
+        LastBurstDuration = (UINT64) llround(ReadBurstDuration*1e9);
         LastTaskId        = TaskId;
         LastThreadId      = ThreadId;
         OngoingBurst      = true;
@@ -263,18 +264,12 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
     if (PercentageRead > CurrentPercentage)
     {
       CurrentPercentage = PercentageRead;
-      system_messages::show_percentage_progress(stdout,
-                                                "Parsing Input Trace",
+      system_messages::show_percentage_progress("Parsing Dimemas Input Trace",
                                                 CurrentPercentage);
     }
   }
   
-  system_messages::show_percentage_progress(stdout,
-                                            "Parsing Input Trace",
-                                            100);
-  
-  if (system_messages::verbose)
-    cout << endl;
+  system_messages::show_percentage_end("Parsing Dimemas Input Trace");
 
   if (ferror(InputTraceFile) != 0)
   {

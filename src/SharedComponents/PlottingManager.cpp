@@ -32,6 +32,9 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
+#include <SystemMessages.hpp>
+using cepba_tools::system_messages;
+
 #include <ClusteringConfiguration.hpp>
 
 #include "PlottingManager.hpp"
@@ -50,8 +53,8 @@ using std::ostringstream;
 
 using std::endl;
 
-#include <errno.h>
-#include <string.h>
+#include <cerrno>
+#include <cstring>
 
 #include "trace_clustering_types.h"
 
@@ -130,7 +133,8 @@ PlottingManager::PrintPlots(string PlotsDataFileName,
                             size_t NumberOfClusters)
 {
 
-  for (INT32 i = 0; i < Plots.size(); i++)
+  system_messages::show_progress("Writing plots to disc", 0, Plots.size());
+  for (size_t i = 0; i < Plots.size(); i++)
   {
     if(CorrectPlots[i])
     {
@@ -143,7 +147,9 @@ PlottingManager::PrintPlots(string PlotsDataFileName,
         return false;
       }
     }
+    system_messages::show_progress("Writing plots to disc", i, Plots.size());
   }
+  system_messages::show_progress_end("Writing plots to disc", Plots.size());
   
   return true;
 }
@@ -518,7 +524,7 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
   }
   else
   {
-    OutputStream << "Clustering (DBSCAN To Do Work)" << endl;
+    OutputStream << "\"Clustering (DBSCAN To Do Work)\"" << endl;
   }
 
   OutputStream << "set xlabel \"" << Definition->XMetricTitle << "\"" << endl;

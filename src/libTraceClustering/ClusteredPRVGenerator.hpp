@@ -32,36 +32,46 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef _EXTRACTOR_H
-#define _EXTRACTOR_H
+#ifndef _CLUSTEREDPRVGENERATOR_HPP_
+#define _CLUSTEREDPRVGENERATOR_HPP_
 
-#include "trace_clustering_types.h"
+#include "ClusteredTraceGenerator.hpp"
+#include "CPUBurst.hpp"
 
-#include <Error.hpp>
-using cepba_tools::Error;
 
-#include <TraceData.hpp>
+#include <vector>
+using std::vector;
 
-/* Forward declarations */
-class DataExtractionManager;
+class ParaverTraceParser;
 
-class DataExtractor: public Error
+class ClusteredPRVGenerator: public ClusteredTraceGenerator
 {
-  protected:
-    string InputTraceName;
-    FILE*  InputTraceFile;
-    string TraceDataFileName;
-
+  private:
+    ParaverTraceParser *TraceParser;
+  
+    bool   PCFPresent;
+    string InputPCFName;
+    FILE  *InputPCFFile;
+    string OutputPCFName;
+    FILE  *OutputPCFFile;
+  
+    vector<CPUBurst*> BurstsBeginTime;
   
   public:
-    DataExtractor(string InputTraceName);
-    ~DataExtractor() {};
-  
-    virtual bool ExtractData(TraceData* DataContainer) = 0;
-    virtual input_file_t GetFileType(void) = 0;
-  
-    string GetTraceDataFileName(void) { return TraceDataFileName; };
+    ClusteredPRVGenerator(string  InputTraceName,
+                          string  OutputTraceName);
 
+    ~ClusteredPRVGenerator(void){};
+  
+    bool Run(vector<CPUBurst*>&    Bursts,
+             vector<cluster_id_t>& IDs,
+             size_t                NumberOfClusters);
+  
+    bool GenerateOutputPCF(size_t NumberOfClusters);
+  
+  private:
+    
 };
 
 #endif
+

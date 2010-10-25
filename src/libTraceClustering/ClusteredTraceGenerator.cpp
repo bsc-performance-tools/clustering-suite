@@ -32,29 +32,26 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef _CLUSTERINGDATAEXTRACTION_HPP_
-#define _CLUSTERINGDATAEXTRACTION_HPP_
+#include <string.h>
 
-#include <string>
-using std::string;
+#include "ClusteredTraceGenerator.hpp"
 
-class DataExtractionLibrary;
-
-namespace ClusteringSuite
+ClusteredTraceGenerator::ClusteredTraceGenerator(string  InputTraceName,
+                                                 string  OutputTraceName)
 {
-  class DataExtraction
+  this->InputTraceName = InputTraceName;
+  if ((InputTraceFile = fopen(InputTraceName.c_str(), "r")) == NULL)
   {
-    private:
-      DataExtractionLibrary *DataExtractionLib;
-    
-    public:
-      DataExtraction(void);
-      
-      bool ExtractData(string ClusteringDefinitionXML,
-                       string InputTraceName,
-                       string OutputFileName,
-                       bool   ApplyCPIStack);
-  };
-}
+    SetError(true);
+    SetErrorMessage("error opening input trace", strerror(errno));
+    return;
+  }
 
-#endif
+  this->OutputTraceName = OutputTraceName;
+  if ((OutputTraceFile = fopen(OutputTraceName.c_str(), "w")) == NULL)
+  {
+    SetError(true);
+    SetErrorMessage("error opening output trace", strerror(errno));
+    return;
+  }
+}

@@ -264,29 +264,53 @@ XMLParser::ParseXML(string                   XMLFileName,
 
     if (!ClusteringAlgorithmError)
     {
+      Configuration->SetClusteringAlgorithmError(false);
       Configuration->SetClusteringAlgorithm(ClusteringAlgorithmName,
                                             ClusteringAlgorithmParameters);
+    }
+    else
+    {
+      Configuration->SetClusteringAlgorithmError(true);
+      Configuration->SetClusteringAlgorithmErrorMessage(ClusteringAlgorithmErrorMessage);
     }
     
     if (!ClusteringParametersError)
     {
+      Configuration->SetClusteringParametersError(false);
       Configuration->SetClusteringParameters(ClusteringParametersNames,
                                              ClusteringParametersDefinitions);
+    }
+    else
+    {
+      Configuration->SetClusteringParametersError(true);
+      Configuration->SetClusteringParametersErrorMessage(ClusteringParametersErrorMessage);
     }
 
     if (!ExtrapolationParametersError)
     {
+      Configuration->SetExtrapolationParametersError(false);
       Configuration->SetExtrapolationParameters(ExtrapolationParametersNames,
                                                 ExtrapolationParametersDefinitions);
+    }
+    else
+    {
+      Configuration->SetExtrapolationParametersError(true);
+      Configuration->SetExtrapolationParametersErrorMessage(ExtrapolationParametersErrorMessage);
     }
 
     if (!PlotsDefinitionsError)
     {
+      Configuration->SetPlotsDefinitionsError(false);
       Configuration->SetAllPlots(AllPlots);
       if (!AllPlots)
       {
         Configuration->SetPlotsDefinitions(PlotsDefinitions);
       }
+    }
+    else
+    {
+      Configuration->SetPlotsDefinitionsError(true);
+      Configuration->SetPlotsDefinitionsErrorMessage(PlotsDefinitionsErrorMessage);
     }
   }
 

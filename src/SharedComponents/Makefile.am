@@ -21,8 +21,6 @@ libClusteringUtils_la_SOURCES = \
   ClusteringParameter.cpp \
   ClusteringParameter.hpp \
   CPIStackModel.hpp \
-  FileNameManipulator.cpp \
-  FileNameManipulator.hpp \
   ParametersManager.cpp \
   ParametersManager.hpp \
   PlottingManager.cpp \

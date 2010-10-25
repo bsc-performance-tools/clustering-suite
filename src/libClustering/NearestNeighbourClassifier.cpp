@@ -35,6 +35,7 @@
 #include "clustering_types.h"
 
 #include <SystemMessages.hpp>
+using cepba_tools::system_messages;
 
 #include <cassert>
 
@@ -50,17 +51,17 @@ NearestNeighbourClassifier::NearestNeighbourClassifier(
   ANNpointArray       ANNDataPoints;
   size_t Dimensions = Data[0]->size();
 
-  system_messages::show_progress(stdout, "Building data spatial index", 0, Data.size());
+  system_messages::show_progress("Building data spatial index", 0, Data.size());
   
   ANNDataPoints = annAllocPts(Data.size(), Dimensions);
 
   for (size_t i = 0; i < Data.size(); i++)
   {
-    system_messages::show_progress(stdout, "Building data spatial index", i, Data.size());
+    system_messages::show_progress("Building data spatial index", i, Data.size());
     ANNDataPoints[i] = ToANNPoint(Data[i]);
   }
 
-  system_messages::show_progress_end(stdout, "Building data spatial index", Data.size());
+  system_messages::show_progress_end("Building data spatial index", Data.size());
 
   SpatialIndex = new ANNkd_tree(ANNDataPoints,
                                 Data.size(),

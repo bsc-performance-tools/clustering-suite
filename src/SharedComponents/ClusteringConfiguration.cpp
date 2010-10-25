@@ -141,7 +141,9 @@ bool ClusteringConfiguration::Initialize(string XMLFileName, bool   ApplyCPIStac
 
   Initialized = true;
 
+  /* DEBUG
   cout << "Duration Filter = " << DurationFilter << endl;
+  */
   
   return true;
 }

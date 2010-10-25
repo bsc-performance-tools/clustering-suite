@@ -64,14 +64,16 @@ class libTraceClustering
                              unsigned char UseFlags);
 
     bool ExtractData(string InputFileName);
+    
+    bool ExtractData(string InputFileName, string OutputCSVFileName);
 
-    bool ExtractData(string InputFileName, string OutputFileName);
+    bool ClusterAnalysis();
 
-    bool ClusterAnalysis(void);
+    bool HierarchicalAnalysis();
 
-    bool HierarchicalAnalysis(void);
+    bool FlushData(string OutputCSVFileName);
 
-    bool FlushData(string OutputFileName);
+    bool ReconstructInputTrace(string OutputTraceName);
 
     bool PrintPlotScripts(string DataFileName,
                           string ScriptsFileNamePrefix = "");

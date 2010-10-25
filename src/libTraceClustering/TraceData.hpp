@@ -35,7 +35,7 @@
 #ifndef _TRACEDATA_HPP_
 #define _TRACEDATA_HPP_
 
-#include <trace_clustering_types.h>
+#include "trace_clustering_types.h"
 
 #include <ParametersManager.hpp>
 #include <Error.hpp>
@@ -139,6 +139,11 @@ class TraceData: public Error
       }
       return (vector<const Point*>&) ClusteringBursts;
     };
+
+    vector<CPUBurst*>& GetAllBursts(void)         { return AllBursts;     };
+    vector<CPUBurst*>& GetClusteringBursts(void)  { return ClusteringBursts; };
+    vector<CPUBurst*>& GetFilteredBursts(void)    { return FilteredBursts; };
+    vector<CPUBurst*>& GetMissingDataBursts(void) { return MissingDataBursts; };
 
     /* Clustering points modifiers */
     void  Normalize(void);

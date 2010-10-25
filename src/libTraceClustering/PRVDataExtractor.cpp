@@ -32,8 +32,14 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#include <string.h>
-#include <errno.h>
+#include <SystemMessages.hpp>
+using cepba_tools::system_messages;
+
+#include "PRVDataExtractor.hpp"
+#include "ParaverTraceParser.hpp"
+
+#include <cstring>
+#include <cerrno>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -43,11 +49,6 @@
 using std::cout;
 using std::cerr;
 using std::endl;
-
-#include <SystemMessages.hpp>
-
-#include "PRVDataExtractor.hpp"
-#include "ParaverTraceParser.hpp"
 
 // #define DEBUG_PARAVER_INPUT 1
 
@@ -140,8 +141,7 @@ PRVDataExtractor::ExtractData(TraceData* TraceDataSet)
   
   CurrentPercentage = TraceParser->GetFilePercentage();
 
-  system_messages::show_percentage_progress(stdout, 
-                                            "Parsing Paraver Input Trace",
+  system_messages::show_percentage_progress("Parsing Paraver Input Trace",
                                             CurrentPercentage);
 
   while (true)
@@ -175,7 +175,7 @@ PRVDataExtractor::ExtractData(TraceData* TraceDataSet)
     if (PercentageRead > CurrentPercentage)
     {
       CurrentPercentage = PercentageRead;
-      system_messages::show_percentage_progress(stdout, "Parsing Paraver Input Trace", CurrentPercentage);
+      system_messages::show_percentage_progress("Parsing Paraver Input Trace", CurrentPercentage);
     }
 
     /* Free memory used by the parser */
@@ -189,9 +189,7 @@ PRVDataExtractor::ExtractData(TraceData* TraceDataSet)
     return false;
   }
   
-  system_messages::show_percentage_progress(stdout, "Parsing Paraver Input Trace", 100);
-  if (system_messages::verbose)
-    fprintf(stdout, "\n");
+  system_messages::show_percentage_end("Parsing Paraver Input Trace");
 
   if (ferror(InputTraceFile) != 0)
   {

@@ -12,7 +12,6 @@ SUBDIRS = \
 	libParaverTraceParser \
 	libANN \
 	libClustering \
-	DataExtraction \
 	libTraceClustering \
 	ClusteringDataExtractor \
 	BurstClustering 

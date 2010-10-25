@@ -32,42 +32,35 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#include "FileNameManipulator.hpp"
+#ifndef _EXTRACTOR_H
+#define _EXTRACTOR_H
 
-FileNameManipulator::FileNameManipulator(string OriginalFileName,
-                                         string Extension)
+#include "trace_clustering_types.h"
+
+#include <Error.hpp>
+using cepba_tools::Error;
+
+#include <TraceData.hpp>
+
+/* Forward declarations */
+class DataExtractionManager;
+
+class DataExtractor: public Error
 {
-  this->OriginalFileName = OriginalFileName;
-  this->Extension        = Extension;
+  protected:
+    string InputTraceName;
+    FILE*  InputTraceFile;
+    string TraceDataFileName;
+
   
-  string::size_type SubstrPosition;
+  public:
+    DataExtractor(string InputTraceName);
+    ~DataExtractor() {};
+  
+    virtual bool ExtractData(TraceData* DataContainer) = 0;
+    virtual input_file_t GetFileType(void) = 0;
+  
+    string GetTraceDataFileName(void) { return TraceDataFileName; };
+};
 
-  SubstrPosition = OriginalFileName.rfind("."+Extension);
-
-  if (SubstrPosition == string::npos)
-  {
-    ChoppedFileName = OriginalFileName;
-  }
-  else
-  {
-    ChoppedFileName = OriginalFileName.substr(0, SubstrPosition);
-  }
-}
-
-string
-FileNameManipulator::AppendString(string Append)
-{
-  return (ChoppedFileName+"."+Append+"."+Extension);
-}
-
-string
-FileNameManipulator::AppendStringAndExtension(string Append, string Extension)
-{
-  return (ChoppedFileName+"."+Append+"."+Extension);
-}
-
-string
-FileNameManipulator::GetChoppedFileName(void)
-{
-  return this->ChoppedFileName;
-}
+#endif

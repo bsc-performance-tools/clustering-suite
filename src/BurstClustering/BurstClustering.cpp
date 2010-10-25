@@ -7,6 +7,11 @@
 #include <types.h>
 #include <libTraceClustering.hpp>
 
+#include <SystemMessages.hpp>
+using cepba_tools::system_messages;
+#include <FileNameManipulator.hpp>
+using cepba_tools::FileNameManipulator;
+
 #include <iostream>
 using std::cout;
 using std::cerr;
@@ -27,6 +32,9 @@ bool   InputTraceNameRead = false;
 
 string OutputFileName;             /* Data extracted from input trace */
 bool   OutputFileNameRead = false;
+
+string OutputDataFileName;
+bool   ReconstructTrace   = true;
 
 bool   ApplyCPIStack = false;
 
@@ -165,7 +173,38 @@ ReadArgs(int argc, char *argv[])
   }
   
   return;
-  
+}
+
+void CheckOutputFile()
+{
+  string OutputFileExtension;
+
+  OutputFileExtension = FileNameManipulator::GetExtension(OutputFileName);
+
+  if (OutputFileExtension.compare("") == 0)
+  {
+    cerr << "Unable to determine output file type. Please use .prv/.trf/.csv extensions" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  if (OutputFileExtension.compare("prv") == 0 ||
+      OutputFileExtension.compare("trf") == 0)
+  {
+    FileNameManipulator NameManipulator(OutputFileName, OutputFileExtension);
+    OutputDataFileName = NameManipulator.AppendStringAndExtension("DATA", "csv");
+    return;
+  }
+  else if (OutputFileExtension.compare("csv") == 0)
+  {
+    ReconstructTrace = false;
+    OutputDataFileName = OutputFileName;
+  }
+  else
+  {
+    cerr << "Unknown output file type. Please use .prv/.trf/.csv to choose the output file type" << endl;
+    exit(EXIT_FAILURE);
+  }
+
   return;
 }
 
@@ -175,34 +214,50 @@ int main(int argc, char *argv[])
   
   ReadArgs(argc, argv);
 
+  CheckOutputFile();
+
   if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, ApplyCPIStack, CLUSTERING|PLOTS))
   {
-    cerr << "Error seting up clustering library: " << Clustering.GetErrorMessage() << endl;
+    cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
 
+  system_messages::information("** DATA EXTRACTION **\n");
   if (!Clustering.ExtractData(InputTraceName))
   {
     cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
 
+  system_messages::information("** CLUSTER ANALYSIS **\n");
   if (!Clustering.ClusterAnalysis())
   {
     cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
 
-  if (!Clustering.FlushData(OutputFileName))
+  system_messages::information("** FLUSHING DATA **\n");
+  if (!Clustering.FlushData(OutputDataFileName))
   {
     cerr << "Error writing data points: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
 
-  if (!Clustering.PrintPlotScripts(OutputFileName))
+  system_messages::information("** GENERATING GNUPlot SCRIPTS **\n");
+  if (!Clustering.PrintPlotScripts(OutputDataFileName))
   {
     cerr << "Error printing plot scripts: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
+  }
+
+  if (ReconstructTrace)
+  {
+    system_messages::information("** RECONSTRUCTING INPUT TRACE **\n");
+    if (!Clustering.ReconstructInputTrace(OutputFileName))
+    {
+      cerr << "Error writing output trace: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
   }
   
   return 0;

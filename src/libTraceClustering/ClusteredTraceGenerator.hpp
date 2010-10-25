@@ -32,34 +32,87 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#include "ClusteringDataExtraction.hpp"
-using ClusteringSuite::DataExtraction;
+#ifndef _CLUSTEREDTRACEGENERATOR_H
+#define _CLUSTEREDTRACEGENERATOR_H
 
-#include "DataExtractionLibrary.hpp"
+#include "trace_clustering_types.h"
+#include <Error.hpp>
+using cepba_tools::Error;
 
-DataExtraction::DataExtraction(void)
+#include "CPUBurst.hpp"
+
+/* Classes for CPUBurst comparisons */
+class BeginTimeCompare
 {
-  DataExtractionLib = new DataExtractionLibrary();
-}
+  public:
+    bool operator()(CPUBurst* P1, CPUBurst* P2)
+    {
+      if (P1->GetBeginTime() < P2->GetBeginTime())
+        return true;
+      else if (P1->GetBeginTime() == P2->GetBeginTime())
+        return (P1->GetLine() < P2->GetLine());
+        // return (P1->GetInstance() < P2->GetInstance());
+        // return (P1->GetEndTime() < P2->GetEndTime());
+        // return (P1->GetTaskId() < P2->GetTaskId());
+      else
+        return false;
+    };
+};
 
-bool 
-DataExtraction::ExtractData(string ClusteringDefinitionXML,
-                            string InputTraceName,
-                            string OutputFileName,
-                            bool   ApplyCPIStack)
+class EndTimeCompare
 {
-  if (DataExtractionLib == NULL)
-  {
-    DataExtractionLib = new DataExtractionLibrary();
-  }
-  else
-  {
-    delete DataExtractionLib;
-    DataExtractionLib = new DataExtractionLibrary();
-  }
+  public:
+    bool operator()(CPUBurst* P1, CPUBurst* P2)
+    {
+      if (P1->GetEndTime() < P2->GetEndTime())
+        return true;
+      else if (P1->GetEndTime() == P2->GetEndTime())
+        return (P1->GetTaskId() < P2->GetTaskId());
+      else
+        return false;
+    };
+};
+
+class InstanceNumCompare
+{
+  public:
+    bool operator()(CPUBurst* P1, CPUBurst* P2)
+    {
+      if (P1->GetInstance() < P2->GetInstance())
+        return true;
+      else
+        return false;
+    }
+};
+
+class LineCompare
+{
+  public:
+    bool operator()(CPUBurst* P1, CPUBurst* P2)
+    {
+      if (P1->GetLine() < P2->GetLine())
+        return true;
+      else
+        return false;
+    }
+};
+
+class ClusteredTraceGenerator: public Error
+{
+  protected:
+    string InputTraceName;
+    FILE*  InputTraceFile;
+    string OutputTraceName;
+    FILE*  OutputTraceFile;
+    bool   DestroyClusteredFile ;
   
-  return (DataExtractionLib->ExtractData (ClusteringDefinitionXML,
-                                          InputTraceName,
-                                          ApplyCPIStack));
-}
+  public:
+    ClusteredTraceGenerator(string  InputTraceName,
+                            string  OutputTraceName);
+  
+    virtual bool Run(vector<CPUBurst*>&    Bursts,
+                     vector<cluster_id_t>& IDs,
+                     size_t                NumberOfClusters) = 0;
+};
 
+#endif

@@ -145,7 +145,6 @@ src/libParaverTraceParser/Makefile
 src/SharedComponents/Makefile
 src/libANN/Makefile
 src/libClustering/Makefile
-src/DataExtraction/Makefile
 src/libTraceClustering/Makefile
 src/ClusteringDataExtractor/Makefile
 src/BurstClustering/Makefile

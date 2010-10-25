@@ -33,6 +33,7 @@
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include <SystemMessages.hpp>
+using cepba_tools::system_messages;
 
 #include "DBSCAN.hpp"
 
@@ -176,12 +177,12 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
     InputDataManager->NewClusterInformation(ClusterId, ClusterName.str());
   */
 
-  system_messages::show_progress(stdout, "Clustering points", 0, (int) Data.size());
+  system_messages::show_progress("Clustering points", 0, (int) Data.size());
   Index = 0; // Double counter: total points vs. clustering points!
 
   for (point_idx i = 0; i < Data.size(); i++)
   {
-    system_messages::show_progress(stdout, "Clustering points", i, (int) Data.size());
+    system_messages::show_progress("Clustering points", i, (int) Data.size());
 
     if (ClusterAssignmentVector[i] == UNCLASSIFIED)
     {
@@ -229,7 +230,7 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
   }
   */
 
-  system_messages::show_progress_end(stdout, "Clustering points", (int) Data.size());
+  system_messages::show_progress_end("Clustering points", (int) Data.size());
 
   /* Erase last cluster information if not needed 
   if (CurrentClusterInformation->GetDensity() == 0)
@@ -364,17 +365,17 @@ bool DBSCAN::BuildKDTree(const vector<const Point*>& Data)
 /*  cout << "Current clustering has " << Dimensions << " dimensions" << endl; */
 #endif
   
-  system_messages::show_progress(stdout, "Building data spatial index", 0, Data.size());
+  system_messages::show_progress("Building data spatial index", 0, Data.size());
   
   ANNDataPoints = annAllocPts(Data.size(), Dimensions);
 
   for (size_t i = 0; i < Data.size(); i++)
   {
-    system_messages::show_progress(stdout, "Building data spatial index", i, Data.size());
+    system_messages::show_progress("Building data spatial index", i, Data.size());
     ANNDataPoints[i] = ToANNPoint(Data[i]);
   }
 
-  system_messages::show_progress_end(stdout, "Building data spatial index", Data.size());
+  system_messages::show_progress_end("Building data spatial index", Data.size());
 
   SpatialIndex = new ANNkd_tree(ANNDataPoints,
                                 Data.size(),
@@ -401,23 +402,27 @@ bool DBSCAN::ExpandCluster(const vector<const Point*>& Data,
   list<point_idx>::iterator SeedListIterator;
   list<point_idx>::iterator NeighbourSeedListIterator;
 
+  /* DEBUG
   cout << "**** In EXPAND CLUSTER (BEGIN) ****" << endl;
   for (size_t i = 0; i < Data.size(); i++)
   {
     cout << "Clustering point " << i << " has " << Data[i]->size() << " dimensions" << endl;
   }
+  */
   
   ClusterAssignmentVector[CurrentPoint] = CurrentClusterId;
 
   EpsilonRangeQuery(Data[CurrentPoint], SeedList);
 
+  /* DEBUG
   cout << "**** In EXPAND CLUSTER (AFTER EPSILON RANGE QUERY) ****" << endl;
   for (size_t i = 0; i < Data.size(); i++)
   {
     cout << "Clustering point " << i << " has " << Data[i]->size() << " dimensions" << endl;
   }
-  /* DEBUG */
+
   cout << "SeedList.size() = " << SeedList.size() << endl;
+  */
 
   /* Point is NO core object */
   if (SeedList.size() < MinPoints)
@@ -475,11 +480,13 @@ bool DBSCAN::ExpandCluster(const vector<const Point*>& Data,
     NeighbourSeedList.clear();
   }
 
+  /* DEBUG
   cout << "**** In EXPAND CLUSTER (END) ****" << endl;
   for (size_t i = 0; i < Data.size(); i++)
   {
     cout << "Clustering point " << i << " has " << Data[i]->size() << " dimensions" << endl;
   }
+  */
   
   return true;
 }
@@ -646,8 +653,7 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
 */
   
 #ifndef DEBUG
-  system_messages::show_progress_end(stdout,
-                                     "Computing K-Neighbour distance",
+  system_messages::show_progress_end("Computing K-Neighbour distance",
                                      Data.size());
 #endif
 
@@ -731,8 +737,7 @@ bool DBSCAN::ComputeKNeighbourDistances(const vector<const Point*>& Data,
 {
   
 #ifndef DEBUG
-  system_messages::show_progress(stdout,
-                                 "Computing K-Neighbour distance",
+  system_messages::show_progress("Computing K-Neighbour distance",
                                  0,
                                  Data.size());
 #endif
@@ -752,8 +757,7 @@ bool DBSCAN::ComputeKNeighbourDistances(const vector<const Point*>& Data,
 
 
 #ifndef DEBUG
-    system_messages::show_progress(stdout,
-                                   "Computing K-Neighbour distance",
+    system_messages::show_progress("Computing K-Neighbour distance",
                                    i,
                                    Data.size());
 #endif

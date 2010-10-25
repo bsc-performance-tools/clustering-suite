@@ -33,13 +33,26 @@
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include "SystemMessages.hpp"
+using cepba_tools::system_messages;
+
+#include <iostream>
+using std::cout;
+using std::endl;
 
 bool system_messages::verbose = false;
 
-void system_messages::show_progress(FILE*       channel,
-                                    const char* message,
+void system_messages::information(const char* message, FILE* channel)
+{
+  if (system_messages::verbose)
+  {
+    fprintf(channel, "%s", message);
+  }
+}
+
+void system_messages::show_progress(const char* message,
                                     int         current,
-                                    int         total)
+                                    int         total,
+                                    FILE*       channel)
 {
   if (system_messages::verbose)
   {
@@ -48,9 +61,9 @@ void system_messages::show_progress(FILE*       channel,
   }
 }
 
-void system_messages::show_progress_end(FILE*       channel,
-                                        const char* message,
-                                        int         total)
+void system_messages::show_progress_end(const char* message,
+                                        int         total,
+                                        FILE*       channel)
 {
   if (system_messages::verbose)
   {
@@ -59,21 +72,30 @@ void system_messages::show_progress_end(FILE*       channel,
   }
 }
 
-void system_messages::show_percentage_progress(FILE*       channel,
-                                               const char* message,
-                                               int         current_percentage)
+void system_messages::show_percentage_progress(const char* message,
+                                               int         current_percentage,
+                                               FILE*       channel)
 {
   int real_percentage;
-
+  
   if (current_percentage < 0)
     real_percentage = 0;
-
-  if (current_percentage > 100)
+  else if (current_percentage > 100)
     real_percentage = 100;
+  else
+    real_percentage = current_percentage;
   
   if (system_messages::verbose)
   {
-    fprintf(channel, "\r%s %d/100\n", message, real_percentage);
+    fprintf(channel, "\r%s %03d%%", message, real_percentage);
     fflush(channel);
+  }
+}
+
+void system_messages::show_percentage_end(const char* message, FILE* channel)
+{
+  if (system_messages::verbose)
+  {
+    fprintf(channel, "\r%s 100%%\n", message);
   }
 }

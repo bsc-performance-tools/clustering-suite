@@ -36,20 +36,26 @@
 #define _SYSTEMMESSAGES_HPP_
 
 #include <cstdio>
-
-class system_messages
+namespace cepba_tools
 {
-  public:
+  class system_messages
+  {
+    public:
 
-    static bool verbose;
+      static bool verbose;
 
-    static void show_progress(FILE* channel, const char* message, int current, int total);
+      static void information(const char* message, FILE* channel = stdout);
+      
+      static void die(const char* message, FILE* channel = stderr);
 
-    static void show_progress_end(FILE* channel, const char* message, int total);
+      static void show_progress(const char* message, int current, int total, FILE* channel = stdout);
 
-    static void show_percentage_progress(FILE* channel, const char* message, int current_percentage);
+      static void show_progress_end(const char* message, int total, FILE* channel = stdout);
 
-};
+      static void show_percentage_progress(const char* message, int current_percentage, FILE* channel = stdout);
 
+      static void show_percentage_end(const char* message, FILE* channel = stdout);
 
+  };
+}
 #endif // _SYSTEMMESSAGES_HPP_

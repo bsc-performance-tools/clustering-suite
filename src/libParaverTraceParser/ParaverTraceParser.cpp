@@ -237,14 +237,12 @@ ParaverTraceParser::GetNextGlobalOp(void)
   return (GlobalOp*) (NextTraceRecord(GLOBOP_REC));
 }
 
-INT32
-ParaverTraceParser::GetFilePercentage(void)
+INT32 ParaverTraceParser::GetFilePercentage(void)
 {
-  off_t CurrentPosition = ftello(ParaverTraceFile);
+  off_t CurrentPosition   = ftello(ParaverTraceFile);
+  INT32 CurrentPercentage = lround (100.0*CurrentPosition/TraceSize);
   
-  // cout << "Current Position " << CurrentPosition << endl;
-  
-  return (INT32) (lround (100.0*CurrentPosition/TraceSize));
+  return CurrentPercentage;
 }
 
 bool
@@ -307,8 +305,8 @@ ParaverTraceParser::GetAppCommunicators(ApplicationDescription_t AppDescription)
     {
       char CurrentError[128]; 
       sprintf(CurrentError,
-              "Error parsing communicator (line %d)",
-              CurrentLine);
+              "Error parsing communicator (line %lu)",
+              (long unsigned int) CurrentLine);
       SetErrorMessage (CurrentError,
                        NewCommunicator->GetLastError().c_str());
       free( (void*) TraceLine);
@@ -440,8 +438,8 @@ ParaverTraceParser::NextTraceRecord(UINT32 RecordTypeMask)
         
         SetError(true);
         sprintf(CurrentError,
-                  "wrong record format on line %d",
-                  CurrentLine);
+                  "wrong record format on line %lu",
+                  (long unsigned int) CurrentLine);
         LastError = CurrentError;
 
         fprintf (stderr, "Current line: %s", Line);
@@ -486,9 +484,9 @@ ParaverTraceParser::NextTraceRecord(UINT32 RecordTypeMask)
         
           SetError(true);
           sprintf(CurrentError,
-                    "Wrong record identifier (%d) on line %d",
+                    "Wrong record identifier (%d) on line %lu",
                     CurrentRecordType,
-                    CurrentLine);
+                    (long unsigned int) CurrentLine);
           LastError = CurrentError;
           Result = NULL;
           break;
@@ -527,8 +525,8 @@ ParaverTraceParser::ParseState(char* ASCIIState)
     
     SetError(true);
     sprintf(CurrentError,
-            "Wrong state record on line %d",
-            CurrentLine);
+            "Wrong state record on line %lu",
+            (long unsigned int) CurrentLine);
     LastError = CurrentError;
     NewState = NULL;
   }
@@ -565,8 +563,8 @@ ParaverTraceParser::ParseEvent(char* ASCIIEvent)
         char CurrentError[256];
         SetError(true);
         sprintf(CurrentError,
-                "Unpaired type/value on event record on line %d",
-                CurrentLine);
+                "Unpaired type/value on event record on line %lu",
+                (long unsigned int) CurrentLine);
         LastError = CurrentError;
         delete NewEvent;
         free( (void*) TypeValueStr);
@@ -586,8 +584,8 @@ ParaverTraceParser::ParseEvent(char* ASCIIEvent)
       char CurrentError[256];
       SetError(true);
       sprintf(CurrentError,
-              "Event record without type/value pairs on line %d",
-              CurrentLine);
+              "Event record without type/value pairs on line %lu",
+              (long unsigned int) CurrentLine);
       LastError = CurrentError;
       delete NewEvent;
       free( (void*) TypeValueStr);
@@ -600,8 +598,8 @@ ParaverTraceParser::ParseEvent(char* ASCIIEvent)
     
     SetError(true);
     sprintf(CurrentError,
-            "Wrong event record on line %d",
-            CurrentLine);
+            "Wrong event record on line %lu",
+            (long unsigned int) CurrentLine);
     LastError = CurrentError;
     NewEvent = NULL;
   }
@@ -643,8 +641,8 @@ ParaverTraceParser::ParseCommunication(char* ASCIICommunication)
     
     SetError(true);
     sprintf(CurrentError,
-            "Wrong communication record on line %d",
-            CurrentLine);
+            "Wrong communication record on line %lu",
+            (long unsigned int) CurrentLine);
     LastError = CurrentError;
     NewCommunication = NULL;
   }
@@ -686,8 +684,8 @@ ParaverTraceParser::ParseGlobalOp(char* ASCIIGlobalOp)
     
     SetError(true);
     sprintf(CurrentError,
-            "Wrong global operation record on line %d",
-            CurrentLine);
+            "Wrong global operation record on line %lu",
+            (long unsigned int) CurrentLine);
     LastError = CurrentError;
     NewGlobalOp = NULL;
   }

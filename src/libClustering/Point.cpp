@@ -52,7 +52,9 @@ Point::Point(vector<double>& _Dimensions)
   Dimensions = _Dimensions;
   Normalized = false;
 
+  /* DEBUG
   cout << "New point! Dimensions size = " << _Dimensions.size() << endl;
+  */
 }
 
 void
