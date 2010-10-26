@@ -99,6 +99,8 @@ using std::string;
 #define NODE_YMETRIC     "y_metric"
 #define NODE_ZMETRIC     "z_metric"
 #define ATTR_TITLE       "title"
+#define ATTR_METRIC_MIN  "min"
+#define ATTR_METRIC_MAX  "max"
 
 #define TEXT_DURATION    "duration"
 

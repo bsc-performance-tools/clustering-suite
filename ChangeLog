@@ -11,6 +11,12 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 
+2010-20-26 Juan Gonzalez <juan.gonzalez@bsc.es>
+
+	* Added support to set the plots range via XML
+
+	* Solved a bug when trying to plot normalized data plots
+
 2010-10-25 Juan Gonzalez <juan.gonzalez@bsc.es>
 
 	* Global modification and restructuration of source directories

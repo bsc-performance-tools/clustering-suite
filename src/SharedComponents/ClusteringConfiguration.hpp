@@ -221,14 +221,20 @@ class PlotDefinition
     string XMetric;
     string XMetricTitle;
     INT32  XMetricPosition;
+    double XMin;
+    double XMax;
 
     string YMetric;
     string YMetricTitle;
     INT32  YMetricPosition;
+    double YMin;
+    double YMax;
 
     string ZMetric;
     string ZMetricTitle;
     INT32  ZMetricPosition;
+    double ZMin;
+    double ZMax;
 
     line_t Line;
     
@@ -242,14 +248,20 @@ class PlotDefinition
       XMetric         = UNDEFINED;
       XMetricTitle    = UNDEFINED;
       XMetricPosition = NOT_FOUND;
+      XMin            = MIN_DOUBLE;
+      XMax            = MAX_DOUBLE;
 
       YMetric         = UNDEFINED;
       YMetricTitle    = UNDEFINED;
       YMetricPosition = NOT_FOUND;
+      YMin            = MIN_DOUBLE;
+      YMax            = MAX_DOUBLE;
 
       ZMetric         = UNDEFINED;
       ZMetricTitle    = UNDEFINED;
       ZMetricPosition = NOT_FOUND;
+      ZMin            = MIN_DOUBLE;
+      ZMax            = MAX_DOUBLE;
 
       Line            = 0;
     }

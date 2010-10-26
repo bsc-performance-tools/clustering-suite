@@ -1036,6 +1036,26 @@ XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
       {
         Definition->XMetricTitle = Definition->XMetric;
       }
+
+      /* Get parameter "min" */
+      AuxCharStr =
+        (char*) xmlGetProp(CurrentNode, (const xmlChar*) ATTR_METRIC_MIN);
+
+      if (AuxCharStr != NULL)
+      {
+        Definition->XMin = atof(AuxCharStr);
+        xmlFree(AuxCharStr);
+      }
+
+      /* Get parameter "max" */
+      AuxCharStr =
+        (char*) xmlGetProp(CurrentNode, (const xmlChar*) ATTR_METRIC_MAX);
+
+      if (AuxCharStr != NULL)
+      {
+        Definition->XMax = atof(AuxCharStr);
+        xmlFree(AuxCharStr);
+      }
     }
     else if (CurrentNodeName.compare(NODE_YMETRIC) == 0)
     { /* Y Axis Metric */
@@ -1071,6 +1091,26 @@ XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
       else
       {
         Definition->YMetricTitle = Definition->YMetric;
+      }
+
+      /* Get parameter "min" */
+      AuxCharStr =
+        (char*) xmlGetProp(CurrentNode, (const xmlChar*) ATTR_METRIC_MIN);
+
+      if (AuxCharStr != NULL)
+      {
+        Definition->YMin = atof(AuxCharStr);
+        xmlFree(AuxCharStr);
+      }
+
+      /* Get parameter "max" */
+      AuxCharStr =
+        (char*) xmlGetProp(CurrentNode, (const xmlChar*) ATTR_METRIC_MAX);
+
+      if (AuxCharStr != NULL)
+      {
+        Definition->YMax = atof(AuxCharStr);
+        xmlFree(AuxCharStr);
       }
     }
     else if (CurrentNodeName.compare(NODE_ZMETRIC) == 0)
@@ -1109,6 +1149,26 @@ XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
         Definition->ZMetricTitle = Definition->ZMetric;
       }
 
+      /* Get parameter "min" */
+      AuxCharStr =
+        (char*) xmlGetProp(CurrentNode, (const xmlChar*) ATTR_METRIC_MIN);
+
+      if (AuxCharStr != NULL)
+      {
+        Definition->ZMin = atof(AuxCharStr);
+        xmlFree(AuxCharStr);
+      }
+
+      /* Get parameter "max" */
+      AuxCharStr =
+        (char*) xmlGetProp(CurrentNode, (const xmlChar*) ATTR_METRIC_MAX);
+
+      if (AuxCharStr != NULL)
+      {
+        Definition->ZMax = atof(AuxCharStr);
+        xmlFree(AuxCharStr);
+      }
+      
       Definition->ThreeDimensions = true;
     }
     else if (CurrentNodeName.compare("text") != 0 &&

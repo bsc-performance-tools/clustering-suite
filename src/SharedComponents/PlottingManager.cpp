@@ -549,19 +549,62 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
 
     /* Z label */
     OutputStream << "set zlabel \"" << Definition->ZMetricTitle << "\"" << endl;
+    OutputStream << endl;
 
+    /* X-Range */
+    OutputStream << "set xrange [";
+    if (Definition->XMin != MIN_DOUBLE)
+    {
+      OutputStream << Definition->XMin;
+    }
+    OutputStream << ":";
+    if (Definition->XMax != MAX_DOUBLE)
+    {
+      OutputStream << Definition->XMax;
+    }
+    OutputStream << "]" << endl;
+
+    /* Y-Range */
+    OutputStream << "set yrange [";
+    if (Definition->YMin != MIN_DOUBLE)
+    {
+      OutputStream << Definition->YMin;
+    }
+    OutputStream << ":";
+    if (Definition->YMax != MAX_DOUBLE)
+    {
+      OutputStream << Definition->YMax;
+    }
+    OutputStream << "]" << endl;
+    
+    /* Z-Range */
+    OutputStream << "set zrange [";
+    if (Definition->ZMin != MIN_DOUBLE)
+    {
+      OutputStream << Definition->ZMin;
+    }
+    OutputStream << ":";
+    if (Definition->ZMax != MAX_DOUBLE)
+    {
+      OutputStream << Definition->ZMax;
+    }
+    OutputStream << "]" << endl;
+
+    OutputStream << endl;
+    
+    /* Actual plot */
     OutputStream << "splot ";
-
-    if (NumberOfClusters != 0)
+    if (NumberOfClusters == 0)
     {
       Write3D_Definition (OutputStream, X, Y, Z, UNCLASSIFIED+PARAVER_OFFSET, "Unclassified", DataFileName);
+      OutputStream << ",\\" << endl;
     }
 
-    if (Definition->RawMetrics)
-    {
+    // if (Definition->RawMetrics)
+    // {
       // OutputStream << ",\\" << endl;
       // Write3D_Definition (OutputStream, X, Y, Z, MISSING_DATA_CLUSTERID, "Missing Data", DataFileName);
-      OutputStream << ",\\" << endl;
+      // OutputStream << ",\\" << endl;
       Write3D_Definition (OutputStream, X, Y, Z, DURATION_FILTERED_CLUSTERID, "Duration Filtered", DataFileName);
       OutputStream << ",\\" << endl;
       Write3D_Definition (OutputStream, X, Y, Z, RANGE_FILTERED_CLUSTERID, "Range Filtered", DataFileName);
@@ -583,7 +626,7 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
           Write3D_Definition (OutputStream, X, Y, Z, i+PARAVER_OFFSET, ClusterName.str(), DataFileName);
         }
       }
-    }
+    // }
   }
   else
   {
@@ -592,16 +635,45 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
     X = Definition->XMetricPosition;
     Y = Definition->YMetricPosition;
 
-    OutputStream << "plot ";
+    /* X-Range */
+    OutputStream << "set xrange [";
+    if (Definition->XMin != MIN_DOUBLE)
+    {
+      OutputStream << Definition->XMin;
+    }
+    OutputStream << ":";
+    if (Definition->XMax != MAX_DOUBLE)
+    {
+      OutputStream << Definition->XMax;
+    }
+    OutputStream << "]" << endl;
 
-    if (NumberOfClusters != 0)
+    /* Y-Range */
+    OutputStream << "set yrange [";
+    if (Definition->YMin != MIN_DOUBLE)
+    {
+      OutputStream << Definition->YMin;
+    }
+    OutputStream << ":";
+    if (Definition->YMax != MAX_DOUBLE)
+    {
+      OutputStream << Definition->YMax;
+    }
+    OutputStream << "]" << endl;
+
+    OutputStream << endl;
+
+    /* Actual plot */
+    OutputStream << "plot ";
+    if (NumberOfClusters == 0)
     {
       Write2D_Definition (OutputStream, X, Y, UNCLASSIFIED+PARAVER_OFFSET, "Unclassified", DataFileName);
+      OutputStream << ",\\" << endl;
     }
 
-    if (Definition->RawMetrics)
-    {
-      OutputStream << ",\\" << endl;
+    // if (Definition->RawMetrics)
+    // {
+      // OutputStream << ",\\" << endl;
       // Write2D_Definition (OutputStream, X, Y, MISSING_DATA_CLUSTERID, "Missing Data", DataFileName);
       // OutputStream << ",\\" << endl;
       Write2D_Definition (OutputStream, X, Y, DURATION_FILTERED_CLUSTERID, "Duration Filtered", DataFileName);
@@ -624,7 +696,7 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
           Write2D_Definition (OutputStream, X, Y, MIN_CLUSTERID+i+PARAVER_OFFSET, ClusterName.str(), DataFileName);
         }
       }
-    }
+    // }
   }
 
   /* Print clusters */

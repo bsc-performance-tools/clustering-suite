@@ -41,6 +41,9 @@
 #include <string>
 using std::string;
 
+#include <limits>
+using std::numeric_limits;
+
 typedef enum { UndefinedAlgorithm, DBSCAN_Algorithm } clustering_algorithm_t;
 
 typedef INT32 cluster_id_t;
@@ -49,6 +52,9 @@ typedef double percentage_t;
 
 static const string UNDEFINED = "Undefined";
 static const INT32  NOT_FOUND = -1;
+
+static const double MAX_DOUBLE = numeric_limits<double>::max();
+static const double MIN_DOUBLE = numeric_limits<double>::min();
 
 static const cluster_id_t UNCLASSIFIED    = -5; /* Just to uniform generate GNUplots when extracting data */
 static const cluster_id_t NOISE_CLUSTERID = 0;
