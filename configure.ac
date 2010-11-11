@@ -1,8 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl Created by Anjuta application wizard.
 
-
-AC_INIT(ClusteringSuite, 1.99, tools@bsc.es)
+AC_INIT(ClusteringSuite, 2.00, tools@bsc.es)
 
 AC_CONFIG_AUX_DIR(config)
 AC_CANONICAL_SYSTEM
@@ -16,17 +15,20 @@ AC_PROG_CXX
 AM_PROG_CC_STDC
 AC_HEADER_STDC
 
-dnl ***************************************************************************
-dnl Subversion Revision
-dnl ***************************************************************************
+dnl =========================================================================
+dnl Revision numbering
+dnl =========================================================================
+SVN_REVISION="$Rev$"
+REVISION_LENGTH=${#SVN_REVISION}
+REVISION_LENGTH=`expr ${REVISION_LENGTH} - 4`
+REVISION_NUMBER=${SVN_REVISION:2:$REVISION_LENGTH}
 
-SVNREV=`svnversion $srcdir | sed 's/:.*//'`
-which svnversion > /dev/null
-if test $? -ne 0  -o  "x$SVNREV" = "xexported";
-  then SVNREV=`cat $srcdir/SVNREV`
-  else echo -n $SVNREV>$srcdir/SVNREV
-fi
-AC_SUBST(SVNREV)
+VERSION="$VERSION.$REVISION_NUMBER"
+
+echo -n $VERSION>$srcdir/VERSION
+
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
 
 
 dnl Check if CFLAGS/CXXFLAGS have been defined by user
@@ -87,9 +89,9 @@ esac
 
 AC_SUBST(Operating_System)
 
-dnl ***********************************#
-dnl ********Check for libxml***********#
-dnl ***********************************#
+dnl =========================================================================
+dnl Check for libxml
+dnl =========================================================================
 
 AM_PATH_XML2(
   [2.5.0],
@@ -102,8 +104,10 @@ AM_PROG_LIBTOOL
 CFLAGS="${CFLAGS} ${XML2_CFLAGS}"
 CXXFLAGS="${CXXFLAGS} ${XML2_CXXFLAGS}"
 
+dnl =========================================================================
 dnl COMMON_FILES_DIR: point the compiling system where the tools 'common-files'
 dnl directory is located
+dnl =========================================================================
 
 AC_ARG_WITH(
   [common-files-dir],
@@ -130,6 +134,41 @@ AC_ARG_WITH(
 )
 AC_SUBST(common_filesdir)
 
+dnl =========================================================================
+dnl MUSTER_DIR: point the compiling system where the tools 'muster' includes
+dnl an libs are located
+dnl =========================================================================
+AC_ARG_WITH(
+  [muster],
+  AS_HELP_STRING(
+    [--with-muster=MUSTER_DIR],
+    [sets the given directory as location of muster includes and libs]
+  ),
+  [
+
+	muster_dir="$withval"
+
+  if test ! -d $muster_dir/include; then
+    AC_MSG_ERROR(muster include directory not found, check --with-muster)
+  fi
+
+	if test ! -f $muster_dir/lib/libmuster.a; then
+		AC_MSG_ERROR(muster static library file not found, check --with-muster)
+	fi
+
+	if test ! -f $muster_dir/lib/libmuster.so; then
+		AC_MSG_ERROR(muster dynamic library file not found, check --with-muster)
+	fi
+  muster_enabled=yes
+	AC_DEFINE(MUSTER_ENABLED, 1, [Defined if MUSTER library is enabled])
+  AC_SUBST(muster_dir)
+  ],
+  [
+  muster_enabled=no
+  ]
+)
+AM_CONDITIONAL(MUSTER_ENABLED, test "x$muster_enabled" = "xyes")
+
 
 dnl src/BurstClustering/Makefile
 dnl src/libANN/Makefile
@@ -144,6 +183,7 @@ src/BasicClasses/Makefile
 src/libParaverTraceParser/Makefile
 src/SharedComponents/Makefile
 src/libANN/Makefile
+src/libClustering/gmeans/Makefile
 src/libClustering/Makefile
 src/libTraceClustering/Makefile
 src/ClusteringDataExtractor/Makefile
@@ -151,13 +191,15 @@ src/BurstClustering/Makefile
 ])
 
 echo "
-  $PACKAGE_NAME version $PACKAGE_VERSION.$SVNREV
+  $PACKAGE_NAME version $VERSION
 
-  Prefix.................: $prefix
-  Debug Build............: $debug
-  C Compiler Flags.......: $CFLAGS
-  C++ Compiler Flags.....: $CXXFLAGS $CPPFLAGS
-  Linker flags...........: $LDFLAGS $LIBS
-  Common files directory.: ${common_filesdir:-default}
+  Prefix....................: $prefix
+  Debug Build...............: $debug
+  C Compiler Flags..........: $CFLAGS
+  C++ Compiler Flags........: $CXXFLAGS $CPPFLAGS
+  Linker flags..............: $LDFLAGS $LIBS
+  'common-files' directory..: ${common_filesdir:-default}
+  MUSTER Clustering enabled.: ${muster_enabled}
+  MUSTER Library directory..: ${muster_dir:-not_available}
 "
 
