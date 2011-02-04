@@ -36,7 +36,8 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	without problems. It allows to set manually the dependencies, and correctly
 	distribute the different flags across all the Makefiles.
 
-	* Minor regressions solved.
+	* Minor regressions solved. Headers instdir solved
+
 
 2010-20-26 Juan Gonzalez <juan.gonzalez@bsc.es>
 

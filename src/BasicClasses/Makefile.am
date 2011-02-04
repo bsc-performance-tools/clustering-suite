@@ -4,7 +4,7 @@ if HAVE_MPI
 libBasicClasses_la_CXXFLAGS = @MPI_CFLAGS@
 endif
 
-instdir=$(includedir)
+instdir = $(includedir)
 
 inst_HEADERS = \
 	Error.hpp \

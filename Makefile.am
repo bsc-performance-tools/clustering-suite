@@ -7,7 +7,7 @@ INCLUDES = \
 
 SUBDIRS = include src 
 
-instdir = $(includedir)/bsc_clustering_suite
+instdir = $(includedir)
 
 inst_HEADERS = \
 	config.h
