@@ -91,8 +91,12 @@ class ParaverTraceParser: public Error
     INT32 GetTimeUnits(void);
       
     ParaverRecord_t GetNextRecord(void);
-    ParaverRecord_t GetNextRecord(UINT32 RecordTypeMask);
-    ParaverRecord_t GetNextTaskRecord(INT32  TaskId);
+
+    ParaverRecord_t GetNextRecord(UINT32         RecordTypeMask);
+    ParaverRecord_t GetNextRecord(UINT32         RecordTypeMask, set<INT32> TaskIds);
+    
+    ParaverRecord_t GetNextTaskRecord(INT32      TaskId);
+    ParaverRecord_t GetNextTaskRecord(set<INT32> TaskIds);
 
     State_t         GetNextState(void);
     Event_t         GetNextEvent(void);

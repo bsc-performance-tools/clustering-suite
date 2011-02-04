@@ -1,0 +1,27 @@
+To offer full functionality, the clustering tool needs the following libraries
+to be installed on your system
+
+* Muster clustering library
+
+http://tgamblin.github.com/muster/main.html
+
+* Computational Geometry Algorithms Library (CGAL)
+
+http://www.cgal.org/
+
+* GNU MPFR (needed by CGAL)
+
+http://www.mpfr.org/
+
+* Boost headers and Boost thread libraries (needed by Muster and CGAL)
+
+http://www.boost.org/
+
+* An MPI implementation.
+
+The suite has been tested using MPICH
+
+http://www.mcs.anl.gov/research/projects/mpich2/
+
+
+export LD_LIBRARY_PATH=/home/bsc41/bsc41491/apps/MUSTER/lib:/home/bsc41/bsc41127/apps/MPFR/32/lib:/home/bsc41/bsc41127/apps/CGAL/32/lib:/gpfs/apps/BOOST/1_39_0/32/lib:/opt/osshpc/mpich-mx/32/lib/shared/

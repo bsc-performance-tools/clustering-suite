@@ -1,9 +1,9 @@
-/*****************************************************************************\
+/*****************************************************************************\ 
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,12 +23,13 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL::                                                                   $:
+
+  $Rev::                            $:  Revision of last commit
+  $Author::                         $:  Author of last commit
+  $Date::                           $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
@@ -42,9 +43,20 @@
 using std::cout;
 using std::endl;
 
+#if defined (HAVE_MUSTER) && defined (HAVE_MPI)
+size_t Point::PointDimensions = 0;
+#endif
+
 Point::Point(size_t Dimensions)
 {
   this->Dimensions = vector<double> (Dimensions, 0.0);
+
+#if defined (HAVE_MUSTER) && defined (HAVE_MPI)
+  if (Point::PointDimensions == 0)
+  {
+    Point::PointDimensions = Dimensions;
+  }
+#endif
 }
 
 Point::Point(vector<double>& _Dimensions)
@@ -52,6 +64,13 @@ Point::Point(vector<double>& _Dimensions)
   Dimensions = _Dimensions;
   Normalized = false;
 
+#if defined (HAVE_MUSTER) && defined (HAVE_MPI)
+  if (Point::PointDimensions == 0)
+  {
+    Point::PointDimensions = _Dimensions.size();
+  }
+#endif
+  
   /* DEBUG
   cout << "New point! Dimensions size = " << _Dimensions.size() << endl;
   */
@@ -93,10 +112,9 @@ Point::RangeNormalization(const vector<double>& MaxValues,
   */
 }
 
-double
-Point::EuclideanDistance(Point& OtherPoint) const
+double Point::EuclideanDistance(const Point& OtherPoint) const
 {
-  double Result = std::numeric_limits<double>::max();;
+  double Result = std::numeric_limits<double>::max();
 
   if (Dimensions.size() != OtherPoint.size())
   {
@@ -121,8 +139,13 @@ size_t Point::size(void) const
   return Dimensions.size();
 }
 
-double&
-Point::operator[](int i)
+void Point::clear(void)
+{
+  Dimensions.clear();
+  Normalized = false;
+}
+
+double& Point::operator[](int i)
 {
   assert(i >= 0 && i < Dimensions.size());
 
@@ -137,8 +160,70 @@ Point::operator[](int i) const
   return Dimensions[i];
 }
 
-void
-Point::PrintPoint(void)
+Point Point::operator +  (const Point& other)
+{
+  Point Result((*this).size());
+
+  if ((*this).size() != other.size())
+  {
+    return Point(0);
+  }
+
+  for (size_t i = 0; i < (*this).size(); i++)
+  {
+    Result[i] = (*this)[i] + other[i];
+  }
+
+  return Result;
+}
+
+Point Point::operator /  (const size_t scalar)
+{
+  Point Result((*this).size());
+
+  for (size_t i = 0; i < (*this).size(); i++)
+  {
+    Result[i] = (*this)[i] / scalar;
+  }
+
+  return Result;
+}
+
+bool Point::operator != (const Point& other) const
+{
+  if (this->Normalized != other.IsNormalized())
+    return true;
+
+  if (this->size() != other.size())
+    return true;
+
+  for (size_t i = 0; i < Dimensions.size(); i++)
+  {
+    if (this[i] != other[i])
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+Point& Point::operator =  (const Point& other)
+{
+  if ((*this) != other)
+  {
+    Dimensions.clear();
+    
+    for (size_t i = 0; i < other.size(); i++)
+    {
+      Dimensions.push_back(other[i]);
+    }
+  }
+
+  return *this;
+}
+
+void Point::PrintPoint(void)
 {
   for (size_t i = 0; i < Dimensions.size(); i++)
   {

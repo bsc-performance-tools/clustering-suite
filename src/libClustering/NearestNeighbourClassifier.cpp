@@ -1,9 +1,9 @@
-/*****************************************************************************\
+/*****************************************************************************\ 
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,15 +23,15 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL::                                                                   $:
+
+  $Rev::                            $:  Revision of last commit
+  $Author::                         $:  Author of last commit
+  $Date::                           $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-
 #include "clustering_types.h"
 
 #include <SystemMessages.hpp>

@@ -1,8 +1,37 @@
-/*
- * main.cc
- * Copyright (C) Juan Gonzalez 2009 <juan.gonzalez@bsc.es>
- * 
- */
+/*****************************************************************************\ 
+ *                        ANALYSIS PERFORMANCE TOOLS                         *
+ *                             ClusteringSuite                               *
+ *   Infrastructure and tools to apply clustering analysis to Paraver and    *
+ *                              Dimemas traces                               *
+ *                                                                           *
+ *****************************************************************************
+ *     ___     This library is free software; you can redistribute it and/or *
+ *    /  __         modify it under the terms of the GNU LGPL as published   *
+ *   /  /  _____    by the Free Software Foundation; either version 2.1      *
+ *  /  /  /     \   of the License, or (at your option) any later version.   *
+ * (  (  ( B S C )                                                           *
+ *  \  \  \_____/   This library is distributed in hope that it will be      *
+ *   \  \__         useful but WITHOUT ANY WARRANTY; without even the        *
+ *    \___          implied warranty of MERCHANTABILITY or FITNESS FOR A     *
+ *                  PARTICULAR PURPOSE. See the GNU LGPL for more details.   *
+ *                                                                           *
+ * You should have received a copy of the GNU Lesser General Public License  *
+ * along with this library; if not, write to the Free Software Foundation,   *
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA          *
+ * The GNU LEsser General Public License is contained in the file COPYING.   *
+ *                                 ---------                                 *
+ *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
+\*****************************************************************************/
+
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
+
+  $URL:: https://svn.bsc.es/repos/ptools/prv2dim/                          $:
+
+  $Rev:: 478                        $:  Revision of last commit
+  $Author:: jgonzale                $:  Author of last commit
+  $Date:: 2010-10-28 13:58:59 +0200 $:  Date of last commit
+
+\* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include <types.h>
 #include <libTraceClustering.hpp>
@@ -43,7 +72,7 @@ bool   ApplyCPIStack = false;
 "Usage:\n"\
 "  %s -d <clustering_def.xml> [OPTIONS] -i <input_trace> [<output_trace>]\n"\
 "\n"\
-"  -a                         Information about the tool\n"\
+"  -v|--version               Information about the tool\n"\
 "\n"\
 "  -h                         This help\n"\
 "\n"\
@@ -84,12 +113,9 @@ bool   ApplyCPIStack = false;
 
 
 #define ABOUT \
-"\n"\
 "%s v%s (%s)\n"\
 "(c) CEPBA-Tools - Barcelona Supercomputing Center\n"\
-"\n"\
-"Automatic clustering analysis of Paraver/Dimemas traces and CSV files\n"\
-"\n"
+"Automatic clustering analysis of Paraver/Dimemas traces and CSV files\n"
 
 void PrintUsage(char* ApplicationName)
 {
@@ -113,7 +139,7 @@ ReadArgs(int argc, char *argv[])
 
   if (argc == 1 ||
       argc == 2 &&
-      ((strcmp(argv[1], "-a") == 0)))
+      ((strcmp(argv[1], "-v") == 0 || (strcmp(argv[1], "--version") == 0))))
   {
     fprintf(stdout, ABOUT, argv[0], VERSION, __DATE__);
     exit(EXIT_SUCCESS);
@@ -216,7 +242,7 @@ int main(int argc, char *argv[])
 
   CheckOutputFile();
 
-  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, ApplyCPIStack, CLUSTERING|PLOTS))
+  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, CLUSTERING|PLOTS))
   {
     cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);

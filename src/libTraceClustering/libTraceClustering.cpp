@@ -60,12 +60,9 @@ libTraceClustering::libTraceClustering(bool verbose)
  */
 bool
 libTraceClustering::InitTraceClustering(string        ClusteringDefinitionXML,
-                                        bool          ApplyCPIStack,
                                         unsigned char UseFlags)
 {
-  ParametersManager* Parameters;
-  
-  if (!Implementation->InitTraceClustering(ClusteringDefinitionXML, ApplyCPIStack, UseFlags))
+  if (!Implementation->InitTraceClustering(ClusteringDefinitionXML, UseFlags))
   {
     Error        = true;
     ErrorMessage = Implementation->GetLastError();

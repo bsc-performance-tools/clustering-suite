@@ -1,9 +1,9 @@
-/*****************************************************************************\
+/*****************************************************************************\ 
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,17 +23,26 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL::                                                                   $:
+
+  $Rev::                            $:  Revision of last commit
+  $Author::                         $:  Author of last commit
+  $Date::                           $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include "ClusteringAlgorithmsFactory.hpp"
 #include "DBSCAN.hpp"
+#include "GMEANS.hpp"
+
+#ifdef HAVE_MUSTER
+#include "MUSTER_DBSCAN.hpp"
+#include "MUSTER_PAM.hpp"
+#include "MUSTER_XCLARA.hpp"
+#include "MUSTER_CAPEK.hpp"
+#endif
 
 ClusteringAlgorithmsFactory*
 ClusteringAlgorithmsFactory::Instance = NULL;
@@ -53,16 +62,32 @@ ClusteringAlgorithmsFactory::GetClusteringAlgorithm(string                Algori
   ClusteringAlgorithm* Algorithm;
   DBSCAN             * dbScan_alg;
   
-  if (AlgorithmDefinition.compare("DBSCAN") == 0)
+  if (AlgorithmDefinition.compare(DBSCAN::NAME) == 0)
   {
-    // dbScan_alg = new DBSCAN(ClusteringParameters);
-    // Algorithm = (ClusteringAlgorithm*) dbScan_alg;
     return (ClusteringAlgorithm*) new DBSCAN(ClusteringParameters);
   }
-  else if (AlgorithmDefinition.compare("GMEANS") == 0)
+  else if (AlgorithmDefinition.compare(GMEANS::NAME) == 0)
   {
-    
+    return (ClusteringAlgorithm*) new GMEANS(ClusteringParameters);
   }
+#ifdef HAVE_MUSTER
+  else if (AlgorithmDefinition.compare(MUSTER_DBSCAN::NAME) == 0)
+  {
+    return (ClusteringAlgorithm*) new MUSTER_DBSCAN(ClusteringParameters);
+  }
+  else if (AlgorithmDefinition.compare(MUSTER_PAM::NAME) == 0)
+  {
+    return (ClusteringAlgorithm*) new MUSTER_PAM(ClusteringParameters);
+  }
+  else if (AlgorithmDefinition.compare(MUSTER_XCLARA::NAME) == 0)
+  {
+    return (ClusteringAlgorithm*) new MUSTER_XCLARA(ClusteringParameters);
+  }
+  else if (AlgorithmDefinition.compare(MUSTER_CAPEK::NAME) == 0)
+  {
+    return (ClusteringAlgorithm*) new MUSTER_CAPEK(ClusteringParameters);
+  }
+#endif
   else
   {
     Algorithm = NULL;

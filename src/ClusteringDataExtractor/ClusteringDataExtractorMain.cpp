@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
   
   ReadArgs(argc, argv);
 
-  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, ApplyCPIStack, PLOTS))
+  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, PLOTS))
   {
     cerr << "Error seting up clustering library: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);

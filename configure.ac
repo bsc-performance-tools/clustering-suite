@@ -65,7 +65,6 @@ dnl Check the compiler binary type
 AX_SELECT_BINARY_TYPE
 AX_OFF_T_64BIT
 
-
 dnl Check the existence of the next data types and its size
 AC_CHECK_TYPES([long, long long, char, int, float, long float, double, long double])
 AC_CHECK_SIZEOF(long)
@@ -98,11 +97,8 @@ AM_PATH_XML2(
   [AC_DEFINE([HAVE_XML2], [1], [Defined if libxml2 exists])],
   [AC_MSG_ERROR(Cannot find xml2-config of libXML 2.5.0 (or above))]
 )
-AX_PROG_XML2
+AX_PROG_XML2()
 AM_PROG_LIBTOOL
-
-CFLAGS="${CFLAGS} ${XML2_CFLAGS}"
-CXXFLAGS="${CXXFLAGS} ${XML2_CXXFLAGS}"
 
 dnl =========================================================================
 dnl COMMON_FILES_DIR: point the compiling system where the tools 'common-files'
@@ -142,33 +138,50 @@ AC_ARG_WITH(
   [muster],
   AS_HELP_STRING(
     [--with-muster=MUSTER_DIR],
-    [sets the given directory as location of muster includes and libs]
+    [sets the given directory as location of muster includes and libs (needs Boost libraries)]
   ),
   [
-
 	muster_dir="$withval"
 
+	dnl Check boost existence
+	BOOST_REQUIRE(1.36)
+
   if test ! -d $muster_dir/include; then
-    AC_MSG_ERROR(muster include directory not found, check --with-muster)
+    AC_MSG_ERROR([muster include directory not found, check --with-muster])
   fi
-
-	if test ! -f $muster_dir/lib/libmuster.a; then
-		AC_MSG_ERROR(muster static library file not found, check --with-muster)
-	fi
-
+	
 	if test ! -f $muster_dir/lib/libmuster.so; then
-		AC_MSG_ERROR(muster dynamic library file not found, check --with-muster)
+		AC_MSG_ERROR([muster dynamic library file not found, check --with-muster])
 	fi
-  muster_enabled=yes
-	AC_DEFINE(MUSTER_ENABLED, 1, [Defined if MUSTER library is enabled])
-  AC_SUBST(muster_dir)
+
+  MUSTER_CXXFLAGS="-I$muster_dir/include $BOOST_CPPFLAGS"
+  MUSTER_CFLAGS="-I$muster_dir/include"
+  MUSTER_LDFLAGS="-L$muster_dir/lib"
+  MUSTER_LIBS="-lmuster"
+
+  AC_SUBST(MUSTER_CXXFLAGS)
+  AC_SUBST(MUSTER_CFLAGS)
+  AC_SUBST(MUSTER_LDFLAGS)
+  AC_SUBST(MUSTER_LIBS)
+
+	muster_enabled=yes
+	AC_DEFINE(HAVE_MUSTER, 1, [Defined if MUSTER library is enabled])
   ],
   [
-  muster_enabled=no
+	muster_enabled=no
   ]
 )
-AM_CONDITIONAL(MUSTER_ENABLED, test "x$muster_enabled" = "xyes")
+AM_CONDITIONAL(HAVE_MUSTER, test "x$muster_enabled" = "xyes")
 
+dnl =========================================================================
+dnl AX_PROG_MPI: set if distributed version must be compiled
+dnl =========================================================================
+AX_PROG_MPI()
+
+dnl =========================================================================
+dnl AX_CHECK_CGAL: set if hull models and mrnet version can be compiled
+dnl =========================================================================
+AX_CHECK_CGAL()
 
 dnl src/BurstClustering/Makefile
 dnl src/libANN/Makefile
@@ -176,12 +189,13 @@ dnl src/libClusteringAlgorithms/Makefile
 dnl src/libClustering/Makefile
 dnl src/libParaverTraceParser/Makefile
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile
+include/Makefile
 src/Makefile
 src/BasicClasses/Makefile
 src/libParaverTraceParser/Makefile
-src/SharedComponents/Makefile
+src/libSharedComponents/Makefile
 src/libANN/Makefile
 src/libClustering/gmeans/Makefile
 src/libClustering/Makefile
@@ -190,16 +204,33 @@ src/ClusteringDataExtractor/Makefile
 src/BurstClustering/Makefile
 ])
 
-echo "
-  $PACKAGE_NAME version $VERSION
+if test "${MPI_INSTALLED}" = "yes" -a "x$muster_enabled" = "xyes"; then
+AC_CONFIG_FILES([src/MusterDistributedClustering/Makefile])
+fi
 
-  Prefix....................: $prefix
-  Debug Build...............: $debug
-  C Compiler Flags..........: $CFLAGS
-  C++ Compiler Flags........: $CXXFLAGS $CPPFLAGS
-  Linker flags..............: $LDFLAGS $LIBS
-  'common-files' directory..: ${common_filesdir:-default}
-  MUSTER Clustering enabled.: ${muster_enabled}
-  MUSTER Library directory..: ${muster_dir:-not_available}
-"
+if test "${cgal_enabled}" = "yes"; then
+AC_CONFIG_FILES([
+src/libDistributedClustering/Makefile
+src/MRNetStub/Makefile
+])
+fi
+
+AC_OUTPUT
+
+AX_SHOW_CONFIGURATION
+
+dnl echo "
+dnl   $PACKAGE_NAME version $VERSION
+
+dnl   Prefix....................: $prefix
+dnl   Debug Build...............: $debug
+dnl   C Compiler Flags..........: $CFLAGS
+dnl   C++ Compiler Flags........: $CXXFLAGS $CPPFLAGS
+dnl   Linker flags..............: $LDFLAGS $LIBS
+dnl   'common-files' directory..: ${common_filesdir:-default}
+dnl   MUSTER Clustering enabled.: ${muster_enabled}
+dnl   MUSTER Library directory..: ${muster_dir:-not_available}
+dnl   Boost includes............: ${BOOST_CPPFLAGS:-default}
+dnl   Distributed version (MPI).: ${MPI_INSTALLED}
+dnl"
 

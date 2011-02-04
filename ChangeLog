@@ -10,6 +10,33 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-01-04 Juan Gonzalez <juan.gonzalez@bsc.es>
+
+	* Added support to 'muster' clustering library, both sequential an parallel
+	algorithms. Requires the library to be installed on the system plus
+	the Boost headers and a MPI implementation, in case you want to use
+	the Capek algorithm (k-medoids distributed clustering).
+
+	* Full implementation of distributed clustering under
+	'src/libDistributedClustering', to perform the tree DBSCAN. Functional, but
+	not cleaned. It uses a set of Convex Hull models of the resulting clusters and
+	a classifier using these hulls. It still lacks on the classification of points
+	in the Eps neigbourhood (just classifies the inner and border points). This
+	modifications requires both CGAL (and its dependencies like MPFR and Boost
+	thread libraries).
+
+	* Solved issues ralated to the clusters time-based rank (bad implemented in
+	previous version).
+
+	* Restructuration of shared components. Now libTraceClustering just includes
+	the public face and the implementation, and the rest of classes are in
+	libSharedComponents, so as to easily access from libDistributedClustering.
+
+	* Full rewriting of the autotools building system. Now it works in MareNostrum
+	without problems. It allows to set manually the dependencies, and correctly
+	distribute the different flags across all the Makefiles.
+
+	* Minor regressions solved.
 
 2010-20-26 Juan Gonzalez <juan.gonzalez@bsc.es>
 

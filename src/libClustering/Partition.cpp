@@ -1,9 +1,9 @@
-/*****************************************************************************\
+/*****************************************************************************\ 
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,12 +23,13 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL::                                                                   $:
+
+  $Rev::                            $:  Revision of last commit
+  $Author::                         $:  Author of last commit
+  $Date::                           $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
@@ -39,7 +40,8 @@
  */
 Partition::Partition(void)
 {
-  NumberOfClusters = 0;
+  _NumberOfClusters = 0;
+  _HasNoise         = false;
 }
 
 /**
@@ -49,7 +51,17 @@ Partition::Partition(void)
  */
 vector<cluster_id_t>& Partition::GetAssignmentVector(void)
 {
-  return ClusterAssignmentVector;
+  return _ClusterAssignmentVector;
+}
+
+/**
+ * Sets the assignment vector
+ *
+ * \param The new assignment vector
+ */ 
+void Partition::SetAssignmentVector(vector<cluster_id_t>& ClusterAssignmentVector)
+{
+  _ClusterAssignmentVector = ClusterAssignmentVector;
 }
 
 /**
@@ -57,9 +69,9 @@ vector<cluster_id_t>& Partition::GetAssignmentVector(void)
  *
  * \param NumberOfClusters Number of clusters discovered in the data
  */
-void Partition::SetNumberOfClusters(size_t NumberOfClusters)
+void Partition::NumberOfClusters(size_t NumberOfClusters)
 {
-  this->NumberOfClusters = NumberOfClusters;
+  _NumberOfClusters = NumberOfClusters;
 }
 
 /**
@@ -67,8 +79,29 @@ void Partition::SetNumberOfClusters(size_t NumberOfClusters)
  *
  * \return The number of clusters discovered
  */
-size_t Partition::GetNumberOfClusters(void) const
+size_t Partition::NumberOfClusters(void) const
 {
-  return NumberOfClusters;
+  return _NumberOfClusters;
 }
+
+/**
+ * Sets if current partition has a noise cluster
+ *
+ */
+void Partition::HasNoise(bool HasNoise)
+{
+  _HasNoise = HasNoise;
+}
+
+/**
+ * Return if the current partition has a noise cluster
+ *
+ * \return True if the current partition has a noise cluster
+ */ 
+bool Partition::HasNoise(void) const
+{
+  return _HasNoise;
+}
+
+
 

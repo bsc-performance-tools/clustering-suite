@@ -53,12 +53,13 @@ class libTraceClusteringImplementation: public Error
 
     string         InputFileName;
     input_file_t   InputFileType;
+
+    unsigned char  UseFlags;
     
   public:
     libTraceClusteringImplementation(bool verbose);
     
     bool InitTraceClustering(string        ClusteringDefinitionXML,
-                             bool          ApplyCPIStack,
                              unsigned char UseFlags);
 
     bool ExtractData(string InputFileName);
@@ -73,6 +74,17 @@ class libTraceClusteringImplementation: public Error
 
     bool PrintPlotScripts(string DataFileName,
                           string ScriptsFileNamePrefix);
+
+  private:
+    void GetTaskSet(size_t TotalTasksInTrace);
+    
+    bool GatherMPIPartition(void);
+
+    bool GatherMaster(void);
+
+    bool GatherSlave(void);
+
+    bool ReconstructMasterPartition(vector<vector<vector<long> > >& GlobalLinesPerCluster);
     
 private:
 

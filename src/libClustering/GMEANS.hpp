@@ -1,9 +1,9 @@
-/*****************************************************************************\
+/*****************************************************************************\ 
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,23 +23,31 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL::                                                                   $:
+
+  $Rev::                            $:  Revision of last commit
+  $Author::                         $:  Author of last commit
+  $Date::                           $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef _DBSCAN_HPP_
-#define _DBSCAN_HPP_
+#ifndef _GMEANS_HPP_
+#define _GMEANS_HPP_
 
 #include "ClusteringAlgorithm.hpp"
 #include "clustering_types.h"
 
-/* Forward declarations */
+/* Gmeans C code declaration */
+extern "C"
+{
 
+#include "gmeans/gmeans.h"
+}
+
+
+/* Forward declarations */
 class Partition;
 
 #include <sstream>
@@ -50,48 +58,38 @@ using std::ostream;
 
 #include <vector>
 using std::vector;
+
 #include <list>
 using std::list;
-
 using std::pair;
-
-class GMEANS: public ClusteringAlgorithm
+class GMEANS:public ClusteringAlgorithm
 {
-
   typedef size_t point_idx;
-  
   private:
+
     UINT32 InitialPoints;
     double CriticalValue;
     INT32  MaxClusters;
-
+    
   public:
 
-    static const string INITIAL_POINTS;
-    static const string CRITICAL_VALUE;
-    static const string MAX_CLUSTERS;
+    static const string NAME;
     
-    GMEANS(map<string, string> ClusteringParameters);
-
-    ~GMEANS(void) {};
-
-    bool Run(const vector<const Point*>& Data,
-             Partition&                  DataPartition,
-             bool                        SimpleRun);
-
-    string GetClusteringAlgorithmName(void) const;
-
-    string GetClusteringAlgorithmNameFile(void) const;
-
+    static const string INITIAL_POINTS_STRING;
+    static const string CRITICAL_VALUE_STRING;
+    static const string MAX_CLUSTERS_STRING;
+    GMEANS ();
+    GMEANS (map < string, string > ClusteringParameters);
+    ~GMEANS (void) {};
+    
+    bool Run (const vector <const Point *> &Data,
+              Partition                    &DataPartition,
+              bool                          SimpleRun);
+    string GetClusteringAlgorithmName (void) const;
+    string GetClusteringAlgorithmNameFile (void) const;
     bool
-    ComputeParamsApproximation(const vector<const Point*>& Data,
-                               INT32                       ParametersCount, ...);
-
+      ComputeParamsApproximation (const vector <const Point *> &Data,
+                                  INT32                         ParametersCount, ...);
   private:
-    
-
-
 };
-
-#endif /* _DBSCAN_HPP_ */
-
+#endif                                            /* _DBSCAN_HPP_ */

@@ -1,9 +1,9 @@
-/*****************************************************************************\
+/*****************************************************************************\ 
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,28 +23,35 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL:: https://svn.bsc.es/repos/ptools/prv2dim/                          $:
+
+  $Rev:: 478                        $:  Revision of last commit
+  $Author:: jgonzale                $:  Author of last commit
+  $Date:: 2010-10-28 13:58:59 +0200 $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #ifndef _CLUSTERING_TYPES_H_
 #define _CLUSTERING_TYPES_H_
 
-#include <stdlib.h>
-#include <stddef.h>
 #include <types.h>
+
+#include <cstdlib>
+#include <cstddef>
 #include <string>
 using std::string;
 
 #include <limits>
 using std::numeric_limits;
 
-typedef enum { UndefinedAlgorithm, DBSCAN_Algorithm } clustering_algorithm_t;
+typedef enum { UndefinedAlgorithm,
+               DBSCAN_Algorithm,
+               GMEANS_Algorithm,
+               MUSTER_DBSCAN_Algorithm,
+               MUSTER_PAM_Algorithm,
+               MUSTER_XCLARA_Algorithm} clustering_algorithm_t;
 
 typedef INT32 cluster_id_t;
 
@@ -54,7 +61,7 @@ static const string UNDEFINED = "Undefined";
 static const INT32  NOT_FOUND = -1;
 
 static const double MAX_DOUBLE = numeric_limits<double>::max();
-static const double MIN_DOUBLE = numeric_limits<double>::min();
+static const double MIN_DOUBLE = -1.0*MAX_DOUBLE;
 
 static const cluster_id_t UNCLASSIFIED    = -5; /* Just to uniform generate GNUplots when extracting data */
 static const cluster_id_t NOISE_CLUSTERID = 0;

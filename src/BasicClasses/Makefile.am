@@ -1,4 +1,16 @@
-noinst_LTLIBRARIES = libBasicClasses.la
+lib_LTLIBRARIES = libBasicClasses.la
+
+if HAVE_MPI
+libBasicClasses_la_CXXFLAGS = @MPI_CFLAGS@
+endif
+
+instdir=$(includedir)
+
+inst_HEADERS = \
+	Error.hpp \
+	FileNameManipulator.hpp \
+	SystemMessages.hpp \
+	Timer.hpp
 
 libBasicClasses_la_SOURCES= \
 	Error.cpp \
@@ -6,5 +18,6 @@ libBasicClasses_la_SOURCES= \
 	FileNameManipulator.cpp \
 	FileNameManipulator.hpp \
 	SystemMessages.cpp \
-	SystemMessages.hpp
+	SystemMessages.hpp \
+	Timer.hpp
 

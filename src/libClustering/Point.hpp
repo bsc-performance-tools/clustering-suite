@@ -1,9 +1,9 @@
-/*****************************************************************************\
+/*****************************************************************************\ 
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,12 +23,13 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL::                                                                   $:
+
+  $Rev::                            $:  Revision of last commit
+  $Author::                         $:  Author of last commit
+  $Date::                           $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
@@ -37,6 +38,8 @@
 
 #include <vector>
 using std::vector;
+
+#include "clustering_types.h"
 
 class Point
 {
@@ -47,6 +50,13 @@ class Point
     
   public:
 
+
+#if defined (HAVE_MUSTER) && defined (HAVE_MPI)
+    static size_t PointDimensions;
+#endif
+
+    Point() {};
+    
     Point(size_t Dimensions);
 
     Point(vector<double>& _Dimensions);
@@ -56,24 +66,100 @@ class Point
 
     void   ScaleDimensions(const vector<double>& Factors);
     
-    double EuclideanDistance(Point& OtherPoint) const;
+    double EuclideanDistance(const Point& OtherPoint) const;
     
     double NormalizedEuclideanDistance(Point& OtherPoint) const;
 
     bool   IsNormalized(void) const { return Normalized; };
+    void   SetNormalized(bool Normalized) { this->Normalized = Normalized; };
 
+    void   clear(void);
+    
     size_t size(void) const;
 
-    double& operator[](int i);
+    double&      operator [] (int i);
+    const double operator [] (int i) const;
+    Point        operator +  (const Point& other);
+    Point        operator /  (const size_t scalar);
+    bool         operator != (const Point& other) const;
+    Point&       operator =  (const Point& other);
     
-    const double operator[](int i) const;
-
     void check_const(void) { Normalized = true;};
-
+    
     void PrintPoint(void);
     
   private:
 
 };
+
+/*
+Point* operator+ (Point* left, Point* right)
+{
+  Point* result;
+  
+  if (left == NULL && right == NULL)
+  {
+    return NULL;
+  }
+  else if (left == NULL && right != NULL)
+  {
+    result = new Point(right->size());
+
+    for (size_t i = 0; i < right->size(); i++)
+    {
+      Point->[i] = right->[i];
+    }
+    
+    return result;
+  }
+  else if (left != NULL && right == NULL)
+  {
+    result = new Point(left->size());
+
+    for (size_t i = 0; i < left->size(); i++)
+    {
+      Point->[i] = left->[i];
+    }
+    
+    return result;
+  }
+
+  if (left->size() != right->size())
+  {
+    return NULL;
+  }
+  
+  Point* result = new Point(left->size());
+
+  for (size_t i = 0; i < left->size(); i++)
+  {
+    result->[i] = left->[i] + right->[i];
+  }
+
+  return result
+}
+*/
+
+/* Distance functor to use with 'muster' library */
+struct PointEuclideanDistance
+{
+  double operator()(const Point* left, const Point* right) const
+  {
+      return left->EuclideanDistance((*right));
+  }
+
+  /*
+  double operator()(const Point left, const Point right) const
+  {
+    return left.EuclideanDistance (right);
+  }
+  */
+
+  double operator()(const Point& left, const Point& right) const
+  {
+    return left.EuclideanDistance (right);
+  }
+};
+
 
 #endif // _POINT_HPP_

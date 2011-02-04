@@ -1,9 +1,9 @@
-/*****************************************************************************\
+/*****************************************************************************\ 
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,12 +23,13 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL::                                                                   $:
+
+  $Rev::                            $:  Revision of last commit
+  $Author::                         $:  Author of last commit
+  $Date::                           $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
@@ -37,26 +38,28 @@
 
 #include "clustering_types.h"
 
-#include <Error.hpp>
-using cepba_tools::Error;
-
 #include <vector>
 using std::vector;
 
-class Partition: public Error 
+class Partition
 {
   private:
-    size_t               NumberOfClusters;
-    vector<cluster_id_t> ClusterAssignmentVector;
+    
+    bool                 _HasNoise;
+    size_t               _NumberOfClusters;
+    vector<cluster_id_t> _ClusterAssignmentVector;
 
   public:
     Partition(void);
 
     vector<cluster_id_t>& GetAssignmentVector(void);
+    void SetAssignmentVector(vector<cluster_id_t>& ClusterAssignmenteVector);
 
-    size_t GetNumberOfClusters(void) const;
+    size_t NumberOfClusters(void) const;
+    void   NumberOfClusters(size_t NumberOfClusters);
 
-    void   SetNumberOfClusters(size_t NumberOfClusters);
+    bool   HasNoise(void) const;
+    void   HasNoise(bool HasNoise);
   
 };
 

@@ -1,9 +1,9 @@
-/*****************************************************************************\
+/*****************************************************************************\ 
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,31 +23,32 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL:: https://svn.bsc.es/repos/ptools/prv2dim/                          $:
+
+  $Rev:: 478                        $:  Revision of last commit
+  $Author:: jgonzale                $:  Author of last commit
+  $Date:: 2010-10-28 13:58:59 +0200 $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include "libTraceClusteringImplementation.hpp"
+#include "libTraceClustering.hpp"
 
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 #include <FileNameManipulator.hpp>
 using cepba_tools::FileNameManipulator;
 
-
 #include <ClusteringConfiguration.hpp>
 #include "DataExtractor.hpp"
 #include "DataExtractorFactory.hpp"
+#include "ClusteringStatistics.hpp"
 #include "ClusteredTraceGenerator.hpp"
 #include "ClusteredPRVGenerator.hpp"
 #include "ClusteredTRFGenerator.hpp"
 #include "PlottingManager.hpp"
-
 
 #include <cerrno>
 #include <cstring>
@@ -55,6 +56,17 @@ using cepba_tools::FileNameManipulator;
 #include <fstream>
 using std::ofstream;
 using std::ios_base;
+
+#include <sstream>
+using std::ostringstream;
+
+#ifdef HAVE_MPI
+#include <mpi.h>
+
+#define CLUSTER_SIZE_EXCHG_TAG  1
+#define CLUSTER_LINES_EXCHG_TAG 2
+
+#endif
 
 /**
  * Empty constructor
@@ -75,7 +87,6 @@ libTraceClusteringImplementation::libTraceClusteringImplementation(bool verbose)
  */
 bool
 libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDefinitionXML,
-                                                      bool          ApplyCPIStack,
                                                       unsigned char UseFlags)
 {
   ClusteringConfiguration *ConfigurationManager;
@@ -84,12 +95,19 @@ libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDe
 
   ConfigurationManager = ClusteringConfiguration::GetInstance();
 
-  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML, ApplyCPIStack))
+  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML))
   {
     SetError(true);
     SetErrorMessage(ConfigurationManager->GetLastError());
     return false;
   }
+  /* Set if MPI should be used */
+  ConfigurationManager->SetDistributed(USE_MPI(UseFlags));
+  
+#if HAVE_MPI
+  /* Set the current rank and total ranks using MPI */
+  
+#endif
 
   /* Check if parameters have been read properly */
   Parameters = ParametersManager::GetInstance();
@@ -108,25 +126,59 @@ libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDe
   }
 
   if (USE_CLUSTERING(UseFlags))
-  { /* Check if clustering defined in the XML is correct */
+  { 
+    string              ClusteringAlgorithmName;
+    map<string, string> ClusteringAlgorithmParameters;
+    
+    /* Check if clustering defined in the XML is correct */
     if (ConfigurationManager->GetClusteringAlgorithmError())
     {
       SetErrorMessage(ConfigurationManager->GetClusteringAlgorithmErrorMessage());
       return false;
     }
+    
+    /* Check if clustering library could be correctly initialized */
+    ClusteringCore = new libClustering();
+
+    ClusteringAlgorithmName       = ConfigurationManager->GetClusteringAlgorithmName();
+    ClusteringAlgorithmParameters = ConfigurationManager->GetClusteringAlgorithmParameters();
+
+    if (!ClusteringCore->InitClustering (ClusteringAlgorithmName,
+                                         ClusteringAlgorithmParameters))
+    {
+      SetError(true);
+      SetErrorMessage(ClusteringCore->GetErrorMessage());
+      return false;
+    }
+
+    if (USE_MPI(UseFlags))
+    {
+      if (!ClusteringCore->UsingADistributedAlgorithm())
+      {
+        string Message;
+        Message = "\"" + ConfigurationManager->GetClusteringAlgorithmName() + "\"";
+        Message += " can't be used in MPI environment";
+        SetError(true);
+        SetErrorMessage (Message);
+        return false;
+      }
+    }
   }
 
   if (USE_PLOTS(UseFlags))
   { /* Check if GNUplots defined in the XML are correct */
-
+    bool DataExtraction;
+    
     if (!USE_CLUSTERING(UseFlags))
     { /* Data Extraction mode */
-      Plots = PlottingManager::GetInstance(true);
+      DataExtraction = true;
     }
     else
-    { /* Tracing mode */
-      Plots = PlottingManager::GetInstance(false);
+    { /* Clustering mode */
+      DataExtraction = false;
     }
+
+    Plots = PlottingManager::GetInstance(DataExtraction);
 
     if (Plots->GetError())
     {
@@ -135,6 +187,14 @@ libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDe
       return false;
     }
   }
+
+  if (USE_MPI(UseFlags))
+  {
+    system_messages::distributed = true;
+  }
+
+  this->UseFlags = UseFlags;
+  
   return true;
 }
 
@@ -158,7 +218,7 @@ libTraceClusteringImplementation::ExtractData(string InputFileName)
 
   /* Get input file extractor */
   ExtractorFactory = DataExtractorFactory::GetInstance();
-  if (!ExtractorFactory->GetExtractor(InputFileName, Extractor))
+  if (!ExtractorFactory->GetExtractor(InputFileName, Extractor, USE_MPI(UseFlags)))
   {
     SetError(true);
     SetErrorMessage(ExtractorFactory->GetLastError());
@@ -215,6 +275,7 @@ libTraceClusteringImplementation::ExtractData(string InputFileName)
 bool
 libTraceClusteringImplementation::FlushData(string OutputFileName)
 {
+  bool     AllData;
   ofstream OutputStream (OutputFileName.c_str(), ios_base::trunc);
 
   if (Data == NULL)
@@ -230,7 +291,16 @@ libTraceClusteringImplementation::FlushData(string OutputFileName)
     return false;
   }
 
-  if (!Data->FlushPoints(OutputStream, LastPartition.GetAssignmentVector()))
+  if (USE_CLUSTERING(UseFlags))
+  {
+    AllData = false;
+  }
+  else
+  {
+    AllData = true;
+  }
+  
+  if (!Data->FlushPoints(OutputStream, LastPartition.GetAssignmentVector(), AllData))
   {
     SetError(true);
     SetErrorMessage(Data->GetLastError());
@@ -250,46 +320,55 @@ libTraceClusteringImplementation::FlushData(string OutputFileName)
 bool libTraceClusteringImplementation::ClusterAnalysis(void)
 {
   ClusteringConfiguration* ConfigurationManager;
-
-  string              ClusteringAlgorithmName;
-  map<string, string> ClusteringAlgorithmParameters;
+  ClusteringStatistics     Statistics;
+  size_t                   ExtrapolationMetrics;
 
   if (Data == NULL)
   {
     SetErrorMessage("data not initialized");
     return false;
   }
-  
-  ClusteringCore = new libClustering();
 
   ConfigurationManager = ClusteringConfiguration::GetInstance();
   if (!ConfigurationManager->IsInitialized())
-  {
-    SetErrorMessage("clustering not initialized");
+  { /* Should never happen! */
+    SetErrorMessage("configuration not initialized");
     return false;
   }
 
-  ClusteringAlgorithmName       = ConfigurationManager->GetClusteringAlgorithmName();
-  ClusteringAlgorithmParameters = ConfigurationManager->GetClusteringAlgorithmParameters();
-
-  if (!ClusteringCore->InitClustering (ClusteringAlgorithmName,
-                                       ClusteringAlgorithmParameters))
-  {
-    SetErrorMessage(ClusteringCore->GetErrorMessage());
-    return false;
-  }
-
+  ExtrapolationMetrics = ConfigurationManager->GetExtrapolationParametersNames().size();
+  
   vector<const Point*>& ClusteringPoints = Data->GetClusteringPoints();
 
   /* DEBUG
   cout << "Clustering Points size = " << ClusteringPoints.size() << endl;
   */
-  
+
+  /* 'ClusteringCore' has been initialized in 'InitTraceClustering' method */
   if (!ClusteringCore->ExecuteClustering(ClusteringPoints, LastPartition))
   {
     SetErrorMessage(ClusteringCore->GetErrorMessage());
     return false;
   }
+
+  if (USE_MPI(UseFlags))
+  {
+    if (!GatherMPIPartition())
+    {
+      // SetErrorMessage("Error gathering MPI information");
+      return false;
+    }
+  }
+  
+  /* Statistics */
+  Statistics.InitStatistics(LastPartition.NumberOfClusters(), ExtrapolationMetrics);
+  if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
+                                    LastPartition.GetAssignmentVector()))
+  {
+    SetErrorMessage(Statistics.GetLastError());
+    return false;
+  }
+  Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
   
   return true;
 }
@@ -339,7 +418,7 @@ bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceN
 
   if (!TraceReconstructor->Run(Data->GetAllBursts(),
                                IDs,
-                               LastPartition.GetNumberOfClusters()))
+                               LastPartition.NumberOfClusters()))
   {
     SetErrorMessage(TraceReconstructor->GetLastError());
     return false;
@@ -374,12 +453,249 @@ bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
     Prefix = ScriptsFileNamePrefix;
   }
 
-  if (!Plots->PrintPlots(DataFileName, Prefix, LastPartition.GetNumberOfClusters()))
+  if (!Plots->PrintPlots(DataFileName,
+                         Prefix,
+                         ClusteringCore->GetClusteringAlgorithmName(),
+                         LastPartition.NumberOfClusters(),
+                         LastPartition.HasNoise()))
   {
     SetError(true);
     SetErrorMessage(Plots->GetLastError());
     return false;
   }
   
+  return true;
+}
+
+/**
+ * When running the MPI version of the library, gathers the results distributed
+ * accross the different tasks into the master task (rank 0 in MPI_COMM_WORLD).
+ * After executing this operation, we can guarantee that the LastPartition of
+ * the master node contains the information needed to reconstruct the whole
+ * trace and generate the GNUPlot scripts.
+ *
+ * \result True if the gather of information finished correctly, false otherwise
+ */
+bool libTraceClusteringImplementation::GatherMPIPartition(void)
+{
+#ifdef HAVE_MPI
+  INT32 Me;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &Me);
+
+  if (Me == 0)
+  {
+    if (!GatherMaster())
+    {
+      return false;
+    }
+    /* Reset the clustering points */
+    // Data->ResetClusteringPoints();
+
+    return true;
+  }
+  else
+  {
+    return GatherSlave();
+  }
+#else
+  return false;
+#endif
+}
+
+/**
+ * Implementation of the master side of the gather operation
+ *
+ * \result True if the operation finished correctly, false otherwise
+ */
+bool libTraceClusteringImplementation::GatherMaster(void)
+{
+#ifdef HAVE_MPI
+  /* Define storage structures: a vector with the number of clusters containing 
+     a vector of the CPU burst lines */
+  vector<vector<long> > LocalLinesPerCluster (LastPartition.NumberOfClusters ());
+  vector<CPUBurst*>&    Bursts = Data->GetClusteringBursts();
+  vector<cluster_id_t>& IDs    = LastPartition.GetAssignmentVector();
+  
+  vector<vector<vector<long> > > GlobalLinesPerCluster (LastPartition.NumberOfClusters());
+  int TotalTasks;
+
+  MPI_Comm_size(MPI_COMM_WORLD, &TotalTasks);
+
+  /* Initialize the master information */
+  for (size_t i = 0; i < Bursts.size(); i++)
+  {
+    LocalLinesPerCluster[IDs[i]].push_back(Bursts[i]->GetLine());
+  }
+  
+  for (size_t Cluster = 0; Cluster < LastPartition.NumberOfClusters(); Cluster++)
+  {
+    GlobalLinesPerCluster[Cluster].push_back(LocalLinesPerCluster[Cluster]);
+  }
+
+  /* Receive the lines per cluster from each slave task */
+  for (size_t Cluster = 0; Cluster < LastPartition.NumberOfClusters(); Cluster++)
+  {
+    for (size_t Task = 1; Task < TotalTasks; Task++)
+    {
+      long  CurrentClusterSize;
+      long* CurrentClusterLines;
+      ostringstream Messages;
+
+      /* Size of the cluster for current Task */
+      MPI_Recv(&CurrentClusterSize, 1, MPI_LONG, Task, CLUSTER_SIZE_EXCHG_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+      /* Lines of the cluster for current Task */
+      CurrentClusterLines = new long[CurrentClusterSize];
+
+      Messages.str("");
+      Messages << "Cluster " << Cluster << " Task " << Task << " CurrentClusterSize = " << CurrentClusterSize << endl;
+      system_messages::information(Messages.str().c_str());
+      
+      MPI_Recv(CurrentClusterLines, CurrentClusterSize, MPI_LONG, Task, CLUSTER_LINES_EXCHG_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+      /* Create the vector of current cluster lines */
+      if (CurrentClusterLines != 0)
+      {
+        GlobalLinesPerCluster[Cluster].push_back(vector<long> (CurrentClusterLines, CurrentClusterLines + CurrentClusterSize));
+      }
+      else
+      {
+        GlobalLinesPerCluster[Cluster].push_back(vector<long> (0));
+      }
+
+      /* */
+      Messages.str("");
+      Messages << "Cluster " << Cluster << " Task " << Task << " Size = " << GlobalLinesPerCluster[Cluster][Task].size() << endl;
+      system_messages::information(Messages.str().c_str());
+    }
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  
+  return ReconstructMasterPartition(GlobalLinesPerCluster);
+#else
+  return false;
+#endif
+}
+
+/**
+ * Implementation of the slave side of the gather operation
+ *
+ * \result True if the operation finished correctly, false otherwise
+ */
+bool libTraceClusteringImplementation::GatherSlave(void)
+{
+#ifdef HAVE_MPI
+  /* Prepare vector of lines of each cluster */
+  vector<vector<line_t> > LocalLinesPerCluster (LastPartition.NumberOfClusters ());
+  
+  vector<CPUBurst*>&    Bursts = Data->GetCompleteBursts();
+  vector<cluster_id_t>& IDs    = LastPartition.GetAssignmentVector();
+
+  for (size_t i = 0; i < Bursts.size(); i++)
+  {
+    LocalLinesPerCluster[IDs[i]].push_back(Bursts[i]->GetLine());
+  }
+
+  /* Send, in order, the size of each cluster and the lines themselves */
+  for (size_t Cluster = 0; Cluster < LastPartition.NumberOfClusters(); Cluster++)
+  {
+    long CurrentClusterSize = LocalLinesPerCluster[Cluster].size();
+    long CurrentClusterLines[CurrentClusterSize];
+    ostringstream Messages;
+
+    for (size_t Line = 0; Line < CurrentClusterSize; Line++)
+    {
+      CurrentClusterLines[Line] = (long) LocalLinesPerCluster[Cluster][Line];
+    }
+
+    /* Send the size */
+    MPI_Send(&CurrentClusterSize, 1, MPI_LONG, 0, CLUSTER_SIZE_EXCHG_TAG, MPI_COMM_WORLD);
+    /* Send the lines */
+    MPI_Send(CurrentClusterLines, CurrentClusterSize, MPI_LONG, 0, CLUSTER_LINES_EXCHG_TAG, MPI_COMM_WORLD);
+
+    Messages.str("");
+    Messages << "Cluster " << Cluster << " Size = " << CurrentClusterSize << endl;
+    system_messages::information(Messages.str().c_str());
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  
+  return true;
+#else
+  return false;
+#endif
+}
+
+/**
+ * Reconstruct the LastPartition in the Master task using the structure created
+ * in the 
+ *
+ * \result True if the operation finished correctly, false otherwise
+ */
+bool libTraceClusteringImplementation::ReconstructMasterPartition(vector<vector<vector<long> > >& GlobalLinesPerCluster)
+{
+  vector<CPUBurst*>&        CompleteBursts = Data->GetCompleteBursts();
+  vector<cluster_id_t>      UnifiedIDs;
+  map<line_t, cluster_id_t> LineToID;
+  size_t                    TotalBursts = 0;
+
+  ostringstream Messages;
+
+  for (size_t Cluster = 0; Cluster < GlobalLinesPerCluster.size(); Cluster++)
+  {
+    for (size_t Task = 0; Task < GlobalLinesPerCluster[Cluster].size(); Task++)
+    {
+      /* DEBUG
+      Messages.str("");
+      Messages << "Cluster " << Cluster << " Task " << Task << " Size = " << GlobalLinesPerCluster[Cluster][Task].size() << endl;
+      system_messages::information(Messages.str().c_str());
+      */
+      
+      for (size_t Line = 0; Line < GlobalLinesPerCluster[Cluster][Task].size(); Line++)
+      {
+        LineToID[(line_t) GlobalLinesPerCluster[Cluster][Task][Line]] = (cluster_id_t) Cluster;
+        Messages.str("");
+        Messages << "Cluster " << Cluster << " Task " << Task << " Lines " << GlobalLinesPerCluster[Cluster][Task][Line] << endl;
+        system_messages::information(Messages.str().c_str());
+      }
+    }
+  }
+
+  /* DEBUG */
+  Messages.str("");
+  Messages << "CompleteBursts size = " << CompleteBursts.size() << " ";
+  Messages << "LineToID size = " << LineToID.size() << endl;
+  system_messages::information(Messages.str().c_str());
+
+  if (CompleteBursts.size() != LineToID.size())
+  {
+    SetError(true);
+    SetErrorMessage("Data gathered from slave tasks doesn't match the number of bursts");
+    return false;
+  }
+  
+  for (size_t i = 0; i < CompleteBursts.size(); i++)
+  {
+    /*
+    Messages.str("");
+    Messages << "Burst #" << AllBursts[i]->GetInstance() << " Type = " << AllBursts[i]->GetBurstType() << endl;
+    system_messages::information(Messages.str().c_str());
+    */
+    
+    UnifiedIDs.push_back(LineToID[CompleteBursts[i]->GetLine()]);
+  }
+
+  /* Set the new assignment vector! */
+  LastPartition.SetAssignmentVector (UnifiedIDs);
+  
+  /*
+  Messages.str("");
+  Messages << "UnifiedIDs size = " << UnifiedIDs.size();
+  Messages << " TotalBursts = " << TotalBursts << endl;
+  system_messages::information(Messages.str().c_str());
+  */
+
   return true;
 }

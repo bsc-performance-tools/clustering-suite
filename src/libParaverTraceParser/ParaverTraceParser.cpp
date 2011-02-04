@@ -197,6 +197,31 @@ ParaverTraceParser::GetNextRecord(UINT32 RecordTypeMask)
 }
 
 ParaverRecord_t
+ParaverTraceParser::GetNextRecord(UINT32 RecordTypeMask, set<INT32> TaskIds)
+{
+  ParaverRecord_t      Record = NULL;
+  bool                 End = false;
+  set<INT32>::iterator TaskIdsIterator;
+
+  do {
+    if (Record != NULL)
+      delete Record;
+    
+    if ((Record = NextTraceRecord(RecordTypeMask)) == NULL)
+      return NULL;
+
+    TaskIdsIterator = TaskIds.find(Record->GetTaskId());
+
+    if (TaskIdsIterator != TaskIds.end())
+    {
+      End = true;
+    }
+  } while (!End);
+
+  return Record;
+}
+
+ParaverRecord_t
 ParaverTraceParser::GetNextTaskRecord(INT32  TaskId)
 {
   ParaverRecord_t Record;
@@ -210,6 +235,30 @@ ParaverTraceParser::GetNextTaskRecord(INT32  TaskId)
       return NULL;
   }
   
+  return Record;
+}
+
+ParaverRecord_t ParaverTraceParser::GetNextTaskRecord(set<INT32> TaskIds)
+{
+  ParaverRecord_t      Record = NULL;
+  bool                 End = false;
+  set<INT32>::iterator TaskIdsIterator;
+
+  do {
+    if (Record != NULL)
+      delete Record;
+    
+    if ((Record = NextTraceRecord(EVENT_REC | STATE_REC)) == NULL)
+      return NULL;
+
+    TaskIdsIterator = TaskIds.find(Record->GetTaskId());
+
+    if (TaskIdsIterator != TaskIds.end())
+    {
+      End = true;
+    }
+  } while (!End);
+
   return Record;
 }
 

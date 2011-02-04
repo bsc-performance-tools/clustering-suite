@@ -35,6 +35,8 @@
 #ifndef _SYSTEMMESSAGES_HPP_
 #define _SYSTEMMESSAGES_HPP_
 
+#include <config.h>
+
 #include <cstdio>
 namespace cepba_tools
 {
@@ -43,6 +45,12 @@ namespace cepba_tools
     public:
 
       static bool verbose;
+
+      static bool distributed;
+
+      static int  my_rank;
+
+      static bool messages_from_all_ranks;
 
       static void information(const char* message, FILE* channel = stdout);
       
@@ -55,7 +63,6 @@ namespace cepba_tools
       static void show_percentage_progress(const char* message, int current_percentage, FILE* channel = stdout);
 
       static void show_percentage_end(const char* message, FILE* channel = stdout);
-
   };
 }
 #endif // _SYSTEMMESSAGES_HPP_

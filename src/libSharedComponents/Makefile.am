@@ -1,0 +1,65 @@
+common_filesdir = @common_filesdir@
+
+INCLUDES = \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src/BasicClasses \
+	-I$(top_srcdir)/src/libClustering \
+	-I$(top_srcdir)/src/libParaverTraceParser \
+	-I$(common_filesdir)
+
+noinst_LTLIBRARIES = libSharedComponents.la
+
+libSharedComponents_la_LIBADD =  \
+	$(top_srcdir)/src/libClustering/libClustering.la \
+	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la
+
+libSharedComponents_la_CFLAGS   = @XML2_CFLAGS@
+libSharedComponents_la_CXXFLAGS = @XML2_CFLAGS@
+libSharedComponents_la_LDFLAGS  = -static @XML2_LIBS@
+
+if HAVE_MPI
+libSharedComponents_la_CXXFLAGS += @MPI_CFLAGS@
+libSharedComponents_la_LDFLAGS += @MPI_LDFLAGS@
+endif
+
+instdir = $(includedir)
+
+inst_HEADERS = \
+	trace_clustering_types.h
+
+libSharedComponents_la_SOURCES = \
+	trace_clustering_types.h \
+	ClusteredPRVGenerator.cpp \
+	ClusteredPRVGenerator.hpp \
+	ClusteredTraceGenerator.cpp \
+	ClusteredTraceGenerator.hpp \
+	ClusteredTRFGenerator.cpp \
+	ClusteredTRFGenerator.hpp \
+	DataExtractor.cpp \
+	DataExtractorFactory.cpp \
+	DataExtractorFactory.hpp \
+	DataExtractor.hpp \
+	PRVDataExtractor.cpp \
+	PRVDataExtractor.hpp \
+	TRFDataExtractor.cpp \
+	TRFDataExtractor.hpp \
+	ClusteringConfiguration.cpp \
+	ClusteringConfiguration.hpp \
+	ClusteringParameter.cpp \
+	ClusteringParameter.hpp \
+	CPIStackModel.hpp \
+	CPUBurst.cpp \
+	CPUBurst.hpp \
+	ParametersManager.cpp \
+	ParametersManager.hpp \
+	PlottingManager.cpp \
+	PlottingManager.hpp \
+	State.cpp \
+	State.hpp \
+	TraceData.cpp \
+	TraceData.hpp \
+	ClusteringStatistics.cpp \
+	ClusteringStatistics.hpp \
+	XMLParser.cpp \
+	XMLParser.hpp 
+

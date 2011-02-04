@@ -39,13 +39,34 @@ using cepba_tools::system_messages;
 using std::cout;
 using std::endl;
 
-bool system_messages::verbose = false;
+bool system_messages::verbose                 = false;
+bool system_messages::distributed             = false;
+
+int  system_messages::my_rank                 = -1;
+bool system_messages::messages_from_all_ranks = false;
 
 void system_messages::information(const char* message, FILE* channel)
 {
   if (system_messages::verbose)
   {
-    fprintf(channel, "%s", message);
+    if (system_messages::distributed)
+    {
+      if (system_messages::messages_from_all_ranks)
+      {
+        fprintf(channel, "[%d] %s", system_messages::my_rank, message);
+      }
+      else
+      {
+        if (my_rank == 0)
+        {
+          fprintf(channel, "[%d] %s", system_messages::my_rank, message);
+        }
+      }
+    }
+    else
+    {
+      fprintf(channel, "%s", message);
+    }
   }
 }
 
@@ -54,10 +75,10 @@ void system_messages::show_progress(const char* message,
                                     int         total,
                                     FILE*       channel)
 {
-  if (system_messages::verbose)
+  if (system_messages::verbose && !system_messages::distributed)
   {
-    fprintf(channel, "\r%s %d/%d", message, current, total);
-    fflush(channel);
+      fprintf(channel, "\r%s %d/%d", message, current, total);
+      fflush(channel);
   }
 }
 
@@ -65,7 +86,7 @@ void system_messages::show_progress_end(const char* message,
                                         int         total,
                                         FILE*       channel)
 {
-  if (system_messages::verbose)
+  if (system_messages::verbose && !system_messages::distributed)
   {
     fprintf(channel, "\r%s %d/%d\n", message, total, total);
     fflush(channel);
@@ -85,7 +106,7 @@ void system_messages::show_percentage_progress(const char* message,
   else
     real_percentage = current_percentage;
   
-  if (system_messages::verbose)
+  if (system_messages::verbose && !system_messages::distributed)
   {
     fprintf(channel, "\r%s %03d%%", message, real_percentage);
     fflush(channel);
@@ -94,7 +115,7 @@ void system_messages::show_percentage_progress(const char* message,
 
 void system_messages::show_percentage_end(const char* message, FILE* channel)
 {
-  if (system_messages::verbose)
+  if (system_messages::verbose && !system_messages::distributed)
   {
     fprintf(channel, "\r%s 100%%\n", message);
   }

@@ -25,10 +25,11 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL::                                                                   $:
+
+  $Rev::                            $:  Revision of last commit
+  $Author::                         $:  Author of last commit
+  $Date::                           $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
@@ -56,7 +57,8 @@ using std::endl;
 
 using std::make_pair;
 
-const string DBSCAN::EPSILON_STRING = "epsilon";
+const string DBSCAN::NAME              = "DBSCAN";
+const string DBSCAN::EPSILON_STRING    = "epsilon";
 const string DBSCAN::MIN_POINTS_STRING = "min_points";
 
 /*****************************************************************************
@@ -134,9 +136,6 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
   size_t         ResultingClusters = 0;
 
   INT64          DataSize, Index;
-  
-  ostringstream                       ClusterName;
-  /* vector<ClusterInformation*>         ClusterInfoVector; */
 
   if (Data.size() == 0)
   {
@@ -159,23 +158,6 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
   
   /* Build KD-Tree */
   BuildKDTree(Data);
- 
-  /* Obtain Noise and Threshold Filtered clusters information objects
-  NoiseClusterInfo             = InputDataManager->GetNoiseClusterInfo();
-  */
-
-  /*
-  ThresholdFilteredClusterInfo = 
-    InputDataManager->GetThresholdFilteredClusterInfo();
-  */
-
-  /* Add the first (candidate) cluster information to ClustersInformation 
-  ClusterName.str("");
-  ClusterName << "Cluster " << ClusterId;
-  
-  CurrentClusterInformation =
-    InputDataManager->NewClusterInformation(ClusterId, ClusterName.str());
-  */
 
   system_messages::show_progress("Clustering points", 0, (int) Data.size());
   Index = 0; // Double counter: total points vs. clustering points!
@@ -194,74 +176,11 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
     }
   }
 
-
-  /*
-  for (size_t i = 0; i < InputData->size(); i++)
-  {
-    
-    if ((*InputData)[i]->WillBeClusterized())
-    {
-      show_progress(stdout, "Clustering points", Index, DataSize);
-      CurrentPoint = (*Data)[i];
-
-      if (!CurrentPoint->Classified())
-      {
-        if (ExpandCluster(InputData,
-                          CurrentPoint,
-                          ClusterId,
-                          CurrentClusterInformation))
-        {
-          ClusterId++;
-          ResultingClusters++; /* Defined on 'ClusteringAlgorithm.h' */
-
-          /* Add new cluster information to ClusterInformationVector 
-          ClustersInformation.push_back(CurrentClusterInformation);
-          
-          ClusterName.str("");
-          ClusterName << "Cluster " << ClusterId;
-
-          CurrentClusterInformation =
-            InputDataManager->NewClusterInformation(ClusterId, ClusterName.str());
-        }
-      }
-      
-      Index++;
-    }
-  }
-  */
-
   system_messages::show_progress_end("Clustering points", (int) Data.size());
 
-  /* Erase last cluster information if not needed 
-  if (CurrentClusterInformation->GetDensity() == 0)
-  {
-    InputDataManager->DeleteClusterInformation(CurrentClusterInformation);
-  }
-  */
-  
-  /* Reorganize clusters 
-  if (!SimpleRun)
-  {
-    SortResultingClusters(InputDataManager,
-                          InputData);
-  }
-  */
-          
-  /* Set clustering ready
-  ClusteringReady = true;
-  Data->SetClusteringReady(true); */
-  
-  /* Set clusters information on DataManager 
-  if (!GetClustersInformation(ClusterInfoVector))
-  {
-    SetError(true);
-    SetErrorMessage("unable to get clusters information");
-    return false;
-  }
-  */
-
-  /* InputDataManager->SetClustersInformation(ClusterInfoVector); */
-  DataPartition.SetNumberOfClusters (ResultingClusters);
+  /* NOISE cluster has to be considered as a cluster, to mantain coherence across the namings */
+  DataPartition.NumberOfClusters (ResultingClusters+1);
+  DataPartition.HasNoise(true);
 
   return true;
 }

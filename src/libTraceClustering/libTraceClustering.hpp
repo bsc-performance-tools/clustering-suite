@@ -42,9 +42,11 @@ using std::string;
 #define DO_NOTHING        0x00
 #define CLUSTERING        0x01
 #define PLOTS             0x02
+#define MPI               0x04
 
 #define USE_CLUSTERING(x) (x & CLUSTERING)
 #define USE_PLOTS(x)      (x & PLOTS)
+#define USE_MPI(x)        (x & MPI)
 
 class libTraceClusteringImplementation;
 
@@ -57,19 +59,20 @@ class libTraceClustering
     string ErrorMessage, WarningMessage;
 
   public:
+    
+    
     libTraceClustering(bool verbose);
     
     bool InitTraceClustering(string        ClusteringDefinitionXML,
-                             bool          ApplyCPIStack,
-                             unsigned char UseFlags);
+                             unsigned char Flags);
 
-    bool ExtractData(string InputFileName);
+    bool ExtractData(string InpasksToRead);
     
     bool ExtractData(string InputFileName, string OutputCSVFileName);
 
-    bool ClusterAnalysis();
+    bool ClusterAnalysis (void);
 
-    bool HierarchicalAnalysis();
+    bool HierarchicalAnalysis(void);
 
     bool FlushData(string OutputCSVFileName);
 

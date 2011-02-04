@@ -3,9 +3,14 @@
 
 INCLUDES = \
     -I$(top_srcdir)/include\
-    -I$(top_srcdir)/../common-files
+    -I@common_filesdir@
 
-SUBDIRS = src 
+SUBDIRS = include src 
+
+instdir = $(includedir)/bsc_clustering_suite
+
+inst_HEADERS = \
+	config.h
 
 EXTRA_DIST = $(clusteringsuitedoc_DATA) \
 	$(top_srcdir)/include

@@ -594,7 +594,7 @@ AC_DEFUN([AX_PROG_MPI],
    AC_DEFINE([HAVE_MPI], 1, [Determine if MPI in installed])
 
    if test "$MPI_INSTALLED" = "no" ; then
-       AC_MSG_WARN([MPI tracing support has been disabled])
+       AC_MSG_WARN([No MPI installed. Distributed version will not be compiled])
    fi
 
    AX_FLAGS_RESTORE()
@@ -1086,49 +1086,6 @@ AC_DEFUN([AX_HAVE_MMTIMER_DEVICE],
    fi
 ])
 
-# AX_SHOW_CONFIGURATION
-# --------------------
-AC_DEFUN([AX_SHOW_CONFIGURATION],
-[
-   if test "${host}" != "${target}" ; then
-      CROSSC="${host} to ${target}"
-   else
-      if test "${IS_BGL_MACHINE}" = "yes" ; then
-         CROSSC="${host} with BG/L system support"
-      elif test "${IS_CELL_MACHINE}" = "yes" ; then
-         CROSSC="${host} with Cell Broadband Engine support - SDK ${CELL_SDK}.x"
-      else
-         CROSSC="no"
-      fi
-   fi
-
-   echo ""
-   echo "Package configuration :"
-   echo "-----------------------"
-   echo "Cross compilation  : ${CROSSC}"
-   echo "CC                 : ${CC}"
-   echo "CXX                : ${CXX}"
-   echo "Binary type        : ${BITS} bits"
-   echo "Fortran decoration : ${FORTRAN_DECORATION}"
-   echo "MPI                : ${MPI_HOME} - enabled? ${MPI_INSTALLED} - peruse? ${PERUSE_AVAILABILITY}"
-   echo "pThread            : ${enable_pthread}"
-   echo "PAPI               : ${PAPI_HOME} - sampling? ${PAPI_SAMPLING_ENABLED}"
-   echo "BFD                : ${BFD_HOME}"
-   echo "liberty            : ${LIBERTY_HOME}"
-   echo "XML2 config        : ${XML2_CONFIG}"
-   echo "DynInst            : ${DYNINST_HOME}"
-   echo ""
-   echo "Machine information :"
-   echo "---------------------"
-   echo "is Altix           : ${IS_ALTIX_MACHINE}"
-   echo "/dev/mmtimer       : ${HAVE_MMTIMER_DEVICE}"
-   echo "is BG/L            : ${IS_BGL_MACHINE}"
-   echo ""
-   echo "Optional features:"
-   echo "------------------"
-   echo "Heterogeneous support : ${enable_hetero}"
-   echo ""
-])
 
 # AX_IS_CELL_MACHINE
 # --------------------
@@ -1648,3 +1605,84 @@ AC_DEFUN([AX_OFF_T_64BIT],
 		AC_MSG_RESULT([unknown])
 	fi
 ])
+
+dnl Check for CGAL and MPFR (uses AX_LIB_CGAL_CORE)
+AC_DEFUN([AX_CHECK_CGAL],
+[
+
+	AX_CHECK_MPFR()
+  BOOST_THREADS()
+  
+  dnl AC_MSG_CHECKING([for CGAL installation])
+  
+  if test "x$mpfr_enabled" = "xyes" -a "$BOOST_THREAD_LIBS"; then
+    AX_FLAGS_SAVE()
+
+    CXXFLAGS="$CXXFLAGS -frounding-math $MPFR_CXXFLAGS $BOOST_CPPFLAGS"
+    CFLAGS="$CFLAGS $MPFR_CFLAGS $BOOST_CPPFLAGS"
+    LDFLAGS="$LDFLAGS $MPFR_LDFLAGS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS"
+    LIBS="$LIBS $MPFR_LIBS $BOOST_THREAD_LIBS"
+    
+    AX_LIB_CGAL_CORE(
+      CGAL_CPPFLAGS="$CGAL_CPPFLAGS -frounding-math $MPFR_CXXFLAGS $BOOST_CPPFLAGS"
+			CGAL_LDFLAGS="$CGAL_LDFLAGS $MPFR_LDFLAGS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS"
+      AC_SUBST(CGAL_CPPFLAGS)
+      AC_SUBST(CGAL_LDFLAGS)
+      cgal_enabled="yes"
+      ,
+      cgal_enabled="no"
+    )
+
+    if test ! "x$cgal_enabled" = "xyes"; then
+      AC_MSG_RESULT([CGAL not found, some functionalities will be missing])
+    fi
+		AX_FLAGS_RESTORE()
+  fi
+  AM_CONDITIONAL(HAVE_CGAL, test "x$cgal_enabled" = "xyes")
+])
+
+AC_DEFUN([AX_CHECK_MPFR],
+[
+	AC_MSG_CHECKING([for MPFR installation (needed by CGAL)])
+	AC_ARG_WITH([mpfr],
+	  AS_HELP_STRING(
+    [--with-mpfr=MPFR_DIR],
+    [sets the given directory as location of MPFR includes and libs (needed by CGAL)]
+  ),
+  [mpfr_paths="$withval"],
+  [mpfr_paths="$MPFR_HOME"' /usr /usr/local /opt /opt/local']
+	)
+
+	mpfr_enabled="no"
+	for mpfr_iterate in $mpfr_paths; do
+
+    if test -e $mpfr_iterate/include/mpfr.h -a -e $mpfr_iterate/lib/libmpfr.so; then
+      mpfr_enabled="yes"
+    fi
+
+    if test "$mpfr_enabled" = "yes"; then
+			mpfr_dir=$mpfr_iterate
+		  AC_MSG_RESULT([yes])
+		  break
+    else
+		  AC_MSG_RESULT([no])
+	  fi
+  done
+
+  if test "x$mpfr_enabled" = "xyes"; then
+	  AC_DEFINE(HAVE_MPFR, 1, [Defined if MPFR library is enabled])
+  	AC_SUBST(mpfr_dir)
+
+  	MPFR_CXXFLAGS="-I${mpfr_dir}/include"
+	  MPFR_CFLAGS="-I${mpfr_dir}/include"
+  	MPFR_LDFLAGS="-L${mpfr_dir}/lib"
+	  MPFR_LIBS="-lmpfr"
+
+  	AC_SUBST(MPFR_CXXFLAGS)
+	  AC_SUBST(MPFR_CFLAGS)
+  	AC_SUBST(MPFR_LDFLAGS)
+	  AC_SUBST(MPFR_LIBS)
+  fi
+	AM_CONDITIONAL(HAVE_MPFR, test "x$mpfr_enabled" = "xyes")
+])
+

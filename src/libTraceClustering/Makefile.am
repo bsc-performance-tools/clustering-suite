@@ -8,41 +8,46 @@ INCLUDES = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/BasicClasses \
 	-I$(top_srcdir)/src/libClustering \
-	-I$(top_srcdir)/src/libParaverTraceParser \
-	-I$(top_srcdir)/src/SharedComponents \
+	-I$(top_srcdir)/src/libSharedComponents \
 	-I$(common_filesdir)
 
-libTraceClustering_la_LIBADD= \
+libTraceClustering_la_LIBADD =  \
 	$(top_srcdir)/src/libClustering/libClustering.la \
-	$(top_srcdir)/src/SharedComponents/libClusteringUtils.la \
+	$(top_srcdir)/src/libSharedComponents/libSharedComponents.la \
 	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la
 
 
-libTraceClustering_la_LDFLAGS= @XML2_LIBS@ 
+libTraceClustering_la_CXXFLAGS=@XML2_CXXFLAGS@
+libTraceClustering_la_LDFLAGS=@LDFLAGS@ -static @XML2_LIBS@ 
+libTraceClustering_la_LIBS=
 
-libTraceClustering_la_CXXFLAGS = @XML2_CXXFLAGS@
+if HAVE_MUSTER
+libTraceClustering_la_CXXFLAGS += @MUSTER_CXXFLAGS@
+libTraceClustering_la_LDFLAGS += @MUSTER_LDFLAGS@
+libTraceClustering_la_LIBS += @MUSTER_LIBS@
+
+if HAVE_MPI
+
+libTraceClustering_la_CXXFLAGS += @MPI_CFLAGS@
+libTraceClustering_la_LDFLAGS += @MPI_LDFLAGS@
+
+endif
+endif
+
+if HAVE_CGAL
+libTraceClustering_la_CXXFLAGS +=  @CGAL_CPPFLAGS@
+libTraceClustering_la_LDFLAGS += @CGAL_LDFLAGS@ 
+endif
+
+instdir = $(includedir)
+
+inst_HEADERS = \
+	libTraceClustering.hpp
 
 libTraceClustering_la_SOURCES = \
-	ClusteredPRVGenerator.cpp \
-	ClusteredPRVGenerator.hpp \
-	ClusteredTraceGenerator.cpp \
-	ClusteredTraceGenerator.hpp \
-	ClusteredTRFGenerator.cpp \
-	ClusteredTRFGenerator.hpp \
-	CPUBurst.cpp \
-	CPUBurst.hpp \
-	DataExtractor.cpp \
-	DataExtractorFactory.cpp \
-	DataExtractorFactory.hpp \
-	DataExtractor.hpp \
-	PRVDataExtractor.cpp \
-	PRVDataExtractor.hpp \
-	TraceData.cpp \
-	TraceData.hpp \
-	TRFDataExtractor.cpp \
-	TRFDataExtractor.hpp \
 	libTraceClustering.cpp \
 	libTraceClustering.hpp \
 	libTraceClusteringImplementation.cpp \
-	libTraceClusteringImplementation.hpp \
-	trace_clustering_types.h
+	libTraceClusteringImplementation.hpp 
+
+

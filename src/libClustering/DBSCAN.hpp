@@ -25,10 +25,11 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL::                                                                   $:
+
+  $Rev::                            $:  Revision of last commit
+  $Author::                         $:  Author of last commit
+  $Date::                           $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
@@ -76,7 +77,8 @@ class DBSCAN: public ClusteringAlgorithm
     ANNkd_tree*         SpatialIndex;
 
   public:
-
+    static const string NAME;
+    
     static const string EPSILON_STRING;
     static const string MIN_POINTS_STRING;
 
@@ -106,7 +108,6 @@ class DBSCAN: public ClusteringAlgorithm
     GetClassifier(void) { return new KDTreeClassifier(SpatialIndex, Eps); }; */
   
     string GetClusteringAlgorithmName(void) const;
-
     string GetClusteringAlgorithmNameFile(void) const;
 
     /*
