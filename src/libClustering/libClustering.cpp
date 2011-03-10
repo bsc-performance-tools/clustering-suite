@@ -90,6 +90,29 @@ bool libClustering::ExecuteClustering(const vector<const Point*>& Data,
 }
 
 /**
+ * Generates a possible parameter approximation needed by the cluster algorithm
+ *
+ * \param OutputFileNamePrefix The prefix of the output files that will be generated
+ * \param Parameters Map of key and value strings parameters of the approximation
+ *
+ * \result True if the approximation wero done correctly, false otherwise
+ */
+bool libClustering::ParametersApproximation(const vector<const Point*>& Data,
+                                            map<string, string>         Parameters,
+                                            string                      OutputFileNamePrefix)
+{
+  if (!Implementation->ParametersApproximation(Data,
+                                               Parameters,
+                                               OutputFileNamePrefix))
+  {
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Return true if the clustering algorithm to be used is based on MPI
  * 
  * \return True if the clustering algorithm is based on MPI
@@ -97,6 +120,16 @@ bool libClustering::ExecuteClustering(const vector<const Point*>& Data,
 bool libClustering::UsingADistributedAlgorithm(void)
 {
   return Implementation->UsingADistributedAlgorithm();
+}
+
+/**
+ * Check if the algorithm uses a noise cluster
+ * 
+ * \return True if the clustering algorithm returns noise clusters
+ */
+bool libClustering::HasNoise(void)
+{
+  return Implementation->HasNoise();
 }
 
 /**

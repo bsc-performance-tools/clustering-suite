@@ -1,9 +1,9 @@
-/*****************************************************************************\ 
+/*****************************************************************************\
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           *
+ *                                                                           * 
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,73 +23,30 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $URL::                                                                   $:
-
-  $Rev::                            $:  Revision of last commit
-  $Author::                         $:  Author of last commit
-  $Date::                           $:  Date of last commit
+  $URL:: https://svn.bsc.#$:  File
+  $Rev:: 20               $:  Revision of last commit
+  $Author:: jgonzale      $:  Author of last commit
+  $Date:: 2010-03-09 17:1#$:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef _MUSTER_DBSCAN_HPP_
-#define _MUSTER_DBSCAN_HPP_
+#ifndef _SEQUENCESCORE_HPP_
+#define _SEQUENCESCORE_HPP_
 
-#include "ClusteringAlgorithm.hpp"
-#include "clustering_types.h"
+#include <Error.hpp>
+using cepba_tools::Error;
 
-/* Forward declarations */
-class Partition;
 
-#include <sstream>
-using std::ostringstream;
-
-#include <iostream>
-using std::ostream;
-
-#include <vector>
-using std::vector;
-
-#include <list>
-using std::list;
-using std::pair;
-
-class MUSTER_DBSCAN: public ClusteringAlgorithm
+class SequenceScore: public Error 
 {
-    typedef size_t point_idx;
+public:
 
-  private:
-    double              Eps;
-    INT32               MinPoints;
+protected:
 
-  public:
+private:
 
-    static const string NAME;
-    
-    static const string EPSILON_STRING;
-    static const string MIN_POINTS_STRING;
-    
-    MUSTER_DBSCAN();
-    
-    MUSTER_DBSCAN(map < string, string > ClusteringParameters);
-    ~MUSTER_DBSCAN(void)
-    {
-    };
-    
-    bool Run (const vector <const Point*> &Data,
-              Partition                   &DataPartition,
-              bool                         SimpleRun);
-    
-    string GetClusteringAlgorithmName (void) const;
-
-    string GetClusteringAlgorithmNameFile (void) const;
-
-    bool HasNoise(void) { return true; };
-    
-    bool ComputeParamsApproximation (const vector < const Point* > &Data,
-                                     INT32                          ParametersCount, ...);
-  private:
 };
 
-#endif /* _MUSTER_DBSCAN_HPP_ */
+#endif // _SEQUENCESCORE_HPP_

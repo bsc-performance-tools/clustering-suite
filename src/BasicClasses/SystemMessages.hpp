@@ -38,6 +38,9 @@
 #include <config.h>
 
 #include <cstdio>
+#include <string>
+using std::string;
+
 namespace cepba_tools
 {
   class system_messages
@@ -52,6 +55,12 @@ namespace cepba_tools
 
       static bool messages_from_all_ranks;
 
+      static bool percentage_ongoing;
+      
+      static int  last_percentage_written;
+
+      static void information(string message, FILE* channel = stdout);
+      
       static void information(const char* message, FILE* channel = stdout);
       
       static void die(const char* message, FILE* channel = stderr);

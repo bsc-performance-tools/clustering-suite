@@ -59,6 +59,9 @@ class libDistributedClusteringImplementation: public Error
 
     string         InputFileName;
     input_file_t   InputFileType;
+
+    double         Epsilon;
+    INT32          MinPoints;
     
     /*
     bool                  ClusteringExecuted;
@@ -68,12 +71,14 @@ class libDistributedClusteringImplementation: public Error
     */
 
   public:
-    libDistributedClusteringImplementation(bool verbose);
+    libDistributedClusteringImplementation(int verbose);
 
     bool InitClustering(string ClusteringDefinitionXML,
-                        bool Root,
-                        INT32 MyRank,
-                        INT32 TotalRanks);
+                        double Eps,
+                        INT32  MinPoints,
+                        bool   Root,
+                        INT32  MyRank,
+                        INT32  TotalRanks);
 
     bool ExtractData(string InputFileName, set<int>& TasksToRead);
 

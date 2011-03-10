@@ -41,8 +41,7 @@ AC_DEFUN([AX_LIB_CGAL_CORE],[
 
 dnl guess from env, or use given value
 AC_ARG_WITH([cgal],
-	AS_HELP_STRING([--with-cgal@<:@=DIR@:>@],
-			[location of cgal installation, default $CGAL_HOME]),
+	AS_HELP_STRING([--with-cgal@<:@=DIR@:>@], [location of cgal installation, default $CGAL_HOME]),
 	[ac_cgal_dirs="$withval"],
 	[ac_cgal_dirs="$CGAL_HOME"' /usr /usr/local /opt /opt/local']
 	)
@@ -100,15 +99,15 @@ done
 
 AC_LANG_POP([C++])
 
-if test $ac_cgal = yes ; then
+if test "x${ac_cgal}" = "xyes"; then
 	AC_DEFINE(HAVE_CGAL,[1],[Indicates presence of CGAL library])
 	AC_SUBST(CGAL_CPPFLAGS)
 	AC_SUBST(CGAL_LDFLAGS)
-        # execute ACTION-IF-FOUND
-        ifelse([$1], , :, [$1])
+	# execute ACTION-IF-FOUND
+	ifelse([$1], , :, [$1])
 else
-        # execute ACTION-IF-NOT-FOUND
-        ifelse([$2], , :, [$2])
+	# execute ACTION-IF-NOT-FOUND
+	ifelse([$2], , :, [$2])
 fi
 
 ])

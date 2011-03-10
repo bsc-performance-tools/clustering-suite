@@ -10,6 +10,24 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-03-10 Juan Gonzalez <juan.gonzalez@bsc.es>
+
+	* Added the implementation to manage the distributed tree DBSCAN in
+	collaboration with German Llort, using an MRNet. This implies adding 
+	a dependency to CGAL (and also MPFR and Boost Threads) to compute the
+	Convex Hulls models of each cluster, and also manipulate them.
+
+	* Added initial support to SeqAn library, to implement the sequence based
+	clustering refinement.
+
+	* Added a new binary target called 'DBSCANParametersApproximation' to
+	offer the functionality of generate the K-Neighbours plot, in order to
+	approximate the 'Epsilon' value.
+
+	* Changed the building system so as to permit a simple compilation to
+	generate the basic BurstClustering binary (and also the
+	 DBSCANParametersApproximation binary), no needing all dependencies.
+
 2011-01-04 Juan Gonzalez <juan.gonzalez@bsc.es>
 
 	* Added support to 'muster' clustering library, both sequential an parallel
@@ -40,7 +58,7 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	directory Makefile.am added.
 
 
-2010-20-26 Juan Gonzalez <juan.gonzalez@bsc.es>
+2010-10-26 Juan Gonzalez <juan.gonzalez@bsc.es>
 
 	* Added support to set the plots range via XML
 

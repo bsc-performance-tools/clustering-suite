@@ -137,6 +137,42 @@ bool libTraceClustering::ClusterAnalysis()
 }
 
 /**
+ * Performs a DBSCAN cluster analysis with auto refinement based on sequence
+ * score
+ *
+ * \result True if the analysis finished correctly, false otherwise
+ */
+bool libTraceClustering::ClusterRefinementAnalysis()
+{
+  if (!Implementation->ClusterRefinementAnalysis())
+  {
+    Error = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Write clusters information to an output file
+ *
+ * \param OutputClustersInfoFileName Name of the output file where clusters information will be written
+ *
+ * \result True if output file is written correctly, false otherwise
+ */
+bool libTraceClustering::FlushClustersInformation(string OutputClustersInfoFileName)
+{
+  if (!Implementation->FlushClustersInformation(OutputClustersInfoFileName))
+  {
+    Error        = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+  return true;
+}
+
+/**
  * Write data to output file (trace or CSV)
  *
  * \param OutputFileName Name of the output file where data will be written
@@ -180,13 +216,35 @@ bool libTraceClustering::ReconstructInputTrace(string OutputTraceName)
  * \param DataFileName Name of the file containg the data to plot
  * \param ScriptsFileNamePrefix Prefix of the output scripts
  *
- * \result True if the scripts where printed correctly, false otherwise
+ * \result True if the scripts were printed correctly, false otherwise
  */
 bool libTraceClustering::PrintPlotScripts(string DataFileName, string ScriptsFileNamePrefix)
 {
   if (!Implementation->PrintPlotScripts(DataFileName, ScriptsFileNamePrefix))
   {
     Error = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Generates a possible parameter approximation needed by the cluster algorithm
+ *
+ * \param OutputFileNamePrefix The prefix of the output files that will be generated
+ * \param Parameters Map of key and value strings parameters of the approximation
+ *
+ * \result True if the approximation wero done correctly, false otherwise
+ */
+bool libTraceClustering::ParametersApproximation(string              OutputFileNamePrefix,
+                                                 map<string, string> Parameters)
+{
+  if (!Implementation->ParametersApproximation(OutputFileNamePrefix,
+                                               Parameters))
+  {
+    Error        = true;
     ErrorMessage = Implementation->GetLastError();
     return false;
   }

@@ -34,8 +34,17 @@
 
 #include "ConvexHullModel.hpp"
 #include <CGAL/Polygon_2_algorithms.h>
+#include <cassert>
 
-ConvexHullModel::ConvexHullModel( vector< const Point * > cluster_points )
+#include <SystemMessages.hpp>
+using cepba_tools::system_messages;
+
+#include <sstream>
+using std::ostringstream;
+
+int ConvexHullModel::MIN_HULL_POINTS = 3;
+
+ConvexHullModel::ConvexHullModel( vector<const Point*> cluster_points )
 {
   vector<Point *>::const_iterator it;
   CGALPoints cgal_points;
@@ -51,9 +60,35 @@ ConvexHullModel::ConvexHullModel( vector< const Point * > cluster_points )
     cgal_points.push_back(Point_2(x, y));
   }
 
-  CGAL::convex_hull_2( cgal_points.begin(), cgal_points.end(), std::back_inserter(HullPoints) );
+  Density = cluster_points.size();
+  /* To compute a hull we need at least three points */
+  if (Density >= ConvexHullModel::MIN_HULL_POINTS)
+  {
+    CGAL::convex_hull_2( cgal_points.begin(), cgal_points.end(), std::back_inserter(HullPoints) );
+  }
+  else
+  {
+    /* All points are "hull" points */
+    HullPoints = cgal_points;
+  }
 }
 
+ConvexHullModel::ConvexHullModel(CGALPoints HullPoints, long long Density)
+{
+  this->Density    = Density;
+  this->Dimensions = 2;
+  
+  if (HullPoints.size() >= 3)
+  {
+    CGAL::convex_hull_2( HullPoints.begin(), HullPoints.end(), std::back_inserter(this->HullPoints) );
+  }
+  else
+  {
+    this->HullPoints = HullPoints;
+  }
+}
+
+/*
 ConvexHullModel::ConvexHullModel( Polygon_2 P, Polygon_2 Q )
 {
   CGALPoints JointPoints;
@@ -74,11 +109,17 @@ ConvexHullModel::ConvexHullModel( Polygon_2 P, Polygon_2 Q )
   CGAL::convex_hull_2( JointPoints.begin(), JointPoints.end(), std::back_inserter(HullPoints) );
 
 }
+*/
 
-ConvexHullModel::ConvexHullModel( int NumPoints, int NumDimensions, double * DimValues )
+ConvexHullModel::ConvexHullModel( long long Density, int NumPoints, int NumDimensions, double * DimValues )
 {
-  Assemble( NumPoints, NumDimensions, DimValues);
+  Assemble( Density, NumPoints, NumDimensions, DimValues);
   
+}
+
+long long ConvexHullModel::GetDensity()
+{
+  return this->Density;
 }
 
 void ConvexHullModel::Flush( )
@@ -93,18 +134,19 @@ void ConvexHullModel::Flush( )
   }
 }
 
-void ConvexHullModel::Serialize( int & NumPoints, int & NumDimensions, double*& DimValues )
+void ConvexHullModel::Serialize( long long& Density, int & NumPoints, int & NumDimensions, double*& DimValues )
 {
   CGALPoints::iterator it;
 
+  Density       = this->Density;
   NumPoints     = HullPoints.size();
   NumDimensions = Dimensions;
   DimValues     = (double*) malloc (sizeof(double)*(NumPoints*NumDimensions));
 
   for (size_t i = 0; i < HullPoints.size(); i++)
   {
-    DimValues[i*NumDimensions]     = HullPoints[i].x();
-    DimValues[(i*NumDimensions)+1] = HullPoints[i].y();
+    DimValues[i*NumDimensions]     = CGAL::to_double(HullPoints[i].x());
+    DimValues[(i*NumDimensions)+1] = CGAL::to_double(HullPoints[i].y());
   }
 
   /*
@@ -112,7 +154,7 @@ void ConvexHullModel::Serialize( int & NumPoints, int & NumDimensions, double*& 
   */
 }
 
-CGALPoints ConvexHullModel::getHullPoints()
+CGALPoints& ConvexHullModel::getHullPoints()
 {
   return HullPoints;
 }
@@ -133,9 +175,15 @@ bool ConvexHullModel::Flush(ostream& str, cluster_id_t id)
 
 bool ConvexHullModel::IsInside(const Point* QueryPoint)
 {
-  Point_2 CGALPoint ((*QueryPoint)[0], (*QueryPoint)[1]);
+  Point_2 CGALPoint((*QueryPoint)[0], (*QueryPoint)[1]);
+  
+  return IsInside(CGALPoint);
+}
+bool ConvexHullModel::IsInside(const Point_2& QueryPoint)
+{
+  ostringstream Message;
 
-  switch(CGAL::bounded_side_2(HullPoints.begin(), HullPoints.end(), CGALPoint))
+  switch(CGAL::bounded_side_2(HullPoints.begin(), HullPoints.end(), QueryPoint))
   {
     case CGAL::ON_BOUNDED_SIDE:
       return true;
@@ -144,54 +192,213 @@ bool ConvexHullModel::IsInside(const Point* QueryPoint)
       return true;
       break;
     case CGAL::ON_UNBOUNDED_SIDE:
-      return false;
       break;
   }
+
+  return false;
 }
 
-ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2 )
+bool ConvexHullModel::IsNear(const Point* QueryPoint, double Epsilon)
 {
-  Polygon_2 P, Q;
-  CGALPoints HullPoints2, JointPoints;
-  ConvexHullModel * JointHull;
-
   CGALPoints::iterator it;
+  PolytopePoint_2 CGALPoint_Dist ((*QueryPoint)[0], (*QueryPoint)[1]);
+  vector<PolytopePoint_2> R, S;
+
+  /*
+  Message << " (Using distance query!) ";
+  system_messages::information(Message.str()); */
+  
   for (it=HullPoints.begin(); it != HullPoints.end(); ++it)
   {
-    P.push_back(*it);
-    JointPoints.push_back(*it);
+    R.push_back(PolytopePoint_2(CGAL::to_double(it->x()), CGAL::to_double(it->y())));
+  }
+
+  S.push_back(CGALPoint_Dist);
+
+  if (GenericDistance(R, S) <= pow(Epsilon, 2.0))
+  {
+    return true;
   }
   
-  HullPoints2 = CHull2->getHullPoints();
-  for (it=HullPoints2.begin(); it != HullPoints2.end(); ++it)
-  {
-    Q.push_back(*it);
-    JointPoints.push_back(*it);
-  }
+  return false;
+}
 
-  if ((CGAL::do_intersect (P, Q)))
+ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsilon, int MinPoints )
+{
+  Polygon_2            P, Q;
+  CGALPoints           Hull2Points, JointPoints;
+  CGALPoints::iterator it;
+  ConvexHullModel      *JointHull;
+  bool                 doMerge = false;
+  int                  TotalDensity;
+  
+  ostringstream        Message;
+  
+  Hull2Points = CHull2->getHullPoints();
+  
+  TotalDensity = this->GetDensity() + CHull2->GetDensity();
+  
+  /*  
+  if (TotalDensity < MinPoints)
+  {
+    return NULL;
+  }
+  */
+
+  if (this->GetDensity() < ConvexHullModel::MIN_HULL_POINTS && 
+      CHull2->GetDensity() < ConvexHullModel::MIN_HULL_POINTS)
+  { /* Check point by point the distances */
+    
+    /* DEBUG 
+    Message << "Checking two small hulls" << std::endl;
+    system_messages::information(Message.str()); */
+  
+    for (size_t i = 0; i < HullPoints.size(); i++)
+    {
+      for (size_t j = 0; j < Hull2Points.size(); j++)
+      {
+        if (squared_distance(HullPoints[i], Hull2Points[j]) <= pow(Epsilon, 2.0))
+        {
+          doMerge = true;
+          break;
+        }
+      }
+
+      if (doMerge)
+      {
+        break;
+      }
+      
+    }
+  }
+  else 
+  if (this->GetDensity() < ConvexHullModel::MIN_HULL_POINTS ||
+      CHull2->GetDensity() < ConvexHullModel::MIN_HULL_POINTS)
   {
     /* DEBUG
-    std::cout << "The two polygons intersect in their interior." << std::endl;
+    Message << "Checking one small hull vs. one big hull" << std::endl;
+    system_messages::information(Message.str());
     */
+    
+    if (this->DistanceTo(CHull2) <= pow(Epsilon, 2.0))
+    {
+      doMerge = true;
+    }
+    else
+    { /* Intersection criteria */
+      ConvexHullModel *BigHull,       *SmallHull;
+      if (this->GetDensity() >= ConvexHullModel::MIN_HULL_POINTS)
+      {
+        BigHull   = this;
+        SmallHull = CHull2;
+      }
+      else
+      {
+        BigHull   = CHull2;
+        SmallHull = this;
+      }
+      CGALPoints &BigHullPoints   = BigHull->getHullPoints();
+      CGALPoints &SmallHullPoints = SmallHull->getHullPoints();
+      
+      for (size_t i = 0; i < SmallHullPoints.size(); i++)
+      {
+        if (BigHull->IsInside(SmallHullPoints[i]))
+        {
+          doMerge = true;
+          break;
+        }
+      }
+    }
+  }
+  else 
+  if (this->GetDensity() >= ConvexHullModel::MIN_HULL_POINTS && 
+           CHull2->GetDensity() >= ConvexHullModel::MIN_HULL_POINTS)
+  {
+    /* DEBUG
+    Message << "Checking two big hulls" << std::endl;
+    system_messages::information(Message.str()); */
 
-    JointHull = new ConvexHullModel( P, Q );
-    // JointHull->Print();
+    for (size_t i = 0; i < HullPoints.size(); i++)
+    {
+      P.push_back(HullPoints[i]);
+    }
+  
+    for (size_t i = 0; i < Hull2Points.size(); i++)
+    {
+      Q.push_back(Hull2Points[i]);
+    }
+
+    /* Check polygon intersection */
+    if (CGAL::do_intersect (P, Q))
+    {
+      doMerge = true;
+    }
+    else if (Epsilon > 0)
+    {
+      /* Check polytope distances */
+      double sqrDistance = this->DistanceTo (CHull2);
+
+      if (sqrDistance <= pow(Epsilon, 2.0))
+      {
+        /* The two hulls are close below Epsilon */
+        doMerge = true;
+      }
+    }
+  }
+
+  if (doMerge)
+  {
+    for (size_t i = 0; i < HullPoints.size(); i++)
+    {
+      JointPoints.push_back(HullPoints[i]);
+    }
+    
+    for (size_t i = 0; i < Hull2Points.size(); i++)
+    {
+      JointPoints.push_back(Hull2Points[i]);
+    }
+    
+    JointHull = new ConvexHullModel( JointPoints, TotalDensity );
+    /* DEBUG
+    std::cout << "The two hulls are merged." << std::endl; 
+    JointHull->Print(); */
     return JointHull;
   }
   else
   {
-    /*
-    std::cout << "The two polygons do not intersect." << std::endl;
-    */
+    /* DEBUG
+    std::cout << "The two hulls are NOT merged." << std::endl; */
     return NULL;
   }
 }
 
-void ConvexHullModel::Assemble(int NumPoints, int NumDimensions, double * DimValues)
+double ConvexHullModel::DistanceTo ( ConvexHullModel * CHull2 )
+{
+  CGALPoints HullPoints2;
+  CGALPoints::iterator it;
+  vector<PolytopePoint_2> R, S;
+
+  for (it=HullPoints.begin(); it != HullPoints.end(); ++it)
+  {
+    R.push_back(PolytopePoint_2(CGAL::to_double(it->x()), CGAL::to_double(it->y())));
+  }
+
+  HullPoints2 = CHull2->getHullPoints();
+  for (it=HullPoints2.begin(); it != HullPoints2.end(); ++it)
+  {
+    S.push_back(PolytopePoint_2(CGAL::to_double(it->x()), CGAL::to_double(it->y())));
+  }
+
+  return GenericDistance (R, S);
+}
+
+
+
+void ConvexHullModel::Assemble(long long Density, int NumPoints, int NumDimensions, double * DimValues)
 {
   /* 2D */
-  Dimensions = NumDimensions;
+  this->Density = Density;
+  Dimensions    = NumDimensions;
 
   for (int i = 0; i < NumPoints*NumDimensions; i +=2)
   {
@@ -204,5 +411,16 @@ void ConvexHullModel::Assemble(int NumPoints, int NumDimensions, double * DimVal
   }
 }
 
+double ConvexHullModel::GenericDistance(vector<PolytopePoint_2> P, vector<PolytopePoint_2> Q)
+{
+  Polytope_distance pd(P.begin(), P.end(), Q.begin(), Q.end());
 
+  assert (pd.is_valid());
 
+  double sqrDistance = CGAL::to_double (pd.squared_distance_numerator()) /
+                       CGAL::to_double (pd.squared_distance_denominator());
+
+  /* std::cout << "[ConvexHullModel::DistanceTo] Squared distance=" << sqrDistance << std::endl; */
+
+  return sqrDistance;
+}

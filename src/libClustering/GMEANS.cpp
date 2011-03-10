@@ -195,7 +195,7 @@ bool SimpleRun)
   pt = (Point *) Data[0];
   Point p = *pt;
   DIMENSIONS = p.size();                          //3;//atoi(argv[2]);
-  //	printf("******** %d ******\n", DIMENSIONS);
+  // printf("******** %d ******\n", DIMENSIONS);
 
   CENTERS = 2;                                    //atoi(argv[3]);
   NEW_CENTERS = 0;
@@ -381,7 +381,7 @@ bool SimpleRun)
   for(i = 0; i < NUMBER_OF_RECORDS; i++)
   {
                                                   //[i] = UNCLASSIFIED;
-    ClusterAssignmentVector.push_back(assigned_centers[i]+1);
+    ClusterAssignmentVector.push_back(assigned_centers[i]+1); // Cluster 0 is always NOISE
   }
 
   /* Add one more cluster, to avoid the non-existent NOISE cluster */

@@ -808,12 +808,28 @@ XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
 
     if (CurrentNodeName.compare(NODE_EVENTTYPE_A) == 0)
     {
-      EventTypeA     = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+      string EventTypeStr = (const char*) xmlNodeGetContent(CurrentNode);
+      if (EventTypeStr.compare(TEXT_DURATION) == 0)
+      {
+        EventTypeA = DURATION_EVENT_TYPE;
+      }
+      else
+      {
+        EventTypeA     = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+      }
       EventTypeARead = true;
     }
     else if (CurrentNodeName.compare(NODE_EVENTTYPE_B) == 0)
     {
-      EventTypeB     = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+      string EventTypeStr = (const char*) xmlNodeGetContent(CurrentNode);
+      if (EventTypeStr.compare(TEXT_DURATION) == 0)
+      {
+        EventTypeB = DURATION_EVENT_TYPE;
+      }
+      else
+      {
+        EventTypeB     = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+      }
       EventTypeBRead = true;
     }
     else if (CurrentNodeName.compare(NODE_FACTOR) == 0)

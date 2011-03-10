@@ -91,10 +91,17 @@ class ClusteringAlgorithm: public Error
 
     virtual string GetClusteringAlgorithmNameFile(void) const = 0;
 
-    virtual bool   IsDistributed(void) { return false; };
+    virtual bool IsDistributed(void) { return false; };
 
-    virtual bool ComputeParamsApproximation(const vector<Point*>& Data,
-                                            INT32     ParametersCount, ...) {};
+    virtual bool HasNoise(void)      { return false; };
+
+    virtual bool ParametersApproximation(const vector<const Point*>& Data,
+                                         map<string, string>&  Parameters,
+                                         string                OutputFileNamePrefix)
+    {
+      SetErrorMessage("this algorithm does no have a parameter approximation defined");
+      return false;
+    };
 
 };
 

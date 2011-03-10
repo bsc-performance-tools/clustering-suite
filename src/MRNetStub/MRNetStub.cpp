@@ -46,15 +46,26 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+#include <sstream>
+using std::ostringstream;
+
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
 #include <cerrno>
 
+#include <Timer.hpp>
+
 bool   Verbose = true;
 
 string ClusteringDefinitionXML;    /* Clustering definition XML file name */
 bool   ClusteringDefinitionRead = false;
+
+double Epsilon;
+bool   EpsilonRead = false;
+
+int    MinPoints;
+bool   MinPointsRead = false;
 
 string InputTraceName;             /* Input trace name */
 bool   InputTraceNameRead = false;
@@ -83,28 +94,9 @@ bool   ApplyCPIStack = false;
 "  -d <clustering_def_xml>    XML containing the clustering process\n"\
 "                             definition\n"\
 "\n"\
-"  -b                         When using Dimemas traces, print \"block begin\"\n"\
-"                             and \"block end\" records for each burst on\n"\
-"                             output trace\n"\
+"  -e <epsilon>               Value of the epsilon parameter to use in DBSCAN\n"\
 "\n"\
-"  -c                         Generate the IBM PPC970 (r) CPIStack model report\n"\
-"                             for each cluster found, if required hardware\n"\
-"                             counters data are present on the input file\n"\
-"\n"\
-"  -p <k>[,k_end]             Computes the k-neighbour (or range) distance in\n"\
-"                             terms of clustering parameter defined with '-d'.\n"\
-"                             Generates an GNUPlot to easily select the DBScan\n"\
-"                             parameters\n"\
-"\n"\
-"  -m <eigen_matrix_file>     CSV file containing an eigenvectors matrix to\n"\
-"                             transform the original space\n"\
-"\n"\
-"  -a[n]                      Create cluster sequence to compute the alignment\n"\
-"                             Using '-an' noise points are NOT FLUSHED in the\n"\
-"                             resulting sequence\n"\
-"\n"\
-"  -t                         Generate the file used to create a tree trough\n"\
-"                             successive clusterings\n"\
+"  -m <min_points>            Value of the min_points parameter to use in DBSCAN\n"\
 "\n"\
 "  -i <input_file>            Input CSV / Dimemas trace / Paraver trace\n"\
 "\n"\
@@ -130,6 +122,7 @@ ReadArgs(int argc, char *argv[])
 {
   INT32 j = 1;
   INT32 ParametersRequired = 1;
+  char* err;
 
   if (argc == 1 ||
       argc == 2 &&
@@ -158,6 +151,30 @@ ReadArgs(int argc, char *argv[])
           ClusteringDefinitionXML  = argv[j];
           ClusteringDefinitionRead = true;
           break;
+        case 'e':
+          j++;
+          Epsilon = strtod(argv[j], &err);
+
+          if (*err)
+          {
+            cerr << "Wrong epsilon value " << argv[j] << endl;
+            exit(EXIT_FAILURE);
+          }
+
+          EpsilonRead = true;
+          break;
+        case 'm':
+          j++;
+          MinPoints = strtol(argv[j], &err, 0);
+
+          if (*err)
+          {
+            cerr << "Wrong min_points value " << argv[j] << endl;
+            exit(EXIT_FAILURE);
+          }
+
+          MinPointsRead = true;
+          break;
         case 'i':
           j++;
           InputTraceName     = argv[j];
@@ -185,6 +202,18 @@ ReadArgs(int argc, char *argv[])
   if (!ClusteringDefinitionRead)
   {
     cerr << "Definition XML file missing ( \'-d\' parameter)" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  if (!EpsilonRead)
+  {
+    cerr << "Epsilon value not defined ( \'-e\' parameter)" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  if (!MinPointsRead)
+  {
+    cerr << "Min_Points value not defined ( \'-m\' parameter)" << endl;
     exit (EXIT_FAILURE);
   }
 
@@ -241,17 +270,23 @@ void CheckOutputFile()
 
 int main(int argc, char *argv[])
 {
-  libDistributedClustering Clustering = libDistributedClustering(true);
-  
-  ReadArgs(argc, argv);
-
-  CheckOutputFile();
-
+  Timer Timing;
   set<int> TasksToRead;
   vector<ConvexHullModel> Hulls;
 
+  ostringstream Messages;
   
-  if (!Clustering.InitClustering(ClusteringDefinitionXML, true, 0, 1)) // true == Root Task, 0 == MyRank, 1 = TotalTasks
+  libDistributedClustering Clustering = libDistributedClustering(VERBOSE);
+  
+  ReadArgs(argc, argv);
+  CheckOutputFile();
+  
+  if (!Clustering.InitClustering(ClusteringDefinitionXML,
+                                 Epsilon,
+                                 MinPoints,
+                                 true,
+                                 0,
+                                 1)) // true == Root Task, 0 == MyRank, 1 = TotalTasks
   {
     cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
@@ -263,18 +298,12 @@ int main(int argc, char *argv[])
     cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
-
+  
+  Timing.begin();
   system_messages::information("** CLUSTER ANALYSIS **\n");
   if (!Clustering.ClusterAnalysis(Hulls))
   {
     cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
-    exit (EXIT_FAILURE);
-  }
-
-  system_messages::information("** FLUSHING DATA **\n");
-  if (!Clustering.PrintModels(Hulls, OutputModelsFileName))
-  {
-    cerr << "Error writing data points: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
 
@@ -284,7 +313,16 @@ int main(int argc, char *argv[])
     cerr << "Error classifying data: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
+  Messages << "--> Analysis/Classification End Time " << Timing.end() << endl;
+  system_messages::information(Messages.str().c_str());
   
+  system_messages::information("** FLUSHING DATA **\n");
+  if (!Clustering.PrintModels(Hulls, OutputModelsFileName))
+  {
+    cerr << "Error writing data points: " << Clustering.GetErrorMessage() << endl;
+    exit (EXIT_FAILURE);
+  }
+
   system_messages::information("** GENERATING LOCAL DATA GNUPlot SCRIPTS **\n");
   if (!Clustering.PrintPlotScripts(OutputLocalDataFileName, "", true )) // true = Local Partition
   {

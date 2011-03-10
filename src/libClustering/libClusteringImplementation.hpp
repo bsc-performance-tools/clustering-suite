@@ -56,7 +56,13 @@ class libClusteringImplementation: public Error
 
     bool ExecuteClustering(const vector<const Point*>& Data, Partition& Partition);
 
+    bool ParametersApproximation(const vector<const Point*>& Data,
+                                 map<string, string>         Parameters,
+                                 string                      OutputFileNamePrefix);
+
     bool UsingADistributedAlgorithm(void);
+
+    bool HasNoise(void);
 
     string GetClusteringAlgorithmName(void);
 

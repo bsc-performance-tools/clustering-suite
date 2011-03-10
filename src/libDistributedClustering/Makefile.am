@@ -7,6 +7,7 @@ common_filesdir = @common_filesdir@
 INCLUDES = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/BasicClasses \
+	-I$(top_srcdir)/src/libANN \
 	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libTraceClustering \
 	-I$(top_srcdir)/src/libSharedComponents 

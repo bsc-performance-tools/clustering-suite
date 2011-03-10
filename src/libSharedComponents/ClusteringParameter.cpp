@@ -42,6 +42,10 @@ using std::numeric_limits;
 #include <math.h>
 #include <float.h>
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 /*****************************************************************************
  * class ClusteringParameter (superclass)
  ****************************************************************************/
@@ -100,18 +104,26 @@ SingleEvent::NewData(event_type_t EventType, event_value_t EventValue)
     // fix broken counters, PM_CMPLU_STALL_FDIV and PM_CMPLU_STALL_ERAT_MISS
     if (this->EventType == 42001226 || this->EventType == 42001219 )
     {
-      INT64 bogus1, bogus2;
+      event_value_t bogus1, bogus2;
 
       bogus1 = EventValue << 32; // shift left 32 bits (to clear out upper 32 bits)
       bogus2 = bogus1 >> 32; // shift right 32 bits (to restore the lower 32 bits)
+
+      /* DEBUG
+      cout << "Cleaning event. Type = " << this->EventType;
+      cout << ". Original Value = " << EventValue; */
+      
       if (bogus2 >> 30 >= 1)
       { // if this is an overflow value, flip all bits
-        this->EventValue = bogus2 ^ 4294967295; // do an XOR with 11111111111111111111111111111111  (32 1's)
+        this->EventValue = bogus2 ^ (4294967295UL); // do an XOR with 11111111111111111111111111111111  (32 1's)
       }
       else
       {
         this->EventValue = bogus2;
-      }
+     }
+
+     /* DEBUG
+     cout << " - Clean Value = " << this->EventValue << endl; */
     }
     else
     {

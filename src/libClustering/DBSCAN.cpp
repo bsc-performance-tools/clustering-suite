@@ -55,6 +55,9 @@ using std::sort;
 using std::cout;
 using std::endl;
 
+#include <fstream>
+using std::ofstream;
+
 using std::make_pair;
 
 const string DBSCAN::NAME              = "DBSCAN";
@@ -143,7 +146,6 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
   }
 
   /* DEBUG */
-  cout << "Running DBSCAN" << endl;
   vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
 
   if (Data.size() != ClusterAssignmentVector.size())
@@ -234,44 +236,83 @@ DBSCAN::NewDataSet(void)
   return new DBSCANDataSet();
 }
 */
+const string DBSCAN::PARAMETER_K_BEGIN = "k_begin";
+const string DBSCAN::PARAMETER_K_END   = "k_end";
 
-bool DBSCAN::ComputeParamsApproximation(const vector<const Point*>& Data,
-                                        INT32                       ParametersCount, ...)
+bool DBSCAN::ParametersApproximation(const vector<const Point*>& Data,
+                                     map<string, string>&        Parameters,
+                                     string                      OutputFileNamePrefix)
 {
-  vector<INT32>* KNeighbours;
-  char*          KNeighbourFileBaseName;
-  va_list        Arguments;
+  INT32  k_begin, k_end;
+  map<string, string>::iterator ParametersIterator;
 
-  /* DataSet* Data = DataSet::GetInstance(); */
-
-  va_start(Arguments, ParametersCount);
-
-  if (ParametersCount != 2)
+  if (Data.size() == 0)
   {
-    ostringstream ErrorMessage;
-
-    ErrorMessage << "parameter approximation in DBSCAN only requires ";
-    ErrorMessage << "2 and " << ParametersCount << " received";
-    SetErrorMessage(ErrorMessage.str().c_str());
+    SetErrorMessage("no data to compute the parameter approximation");
+    SetError(true);
     return false;
   }
 
-  KNeighbours            = va_arg(Arguments, vector<INT32>*);
-  KNeighbourFileBaseName = va_arg(Arguments, char*);
+  /* k_begin */
+  ParametersIterator = Parameters.find(DBSCAN::PARAMETER_K_BEGIN);
+  if (ParametersIterator == Parameters.end())
+  {
+    string ErrorMessage;
+    ErrorMessage = "value of '" + DBSCAN::PARAMETER_K_BEGIN + "' not found when approximating DBSCAN parameters";
+    
+    SetErrorMessage(ErrorMessage);
+    SetError(true);
+    return false;
+  }
+  else
+  {
+    char* err;
+    k_begin = strtol(ParametersIterator->second.c_str(), &err, 0);
+
+    if (*err)
+    {
+      string ErrorMessage;
+      ErrorMessage = "incorrect value for '"+ DBSCAN::PARAMETER_K_BEGIN + "'";
+
+      SetErrorMessage(ErrorMessage);
+      SetError(true);
+      return false;
+    }
+  }
+  /* k_end */
+  ParametersIterator = Parameters.find(DBSCAN::PARAMETER_K_END);
+  if (ParametersIterator == Parameters.end())
+  {
+    k_end = k_begin;
+  }
+  else
+  {
+    char* err;
+    k_end = strtol(ParametersIterator->second.c_str(), &err, 0);
+
+    if (*err)
+    {
+      string ErrorMessage;
+      ErrorMessage = "incorrect value for '"+ DBSCAN::PARAMETER_K_BEGIN + "'";
+
+      SetErrorMessage(ErrorMessage);
+      SetError(true);
+      return false;
+    }
+
+    if (k_begin > k_end)
+    {
+      string ErrorMessage;
+      ErrorMessage = "'k_begin' value bigger than 'k_end' when approximating DBSCAN parameters";
+
+      SetErrorMessage(ErrorMessage);
+      SetError(true);
+      return false;
+    }
+  }
+
   
-  return ComputeKNeighbourhoods(Data,
-                                KNeighbours,
-                                string(KNeighbourFileBaseName));
-}
-
-bool
-DBSCAN::ComputeParamsApproximation(const vector<const Point*>& Data,
-                                   INT32                       MinPoints,
-                                   vector<double>&             Distances)
-{
-  ComputeKNeighbourDistances(Data, MinPoints, Distances);
-
-  return true;
+  return ComputeKNeighbourhoods(Data, k_begin, k_end, OutputFileNamePrefix);
 }
 
 bool DBSCAN::BuildKDTree(const vector<const Point*>& Data)
@@ -457,38 +498,33 @@ ANNpoint DBSCAN::ToANNPoint(const Point* InputPoint)
 
 bool
 DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
-                               vector<INT32>              *KNeighbours,
-                               string                      KNeighbourFileBaseName)
+                               INT32                       k_begin,
+                               INT32                       k_end,
+                               string                      OutputFileNamePrefix)
 {
-  vector<vector< double> > ResultingDistances;
+  vector<vector< double> > ResultingDistances (k_end - k_begin + 1, vector<double> ());
   vector<string>           KNeighbourFileNames;
-  vector<FILE*>            KNeighbourDataFiles (KNeighbours->size());
+  vector<ofstream*>        KNeighbourDataStreams;
   string                   KNeighbourPlotFileName;
-  FILE*                    KNeighbourPlotFile;
+  ofstream                 KNeighbourPlotStream;
   size_t                   DataSize;
-  INT64                    CurrentIndex;
 
-
-  if (Data.size() == 0)
-  { /* NO DATA! */
-    return true;
-  }
-  
-  /* Generate all neighbours data file names */
-  for (INT32 i = 0; i < KNeighbours->size(); i++)
+  /* Generate all neighbours data file names and streams */
+  for (size_t i = 0; i <= (k_end - k_begin); i++)
   {
     ostringstream KNeighbourDataFileName;
     
-    KNeighbourDataFileName << KNeighbourFileBaseName;
-    KNeighbourDataFileName << "." << KNeighbours->at(i) << "Pts.neighbour_data";
+    KNeighbourDataFileName << OutputFileNamePrefix;
+    KNeighbourDataFileName << "." << k_begin+i << "Pts.neighbour_data";
+
+    KNeighbourDataStreams.push_back(new ofstream(KNeighbourDataFileName.str().c_str(), std::ios_base::trunc));
     
-    if ((KNeighbourDataFiles[i] = 
-           fopen(KNeighbourDataFileName.str().c_str(), "w")) == NULL)
+    if (!KNeighbourDataStreams[i])
     {
       ostringstream ErrorMessage;
 
       ErrorMessage << "Unable to open ";
-      ErrorMessage << (*KNeighbours)[i];
+      ErrorMessage << k_begin+i;
       ErrorMessage << "-Neighbour distance data file \"";
       ErrorMessage << KNeighbourDataFileName;
       ErrorMessage << "\"";
@@ -499,11 +535,18 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
     }
 
     KNeighbourFileNames.push_back(KNeighbourDataFileName.str());
+    
+    (*KNeighbourDataStreams[i]).precision(6);
+    (*KNeighbourDataStreams[i]) << std::fixed;
+
+    
   }
 
-  KNeighbourPlotFileName = KNeighbourFileBaseName+".neighbour.plot";
+  /* Generate the plot script file and stream */
+  KNeighbourPlotFileName = OutputFileNamePrefix+".neighbour.plot";
+  KNeighbourPlotStream.open(KNeighbourPlotFileName.c_str(),  std::ios_base::trunc);
   
-  if ((KNeighbourPlotFile = fopen(KNeighbourPlotFileName.c_str(), "w")) == NULL)
+  if (!KNeighbourPlotStream)
   {
     string ErrorMessage;
 
@@ -519,130 +562,72 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
   /* Build KD tree */
   BuildKDTree(Data);
 
-/* DEBUG */
-  for (INT32 i = 0; i < KNeighbours->size(); i++)
-  {
-    ResultingDistances.push_back(vector<double>());
+  /* Compute the distances for all points */
 
-    cout << "Computing K-neighbour distances k=" << (*KNeighbours)[i] << endl;
+  system_messages::show_progress("Computing K-Neighbour distance",
+                                 0,
+                                 Data.size());
+
+
+  for (size_t i = 0; i < Data.size(); i++)
+  {
     
-    ComputeKNeighbourDistances(Data,
-                               (*KNeighbours)[i],
-                               ResultingDistances[i]);
-  }
-
-/*
-
-#ifndef DEBUG
-  show_progress(stdout,
-                "Computing K-Neighbour distance",
-                0,
-                DataSize);
-#endif
-
-  CurrentIndex = 0;
-  for (INT32 i = 0; i < InputData->size(); i++)
-  {
 #ifdef EXTRA_DEBUG
     cout << "Searching for K-Neigbour of point (" << i << "): ";
     cout << *InputData[i] << endl;
 #endif
-    
-    if ((*InputData)[i]->WillBeClusterized())
-    {
-      for (INT32 j = 0; j < KNeighbours->size(); j++)
-      {
-        ResultingDistances.push_back(vector<double> (DataSize));
 
-        ResultingDistances[j][CurrentIndex] = 
-          ComputeKNeighbourDistance((*InputData)[i], (*KNeighbours)[j]);
-      }
-      CurrentIndex++;
-    }
+    ComputeNeighboursDistance(Data[i], k_begin, k_end, ResultingDistances);
 
-
-#ifndef DEBUG
-    show_progress(stdout,
-                  "Computing K-Neighbour distance",
-                  CurrentIndex,
-                  DataSize);
-#endif
+    system_messages::show_progress("Computing K-Neighbour distance", i, Data.size());
   }
 
-*/
-  
-#ifndef DEBUG
   system_messages::show_progress_end("Computing K-Neighbour distance",
                                      Data.size());
-#endif
 
   /* Sort distances */
-  if (!system_messages::verbose)
-    cout << "Sorting distances... ";
-
-  for (INT32 i = 0; i < KNeighbours->size(); i++)
+  for (size_t i = 0; i <= (k_end - k_begin); i++)
   {
-    sort(ResultingDistances[i].begin(), ResultingDistances[i].end());
+    sort(ResultingDistances[i].rbegin(), ResultingDistances[i].rend());
   }
-
-  if (!system_messages::verbose)
-    cout << "DONE!" << endl;
   
   /* Flush files */
-  if (!system_messages::verbose)
-    cout << "Flushing sorted data output files... ";
 
-  for (INT32 j = 0; j < KNeighbours->size(); j++)
+  for (size_t i = 0; i <= (k_end - k_begin); i++)
   {
-    for (INT32 i = ResultingDistances[j].size()-1; i >= 0; i--)
+    for (size_t j = 0; j < Data.size(); j++)
     {
-
-      if (
-      fprintf(KNeighbourDataFiles[j], "%.06f\n", ResultingDistances[j][i]) < 0)
-      {
-        if (!system_messages::verbose)
-          cout << "NOK!" << endl;
-        SetError(true);
-        SetErrorMessage("problem writing value to K-Neighbour distance data file",
-                        strerror(errno));
-        return false;
-      }
+      (*KNeighbourDataStreams[i]) << ResultingDistances[i][j] << '\n';
     }
   }
-  
-  if (!system_messages::verbose)
-    cout << "DONE! " << endl;
 
   /* Generate plot script */
   if (!system_messages::verbose)
     cout << "Generating neighbour GNUPLot script... ";
-  
-  fprintf(KNeighbourPlotFile, 
-          "set title \"Neighbour distances\" font \",13\"\n");
+
+  KNeighbourPlotStream << "set title \"Neighbour distances\" font \",13\"" << '\n';
+
   /* There is always one 'k' value */
-  fprintf(KNeighbourPlotFile,
-            "plot \"%s\" title 'k = %d'",
-            KNeighbourFileNames[0].c_str(),
-            (*KNeighbours)[0]);
-  
-  if (KNeighbours->size() > 1)
+  KNeighbourPlotStream << "plot \"" << KNeighbourFileNames[0] << "\" title 'k = ";
+  KNeighbourPlotStream << k_begin << "'";
+
+  for (size_t i = 1; i <= (k_end - k_begin); i++)
   {
-    for (INT32 i = 1; i < KNeighbours->size(); i++)
-    {
-      fprintf(KNeighbourPlotFile,
-              ",\\\n\"%s\" title 'k = %d'",
-              KNeighbourFileNames[i].c_str(),
-              (*KNeighbours)[i]);
-    }
+    KNeighbourPlotStream << ", " << '\n' << "\\"  ;
+    KNeighbourPlotStream << "\"" << KNeighbourFileNames[i] << "\" title 'k = ";
+    KNeighbourPlotStream << k_begin+i << "'";
   }
-  fprintf(KNeighbourPlotFile,
-          "\npause -1 \"Hit return to continue...\"\n");
+  
+  KNeighbourPlotStream << '\n';
+  KNeighbourPlotStream << "pause -1 \"Hit return to continue...\"" << '\n';
   
   /* Closing files */
-  for (INT32 i = 0; i < KNeighbours->size(); i++)
-    fclose(KNeighbourDataFiles[i]);
+  for (size_t i = 0; i <= (k_end - k_begin); i++)
+  {
+    (*KNeighbourDataStreams[i]).close();
+  }
   
-  fclose(KNeighbourPlotFile);
+  KNeighbourPlotStream.close();
   
   if (!system_messages::verbose)
     cout << "DONE!" << endl;
@@ -650,48 +635,15 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
   return true;
 }
 
-bool DBSCAN::ComputeKNeighbourDistances(const vector<const Point*>& Data,
-                                   INT32                            k,
-                                   vector<double>&                  Distances)
+void DBSCAN::ComputeNeighboursDistance(const Point*             QueryPoint,
+                                       size_t                   k_begin,
+                                       size_t                   k_end,
+                                       vector<vector<double> >& ResultingDistances)
 {
-  
-#ifndef DEBUG
-  system_messages::show_progress("Computing K-Neighbour distance",
-                                 0,
-                                 Data.size());
-#endif
-
-  for (size_t i = 0; i < Data.size(); i++)
-  {
-
-#ifdef EXTRA_DEBUG
-    cout << "Searching for K-Neigbour of point (" << i << "): ";
-    // cout << (*InputData)[i] << endl;
-#endif
-    
-
-    Distances.push_back(ComputeKNeighbourDistance(Data[i], k));
-
-
-
-
-#ifndef DEBUG
-    system_messages::show_progress("Computing K-Neighbour distance",
-                                   i,
-                                   Data.size());
-#endif
-  }
-
-  return true;
-}
-
-double
-DBSCAN::ComputeKNeighbourDistance(const Point* QueryPoint, INT32 k)
-{
-  ANNpoint     ANNQueryPoint = ToANNPoint(QueryPoint);
-  ANNidxArray  ResultPoints  = new ANNidx[k+1];
-  ANNdistArray Distances     = new ANNdist[k+1];
-  double       Result;
+  ANNpoint       ANNQueryPoint = ToANNPoint(QueryPoint);
+  ANNidxArray    ResultPoints  = new ANNidx[k_end+1];
+  ANNdistArray   Distances     = new ANNdist[k_end+1];
+  vector<double> Result;
 
 #ifdef EXTRA_DEBUG
   cout << __FUNCTION__  << " QueryPoint [";
@@ -704,7 +656,7 @@ DBSCAN::ComputeKNeighbourDistance(const Point* QueryPoint, INT32 k)
   cout << "]" << endl;
 #endif
   
-  SpatialIndex->annkSearch(ANNQueryPoint, k+1, ResultPoints, Distances);
+  SpatialIndex->annkSearch(ANNQueryPoint, k_end+1, ResultPoints, Distances);
   
 #ifdef EXTRA_DEBUG
   for (INT32 i = 0; i < k+1; i++)
@@ -713,116 +665,13 @@ DBSCAN::ComputeKNeighbourDistance(const Point* QueryPoint, INT32 k)
   }
   cout << endl;
 #endif
-  
-  Result = ANN_ROOT(Distances[k]);
+
+  for (size_t i = 0; i <= (k_end - k_begin); i++)
+  {
+    ResultingDistances[i].push_back(ANN_ROOT(Distances[k_begin+i]));
+  }
   
   delete    QueryPoint;
   delete [] ResultPoints;
   delete [] Distances;
-  
-  return Result;
 }
-
-
-/*
-void
-DBSCAN::SortResultingClusters(DataManager*   InputDataManager,
-                              DBSCANDataSet* InputData)
-{
-  ostringstream                       ClusterName;
-  INT32                               i;
-  UINT64                              TotalBurstDuration = 0;
-  list<ClusterInformation*>::iterator ClusterInformationIteraror;
-  
-  /* Reorganize clusters based on cluster duration 
-  ClustersInformation.sort(ClusterInformationCompare());
-  
-  ClusterIdTranslation = vector<INT32> (ClustersInformation.size()+1);
-
-  /* Filter clusters with duration less than x% of total durations and 
-   * rename the clusters in terms of total duration 
-  for (ClusterInformationIteraror  = ClustersInformation.begin();
-       ClusterInformationIteraror != ClustersInformation.end();
-       ClusterInformationIteraror++)
-  {
-    TotalBurstDuration += (*ClusterInformationIteraror)->GetDurationSum();
-  }
-  
-  for (ClusterInformationIteraror  = ClustersInformation.begin(), 
-       i                           = MIN_CLUSTERID ;
-       ClusterInformationIteraror != ClustersInformation.end();
-       ClusterInformationIteraror++,
-       i++)
-  {
-    /* Original position is changed with the new position 
-    INT32 OriginalClusterId =
-      (*ClusterInformationIteraror)->GetClusterId();
-    
-    ClusterIdTranslation[OriginalClusterId-CLUSTERID_OFFSET] = i;
-    
-    (*ClusterInformationIteraror)->ComputeDurationPercentage(TotalBurstDuration);
-    
-    if ((*ClusterInformationIteraror)->GetDurationPercentage() < FilterThreshold)
-    {
-      ClusterIdTranslation[OriginalClusterId-CLUSTERID_OFFSET] = 
-        THRESHOLD_FILTERED_CLUSTERID;
-
-      (*ClusterInformationIteraror)->SetThresholdFiltered(true);
-      
-      ClusterName.str("");
-      ClusterName << (*ClusterInformationIteraror)->GetClusterName() << "F";
-    }
-    else
-    {
-      ClusterName.str("");
-      ClusterName << "Cluster " << i-CLUSTERID_OFFSET;
-    }
-    
-    (*ClusterInformationIteraror)->SetClusterName(ClusterName.str());
-    (*ClusterInformationIteraror)->SetClusterId(i);
-  }
-  
-
-  /* Translate the clusterId of each point 
-
-  show_progress(stdout, "Translating clusters", 0, InputData->size());
-  for (INT32 i = 0; i < InputData->size(); i++)
-  {
-    show_progress(stdout, "Translating clusters", i, InputData->size());
-    
-    if ((*InputData)[i]->WillBeClusterized() && !(*InputData)[i]->IsNoise())
-    {
-      INT32 NewClusterId = 
-        ClusterIdTranslation[(*InputData)[i]->GetClusterId()-CLUSTERID_OFFSET];
-      
-      (*InputData)[i]->SetClusterId(NewClusterId);
-    }
-  }
-  show_progress_end(stdout, "Translating clusters", InputData->size());
-  
-  /* Merge all threshold filtered clusters
-  if (ClustersInformation.size() != 0)
-  {
-    while(true)
-    {
-      ClusterInformation* CurrentClusterInformation;
-      
-      CurrentClusterInformation = ClustersInformation.back();
-      
-      if (CurrentClusterInformation->IsThresholdFiltered())
-      {
-        ThresholdFilteredClusterInfo->Merge(CurrentClusterInformation);
-        InputDataManager->DeleteClusterInformation(CurrentClusterInformation);
-        
-        ClustersInformation.pop_back();
-      }
-      else
-      {
-        break;
-      }
-    }
-  }
-  
-  return;
-}
-*/

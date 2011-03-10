@@ -42,29 +42,50 @@
 #include "ClusteringStatistics.hpp"
 #include "CPUBurst.hpp"
 
+#include <iostream>
+using std::ostream;
+
 #include <map>
 using std::map;
 
 /******************************************************************************
- * CLASS 'ExtrapolationDataContainer'
+ * CLASS 'MetricContainer'
  *****************************************************************************/
 
 /// 
-/// Container to easily manipulate the statistics of the extrapolation metrics
+/// Container to easily manipulate the statistics of a giving metric for all
+/// clusters
 ///
-class ExtrapolationDataContainer
+class MetricContainer
 {
   private:
+    string         Name;
+    bool           HighPrecision;
+
     vector<size_t> Individuals;
     vector<double> Mean;
     vector<double> M2;
     vector<double> StdDev_2;
 
   public:
-    ExtrapolationDataContainer() {};
-    ExtrapolationDataContainer(size_t ExtrapolationMetrics);
+    MetricContainer() {};
+    MetricContainer(string Name,
+                    bool   HighPrecision,
+                    size_t NumberOfClusters);
+
+    void Update(cluster_id_t Cluster, double NewValue);
+
+    string GetMetricName(void)           { return Name; };
+    bool   IsHighPrecision(void)         { return HighPrecision; };
     
-    void Update(const map<size_t, double>& ExtrapolationData);
+    vector<size_t>& GetIndividuals(void) { return Individuals; };
+    vector<double>& GetMeans(void)       { return Mean; };
+    vector<double>& GetM2s(void)         { return M2; };
+    vector<double>& GetStdDevs_2(void)   { return StdDev_2; };
+
+    bool Flush(ostream&              str,
+               bool                  HasNoise,
+               vector<cluster_id_t>& SortedClusters);
 };
 
 /******************************************************************************
@@ -80,24 +101,43 @@ class ClusteringStatistics: public Error
 {
   private:
 
-    vector<size_t>                     Individuals;
-    vector<double>                     TotalDuration;
-    vector<double>                     DurationMean;
-    vector<double>                     DurationM2;
-    vector<double>                     DurationStdDev_2;
-    vector<ExtrapolationDataContainer> Extrapolation;
+    size_t                  NumberOfClusters;
+    bool                    HasNoise;
+    
+    vector<size_t>          Individuals;
+    vector<double>          TotalDuration;
+    vector<double>          DurationMean;
+    vector<double>          DurationM2;
+    vector<double>          DurationStdDev_2;
+
+    vector<MetricContainer> ClusteringMetrics;
+    vector<MetricContainer> ExtrapolationMetrics;
+
+    map<cluster_id_t, cluster_id_t>    TranslationMap; // To re-order in terms of duration
     
   public:
 
     ClusteringStatistics() {} ;
     
-    ClusteringStatistics(size_t NumberOfClusters, size_t ExtrapolationMetrics);
+    ClusteringStatistics(size_t         NumberOfClusters,
+                         bool           HasNoise,
+                         vector<string> ClusteringParametersNames,
+                         vector<bool>   ClusteringParametersPrecision,
+                         vector<string> ExtrapolationMetricsNames,
+                         vector<bool>   ExtrapolationMetricsPrecision);
 
-    void InitStatistics(size_t NumberOfClusters, size_t ExtrapolationMetrics);
+    void InitStatistics(size_t         NumberOfClusters,
+                        bool           HasNoise,
+                        vector<string> ClusteringParametersNames,
+                        vector<bool>   ClusteringParametersPrecision,
+                        vector<string> ExtrapolationMetricsNames,
+                        vector<bool>   ExtrapolationMetricsPrecision);
 
     bool ComputeStatistics(const vector<CPUBurst*>& Bursts, const vector<cluster_id_t>& IDs);
     
     void TranslatedIDs(vector<cluster_id_t>& NewIDs);
+
+    bool Flush(ostream& str);
 
   private:
 

@@ -117,25 +117,23 @@ class DBSCAN: public ClusteringAlgorithm
 
     /* bool GetDataPoints(vector<DataPoint*>& DataPoints); */
 
+    bool HasNoise(void) { return true; };
 
-    bool
-    ComputeParamsApproximation(const vector<const Point*>& Data,
-                               INT32                       ParametersCount, ...);
-
-    bool
-    ComputeParamsApproximation(const vector<const Point*>& Data,
-                               INT32                       MinPoints,
-                               vector<double>&             Distances);
+    static const string PARAMETER_K_BEGIN;
+    static const string PARAMETER_K_END;
+      
+    bool ParametersApproximation(const vector<const Point*>& Data,
+                                 map<string, string>&        Parameters,
+                                 string                      OutputFileNamePrefix);
 
   private:
     
     bool BuildKDTree(const vector<const Point*>& Data);
 
-    bool
-    ExpandCluster(const vector<const Point*>& Data,
-                  point_idx                   CurrentPoint,
-                  vector<cluster_id_t>&       Partition,
-                  cluster_id_t           CurrentClusterId);
+    bool ExpandCluster(const vector<const Point*>& Data,
+                       point_idx                   CurrentPoint,
+                       vector<cluster_id_t>&       Partition,
+                       cluster_id_t                CurrentClusterId);
 
 
     void EpsilonRangeQuery(const Point*     QueryPoint,
@@ -144,18 +142,22 @@ class DBSCAN: public ClusteringAlgorithm
     ANNpoint ToANNPoint(const Point* const InputPoint);
 
     /* Parameters approximation methods */
-    bool
-    ComputeKNeighbourhoods(const vector<const Point*>& Data,
-                           vector<INT32>              *KNeighbours,
-                           string                      KNeighbourFileBaseName);
+    bool ComputeKNeighbourhoods(const vector<const Point*>& Data,
+                                INT32                       k_begin,
+                                INT32                       k_end,
+                                string                      OutputFileNamePrefix);
 
+    /*
     bool
     ComputeKNeighbourDistances(const vector<const Point*>& Data,
                                INT32                       k,
                                vector<double>&             Distances);
-
-    double
-    ComputeKNeighbourDistance(const Point* QueryPoint, INT32 k);
+    */
+    
+    void ComputeNeighboursDistance(const  Point*            QueryPoint,
+                                   size_t                   k_begin,
+                                   size_t                   k_end,
+                                   vector<vector<double> >& ResultingDistances);
 
 };
 

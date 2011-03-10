@@ -98,15 +98,48 @@ bool libClusteringImplementation::ExecuteClustering(const vector<const Point*>& 
   if (Algorithm == NULL)
   {
     SetErrorMessage("clustering algorithm not initialized");
+    SetError(true);
     return false;
   }
 
   if (!Algorithm->Run(Data, DataPartition))
   {
     SetErrorMessage(Algorithm->GetLastError());
+    SetError(true);
     return false;
   }
   
+  return true;
+}
+
+/**
+ * Generates a possible parameter approximation needed by the cluster algorithm
+ *
+ * \param OutputFileNamePrefix The prefix of the output files that will be generated
+ * \param Parameters Map of key and value strings parameters of the approximation
+ *
+ * \result True if the approximation wero done correctly, false otherwise
+ */
+bool libClusteringImplementation::ParametersApproximation(const vector<const Point*>& Data,
+                                                          map<string, string>         Parameters,
+                                                          string                      OutputFileNamePrefix)
+{
+  if (Algorithm == NULL)
+  {
+    SetErrorMessage("clustering algorithm not initialized");
+    SetError(true);
+    return false;
+  }
+  
+  if (!Algorithm->ParametersApproximation(Data,
+                                          Parameters,
+                                          OutputFileNamePrefix))
+  {
+    SetErrorMessage(Algorithm->GetLastError());
+    SetError(true);
+    return false;
+  }
+
   return true;
 }
 
@@ -123,6 +156,21 @@ bool libClusteringImplementation::UsingADistributedAlgorithm(void)
   }
   
   return Algorithm->IsDistributed();
+}
+
+/**
+ * Check if the algorithm uses a noise cluster
+ * 
+ * \return True if the clustering algorithm returns noise clusters
+ */
+bool libClusteringImplementation::HasNoise(void)
+{
+  if (Algorithm == NULL)
+  {
+    return false;
+  }
+
+  return Algorithm->HasNoise();
 }
 
 /**

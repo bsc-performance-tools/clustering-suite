@@ -27,21 +27,21 @@
 
 class Timer {
 
-	public:
-  	typedef double diff_type;
+  public:
+    typedef double diff_type;
 
-  	// Same as Timer t; t.begin();
-	  Timer(): start(std::clock()), elapsed(0) {}
-  	// Last result before a call to begin()
-  	diff_type last() const { return elapsed; }
-	  // Reset the timer
-  	void begin() { start = std::clock(); elapsed = 0; }
-  	// Save the result
-	  diff_type end();
+    // Same as Timer t; t.begin();
+    Timer(): start(std::clock()), elapsed(0) {}
+    // Last result before a call to begin()
+    diff_type last() const { return elapsed; }
+    // Reset the timer
+    void begin() { start = std::clock(); elapsed = 0; }
+    // Save the result
+    diff_type end();
 
-	private:
-  	std::clock_t start;
-	  diff_type    elapsed;
+  private:
+    std::clock_t start;
+    diff_type    elapsed;
 };
 
 Timer::diff_type Timer::end()

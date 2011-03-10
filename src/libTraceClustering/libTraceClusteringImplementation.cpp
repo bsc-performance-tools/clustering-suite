@@ -44,6 +44,7 @@ using cepba_tools::FileNameManipulator;
 #include <ClusteringConfiguration.hpp>
 #include "DataExtractor.hpp"
 #include "DataExtractorFactory.hpp"
+#include "ClusteringRefinement.hpp"
 #include "ClusteringStatistics.hpp"
 #include "ClusteredTraceGenerator.hpp"
 #include "ClusteredPRVGenerator.hpp"
@@ -74,6 +75,7 @@ using std::ostringstream;
 libTraceClusteringImplementation::libTraceClusteringImplementation(bool verbose)
 {
   system_messages::verbose = verbose;
+  ClusteringExecuted       = false;
 }
 
 /**
@@ -103,7 +105,7 @@ libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDe
   }
   /* Set if MPI should be used */
   ConfigurationManager->SetDistributed(USE_MPI(UseFlags));
-  
+
 #if HAVE_MPI
   /* Set the current rank and total ranks using MPI */
   
@@ -125,7 +127,7 @@ libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDe
     SetWarningMessage (Parameters->GetLastWarning());
   }
 
-  if (USE_CLUSTERING(UseFlags))
+  if (USE_CLUSTERING(UseFlags) || USE_PARAMETER_APPROXIMATION(UseFlags))
   { 
     string              ClusteringAlgorithmName;
     map<string, string> ClusteringAlgorithmParameters;
@@ -320,8 +322,7 @@ libTraceClusteringImplementation::FlushData(string OutputFileName)
 bool libTraceClusteringImplementation::ClusterAnalysis(void)
 {
   ClusteringConfiguration* ConfigurationManager;
-  ClusteringStatistics     Statistics;
-  size_t                   ExtrapolationMetrics;
+  ParametersManager*       Parameters;
 
   if (Data == NULL)
   {
@@ -330,14 +331,13 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
   }
 
   ConfigurationManager = ClusteringConfiguration::GetInstance();
+  
   if (!ConfigurationManager->IsInitialized())
   { /* Should never happen! */
     SetErrorMessage("configuration not initialized");
     return false;
   }
 
-  ExtrapolationMetrics = ConfigurationManager->GetExtrapolationParametersNames().size();
-  
   vector<const Point*>& ClusteringPoints = Data->GetClusteringPoints();
 
   /* DEBUG
@@ -351,6 +351,8 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
     return false;
   }
 
+  ClusteringExecuted = true;
+  
   if (USE_MPI(UseFlags))
   {
     if (!GatherMPIPartition())
@@ -361,14 +363,74 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
   }
   
   /* Statistics */
-  Statistics.InitStatistics(LastPartition.NumberOfClusters(), ExtrapolationMetrics);
+  Parameters = ParametersManager::GetInstance();
+  
+  Statistics.InitStatistics(LastPartition.NumberOfClusters(),
+                            ClusteringCore->HasNoise(),
+                            Parameters->GetClusteringParametersNames(),
+                            Parameters->GetClusteringParametersPrecision(),
+                            Parameters->GetExtrapolationParametersNames(),
+                            Parameters->GetExtrapolationParametersPrecision());
+  
   if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
                                     LastPartition.GetAssignmentVector()))
   {
     SetErrorMessage(Statistics.GetLastError());
     return false;
   }
+  
   Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
+  
+  return true;
+}
+
+/**
+ * Performs a DBSCAN cluster analysis plus an automatic refinement based on
+ * sequence score
+ *
+ * \result True if the analysis finished correctly, false otherwise
+ */
+bool libTraceClusteringImplementation::ClusterRefinementAnalysis(void)
+{
+#ifdef HAVE_SEQAN
+  ClusteringExecuted = true;
+  return true;
+#else
+  SetErrorMessage("Refinement analysis is not available due to the unavailability of SeqAn library");
+  SetError(true);
+  return false;
+#endif
+
+}
+
+/**
+ * Write clusters information to an output file
+ *
+ * \param OutputClustersInfoFileName Name of the output file where clusters information will be written
+ *
+ * \result True if output file is written correctly, false otherwise
+ */
+bool libTraceClusteringImplementation::FlushClustersInformation(string OutputClustersInfoFileName)
+{
+  ofstream OutputStream (OutputClustersInfoFileName.c_str(), ios_base::trunc);
+
+  if (Data == NULL)
+  {
+    SetErrorMessage("data not initialized");
+    return false;
+  }
+
+  if (!ClusteringExecuted)
+  {
+    SetErrorMessage("cluster analysis not executed");
+    return false;
+  }
+
+  if (!Statistics.Flush(OutputStream))
+  {
+    SetErrorMessage(Statistics.GetLastError());
+    return false;
+  }
   
   return true;
 }
@@ -461,6 +523,37 @@ bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
   {
     SetError(true);
     SetErrorMessage(Plots->GetLastError());
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Generates a possible parameter approximation needed by the cluster algorithm
+ *
+ * \param OutputFileNamePrefix The prefix of the output files that will be generated
+ * \param Parameters Map of key and value strings parameters of the approximation
+ *
+ * \result True if the approximation wero done correctly, false otherwise
+ */
+bool libTraceClusteringImplementation::ParametersApproximation(string              OutputFileNamePrefix,
+                                                               map<string, string> Parameters)
+{
+  if (Data == NULL)
+  {
+    SetErrorMessage("data not initialized");
+    return false;
+  }
+
+  vector<const Point*>& ClusteringPoints = Data->GetClusteringPoints();
+  
+  /* 'ClusteringCore' has been initialized in 'InitTraceClustering' method */
+  if (!ClusteringCore->ParametersApproximation(ClusteringPoints,
+                                               Parameters,
+                                               OutputFileNamePrefix))
+  {
+    SetErrorMessage(ClusteringCore->GetErrorMessage());
     return false;
   }
   

@@ -40,6 +40,7 @@ using cepba_tools::Error;
 
 #include <libClustering.hpp>
 #include <TraceData.hpp>
+#include <ClusteringStatistics.hpp>
 
 #include "trace_clustering_types.h"
 
@@ -47,13 +48,16 @@ class libTraceClusteringImplementation: public Error
 {
   private:
     
-    TraceData     *Data;
-    libClustering *ClusteringCore;
-    Partition      LastPartition;
-
+    TraceData           *Data;
+    libClustering       *ClusteringCore;
+    Partition            LastPartition;
+    ClusteringStatistics Statistics;
+    
     string         InputFileName;
     input_file_t   InputFileType;
 
+    bool           ClusteringExecuted;
+    
     unsigned char  UseFlags;
     
   public:
@@ -65,16 +69,21 @@ class libTraceClusteringImplementation: public Error
     bool ExtractData(string InputFileName);
 
     bool FlushData(string OutputFileName);
-
+    
     bool ClusterAnalysis(void);
 
-    bool HierarchicalAnalysis(void);
+    bool ClusterRefinementAnalysis(void);
+
+    bool FlushClustersInformation(string OutputClustersInfoFileName);
 
     bool ReconstructInputTrace(string OutputTraceName);
 
     bool PrintPlotScripts(string DataFileName,
                           string ScriptsFileNamePrefix);
 
+    bool ParametersApproximation(string              OutputFileNamePrefix,
+                                 map<string, string> Parameters);
+    
   private:
     void GetTaskSet(size_t TotalTasksInTrace);
     

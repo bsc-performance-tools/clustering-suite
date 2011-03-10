@@ -11,10 +11,10 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
 	echo CXX:                 ${CXX}
 	echo Binary type:         ${BITS} bits
 	echo common-files:        ${common_filesdir:-default}
-  echo CXXFLAGS:            ${CXXFLAGS}
-  echo CFLAGS:              ${CFLAGS}
-	echo LDFLAGS:							${LDFLAGS}
-	echo LIBS:								${LIBS}
+	echo CXXFLAGS:            ${CXXFLAGS}
+	echo CFLAGS:              ${CFLAGS}
+	echo LDFLAGS:             ${LDFLAGS}
+	echo LIBS:                ${LIBS}
 	echo 
 
 	echo

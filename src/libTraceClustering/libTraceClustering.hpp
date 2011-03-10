@@ -36,17 +36,25 @@
 #ifndef _LIBTRACECLUSTERING_HPP_
 #define _LIBTRACECLUSTERING_HPP_
 
+#include "trace_clustering_types.h"
+
 #include <string>
 using std::string;
 
-#define DO_NOTHING        0x00
-#define CLUSTERING        0x01
-#define PLOTS             0x02
-#define MPI               0x04
+#include <map>
+using std::map;
 
-#define USE_CLUSTERING(x) (x & CLUSTERING)
-#define USE_PLOTS(x)      (x & PLOTS)
-#define USE_MPI(x)        (x & MPI)
+#define DO_NOTHING              0x00
+#define CLUSTERING              0x01
+#define PLOTS                   0x02
+#define PARAMETER_APPROXIMATION 0x04
+#define MPI                     0x08
+
+#define USE_CLUSTERING(x)              (x & CLUSTERING)
+#define USE_PLOTS(x)                   (x & PLOTS)
+#define USE_PARAMETER_APPROXIMATION(x) (x & PARAMETER_APPROXIMATION)
+#define USE_MPI(x)                     (x & MPI)
+
 
 class libTraceClusteringImplementation;
 
@@ -66,20 +74,25 @@ class libTraceClustering
     bool InitTraceClustering(string        ClusteringDefinitionXML,
                              unsigned char Flags);
 
-    bool ExtractData(string InpasksToRead);
+    bool ExtractData(string InputFileName);
     
     bool ExtractData(string InputFileName, string OutputCSVFileName);
 
     bool ClusterAnalysis (void);
 
-    bool HierarchicalAnalysis(void);
+    bool ClusterRefinementAnalysis(void);
 
+    bool FlushClustersInformation(string OutputClustersInfoFileName);
+    
     bool FlushData(string OutputCSVFileName);
 
     bool ReconstructInputTrace(string OutputTraceName);
 
     bool PrintPlotScripts(string DataFileName,
                           string ScriptsFileNamePrefix = "");
+
+    bool ParametersApproximation(string              OutputFileNamePrefix,
+                                 map<string, string> Parameters);
 
     string GetErrorMessage(void);
 

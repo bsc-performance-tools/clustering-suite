@@ -38,9 +38,16 @@
 
 #include <Error.hpp>
 using cepba_tools::Error;
+#include <SystemMessages.hpp>
+using cepba_tools::system_messages;
 
 #include "Classifier.hpp"
 #include "ConvexHullModel.hpp"
+
+#include <iostream>
+
+#include <sstream>
+using std::ostringstream;
 
 /* Forward declarations */
 
@@ -57,7 +64,12 @@ class ConvexHullClassifier: public Classifier
                          double                   _Eps):
     HullModels(_HullModels),
     Eps(_Eps)
-    {};
+    {
+      ostringstream Message;
+      Message << "Classifier - Total Models = " << _HullModels.size();
+      Message << " Epsilon = " << _Eps << std::endl;
+      system_messages::information(Message.str());
+    };
     
     bool Classify(vector<const Point*>& Data,
                   Partition&            DataPartition);

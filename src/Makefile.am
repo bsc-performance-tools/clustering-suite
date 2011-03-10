@@ -10,6 +10,7 @@ SUBDIRS = \
 	libSharedComponents \
 	libTraceClustering \
 	ClusteringDataExtractor \
+	DBSCANParametersApproximation \
 	BurstClustering 
 	
 

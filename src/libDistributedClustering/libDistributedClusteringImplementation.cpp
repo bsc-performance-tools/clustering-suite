@@ -33,6 +33,7 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
+#include "libDistributedClustering.hpp"
 #include "libDistributedClusteringImplementation.hpp"
 
 #include <ClusteringConfiguration.hpp>
@@ -45,6 +46,7 @@
 #include "PlottingManager.hpp"
 
 #include "ConvexHullClassifier.hpp"
+#include "DBSCAN.hpp"
 
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
@@ -61,12 +63,33 @@ using std::ostringstream;
 /**
  * Empty constructor
  */
-libDistributedClusteringImplementation::libDistributedClusteringImplementation(bool verbose)
+libDistributedClusteringImplementation::libDistributedClusteringImplementation(int verbose)
 {
-  system_messages::verbose = verbose;
+  system_messages::distributed = true;
+  
+  switch(verbose)
+  {
+    case SILENT:
+      system_messages::verbose = false;
+      break;
+    case VERBOSE:
+      system_messages::verbose                 = true;
+      system_messages::messages_from_all_ranks = false;
+      break;
+    case VVERBOSE:
+      system_messages::verbose                 = true;
+      system_messages::messages_from_all_ranks = true;
+    default:
+      system_messages::verbose                 = false;
+      break;
+  }
+  
+  
 }
 
 bool libDistributedClusteringImplementation::InitClustering(string ClusteringDefinitionXML,
+                                                            double Epsilon,
+                                                            INT32  MinPoints,
                                                             bool   Root,
                                                             INT32  MyRank,
                                                             INT32  TotalRanks)
@@ -76,6 +99,8 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
   string                   ClusteringAlgorithmName;
   map<string, string>      ClusteringAlgorithmParameters;
   PlottingManager         *Plots;
+  ostringstream            Converter;
+  string                   EpsilonStr, MinPointsStr;
   
   ConfigurationManager = ClusteringConfiguration::GetInstance();
 
@@ -110,9 +135,14 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
   /* Check if clustering library could be correctly initialized */
   ClusteringCore = new libClustering();
 
-  ClusteringAlgorithmName       = ConfigurationManager->GetClusteringAlgorithmName();
-  ClusteringAlgorithmParameters = ConfigurationManager->GetClusteringAlgorithmParameters();
+  /* Ignore the clustering algorithm defined in the XML and force it to DBSCAN */
+  ClusteringAlgorithmName       = DBSCAN::NAME;
 
+  Converter << Epsilon;
+  ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::EPSILON_STRING, string(Converter.str())));
+  Converter.str("");
+  Converter << MinPoints;
+  ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::MIN_POINTS_STRING, string(Converter.str())));
   if (!ClusteringCore->InitClustering (ClusteringAlgorithmName,
                                        ClusteringAlgorithmParameters))
   {
@@ -120,6 +150,8 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
     SetErrorMessage(ClusteringCore->GetErrorMessage());
     return false;
   }
+  this->Epsilon   = Epsilon;
+  this->MinPoints = MinPoints;
 
   Plots = PlottingManager::GetInstance(false);
 
@@ -130,10 +162,8 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
     return false;
   }
 
-  system_messages::distributed = true;
   system_messages::my_rank     = MyRank; 
-  system_messages::messages_from_all_ranks = true;
- 
+  
   this->Root = Root;
   
   return true;
@@ -311,7 +341,7 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<ConvexHullModel
   ostringstream Messages;
 
   vector<const Point*>& CompletePoints = (vector<const Point*>&) Data->GetCompleteBursts();
-  ConvexHullClassifier ClassifierCore(ClusterModels, 0.0);
+  ConvexHullClassifier ClassifierCore(ClusterModels, Epsilon);
 
   /* DEBUG
   Messages << "Hulls used to classify points = " << ClusterModels.size() << endl;
@@ -330,7 +360,7 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
 {
   ClusteringConfiguration* ConfigurationManager;
   ClusteringStatistics     Statistics;
-  size_t                   ExtrapolationMetrics;
+  ParametersManager*       Parameters;
  
 
   ConfigurationManager = ClusteringConfiguration::GetInstance();
@@ -340,12 +370,19 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
     return false;
   }
 
-  ExtrapolationMetrics = ConfigurationManager->GetExtrapolationParametersNames().size();
-  
   /* Statistics */
+
+  Parameters = ParametersManager::GetInstance();
+  Statistics.InitStatistics(LastPartition.NumberOfClusters(),
+                            true, // We alway use DBSCAN 
+                            Parameters->GetClusteringParametersNames(),
+                            Parameters->GetClusteringParametersPrecision(),
+                            Parameters->GetExtrapolationParametersNames(),
+                            Parameters->GetExtrapolationParametersPrecision());
+  
   if (UseClassificationPartition)
   {
-    Statistics.InitStatistics(ClassificationPartition.NumberOfClusters(), ExtrapolationMetrics);
+    
     if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
                                       ClassificationPartition.GetAssignmentVector()))
     {
@@ -356,7 +393,6 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
   }
   else
   {
-    Statistics.InitStatistics(LastPartition.NumberOfClusters(), ExtrapolationMetrics);
     if (!Statistics.ComputeStatistics(Data->GetClusteringBursts(),
                                       LastPartition.GetAssignmentVector()))
     {

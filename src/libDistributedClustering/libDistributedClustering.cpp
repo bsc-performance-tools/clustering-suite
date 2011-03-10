@@ -42,13 +42,15 @@ using cepba_tools::system_messages;
 /**
  * Empty constructor
  */
-libDistributedClustering::libDistributedClustering(bool verbose)
+libDistributedClustering::libDistributedClustering(int verbose)
 {
-  Implementation = new libDistributedClusteringImplementation(verbose);
+  Implementation  = new libDistributedClusteringImplementation(verbose);
   Error = Warning = false;
 }
 
 bool libDistributedClustering::InitClustering(string ClusteringDefinitionXML,
+                                              double Epsilon,
+                                              int    MinPoints,
                                               bool   Root,
                                               int    MyRank,
                                               int    TotalRanks)
@@ -56,6 +58,8 @@ bool libDistributedClustering::InitClustering(string ClusteringDefinitionXML,
   this->Root = Root;
   
   if (!Implementation->InitClustering(ClusteringDefinitionXML,
+                                      Epsilon,
+                                      MinPoints,
                                       Root,
                                       MyRank,
                                       TotalRanks))

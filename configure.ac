@@ -183,6 +183,16 @@ dnl AX_CHECK_CGAL: set if hull models and mrnet version can be compiled
 dnl =========================================================================
 AX_CHECK_CGAL()
 
+dnl =========================================================================
+dnl AX_CHECK_SEQAN: check for Seqan installation to perform the iterative
+dnl refinement
+dnl =========================================================================
+AX_CHECK_SEQAN()
+if test "x${seqan_enabled}" = "xyes"; then
+	CXXFLAGS="${CXXFLAGS} ${SEQAN_CPPFLAGS}"
+	CFLAGS="${CFLAGS} ${SEQAN_CPPFLAGS}"
+fi
+
 dnl src/BurstClustering/Makefile
 dnl src/libANN/Makefile
 dnl src/libClusteringAlgorithms/Makefile
@@ -201,6 +211,7 @@ src/libClustering/gmeans/Makefile
 src/libClustering/Makefile
 src/libTraceClustering/Makefile
 src/ClusteringDataExtractor/Makefile
+src/DBSCANParametersApproximation/Makefile
 src/BurstClustering/Makefile
 ])
 

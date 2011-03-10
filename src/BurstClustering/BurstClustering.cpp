@@ -65,6 +65,8 @@ bool   OutputFileNameRead = false;
 string OutputDataFileName;
 bool   ReconstructTrace   = true;
 
+string OutputClustersInformationFileName;
+
 bool   ApplyCPIStack = false;
 
 #define HELP \
@@ -72,7 +74,7 @@ bool   ApplyCPIStack = false;
 "Usage:\n"\
 "  %s -d <clustering_def.xml> [OPTIONS] -i <input_trace> [<output_trace>]\n"\
 "\n"\
-"  -v|--version               Information about the tool\n"\
+"  -v |--version              Information about the tool\n"\
 "\n"\
 "  -h                         This help\n"\
 "\n"\
@@ -80,29 +82,6 @@ bool   ApplyCPIStack = false;
 "\n"\
 "  -d <clustering_def_xml>    XML containing the clustering process\n"\
 "                             definition\n"\
-"\n"\
-"  -b                         When using Dimemas traces, print \"block begin\"\n"\
-"                             and \"block end\" records for each burst on\n"\
-"                             output trace\n"\
-"\n"\
-"  -c                         Generate the IBM PPC970 (r) CPIStack model report\n"\
-"                             for each cluster found, if required hardware\n"\
-"                             counters data are present on the input file\n"\
-"\n"\
-"  -p <k>[,k_end]             Computes the k-neighbour (or range) distance in\n"\
-"                             terms of clustering parameter defined with '-d'.\n"\
-"                             Generates an GNUPlot to easily select the DBScan\n"\
-"                             parameters\n"\
-"\n"\
-"  -m <eigen_matrix_file>     CSV file containing an eigenvectors matrix to\n"\
-"                             transform the original space\n"\
-"\n"\
-"  -a[n]                      Create cluster sequence to compute the alignment\n"\
-"                             Using '-an' noise points are NOT FLUSHED in the\n"\
-"                             resulting sequence\n"\
-"\n"\
-"  -t                         Generate the file used to create a tree trough\n"\
-"                             successive clusterings\n"\
 "\n"\
 "  -i <input_file>            Input CSV / Dimemas trace / Paraver trace\n"\
 "\n"\
@@ -119,8 +98,8 @@ bool   ApplyCPIStack = false;
 
 void PrintUsage(char* ApplicationName)
 {
-  cout << "Usage: " << ApplicationName << " [-s] -d <clustering_def.xml> [-b] [-m <eigen_matrix_file>";
-  cout << "[-c] [-p <k>[,<k_end>]] [-x] [-r] -i <input_trace> <output_trace|output_data>" << endl;
+  cout << "Usage: " << ApplicationName << " [-s] -d <clustering_def.xml> ";
+  cout << "-i <input_file> -o <output_file>" << endl;
 }
 
 void
@@ -217,7 +196,8 @@ void CheckOutputFile()
       OutputFileExtension.compare("trf") == 0)
   {
     FileNameManipulator NameManipulator(OutputFileName, OutputFileExtension);
-    OutputDataFileName = NameManipulator.AppendStringAndExtension("DATA", "csv");
+    OutputDataFileName                 = NameManipulator.AppendStringAndExtension("DATA", "csv");
+    OutputClustersInformationFileName  = NameManipulator.AppendStringAndExtension("clusters_info", "csv");
     return;
   }
   else if (OutputFileExtension.compare("csv") == 0)
@@ -266,6 +246,13 @@ int main(int argc, char *argv[])
   if (!Clustering.FlushData(OutputDataFileName))
   {
     cerr << "Error writing data points: " << Clustering.GetErrorMessage() << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  system_messages::information("** GENERATING CLUSTERS INFORMATION FILE **\n");
+  if (!Clustering.FlushClustersInformation(OutputClustersInformationFileName))
+  {
+    cerr << "Error writing clusters information file: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
 

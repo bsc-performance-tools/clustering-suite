@@ -45,6 +45,15 @@ bool system_messages::distributed             = false;
 int  system_messages::my_rank                 = -1;
 bool system_messages::messages_from_all_ranks = false;
 
+
+bool system_messages::percentage_ongoing      = false;
+int  system_messages::last_percentage_written = 0;
+
+void system_messages::information(string message, FILE* channel)
+{
+  system_messages::information(message.c_str(), channel);
+}
+
 void system_messages::information(const char* message, FILE* channel)
 {
   if (system_messages::verbose)
@@ -106,17 +115,50 @@ void system_messages::show_percentage_progress(const char* message,
   else
     real_percentage = current_percentage;
   
-  if (system_messages::verbose && !system_messages::distributed)
+  if (system_messages::verbose)
   {
-    fprintf(channel, "\r%s %03d%%", message, real_percentage);
-    fflush(channel);
+    if (!system_messages::distributed)
+    {
+      fprintf(channel, "\r%s %03d%%", message, real_percentage);
+      fflush(channel);
+    }
+    else
+    {
+      if(!system_messages::percentage_ongoing)
+      {
+        fprintf(channel,
+                "[%d] %s %03d%%",
+                system_messages::my_rank,
+                message,
+                real_percentage);
+        fflush(channel);
+        system_messages::percentage_ongoing = true;
+      }
+      else
+      {
+        if (real_percentage % 10 == 0 && real_percentage != 100 )
+        {
+          fprintf(channel, "  %03d%%", real_percentage);
+          fflush(channel);
+        }
+      }
+    }
   }
+  
 }
 
 void system_messages::show_percentage_end(const char* message, FILE* channel)
 {
-  if (system_messages::verbose && !system_messages::distributed)
+  if (system_messages::verbose)
   {
-    fprintf(channel, "\r%s 100%%\n", message);
+    if (!system_messages::distributed)
+    {
+      fprintf(channel, "\r%s 100%%\n", message);
+    }
+    else
+    {
+      fprintf(channel, " 100%%\n");
+      system_messages::percentage_ongoing = false;
+    }
   }
 }

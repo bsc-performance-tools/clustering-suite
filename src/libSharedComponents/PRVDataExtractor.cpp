@@ -50,7 +50,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-// #define DEBUG_PARAVER_INPUT 1
+// #define DEBUG_PARAVER_INPUT 0
 
 PRVDataExtractor::PRVDataExtractor(string InputTraceName)
 :DataExtractor(InputTraceName)
@@ -236,7 +236,7 @@ PRVDataExtractor::ExtractData(TraceData* TraceDataSet)
   */
   
 #ifdef DEBUG_PARAVER_INPUT
-  cout << "Data Size = " << TraceDataSet.GetDataSetSize() << endl;
+  // cout << "Data Size = " << TraceDataSet->GetDataSetSize() << endl;
 #endif
   
   return true;

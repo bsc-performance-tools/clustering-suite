@@ -63,3 +63,10 @@ libSharedComponents_la_SOURCES = \
 	XMLParser.cpp \
 	XMLParser.hpp 
 
+if HAVE_SEQAN
+libSharedComponents_la_SOURCES += \
+	ClusteringRefinement.hpp \
+	ClusteringRefinement.cpp \
+	SequenceScore.hpp \
+	SequenceScore.cpp
+endif

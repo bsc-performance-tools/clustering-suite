@@ -37,13 +37,18 @@
 #define _LIB_DISTRIBUTED_CLUSTERING_HPP_
 
 #include <trace_clustering_types.h>
+#include "ConvexHullModel.hpp"
+
+#define SILENT   0
+#define VERBOSE  1
+#define VVERBOSE 2
 
 #include <vector>
 using std::vector;
 #include <set>
 using std::set;
 
-#include "ConvexHullModel.hpp"
+
 
 class libDistributedClusteringImplementation;
 
@@ -65,9 +70,11 @@ class libDistributedClustering
     */
 
   public:
-    libDistributedClustering(bool verbose);
+    libDistributedClustering(int verbose);
 
     bool InitClustering(string ClusteringDefinitionXML,
+                        double Epsilon,
+                        int    MinPoints,
                         bool   Root,
                         int    MyRank,
                         int    TotalRanks);

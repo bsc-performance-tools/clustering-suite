@@ -1,5 +1,7 @@
 INCLUDES = \
 	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src/libClustering \
+	-I$(top_srcdir)/src/libSharedComponents \
 	-I$(top_srcdir)/src/libTraceClustering
 
 ###############################################################################
