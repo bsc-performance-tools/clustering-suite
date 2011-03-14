@@ -235,9 +235,9 @@ bool ClusteringStatistics::ComputeStatistics(const vector<CPUBurst*>&    Bursts,
  */
 void ClusteringStatistics::TranslatedIDs(vector<cluster_id_t>& NewIDs)
 {
-  map<double, cluster_id_t>                       SortingMap;
-  map<double, cluster_id_t>::const_iterator       SortingMapIterator;
-  map<cluster_id_t, cluster_id_t>::const_iterator TranslationMapIterator;
+  map<double, cluster_id_t>                         SortingMap;
+  map<double, cluster_id_t>::const_reverse_iterator SortingMapIterator;
+  map<cluster_id_t, cluster_id_t>::iterator TranslationMapIterator;
   cluster_id_t TranslatedClusterID;
 
   for (size_t i = 1; i < TotalDuration.size(); i++)
@@ -250,24 +250,25 @@ void ClusteringStatistics::TranslatedIDs(vector<cluster_id_t>& NewIDs)
   */
 
   TranslationMap[NOISE_CLUSTERID] = NOISE_CLUSTERID;
-  SortingMapIterator = SortingMap.end();
 
   
   TranslatedClusterID = MIN_CLUSTERID;
-  do
+  for (SortingMapIterator  = SortingMap.rbegin();
+       SortingMapIterator != SortingMap.rend();
+       ++SortingMapIterator)
   {
-    --SortingMapIterator;
+    // --SortingMapIterator;
     
     cluster_id_t OriginalClusterID = (*SortingMapIterator).second;
     double       Duration          = (*SortingMapIterator).first;
-    /* DEBUG 
+    /* DEBUG
     cout << "CLUSTER << " << OriginalClusterID << " ";
-    cout << "Total Duration = " << Duration << endl; 
-    */
+    cout << "Total Duration = " << Duration << endl; */
     
     TranslationMap[OriginalClusterID] = TranslatedClusterID;
     TranslatedClusterID++;
-  } while (SortingMapIterator != SortingMap.begin());
+  }
+  //while (SortingMapIterator != SortingMap.begin());
 
   /* DEBUG 
   for (TranslationMapIterator  = TranslationMap.begin();

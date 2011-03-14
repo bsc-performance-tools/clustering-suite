@@ -78,7 +78,8 @@ Point::Point(vector<double>& _Dimensions)
 
 void
 Point::RangeNormalization(const vector<double>& MaxValues,
-                          const vector<double>& MinValues)
+                          const vector<double>& MinValues,
+                          const vector<double>& Factors)
 {
   double BaseValue;
   
@@ -96,8 +97,7 @@ Point::RangeNormalization(const vector<double>& MaxValues,
   {
     BaseValue = Dimensions[i];
   
-    Dimensions[i] =
-      (BaseValue - MinValues[i]) / (MaxValues[i] - MinValues[i]);
+    Dimensions[i] = Factors[i]*((BaseValue - MinValues[i]) / (MaxValues[i] - MinValues[i]));
   }
 
   Normalized = true;

@@ -80,6 +80,8 @@ class ParametersManager: public Error
 
     vector<bool> GetClusteringParametersPrecision    (void);
     vector<bool> GetExtrapolationParametersPrecision (void);
+
+    vector<double> GetClusteringParametersFactors(void);
     
     void Clear(void);
     

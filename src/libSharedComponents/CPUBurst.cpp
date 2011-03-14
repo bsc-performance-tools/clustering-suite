@@ -191,8 +191,8 @@ CPUBurst::Print(ostream&       str,
   size_t TotalExtrapolationDimensions = ExtrapolationParametersPrecision.size();
   
   /* Common data */
-  str << Instance  << ", " << TaskId  << ", " << ThreadId << ", ";
-  str << BeginTime << ", " << EndTime << ", " << Duration << ", " << Line;
+  str << Instance  << "," << TaskId  << "," << ThreadId << ",";
+  str << BeginTime << "," << EndTime << "," << Duration << "," << Line;
 
   str.setf(ios::fixed,ios::floatfield);
   
@@ -208,7 +208,7 @@ CPUBurst::Print(ostream&       str,
       str.precision(0);
     }
     
-    str << ", " << RawDimensions[i];
+    str << "," << RawDimensions[i];
   }
 
   /* Clustering Dimensions Normalized */
@@ -221,7 +221,7 @@ CPUBurst::Print(ostream&       str,
   /* Extrapolation Dimensions */
   for (size_t i = 0; i < TotalExtrapolationDimensions; i++)
   {
-    str << ", ";
+    str << ",";
 
     ExtrapolationData = ExtrapolationDimensions.find(i);
     if (ExtrapolationData != ExtrapolationDimensions.end())
@@ -245,7 +245,7 @@ CPUBurst::Print(ostream&       str,
   }
 
   /* ClusterID */
-  str << ", " << ClusterId << endl;
+  str << "," << ClusterId << endl;
   
   return true;
 }

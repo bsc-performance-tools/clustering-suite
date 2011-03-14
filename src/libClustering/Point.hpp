@@ -62,7 +62,8 @@ class Point
     Point(vector<double>& _Dimensions);
 
     void   RangeNormalization(const vector<double>& MaxValues,
-                              const vector<double>& MinValues);
+                              const vector<double>& MinValues,
+                              const vector<double>& Factors);
 
     void   ScaleDimensions(const vector<double>& Factors);
     

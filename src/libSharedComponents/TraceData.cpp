@@ -554,13 +554,17 @@ TraceData::Normalize(void)
       
     } */
 #endif
-    
+
+    vector<double> Factors = Parameters->GetClusteringParametersFactors();
+  
     for (DataIterator  = CompleteBursts.begin();
          DataIterator != CompleteBursts.end();
          DataIterator++)
     {
       if (!(*DataIterator)->IsNormalized())
-        (*DataIterator)->RangeNormalization(MaxValues, MinValues);
+      {
+        (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
+      }
     }
 
     for (DataIterator  = FilteredBursts.begin();
@@ -568,7 +572,9 @@ TraceData::Normalize(void)
          DataIterator++)
     {
       if (!(*DataIterator)->IsNormalized())
-        (*DataIterator)->RangeNormalization(MaxValues, MinValues);
+      {
+        (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
+      }
     }
 
     // cout << "END OF NORMALIZATIONS" << endl;
@@ -815,24 +821,24 @@ bool TraceData::FlushPoints(ostream&             str,
   ExtrapolationParametersPrecision = Parameters->GetExtrapolationParametersPrecision();
 
   /* Heading line */
-  str << "# Instance, TaskId, ThreadId, Begin_Time, End_Time, Duration, Line";
+  str << "# Instance,TaskId,ThreadId,Begin_Time,End_Time,Duration, Line";
 
   for (INT32 i = 0; i < ClusteringParametersNames.size(); i++)
   {
-    str << ", " << ClusteringParametersNames[i];
+    str << "," << ClusteringParametersNames[i];
   }
 
   for (INT32 i = 0; i < ClusteringParametersNames.size(); i++)
   {
-    str << ", " << ClusteringParametersNames[i] << "_Norm";
+    str << "," << ClusteringParametersNames[i] << "_Norm";
   }
 
   for (INT32 i = 0; i < ExtrapolationParametersNames.size(); i++)
   {
-    str << ", " << ExtrapolationParametersNames[i];
+    str << "," << ExtrapolationParametersNames[i];
   }
 
-  str << ", ClusterID" << endl;
+  str << ",ClusterID" << endl;
 
   /* DEBUG
   cout << "Clustering Bursts = " << ClusteringBursts.size() << endl;

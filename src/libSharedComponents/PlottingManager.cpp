@@ -632,20 +632,18 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
     if (NumberOfClusters == 0)
     {
       Write3D_Definition (OutputStream, X, Y, Z, UNCLASSIFIED+PARAVER_OFFSET, "Unclassified", DataFileName);
-      OutputStream << ",\\" << endl;
+      OutputStream << ",\\" << '\n';
       Write3D_Definition (OutputStream, X, Y, Z, DURATION_FILTERED_CLUSTERID, "Duration Filtered", DataFileName);
-      OutputStream << ",\\" << endl;
+      OutputStream << ",\\" << '\n';
       Write3D_Definition (OutputStream, X, Y, Z, RANGE_FILTERED_CLUSTERID, "Range Filtered", DataFileName);
-      OutputStream << ",\\" << endl;
+      OutputStream << ",\\" << '\n';
       Write3D_Definition (OutputStream, X, Y, Z, THRESHOLD_FILTERED_CLUSTERID, "Threshold Filtered", DataFileName);
-      OutputStream << ",\\" << endl;
     }
     else
     {
       if (PrintNoiseCluster)
       {
         Write3D_Definition (OutputStream, X, Y, Z, NOISE_CLUSTERID+PARAVER_OFFSET, "Noise", DataFileName);
-        OutputStream << ",\\" << endl;
       }
     
       for (cluster_id_t Cluster = 1; Cluster < NumberOfClusters; Cluster++)
@@ -654,10 +652,9 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
 
         ClusterName << "Cluster " << Cluster;
 
+        OutputStream << ",\\" << '\n';
         Write3D_Definition (OutputStream, X, Y, Z, Cluster+PARAVER_OFFSET, ClusterName.str(), DataFileName);
 
-        if (Cluster != NumberOfClusters -1 )
-          OutputStream << ",\\" << endl;
       }
     }
   }
@@ -703,20 +700,18 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
     if (NumberOfClusters == 0)
     {
       Write2D_Definition (OutputStream, X, Y, UNCLASSIFIED+PARAVER_OFFSET, "Unclassified", DataFileName);
-      OutputStream << ",\\" << endl;
+      OutputStream << ",\\" << '\n';
       Write2D_Definition (OutputStream, X, Y, DURATION_FILTERED_CLUSTERID, "Duration Filtered", DataFileName);
-      OutputStream << ",\\" << endl;
+      OutputStream << ",\\" << '\n';
       Write2D_Definition (OutputStream, X, Y, RANGE_FILTERED_CLUSTERID, "Range Filtered", DataFileName);
-      OutputStream << ",\\" << endl;
+      OutputStream << ",\\" << '\n';
       Write2D_Definition (OutputStream, X, Y, THRESHOLD_FILTERED_CLUSTERID, "Threshold Filtered", DataFileName);
-      OutputStream << ",\\" << endl;
     }
     else
     {
       if (PrintNoiseCluster)
       {
         Write2D_Definition (OutputStream, X, Y, NOISE_CLUSTERID+PARAVER_OFFSET, "Noise", DataFileName);
-        OutputStream << ",\\" << endl;
       }
       
       for (size_t Cluster = 1; Cluster < NumberOfClusters; Cluster++)
@@ -724,10 +719,9 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
         ostringstream ClusterName;
         ClusterName << "Cluster " << Cluster;
 
+        OutputStream << ",\\" << '\n';
         Write2D_Definition (OutputStream, X, Y, Cluster+PARAVER_OFFSET, ClusterName.str(), DataFileName);
 
-        if (Cluster != NumberOfClusters -1 )
-          OutputStream << ",\\" << endl;
       }
     }
   }

@@ -10,6 +10,18 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-03-14 Juan Gonzalez <juan.gonzalez@bsc.es>
+
+	* Solved a problem when sorting the clusters to translated the cluster
+	IDs in ClusteringStatistics class
+
+	* Solved a problem when generating plots just with NOISE cluster
+
+	* Solved a bug to correctly apply the clustering parameters factors
+
+	* Solved a bug to correctly generate the revision number in the 
+	configure.ac file
+
 2011-03-10 Juan Gonzalez <juan.gonzalez@bsc.es>
 
 	* Added the implementation to manage the distributed tree DBSCAN in

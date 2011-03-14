@@ -197,7 +197,7 @@ ParametersManager::GetExtrapolationParametersNames (void)
 {
   vector<string> Result;
 
-  for (INT32 i = 0; i < ExtrapolationParameters.size(); i++)
+  for (size_t i = 0; i < ExtrapolationParameters.size(); i++)
   {
     Result.push_back(ExtrapolationParameters[i]->GetParameterName());
   }
@@ -214,7 +214,7 @@ ParametersManager::GetClusteringParametersPrecision (void)
 {
   vector<bool> Result;
 
-  for (INT32 i = 0; i < ClusteringParameters.size(); i++)
+  for (size_t i = 0; i < ClusteringParameters.size(); i++)
   {
     Result.push_back(ClusteringParameters[i]->HighPrecision());
   }
@@ -231,9 +231,25 @@ ParametersManager::GetExtrapolationParametersPrecision (void)
 {
   vector<bool> Result;
 
-  for (INT32 i = 0; i < ExtrapolationParameters.size(); i++)
+  for (size_t i = 0; i < ExtrapolationParameters.size(); i++)
   {
     Result.push_back(ExtrapolationParameters[i]->HighPrecision());
+  }
+
+  return Result;
+}
+
+/**
+ * Returns the factors associated to each clustering parameter
+ * \return A vector containing if the factors of the clustering parameters
+ */ 
+vector<double> ParametersManager::GetClusteringParametersFactors(void)
+{
+  vector<double> Result;
+
+  for (size_t i = 0; i < ClusteringParameters.size(); i++)
+  {
+    Result.push_back(ClusteringParameters[i]->GetFactor());
   }
 
   return Result;
