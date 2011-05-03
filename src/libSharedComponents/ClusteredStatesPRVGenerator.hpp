@@ -32,8 +32,8 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef _CLUSTEREDPRVGENERATOR_HPP_
-#define _CLUSTEREDPRVGENERATOR_HPP_
+#ifndef _CLUSTEREDSTATESPRVGENERATOR_HPP_
+#define _CLUSTEREDSTATESPRVGENERATOR_HPP_
 
 #include "ClusteredTraceGenerator.hpp"
 #include "CPUBurst.hpp"
@@ -44,7 +44,7 @@ using std::vector;
 
 class ParaverTraceParser;
 
-class ClusteredPRVGenerator: public ClusteredTraceGenerator
+class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
 {
   private:
     ParaverTraceParser *TraceParser;
@@ -58,14 +58,17 @@ class ClusteredPRVGenerator: public ClusteredTraceGenerator
     vector<CPUBurst*> BurstsBeginTime;
   
   public:
-    ClusteredPRVGenerator(string  InputTraceName,
+    ClusteredStatesPRVGenerator(string  InputTraceName,
                           string  OutputTraceName);
 
-    ~ClusteredPRVGenerator(void){};
-  
+    ~ClusteredStatesPRVGenerator(void){};
+
+    bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith);
+    
     bool Run(vector<CPUBurst*>&    Bursts,
              vector<cluster_id_t>& IDs,
-             size_t                NumberOfClusters);
+             size_t                NumberOfClusters,
+             bool                  MinimizeInformation = false);
   
     bool GenerateOutputPCF(size_t NumberOfClusters);
   

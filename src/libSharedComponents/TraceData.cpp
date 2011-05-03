@@ -850,6 +850,7 @@ bool TraceData::FlushPoints(ostream&             str,
     BeginLimitIterator = AllBursts.begin();
     EndLimitIterator   = AllBursts.end();
     DataSize           = AllBursts.size();
+    sort(AllBursts.begin(), AllBursts.end(), InstanceNumCompare());
   }
   else
   { /* Print the complete points (as a result of a clustering analysis, all
@@ -857,6 +858,7 @@ bool TraceData::FlushPoints(ostream&             str,
     BeginLimitIterator = CompleteBursts.begin();
     EndLimitIterator   = CompleteBursts.end();
     DataSize           = CompleteBursts.size();
+    sort(CompleteBursts.begin(), CompleteBursts.end(), InstanceNumCompare());
   }
   
   system_messages::show_progress("Writing point to disc", 0, DataSize);

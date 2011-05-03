@@ -40,8 +40,9 @@
  */
 Partition::Partition(void)
 {
-  _NumberOfClusters = 0;
-  _HasNoise         = false;
+  _NumberOfClusters        = 0;
+  _HasNoise                = false;
+  _ClusterAssignmentVector = vector<cluster_id_t> (0);
 }
 
 /**
@@ -62,6 +63,26 @@ vector<cluster_id_t>& Partition::GetAssignmentVector(void)
 void Partition::SetAssignmentVector(vector<cluster_id_t>& ClusterAssignmentVector)
 {
   _ClusterAssignmentVector = ClusterAssignmentVector;
+}
+
+/**
+ * Returns the set containing the IDs used
+ *
+ * \return A set containing the IDs used in the partition
+ */
+set<cluster_id_t>& Partition::GetIDs(void)
+{
+  return _IDs;
+}
+
+/**
+ * Sets the set of used IDs
+ *
+ * \param IDs A set containing the IDs used in the partition
+ */
+void Partition::SetIDs(set<cluster_id_t>& IDs)
+{
+  _IDs = IDs;
 }
 
 /**

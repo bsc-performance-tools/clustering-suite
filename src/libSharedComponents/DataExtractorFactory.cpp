@@ -33,7 +33,8 @@
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include "DataExtractorFactory.hpp"
-#include "PRVDataExtractor.hpp"
+#include "PRVStatesDataExtractor.hpp"
+#include "PRVEventsDataExtractor.hpp"
 #include "TRFDataExtractor.hpp"
 
 #include <sstream>
@@ -44,12 +45,12 @@ using std::ostringstream;
 
 DataExtractorFactory* DataExtractorFactory::Instance = NULL;
 
-DataExtractorFactory::DataExtractorFactory(void)
+DataExtractorFactory::DataExtractorFactory()
 {
   this->FileType = UndefinedInputFile;
 }
 
-DataExtractorFactory* DataExtractorFactory::GetInstance(void)
+DataExtractorFactory* DataExtractorFactory::GetInstance()
 {
   if (DataExtractorFactory::Instance == NULL)
   {
@@ -61,6 +62,7 @@ DataExtractorFactory* DataExtractorFactory::GetInstance(void)
 
 bool DataExtractorFactory::GetExtractor(string          InputFileName,
                                         DataExtractor *&DataExtractorObject,
+                                        bool            EventParsing,
                                         bool            MPI)
 {
   if (!CheckFileType(InputFileName))
@@ -80,7 +82,14 @@ bool DataExtractorFactory::GetExtractor(string          InputFileName,
   switch(FileType)
   {
     case ParaverTrace:
-      DataExtractorObject = new PRVDataExtractor(InputFileName);
+      if (EventParsing)
+      {
+        DataExtractorObject = new PRVEventsDataExtractor(InputFileName);
+      }
+      else
+      {
+        DataExtractorObject = new PRVStatesDataExtractor(InputFileName);
+      }
       break;
     case DimemasTrace:
       DataExtractorObject = new TRFDataExtractor(InputFileName);

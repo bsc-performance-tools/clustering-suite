@@ -35,7 +35,7 @@
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 
-#include "PRVDataExtractor.hpp"
+#include "PRVStatesDataExtractor.hpp"
 #include "ParaverTraceParser.hpp"
 
 #include <cstring>
@@ -52,7 +52,7 @@ using std::endl;
 
 // #define DEBUG_PARAVER_INPUT 0
 
-PRVDataExtractor::PRVDataExtractor(string InputTraceName)
+PRVStatesDataExtractor::PRVStatesDataExtractor(string InputTraceName)
 :DataExtractor(InputTraceName)
 {
   if (GetError())
@@ -76,13 +76,21 @@ PRVDataExtractor::PRVDataExtractor(string InputTraceName)
 }
 
 
-PRVDataExtractor::~PRVDataExtractor()
+
+PRVStatesDataExtractor::~PRVStatesDataExtractor()
 {
   unlink(TraceDataFileName.c_str());
 }
 
-bool
-PRVDataExtractor::ExtractData(TraceData* TraceDataSet)
+bool PRVStatesDataExtractor::SetEventsToDealWith (set<event_type_t>& EventsToDealWith)
+{
+  SetError(true);
+  SetErrorMessage("trying to use a state guided parser to an event guided parsing");
+  
+  return false;
+}
+
+bool PRVStatesDataExtractor::ExtractData(TraceData* TraceDataSet)
 {
   vector<ApplicationDescription_t> AppsDescription;
   vector<TaskDescription_t>        TaskInfo;
@@ -225,6 +233,8 @@ PRVDataExtractor::ExtractData(TraceData* TraceDataSet)
       }
     }
   }
+
+  TraceDataSet->Normalize();
   
   /* No more burst 
   if (!TraceDataSet->NoMoreBursts())
@@ -243,9 +253,8 @@ PRVDataExtractor::ExtractData(TraceData* TraceDataSet)
 }
 
 
-bool
-PRVDataExtractor::CheckState(State     *CurrentState,
-                             TraceData *TraceDataSet)
+bool PRVStatesDataExtractor::CheckState(State     *CurrentState,
+                                        TraceData *TraceDataSet)
 {
   TaskDataContainer &CurrentTaskData = 
     TaskData[CurrentState->GetTaskId()][CurrentState->GetThreadId()];
@@ -357,7 +366,7 @@ PRVDataExtractor::CheckState(State     *CurrentState,
 }
 
 bool
-PRVDataExtractor::CheckEvent(Event     *CurrentEvent,
+PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
                              TraceData *TraceDataSet)
 {
   map<event_type_t, event_value_t>::iterator EventsDataIterator;
@@ -561,7 +570,7 @@ PRVDataExtractor::CheckEvent(Event     *CurrentEvent,
 }
 
 void
-PRVDataExtractor::FillDataContainer(TaskDataContainer &TaskData,
+PRVStatesDataExtractor::FillDataContainer(TaskDataContainer &TaskData,
                                     State             *CurrentState)
 {
   TaskData.TaskId        = CurrentState->GetTaskId();

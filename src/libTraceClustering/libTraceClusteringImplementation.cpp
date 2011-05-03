@@ -44,12 +44,17 @@ using cepba_tools::FileNameManipulator;
 #include <ClusteringConfiguration.hpp>
 #include "DataExtractor.hpp"
 #include "DataExtractorFactory.hpp"
-#include "ClusteringRefinement.hpp"
 #include "ClusteringStatistics.hpp"
 #include "ClusteredTraceGenerator.hpp"
-#include "ClusteredPRVGenerator.hpp"
+#include "ClusteredStatesPRVGenerator.hpp"
+#include "ClusteredEventsPRVGenerator.hpp"
 #include "ClusteredTRFGenerator.hpp"
 #include "PlottingManager.hpp"
+
+#ifdef HAVE_SEQAN
+#include "SequenceScore.hpp"
+#include "ClusteringRefinement.hpp"
+#endif
 
 #include <cerrno>
 #include <cstring>
@@ -76,6 +81,7 @@ libTraceClusteringImplementation::libTraceClusteringImplementation(bool verbose)
 {
   system_messages::verbose = verbose;
   ClusteringExecuted       = false;
+  PRVEventsParsing         = false;
 }
 
 /**
@@ -87,9 +93,8 @@ libTraceClusteringImplementation::libTraceClusteringImplementation(bool verbose)
  *
  * \return True if initialization has been done properly. False otherwise
  */
-bool
-libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDefinitionXML,
-                                                      unsigned char UseFlags)
+bool libTraceClusteringImplementation::InitTraceClustering(string ClusteringDefinitionXML,
+                                                           unsigned char UseFlags)
 {
   ClusteringConfiguration *ConfigurationManager;
   ParametersManager       *Parameters;
@@ -127,6 +132,11 @@ libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDe
     SetWarningMessage (Parameters->GetLastWarning());
   }
 
+  if (USE_CLUSTERING_REFINEMENT(UseFlags))
+  {
+    ClusteringRefinementExecution = true;
+  }
+  
   if (USE_CLUSTERING(UseFlags) || USE_PARAMETER_APPROXIMATION(UseFlags))
   { 
     string              ClusteringAlgorithmName;
@@ -171,7 +181,7 @@ libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDe
   { /* Check if GNUplots defined in the XML are correct */
     bool DataExtraction;
     
-    if (!USE_CLUSTERING(UseFlags))
+    if (!USE_CLUSTERING(UseFlags) && !USE_CLUSTERING_REFINEMENT(UseFlags))
     { /* Data Extraction mode */
       DataExtraction = true;
     }
@@ -206,21 +216,38 @@ libTraceClusteringImplementation::InitTraceClustering(string        ClusteringDe
  * and should be used to later run an analysis.
  *
  * \param InputFileName The name of the input file where data is located
+ * \param EventsToDealWith Set of parameters in case we want to do an event parsing
+ *                         of a Paraver trace
  *
  * \return True if the data extraction work properly. False otherwise
  */
 bool
-libTraceClusteringImplementation::ExtractData(string InputFileName)
+libTraceClusteringImplementation::ExtractData(string            InputFileName,
+                                              set<event_type_t> EventsToDealWith)
 {
   DataExtractorFactory*    ExtractorFactory;
   DataExtractor*           Extractor;
-
+  
   /* Get the container */
   Data = TraceData::GetInstance();
 
   /* Get input file extractor */
   ExtractorFactory = DataExtractorFactory::GetInstance();
-  if (!ExtractorFactory->GetExtractor(InputFileName, Extractor, USE_MPI(UseFlags)))
+
+  if (EventsToDealWith.size() > 0)
+  {
+    PRVEventsParsing       = true;
+    this->EventsToDealWith = EventsToDealWith;
+  }
+  else
+  {
+    PRVEventsParsing = false;
+  }
+  
+  if (!ExtractorFactory->GetExtractor(InputFileName,
+                                      Extractor,
+                                      PRVEventsParsing,
+                                      USE_MPI(UseFlags)))
   {
     SetError(true);
     SetErrorMessage(ExtractorFactory->GetLastError());
@@ -229,6 +256,16 @@ libTraceClusteringImplementation::ExtractData(string InputFileName)
 
   this->InputFileName = InputFileName;
   InputFileType       = Extractor->GetFileType();
+
+  if (PRVEventsParsing)
+  {
+    if (!Extractor->SetEventsToDealWith(EventsToDealWith))
+    {
+      SetError(true);
+      SetErrorMessage(Extractor->GetLastError());
+      return false;
+    }
+  }
   
   if (!Extractor->ExtractData(Data))
   {
@@ -330,6 +367,13 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
     return false;
   }
 
+  if (ClusteringRefinementExecution)
+  {
+    SetError(true);
+    SetErrorMessage("single cluster analysis not available when performing a cluster refinement");
+    return false;
+  }
+
   ConfigurationManager = ClusteringConfiguration::GetInstance();
   
   if (!ConfigurationManager->IsInitialized())
@@ -365,7 +409,7 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
   /* Statistics */
   Parameters = ParametersManager::GetInstance();
   
-  Statistics.InitStatistics(LastPartition.NumberOfClusters(),
+  Statistics.InitStatistics(LastPartition.GetIDs(),
                             ClusteringCore->HasNoise(),
                             Parameters->GetClusteringParametersNames(),
                             Parameters->GetClusteringParametersPrecision(),
@@ -385,20 +429,169 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
 }
 
 /**
- * Performs a DBSCAN cluster analysis plus an automatic refinement based on
- * sequence score
+ * Performs a DBSCAN cluster analysis with auto refinement based on sequence
+ * score. The exploration range is guessed automatically
+ *
+ * \param OutputFileNamePrefix Prefix of the output files for each step data and plots
  *
  * \result True if the analysis finished correctly, false otherwise
  */
-bool libTraceClusteringImplementation::ClusterRefinementAnalysis(void)
+bool libTraceClusteringImplementation::ClusterRefinementAnalysis(string OutputFileNamePrefix)
+{
+  return true;
+}
+
+/**
+ * Performs a DBSCAN cluster analysis with auto refinement based on sequence
+ * score. The exploration range is provided by the user
+ *
+ * \param MinPoints Fixed MinPoints value used in all runs of DBSCAN
+ * \param MaxEps Maximum value of Epsilon
+ * \param MinEps Minimum value of Epsilon
+ * \param Steps  Number of iterarions of the algorithm
+ * \param OutputFileNamePrefix Prefix of the output files for each step data and plots
+ *
+ * \result True if the analysis finished correctly, false otherwise
+ */
+bool libTraceClusteringImplementation::ClusterRefinementAnalysis(int    MinPoints,
+                                                                 double MaxEps,
+                                                                 double MinEps,
+                                                                 int    Steps,
+                                                                 string OutputFileNamePrefix)
 {
 #ifdef HAVE_SEQAN
+
+  ParametersManager       *Parameters;
+  vector<Partition> PartitionsHierarchy;
+  
+  if (Data == NULL)
+  {
+    SetErrorMessage("data not initialized");
+    return false;
+  }
+  
+  ClusteringRefinement RefinementAnalyzer((INT32) MinPoints,
+                                          MaxEps,
+                                          MinEps,
+                                          (size_t) Steps);
+
+  if (!RefinementAnalyzer.Run(Data->GetClusteringBursts(),
+                              PartitionsHierarchy,
+                              OutputFileNamePrefix))
+  {
+    SetErrorMessage(RefinementAnalyzer.GetLastError());
+    SetError(true);
+    return false;
+  }
+
+  /* DEBUG 
+  for (size_t i = 0; i < PartitionsHierarchy.size(); i++)
+  {
+    cout << "**** Step " << i+1 << " ****" << endl;
+    cout << "-> Number of Clusters = " << PartitionsHierarchy[i].NumberOfClusters() << endl;
+
+    vector<cluster_id_t>& IDs = PartitionsHierarchy[i].GetAssignmentVector();
+
+    cout << "IDs = ";
+    
+    for (size_t j = 0; j < IDs.size(); j++)
+    {
+      cout << IDs[j] << " ";
+    }
+    cout << endl;
+  }
+  */
+
+  LastPartition = PartitionsHierarchy[PartitionsHierarchy.size()-1];
+
+  /* Statistics */
+  Parameters = ParametersManager::GetInstance();
+  
+  Statistics.InitStatistics(LastPartition.GetIDs(),
+                            LastPartition.HasNoise(),
+                            Parameters->GetClusteringParametersNames(),
+                            Parameters->GetClusteringParametersPrecision(),
+                            Parameters->GetExtrapolationParametersNames(),
+                            Parameters->GetExtrapolationParametersPrecision());
+  
+  if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
+                                    LastPartition.GetAssignmentVector()))
+  {
+    SetErrorMessage(Statistics.GetLastError());
+    return false;
+  }
+  
+  Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
+
+  /* Generate all intermediate (event) traces */
+  if (OutputFileNamePrefix.compare("") != 0)
+  {
+    for (size_t i = 0; i < PartitionsHierarchy.size()-1; i++)
+    {
+      ClusteredTraceGenerator* TraceGenerator;
+      ostringstream OutputTraceName;
+
+      OutputTraceName << OutputFileNamePrefix << ".STEP" << i+1 << ".prv";
+
+      ClusteringStatistics Stats;
+
+      /* Sort IDs */
+      Stats.InitStatistics(PartitionsHierarchy[i].GetIDs(),
+                           PartitionsHierarchy[i].HasNoise(),
+                           Parameters->GetClusteringParametersNames(),
+                           Parameters->GetClusteringParametersPrecision(),
+                           Parameters->GetExtrapolationParametersNames(),
+                           Parameters->GetExtrapolationParametersPrecision());
+  
+      if (!Stats.ComputeStatistics(Data->GetCompleteBursts(),
+                                   PartitionsHierarchy[i].GetAssignmentVector()))
+      {
+        SetErrorMessage(Stats.GetLastError());
+        return false;
+      }
+      
+      Stats.TranslatedIDs(PartitionsHierarchy[i].GetAssignmentVector());
+
+
+      if (PRVEventsParsing)
+      {
+        TraceGenerator = new ClusteredEventsPRVGenerator (InputFileName,
+                                                          OutputTraceName.str());
+      }
+      else
+      {
+        TraceGenerator = new ClusteredStatesPRVGenerator (InputFileName,
+                                                          OutputTraceName.str());
+      }
+
+      /* DEBUG */
+      cout << "All Burst size = " << Data->GetAllBursts().size() << endl;
+      cout << "IDs size = " << PartitionsHierarchy[i].GetAssignmentVector().size() << endl;
+      
+      if (!TraceGenerator->Run(Data->GetAllBursts(),
+                               PartitionsHierarchy[i].GetAssignmentVector(),
+                               PartitionsHierarchy[i].NumberOfClusters(),
+                               true)) // Minimize information
+      {
+   
+          SetErrorMessage(TraceGenerator->GetLastError());
+          return false;
+      }
+
+      delete TraceGenerator;
+    }
+  }
+
   ClusteringExecuted = true;
+  
   return true;
+  
 #else
+
   SetErrorMessage("Refinement analysis is not available due to the unavailability of SeqAn library");
   SetError(true);
   return false;
+  
 #endif
 
 }
@@ -436,6 +629,59 @@ bool libTraceClusteringImplementation::FlushClustersInformation(string OutputClu
 }
 
 /**
+ * Write clusters sequences to an output file
+ *
+ * \param OutputFilePrefix Output file prefix for the sequences file and the sequence score file
+ * \param FASTASequenceFile True to generate a FASTA aminoacids sequences file
+ *
+ * \result True if sequences file is written correctly, false otherwise
+ */
+bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePrefix,
+                                                            bool   FASTASequencesFile)
+{
+#ifdef HAVE_SEQAN
+  vector<percentage_t>       PercentageDurations;
+  SequenceScore              Scoring;
+  vector<SequenceScoreValue> ScoresPerCluster;
+  double                     GlobalScore;
+  
+  
+  if (Data == NULL)
+  {
+    SetErrorMessage("data not initialized");
+    return false;
+  }
+
+  // This assignement is needed pass the reference
+  PercentageDurations = Statistics.GetPercentageDurations();
+  
+  if(!Scoring.ComputeScore(Data->GetClusteringBursts(),
+                           LastPartition.GetAssignmentVector(),
+                           PercentageDurations,
+                           LastPartition.HasNoise(),
+                           ScoresPerCluster,
+                           GlobalScore,
+                           OutputFilePrefix,
+                           FASTASequencesFile))
+  {
+    SetError(true);
+    SetErrorMessage("unable to compute sequences score");
+    return false;
+  }
+  
+  return true;
+  
+#else
+  
+  SetError(true);
+  SetErrorMessage("SeqAn not available, sequence score could not be computed");
+  return false;
+  
+#endif
+
+}
+
+/**
  * Reconstruct the input trace using the information of the clustering analysis
  * 
  * \param OutputTraceName Name of the output trace file
@@ -461,7 +707,15 @@ bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceN
   switch(InputFileType)
   {
     case ParaverTrace:
-      TraceReconstructor = new ClusteredPRVGenerator(InputFileName, OutputTraceName);
+      if (PRVEventsParsing)
+      {
+        TraceReconstructor = new ClusteredEventsPRVGenerator(InputFileName, OutputTraceName);
+        TraceReconstructor->SetEventsToDealWith (EventsToDealWith);
+      }
+      else
+      { 
+        TraceReconstructor = new ClusteredStatesPRVGenerator(InputFileName, OutputTraceName);
+      }
       break;
     case DimemasTrace:
       /* TBI -> Dimemas Cluster blocks not implemented */
@@ -502,6 +756,7 @@ bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
 {
   PlottingManager *Plots;
   string Prefix;
+  string PlotTitle;
 
   Plots = PlottingManager::GetInstance();
   
@@ -515,9 +770,22 @@ bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
     Prefix = ScriptsFileNamePrefix;
   }
 
+  if (USE_CLUSTERING(UseFlags))
+  {
+    PlotTitle = ClusteringCore->GetClusteringAlgorithmName();
+  }
+  else if (USE_CLUSTERING_REFINEMENT(UseFlags))
+  {
+    PlotTitle = "Clustering Refinement of trace \'"+InputFileName+"\'";
+  }
+  else
+  {
+    PlotTitle = "Data of trace \'"+InputFileName+"\'";
+  }
+  
   if (!Plots->PrintPlots(DataFileName,
                          Prefix,
-                         ClusteringCore->GetClusteringAlgorithmName(),
+                         PlotTitle,
                          LastPartition.NumberOfClusters(),
                          LastPartition.HasNoise()))
   {

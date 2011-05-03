@@ -41,19 +41,28 @@
 #include <vector>
 using std::vector;
 
+#include <set>
+using std::set;
+
 class Partition
 {
   private:
     
     bool                 _HasNoise;
     size_t               _NumberOfClusters;
+    set<cluster_id_t>    _IDs;
     vector<cluster_id_t> _ClusterAssignmentVector;
+    
 
   public:
+
     Partition(void);
 
     vector<cluster_id_t>& GetAssignmentVector(void);
-    void SetAssignmentVector(vector<cluster_id_t>& ClusterAssignmenteVector);
+    void SetAssignmentVector(vector<cluster_id_t>& ClusterAssignmentVector);
+
+    set<cluster_id_t>& GetIDs(void);
+    void               SetIDs(set<cluster_id_t>& IDs);
 
     size_t NumberOfClusters(void) const;
     void   NumberOfClusters(size_t NumberOfClusters);

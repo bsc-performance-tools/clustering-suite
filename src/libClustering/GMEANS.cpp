@@ -57,7 +57,6 @@ using std::endl;
 using std::make_pair;
 
 const string GMEANS::NAME                  = "GMEANS";
-const string GMEANS::INITIAL_POINTS_STRING = "initial_points";
 const string GMEANS::CRITICAL_VALUE_STRING = "critical_value";
 const string GMEANS::MAX_CLUSTERS_STRING   = "max_clusters";
 
@@ -72,33 +71,6 @@ GMEANS::GMEANS()
 GMEANS::GMEANS(map<string, string> ClusteringParameters)
 {
   map<string, string>::iterator ParametersIterator;
-
-  /* Initial Points */
-  ParametersIterator = ClusteringParameters.find(GMEANS::INITIAL_POINTS_STRING);
-  if (ParametersIterator == ClusteringParameters.end())
-  {
-    string ErrorMessage;
-    ErrorMessage = "parameter '" + GMEANS::INITIAL_POINTS_STRING + "' not found in G-Means definition";
-
-    SetErrorMessage(ErrorMessage);
-    SetError(true);
-    return;
-  }
-  else
-  {
-    char* err;
-    InitialPoints = strtol(ParametersIterator->second.c_str(), &err, 0);
-
-    if (*err)
-    {
-      string ErrorMessage;
-      ErrorMessage = "incorrect value for G-Means parameter '" + GMEANS::INITIAL_POINTS_STRING + "'";
-
-      SetErrorMessage(ErrorMessage);
-      SetError(true);
-      return;
-    }
-  }
 
   /* Critical Values */
   ParametersIterator = ClusteringParameters.find(GMEANS::CRITICAL_VALUE_STRING);
@@ -131,12 +103,15 @@ GMEANS::GMEANS(map<string, string> ClusteringParameters)
   ParametersIterator = ClusteringParameters.find(GMEANS::MAX_CLUSTERS_STRING);
   if (ParametersIterator == ClusteringParameters.end())
   {
-    MaxClusters = 500;
+    MaxClusters = 30;
   }
   else
   {
     char* err;
     MaxClusters = strtol(ParametersIterator->second.c_str(), &err, 0);
+
+    if (MaxClusters > 256)
+      MaxClusters = 256;
 
     if (*err)
     {
@@ -153,8 +128,9 @@ GMEANS::GMEANS(map<string, string> ClusteringParameters)
 }
 
 
-bool GMEANS::Run(const vector<const Point*>& Data, Partition& DataPartition,
-bool SimpleRun)
+bool GMEANS::Run(const vector<const Point*>& Data,
+                 Partition& DataPartition,
+                 bool SimpleRun)
 {
 
   //    CriticalValue = 20.0;
@@ -197,15 +173,16 @@ bool SimpleRun)
   DIMENSIONS = p.size();                          //3;//atoi(argv[2]);
   // printf("******** %d ******\n", DIMENSIONS);
 
-  CENTERS = 2;                                    //atoi(argv[3]);
+  CENTERS     = 2;                                    //atoi(argv[3]);
   NEW_CENTERS = 0;
 
-  /* Check number of centers (to avoid uchar overflow) */
+  /* Check number of centers (to avoid uchar overflow) 
   if (CENTERS > 256)
   {
     printf("Current program only supports 256 centers\n.");
     return 2;
   }
+  */
 
   int block_records = BLOCK_SIZE;
 
@@ -215,21 +192,35 @@ bool SimpleRun)
   get_ad_cv(1 - ALPHA, &adcv);
 
   // alocate alligned memory for the variables
-  records = (float *) memalign(128, ((NUMBER_OF_RECORDS * DIMENSIONS) + 4)* sizeof(float));
-  centers = (float *) memalign(128, MAX_CENTERS * DIMENSIONS * sizeof(float));
-  assigned_centers = (int *) memalign(128, NUMBER_OF_RECORDS * sizeof(int));
-  assigned_memcpy = (int *) memalign(128, NUMBER_OF_RECORDS * sizeof(int));
+  /*
+  records          = (float *) memalign(128, ((NUMBER_OF_RECORDS * DIMENSIONS) + 4)* sizeof(float));
+  centers          = (float *) memalign(128, MAX_CENTERS * DIMENSIONS * sizeof(float));
+  assigned_centers = (int *)   memalign(128, NUMBER_OF_RECORDS * sizeof(int));
+  assigned_memcpy  = (int *)   memalign(128, NUMBER_OF_RECORDS * sizeof(int));
+  */
+
+  posix_memalign((void**) &records,          128, ((NUMBER_OF_RECORDS * DIMENSIONS) + 4)* sizeof(float));
+  posix_memalign((void**) &centers,          128, MAX_CENTERS * DIMENSIONS * sizeof(float));
+  posix_memalign((void**) &assigned_centers, 128, NUMBER_OF_RECORDS * sizeof(int));
+  posix_memalign((void**) &assigned_memcpy,  128, NUMBER_OF_RECORDS * sizeof(int));
 
   memset(records, 0, ((NUMBER_OF_RECORDS * DIMENSIONS) + 4) * sizeof(float));
   memset(centers, 0, MAX_CENTERS * DIMENSIONS * sizeof(float));
   memset(assigned_centers, 0, NUMBER_OF_RECORDS * sizeof(int));
 
-  // Alocated memory for the temporary variables for kmeans_ad
-  records_center = (float *) memalign(128, ((NUMBER_OF_RECORDS * DIMENSIONS) + 4) * sizeof(float));
-  records_center_count = (int *) memalign(128, MAX_CENTERS * sizeof(int));
-  records_center_mempos = (int *) memalign(128, MAX_CENTERS * sizeof(int));
-  records_center_mempos_tmp = (int *) memalign(128, MAX_CENTERS * sizeof(int));
+  //Alocated memory for the temporary variables for kmeans_ad
+  /*
+  records_center            = (float *) memalign(128, ((NUMBER_OF_RECORDS * DIMENSIONS) + 4) * sizeof(float));
+  records_center_count      = (int *)   memalign(128, MAX_CENTERS * sizeof(int));
+  records_center_mempos     = (int *)   memalign(128, MAX_CENTERS * sizeof(int));
+  records_center_mempos_tmp = (int *)   memalign(128, MAX_CENTERS * sizeof(int));
+  */
 
+  posix_memalign((void**) &records_center,            128, ((NUMBER_OF_RECORDS * DIMENSIONS) + 4) * sizeof(float));
+  posix_memalign((void**) &records_center_count,      128, MAX_CENTERS * sizeof(int));
+  posix_memalign((void**) &records_center_mempos,     128, MAX_CENTERS * sizeof(int));
+  posix_memalign((void**) &records_center_mempos_tmp, 128, MAX_CENTERS * sizeof(int));  
+  
   int num_hist = (NUMBER_OF_RECORDS / block_records) + 2;
   records_center_hist = (int *) memalign(128, num_hist * MAX_CENTERS * sizeof(int));
 
@@ -306,10 +297,9 @@ bool SimpleRun)
     }
     for (i = 0; i < NUMBER_OF_RECORDS; i++)
     {
-      memcpy(
-        &records_center[records_center_mempos_tmp[assigned_centers[i]]
-        * DIMENSIONS], &records[i * DIMENSIONS], DIMENSIONS
-        * sizeof(float));
+      memcpy(&records_center[records_center_mempos_tmp[assigned_centers[i]]* DIMENSIONS],
+             &records[i * DIMENSIONS],
+             DIMENSIONS * sizeof(float));
       records_center_mempos_tmp[assigned_centers[i]]++;
     }
 
@@ -377,15 +367,18 @@ bool SimpleRun)
   /* Number of resulting clusters must be defined for the partition */
 
   vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
+  set<cluster_id_t>&    DifferentIDs            = DataPartition.GetIDs();
 
   for(i = 0; i < NUMBER_OF_RECORDS; i++)
   {
                                                   //[i] = UNCLASSIFIED;
-    ClusterAssignmentVector.push_back(assigned_centers[i]+1); // Cluster 0 is always NOISE
+    ClusterAssignmentVector.push_back(assigned_centers[i]); // Cluster 0 is always NOISE
+    DifferentIDs.insert((cluster_id_t) assigned_centers[i]);
   }
 
   /* Add one more cluster, to avoid the non-existent NOISE cluster */
-  DataPartition.NumberOfClusters (CENTERS+1);
+  DataPartition.NumberOfClusters (DifferentIDs.size());
+  DataPartition.HasNoise(false);
 
   free(centers);
   free(records);
@@ -404,8 +397,8 @@ bool SimpleRun)
 string GMEANS::GetClusteringAlgorithmName(void) const
 {
   ostringstream Result;
-  Result << "G-Means (InitialPoints =" << InitialPoints << ", CriticalValue="
-    << CriticalValue << ")";
+  Result << "G-Means ( CriticalValue = " << CriticalValue;
+  Result << ", MaxClusters = " << MaxClusters << ")";
 
   return Result.str();
 }
@@ -414,8 +407,8 @@ string GMEANS::GetClusteringAlgorithmName(void) const
 string GMEANS::GetClusteringAlgorithmNameFile(void) const
 {
   ostringstream Result;
-  Result << "GMEANS_InitPoints_" << InitialPoints << "_CriticalValue_"
-    << CriticalValue;
+  Result << "GMEANS_CriticalValue_" << CriticalValue;
+  Result << "_MaxClusters_" << MaxClusters;
 
   return Result.str();
 }

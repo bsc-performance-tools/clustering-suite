@@ -51,9 +51,11 @@ class DataExtractorFactory: public Error
     input_file_t FileType;
     
     static DataExtractorFactory* Instance;
+
+    set<event_type_t> EventsToDealWith;
     
     DataExtractorFactory(void);
-
+    
     bool CheckFileType(string InputFileName);
   
   public:
@@ -61,7 +63,8 @@ class DataExtractorFactory: public Error
 
     bool   GetExtractor(string          InputFileName,
                         DataExtractor *&DataExtractorObject,
-                        bool            Distributed = false);
+                        bool            EventParsing  = false,
+                        bool            Distributed   = false);
     
     input_file_t  GetFileType(void);
     

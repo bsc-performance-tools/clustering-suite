@@ -103,7 +103,7 @@ class ApplicationDescription: public Error
     INT32 GetTaskCount(void)                    { return TaskCount; };
     vector<TaskDescription_t> GetTaskInfo(void) { return TaskInfo; };
 
-    INT32 GetCommunicatorCount(void)            { return CommunicatorCount; };
+    INT32 GetCommunicatorCount(void)             { return CommunicatorCount; };
     vector<Communicator*> GetCommunicators(void) {return Communicators;}
     INT32 GetCOMM_WORLD_Id(void);
 

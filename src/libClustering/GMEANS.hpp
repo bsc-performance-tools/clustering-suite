@@ -67,7 +67,6 @@ class GMEANS:public ClusteringAlgorithm
   typedef size_t point_idx;
   private:
 
-    UINT32 InitialPoints;
     double CriticalValue;
     INT32  MaxClusters;
     
@@ -75,7 +74,6 @@ class GMEANS:public ClusteringAlgorithm
 
     static const string NAME;
     
-    static const string INITIAL_POINTS_STRING;
     static const string CRITICAL_VALUE_STRING;
     static const string MAX_CLUSTERS_STRING;
     GMEANS ();

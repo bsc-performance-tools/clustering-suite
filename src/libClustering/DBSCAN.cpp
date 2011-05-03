@@ -147,6 +147,9 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
 
   /* DEBUG */
   vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
+  set<cluster_id_t>& DifferentIDs = DataPartition.GetIDs();
+
+  DifferentIDs.insert(NOISE_CLUSTERID);
 
   if (Data.size() != ClusterAssignmentVector.size())
   {
@@ -172,8 +175,8 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
     {
       if (ExpandCluster(Data, i, ClusterAssignmentVector, ClusterId))
       {
+        DifferentIDs.insert(ClusterId);
         ClusterId++;
-        ResultingClusters++;
       }
     }
   }
@@ -181,7 +184,7 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
   system_messages::show_progress_end("Clustering points", (int) Data.size());
 
   /* NOISE cluster has to be considered as a cluster, to mantain coherence across the namings */
-  DataPartition.NumberOfClusters (ResultingClusters+1);
+  DataPartition.NumberOfClusters (DifferentIDs.size());
   DataPartition.HasNoise(true);
 
   return true;

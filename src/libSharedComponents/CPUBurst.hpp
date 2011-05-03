@@ -179,6 +179,62 @@ inline ostream &operator<<(ostream &str, const CPUBurst &Burst)
   return str;
 }
 
+/* Classes for CPUBurst comparisons */
+class BeginTimeCompare
+{
+  public:
+    bool operator()(CPUBurst* P1, CPUBurst* P2)
+    {
+      if (P1->GetBeginTime() < P2->GetBeginTime())
+        return true;
+      else if (P1->GetBeginTime() == P2->GetBeginTime())
+        return (P1->GetLine() < P2->GetLine());
+        // return (P1->GetInstance() < P2->GetInstance());
+        // return (P1->GetEndTime() < P2->GetEndTime());
+        // return (P1->GetTaskId() < P2->GetTaskId());
+      else
+        return false;
+    };
+};
+
+class EndTimeCompare
+{
+  public:
+    bool operator()(CPUBurst* P1, CPUBurst* P2)
+    {
+      if (P1->GetEndTime() < P2->GetEndTime())
+        return true;
+      else if (P1->GetEndTime() == P2->GetEndTime())
+        return (P1->GetTaskId() < P2->GetTaskId());
+      else
+        return false;
+    };
+};
+
+class InstanceNumCompare
+{
+  public:
+    bool operator()(CPUBurst* P1, CPUBurst* P2)
+    {
+      if (P1->GetInstance() < P2->GetInstance())
+        return true;
+      else
+        return false;
+    }
+};
+
+class LineCompare
+{
+  public:
+    bool operator()(CPUBurst* P1, CPUBurst* P2)
+    {
+      if (P1->GetLine() < P2->GetLine())
+        return true;
+      else
+        return false;
+    }
+};
+
 #ifndef DATAPOINT_SEPARATOR
 #define DATAPOINT_SEPARATOR
 // char DataPoint::Separator = ',';

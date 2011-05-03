@@ -48,9 +48,19 @@ ClusteredTRFGenerator::~ClusteredTRFGenerator(void)
 {
 }
 
+bool ClusteredTRFGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith)
+{
+  
+  SetError(true);
+  SetErrorMessage("TRF traces doesn't permit parsing based on events");
+  
+  return false;
+}
+
 bool ClusteredTRFGenerator::Run(vector<CPUBurst*>&    Bursts,
                                 vector<cluster_id_t>& IDs,
-                                size_t                NumberOfClusters)
+                                size_t                NumberOfClusters,
+                                bool                  MinimizeInformation)
 {
   vector<cluster_id_t> CompleteIDs;
   

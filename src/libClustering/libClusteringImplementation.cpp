@@ -49,6 +49,7 @@ using std::ios_base;
  */
 libClusteringImplementation::libClusteringImplementation(void)
 {
+  Algorithm = NULL;
 }
 
 /**
@@ -62,6 +63,11 @@ libClusteringImplementation::libClusteringImplementation(void)
 bool libClusteringImplementation::InitClustering(string              AlgorithmName,
                                                  map<string, string> AlgorithmParameters)
 {
+  if (Algorithm != NULL)
+  {
+    delete Algorithm;
+  }
+  
   ClusteringAlgorithmsFactory* AlgorithmsFactory;
 
   AlgorithmsFactory = ClusteringAlgorithmsFactory::GetInstance();

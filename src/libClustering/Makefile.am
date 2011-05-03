@@ -57,6 +57,8 @@ libClustering_la_SOURCES = \
 	DBSCAN.hpp \
 	GMEANS.cpp \
 	GMEANS.hpp \
+	OPTICS.cpp \
+	OPTICS.hpp \
 	libClustering.cpp \
 	libClustering.hpp \
 	libClusteringImplementation.cpp \

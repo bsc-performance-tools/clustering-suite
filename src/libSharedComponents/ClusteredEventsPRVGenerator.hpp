@@ -32,40 +32,54 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef _EXTRACTOR_H
-#define _EXTRACTOR_H
+#ifndef _CLUSTEREDEVENTSPRVGENERATOR_HPP_
+#define _CLUSTEREDEVENTSPRVGENERATOR_HPP_
 
-#include "trace_clustering_types.h"
+#include "ClusteredTraceGenerator.hpp"
+#include "CPUBurst.hpp"
 
-#include <Error.hpp>
-using cepba_tools::Error;
+#include <vector>
+using std::vector;
 
-#include <set>
-using std::set;
+class ParaverTraceParser;
+class Event;
 
-#include <TraceData.hpp>
-
-/* Forward declarations */
-class DataExtractionManager;
-
-class DataExtractor: public Error
+class ClusteredEventsPRVGenerator: public ClusteredTraceGenerator
 {
-  protected:
-    string InputTraceName;
-    FILE*  InputTraceFile;
-    string TraceDataFileName;
+  private:
+    ParaverTraceParser *TraceParser;
+  
+    bool   PCFPresent;
+    string InputPCFName;
+    FILE  *InputPCFFile;
+    string OutputPCFName;
+    FILE  *OutputPCFFile;
+  
+    vector<CPUBurst*> BurstsBeginTime;
 
+    set<event_type_t> EventsToDealWith;
   
   public:
-    DataExtractor(string InputTraceName);
-    ~DataExtractor() {};
-  
-    virtual bool   ExtractData(TraceData* DataContainer) = 0;
-    virtual input_file_t GetFileType(void) = 0;
+    ClusteredEventsPRVGenerator(string  InputTraceName,
+                          string  OutputTraceName);
 
-    virtual bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith) = 0;
+    ~ClusteredEventsPRVGenerator(void){};
+
+    bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith);
+    
+    bool Run(vector<CPUBurst*>&    Bursts,
+             vector<cluster_id_t>& IDs,
+             size_t                NumberOfClusters,
+             bool                  MinimizeInformation = false);
   
-    string GetTraceDataFileName(void) { return TraceDataFileName; };
+    bool GenerateOutputPCF(size_t NumberOfClusters);
+  
+  private:
+
+    bool BurstOpeningEvent(Event* CurrentEvent);
+
+    bool BurstClosingEvent(Event* CurrentEvent);
 };
 
 #endif
+

@@ -3,6 +3,7 @@ common_filesdir = @common_filesdir@
 INCLUDES = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/BasicClasses \
+	-I$(top_srcdir)/src/libANN \
 	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libParaverTraceParser \
 	-I$(common_filesdir)
@@ -29,18 +30,22 @@ inst_HEADERS = \
 
 libSharedComponents_la_SOURCES = \
 	trace_clustering_types.h \
-	ClusteredPRVGenerator.cpp \
-	ClusteredPRVGenerator.hpp \
 	ClusteredTraceGenerator.cpp \
 	ClusteredTraceGenerator.hpp \
+	ClusteredStatesPRVGenerator.cpp \
+	ClusteredStatesPRVGenerator.hpp \
+	ClusteredEventsPRVGenerator.cpp \
+	ClusteredEventsPRVGenerator.hpp \
 	ClusteredTRFGenerator.cpp \
 	ClusteredTRFGenerator.hpp \
 	DataExtractor.cpp \
 	DataExtractorFactory.cpp \
 	DataExtractorFactory.hpp \
 	DataExtractor.hpp \
-	PRVDataExtractor.cpp \
-	PRVDataExtractor.hpp \
+	PRVStatesDataExtractor.cpp \
+	PRVStatesDataExtractor.hpp \
+	PRVEventsDataExtractor.cpp \
+	PRVEventsDataExtractor.hpp \
 	TRFDataExtractor.cpp \
 	TRFDataExtractor.hpp \
 	ClusteringConfiguration.cpp \

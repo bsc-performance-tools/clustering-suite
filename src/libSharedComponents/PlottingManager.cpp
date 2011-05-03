@@ -82,6 +82,8 @@ PlottingManager* PlottingManager::_PlottingManager = NULL;
 PlottingManager*
 PlottingManager::GetInstance(bool DataExtraction)
 {
+  /* DEBUG */
+  cout << "GETTING A PLOT INSTANCE WITH DataExtraction SET TO " << DataExtraction << endl;
   if (PlottingManager::_PlottingManager == NULL)
   {
     PlottingManager::_PlottingManager = new PlottingManager(DataExtraction);
@@ -638,12 +640,14 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
       Write3D_Definition (OutputStream, X, Y, Z, RANGE_FILTERED_CLUSTERID, "Range Filtered", DataFileName);
       OutputStream << ",\\" << '\n';
       Write3D_Definition (OutputStream, X, Y, Z, THRESHOLD_FILTERED_CLUSTERID, "Threshold Filtered", DataFileName);
+      // OutputStream << ",\\" << '\n';
     }
     else
     {
       if (PrintNoiseCluster)
       {
         Write3D_Definition (OutputStream, X, Y, Z, NOISE_CLUSTERID+PARAVER_OFFSET, "Noise", DataFileName);
+        OutputStream << ",\\" << '\n';
       }
     
       for (cluster_id_t Cluster = 1; Cluster < NumberOfClusters; Cluster++)
@@ -652,9 +656,10 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
 
         ClusterName << "Cluster " << Cluster;
 
-        OutputStream << ",\\" << '\n';
         Write3D_Definition (OutputStream, X, Y, Z, Cluster+PARAVER_OFFSET, ClusterName.str(), DataFileName);
 
+        if (Cluster != NumberOfClusters -1 )
+          OutputStream << ",\\" << endl;
       }
     }
   }
@@ -706,12 +711,14 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
       Write2D_Definition (OutputStream, X, Y, RANGE_FILTERED_CLUSTERID, "Range Filtered", DataFileName);
       OutputStream << ",\\" << '\n';
       Write2D_Definition (OutputStream, X, Y, THRESHOLD_FILTERED_CLUSTERID, "Threshold Filtered", DataFileName);
+      // OutputStream << ",\\" << '\n';
     }
     else
     {
       if (PrintNoiseCluster)
       {
         Write2D_Definition (OutputStream, X, Y, NOISE_CLUSTERID+PARAVER_OFFSET, "Noise", DataFileName);
+        OutputStream << ",\\" << '\n';
       }
       
       for (size_t Cluster = 1; Cluster < NumberOfClusters; Cluster++)
@@ -719,8 +726,10 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
         ostringstream ClusterName;
         ClusterName << "Cluster " << Cluster;
 
-        OutputStream << ",\\" << '\n';
         Write2D_Definition (OutputStream, X, Y, Cluster+PARAVER_OFFSET, ClusterName.str(), DataFileName);
+
+        if (Cluster != NumberOfClusters -1 )
+          OutputStream << ",\\" << endl;
 
       }
     }

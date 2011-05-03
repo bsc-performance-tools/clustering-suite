@@ -155,6 +155,12 @@ class TraceData: public Error
     void SetMaster(bool Master)               { this->Master = Master; };
     void SetReadAllTasks(bool ReadAllTasks)   { this->ReadAllTasks = ReadAllTasks; };
     void SetTasksToRead(set<int> TasksToRead) { this->TasksToRead = TasksToRead; };
+
+    vector<string> GetClusteringParametersNames;
+    vector<string> GetExtrapolationParametersNames;
+
+    vector<bool>   GetClusteringParametersPrecision;
+    vector<bool>   GetExtrapolationParametersPrecision;
     
     /*
     Point* operator[](const size_t Index)
@@ -192,7 +198,6 @@ class TraceData: public Error
     
   private:
     void SetTasksToRead();
-    
     bool ReadThisTask(task_id_t Task);
 };
 

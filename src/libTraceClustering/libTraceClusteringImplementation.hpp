@@ -57,6 +57,10 @@ class libTraceClusteringImplementation: public Error
     input_file_t   InputFileType;
 
     bool           ClusteringExecuted;
+    bool           ClusteringRefinementExecution;
+
+    bool              PRVEventsParsing;
+    set<event_type_t> EventsToDealWith;
     
     unsigned char  UseFlags;
     
@@ -66,15 +70,25 @@ class libTraceClusteringImplementation: public Error
     bool InitTraceClustering(string        ClusteringDefinitionXML,
                              unsigned char UseFlags);
 
-    bool ExtractData(string InputFileName);
+    bool ExtractData(string InputFileName,
+                     set<event_type_t> EventsToDealWith = set<event_type_t> ());
 
     bool FlushData(string OutputFileName);
     
     bool ClusterAnalysis(void);
 
-    bool ClusterRefinementAnalysis(void);
+    bool ClusterRefinementAnalysis(string OutputFileNamePrefix);
+    
+    bool ClusterRefinementAnalysis(int    MinPoints,
+                                   double MaxEps,
+                                   double MinEps,
+                                   int    Steps,
+                                   string OutputFileNamePrefix);
 
     bool FlushClustersInformation(string OutputClustersInfoFileName);
+
+    bool ComputeSequenceScore(string OutputFilePrefix,
+                              bool   FASTASequenceFile);
 
     bool ReconstructInputTrace(string OutputTraceName);
 

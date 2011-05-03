@@ -54,7 +54,9 @@ class TRFDataExtractor: public DataExtractor
     TRFDataExtractor(string InputTraceName);
 
     ~TRFDataExtractor();
-      
+
+    bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith);
+    
     bool ExtractData(TraceData* TraceDataSet);
 
     input_file_t GetFileType(void) { return DimemasTrace; };

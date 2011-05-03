@@ -73,6 +73,14 @@ TRFDataExtractor::~TRFDataExtractor()
   unlink(TraceDataFileName.c_str());
 }
 
+bool TRFDataExtractor::SetEventsToDealWith(set<event_type_t>& EventsToDealWith)
+{
+  SetError(true);
+  SetErrorMessage("TRF traces doesn't permit parsing based on events");
+  
+  return false;
+}
+
 bool
 TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
 {
@@ -295,6 +303,8 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
       }
     }
   }
+
+  TraceDataSet->Normalize();
   
   /* No more burst 
   if (!TraceDataSet->NoMoreBursts())

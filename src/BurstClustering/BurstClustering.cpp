@@ -51,6 +51,16 @@ using std::endl;
 #include <cstdio>
 #include <cerrno>
 
+#include <string>
+#include <sstream>
+using std::stringstream;
+
+#include <vector>
+using std::vector;
+
+#include <set>
+using std::set;
+
 bool   Verbose = true;
 
 string ClusteringDefinitionXML;    /* Clustering definition XML file name */
@@ -62,10 +72,26 @@ bool   InputTraceNameRead = false;
 string OutputFileName;             /* Data extracted from input trace */
 bool   OutputFileNameRead = false;
 
-string OutputDataFileName;
+string OutputDataFileName;         /* File where the burst data is stored */
+
+string ClusterSequencesFileName;
+bool   GenerateClusterSequences = false;
+
+bool   ClusteringRefinement = false;
+
+double MaxEps, MinEps;
+int    MinPoints, Steps;
+
 bool   ReconstructTrace   = true;
 
 string OutputClustersInformationFileName;
+bool   FASTASequences = false;
+
+string RefinementPrefixFileName = "";
+bool   PrintRefinementSteps     = false;
+
+bool              UseParaverEventParsing = false;
+set<unsigned int> EventsToParse;
 
 bool   ApplyCPIStack = false;
 
@@ -74,20 +100,35 @@ bool   ApplyCPIStack = false;
 "Usage:\n"\
 "  %s -d <clustering_def.xml> [OPTIONS] -i <input_trace> [<output_trace>]\n"\
 "\n"\
-"  -v |--version              Information about the tool\n"\
+"  -v |--version               Information about the tool\n"\
 "\n"\
-"  -h                         This help\n"\
+"  -h                          This help\n"\
 "\n"\
-"  -s                         Do not show information messages (silent mode)\n"\
+"  -s                          Do not show information messages (silent mode)\n"\
 "\n"\
-"  -d <clustering_def_xml>    XML containing the clustering process\n"\
-"                             definition\n"\
+"  -e Type1,Type2,...          When using an input Paraver trace, use this\n"\
+"                              event types to determine the regions treated as\n"\
+"                              bursts\n"\
 "\n"\
-"  -i <input_file>            Input CSV / Dimemas trace / Paraver trace\n"\
+"  -d <clustering_def_xml>     XML containing the clustering process\n"\
+"                              definition\n"\
 "\n"\
-"  -o <output_file>           Output CSV file / Dimemas trace / Paraver trace\n"\
-"                             clustering process or output data file if\n"\
-"                             parameters '-x' or '-r' are used\n"\
+"  -a[f]                       Generate a file containing the cluster sequences\n"\
+"                              (using 'f' generates a FASTA aminoacid sequences)\n"\
+"\n"\
+"  -r[p] <min_points>,<max_eps>,<min_eps>,<steps>\n"\
+"\n"\
+"                              Applies a clustering refinement based on DBSCAN\n"\
+"                              using min_ the epsilon range introduced\n"\
+"                              Ignores the cluster algorithm used in the XML\n"\
+"                              If 'p' option is included, plots of each step\n"\
+"                              are print\n"\
+"\n"\
+"  -i <input_file>             Input CSV / Dimemas trace / Paraver trace\n"\
+"\n"\
+"  -o <output_file>            Output CSV file / Dimemas trace / Paraver trace\n"\
+"                              clustering process or output data file if\n"\
+"                              parameters '-x' or '-r' are used\n"\
 "\n"
 
 
@@ -95,6 +136,9 @@ bool   ApplyCPIStack = false;
 "%s v%s (%s)\n"\
 "(c) CEPBA-Tools - Barcelona Supercomputing Center\n"\
 "Automatic clustering analysis of Paraver/Dimemas traces and CSV files\n"
+
+void GetRefinementParameters(char*);
+void GetEventParsingParameters(char*);
 
 void PrintUsage(char* ApplicationName)
 {
@@ -145,6 +189,28 @@ ReadArgs(int argc, char *argv[])
           OutputFileName     = argv[j];
           OutputFileNameRead = true;
           break;
+        case 'a':
+          GenerateClusterSequences = true;
+          if (argv[j][2] == 'f')
+          {
+            FASTASequences = true;
+          }
+          break;
+        case 'r':
+          ClusteringRefinement = true;
+          if (argv[j][2] == 'p')
+          {
+            PrintRefinementSteps = true;
+          }
+          j++;
+          GetRefinementParameters(argv[j]);
+          break;
+        case 'e':
+
+          UseParaverEventParsing = true;
+          j++;
+          GetEventParsingParameters(argv[j]);
+          break;
         case 's':
           Verbose = false;
           break;
@@ -180,6 +246,105 @@ ReadArgs(int argc, char *argv[])
   return;
 }
 
+void GetRefinementParameters(char* RefinementArgs)
+{
+  char* err;
+  string       ArgsString (RefinementArgs);
+  stringstream ArgsStream (ArgsString);
+
+  string         Buffer;
+  vector<string> Args;
+
+  while(std::getline(ArgsStream, Buffer, ','))
+  {
+      Args.push_back(Buffer);
+  }
+
+  if (Args.size() != 4)
+  {
+    cerr << "Refinement parameters (\'-r\') not correctly defined (";
+    cerr << RefinementArgs << ")" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  MinPoints = strtol(Args[0].c_str(), &err, 0);
+  if (*err)
+  {
+    cerr << "Error on refinement parameters (\'-r\'): Incorrect value of min_points ";
+    cerr << "(" << Args[0] << ")" << endl;
+    exit (EXIT_FAILURE);
+  }
+  
+  MaxEps = strtod(Args[1].c_str(), &err);
+  if (*err)
+  {
+    cerr << "Error on refinement parameters (\'-r\'): Incorrect maximum epsilon ";
+    cerr << "(" << Args[1] << ")" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  MinEps = strtod(Args[2].c_str(), &err);
+  if (*err)
+  {
+    cerr << "Error on refinement parameters (\'-r\'): Incorrect minimum epsilon ";
+    cerr << "(" << Args[2] << ")" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  if (MinEps > MaxEps)
+  {
+    cerr << "Error on refinement parameters (\'-r\'): maximum epsilon smaller than minimum epsilon" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  Steps = strtol(Args[3].c_str(), &err, 0);
+
+  if (*err)
+  {
+    cerr << "Error on refinement parameters (\'-r\'): Incorrect number of steps ";
+    cerr << "(" << Args[3] << ")" << endl;
+    exit (EXIT_FAILURE);
+  }
+}
+
+void GetEventParsingParameters(char* EventParsingArgs)
+{
+  char* err;
+  
+  string       ArgsString (EventParsingArgs);
+  stringstream ArgsStream (ArgsString);
+  string       Buffer;
+
+  set<unsigned int>::iterator EventsIterator;
+
+  while(std::getline(ArgsStream, Buffer, ','))
+  {
+    unsigned int CurrentType;
+    
+    CurrentType = strtoul(Buffer.c_str(), &err, 0);
+    if (*err)
+    {
+      cerr << "Error on event parsing parameters (\'-e\'): Incorrect type ";
+      cerr << "(" << Buffer << ")" << endl;
+      exit (EXIT_FAILURE);
+    }
+    else
+    {
+      EventsToParse.insert(CurrentType);
+    }
+  }
+
+  /* DEBUG */
+  cout << "Events to parse: ";
+  for (EventsIterator  = EventsToParse.begin();
+       EventsIterator != EventsToParse.end();
+       ++EventsIterator)
+  {
+    cout << (*EventsIterator) << " ";
+  }
+  cout << endl;
+}
+
 void CheckOutputFile()
 {
   string OutputFileExtension;
@@ -198,6 +363,12 @@ void CheckOutputFile()
     FileNameManipulator NameManipulator(OutputFileName, OutputFileExtension);
     OutputDataFileName                 = NameManipulator.AppendStringAndExtension("DATA", "csv");
     OutputClustersInformationFileName  = NameManipulator.AppendStringAndExtension("clusters_info", "csv");
+    // ClusterSequencesFileName           = NameManipulator.AppendString("seq");
+    ClusterSequencesFileName           = NameManipulator.GetChoppedFileName();
+    if (PrintRefinementSteps)
+    {
+      RefinementPrefixFileName           = NameManipulator.GetChoppedFileName();
+    }
     return;
   }
   else if (OutputFileExtension.compare("csv") == 0)
@@ -222,26 +393,80 @@ int main(int argc, char *argv[])
 
   CheckOutputFile();
 
-  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, CLUSTERING|PLOTS))
+  if (ClusteringRefinement)
   {
-    cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
-    exit (EXIT_FAILURE);
+    if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, CLUSTERING_REFINEMENT|PLOTS))
+    {
+      cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
+  }
+  else
+  {
+    if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, CLUSTERING|PLOTS))
+    {
+      cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
+  }
+
+  if (Clustering.GetWarning())
+  {
+    cerr << "WARNING: " << Clustering.GetWarningMessage() << endl;
   }
 
   system_messages::information("** DATA EXTRACTION **\n");
-  if (!Clustering.ExtractData(InputTraceName))
+  if (UseParaverEventParsing)
   {
-    cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
-    exit (EXIT_FAILURE);
+    if (!Clustering.ExtractData(InputTraceName, EventsToParse))
+    {
+      cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
+  }
+  else
+  {
+    if (!Clustering.ExtractData(InputTraceName))
+    {
+      cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
   }
 
-  system_messages::information("** CLUSTER ANALYSIS **\n");
-  if (!Clustering.ClusterAnalysis())
+  if (ClusteringRefinement)
   {
-    cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
-    exit (EXIT_FAILURE);
+    system_messages::information("** CLUSTER REFINEMENT ANALYSIS **\n");
+    if (!Clustering.ClusterRefinementAnalysis(MinPoints,
+                                              MaxEps,
+                                              MinEps,
+                                              Steps,
+                                              RefinementPrefixFileName))
+    {
+      cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
+  }
+  else
+  {
+    system_messages::information("** CLUSTER ANALYSIS **\n");
+    if (!Clustering.ClusterAnalysis())
+    {
+      cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
   }
 
+  if (GenerateClusterSequences)
+  {
+    system_messages::information("** GENERATING CLUSTER SEQUENCES **\n");
+    if (!Clustering.ComputeSequenceScore(ClusterSequencesFileName, 
+                                         FASTASequences))
+    {
+      cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
+  }
+  
   system_messages::information("** FLUSHING DATA **\n");
   if (!Clustering.FlushData(OutputDataFileName))
   {

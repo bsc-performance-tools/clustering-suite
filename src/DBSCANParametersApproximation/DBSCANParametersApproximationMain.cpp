@@ -54,6 +54,9 @@ using std::vector;
 #include <map>
 using std::map;
 
+#include <sstream>
+using std::stringstream;
+
 bool   Verbose = true;
 
 string ClusteringDefinitionXML;    /* Clustering definition XML file name */
@@ -67,6 +70,11 @@ bool   OutputFileNameRead = false;
 
 map<string, string> Parameters;
 bool   KNeighbourValuesRead = false;
+
+bool              UseParaverEventParsing = false;
+set<unsigned int> EventsToParse;
+
+void GetEventParsingParameters(char* EventParsingArgs);
 
 #define HELP \
 "Usage:\n"\
@@ -83,6 +91,10 @@ bool   KNeighbourValuesRead = false;
 "  -p <k>[,k_end]             Value of 'k' for the k-neighbour (or range) distance\n"\
 "                             in terms of clustering parameter defined with '-d'.\n"\
 "\n"\
+"  -e Type1,Type2,...         When using an input Paraver trace, use this\n"\
+"                             event types to determine the regions treated as\n"\
+"                             bursts\n"\
+"\n"\
 "  -i <input_trace>           Input trace\n"\
 "\n"\
 "  -o <output_data>           Output data file prefix\n"\
@@ -98,7 +110,7 @@ bool   KNeighbourValuesRead = false;
 void PrintUsage(char* ApplicationName)
 {
   cout << "Usage: " << ApplicationName << " -d <clustering_def.xml>";
-  cout << "-p <k>[,<k_end>] -i <input_trace> -o <output_data>" << endl;
+  cout << "-p <k>[,<k_end>] -e Type1,Type2,... -i <input_trace> -o <output_data>" << endl;
 }
 
 void
@@ -183,6 +195,11 @@ ReadArgs(int argc, char *argv[])
           ClusteringDefinitionXML  = argv[j];
           ClusteringDefinitionRead = true;
           break;
+        case 'e':
+          UseParaverEventParsing = true;
+          j++;
+          GetEventParsingParameters(argv[j]);
+          break;
         case 'i':
           j++;
           InputTraceName     = argv[j];
@@ -233,6 +250,44 @@ ReadArgs(int argc, char *argv[])
   return;
 }
 
+void GetEventParsingParameters(char* EventParsingArgs)
+{
+  char* err;
+  
+  string       ArgsString (EventParsingArgs);
+  stringstream ArgsStream (ArgsString);
+  string       Buffer;
+
+  set<unsigned int>::iterator EventsIterator;
+
+  while(std::getline(ArgsStream, Buffer, ','))
+  {
+    unsigned int CurrentType;
+    
+    CurrentType = strtoul(Buffer.c_str(), &err, 0);
+    if (*err)
+    {
+      cerr << "Error on event parsing parameters (\'-e\'): Incorrect type ";
+      cerr << "(" << Buffer << ")" << endl;
+      exit (EXIT_FAILURE);
+    }
+    else
+    {
+      EventsToParse.insert(CurrentType);
+    }
+  }
+
+  /* DEBUG */
+  cout << "Events to parse: ";
+  for (EventsIterator  = EventsToParse.begin();
+       EventsIterator != EventsToParse.end();
+       ++EventsIterator)
+  {
+    cout << (*EventsIterator) << " ";
+  }
+  cout << endl;
+}
+
 int main(int argc, char *argv[])
 {
   libTraceClustering Clustering = libTraceClustering(true);
@@ -245,12 +300,22 @@ int main(int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  if (!Clustering.ExtractData(InputTraceName))
+  if (UseParaverEventParsing)
   {
-    cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
-    exit (EXIT_FAILURE);
+    if (!Clustering.ExtractData(InputTraceName, EventsToParse))
+    {
+      cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
   }
-
+  else
+  {
+    if (!Clustering.ExtractData(InputTraceName))
+    {
+      cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
+  }
 
   if (!Clustering.ParametersApproximation(OutputFileName, Parameters))
   {

@@ -49,6 +49,9 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+#include <sstream>
+using std::stringstream;
+
 string ClusteringDefinitionXML;    /* Clustering definition XML file name */
 bool   ClusteringDefinitionRead = false;
 
@@ -66,20 +69,35 @@ bool  ExtractNormalizedData      = false;
 
 bool  ChangeBase                 = false;
 
+bool              UseParaverEventParsing = false;
+set<unsigned int> EventsToParse;
+
 #define HELP \
 "Usage:\n"\
 "  %s -d <clustering_def.xml> [-x] -i <input_trace> -o <output_data>\n"\
 "\n"\
 "  -a                         Information about the tool\n"\
+"\n"\
 "  -h                         This help\n"\
+"\n"\
 "  -s                         Silent mode (No progress messages)\n"\
+"\n"\
+"  -e Type1,Type2,...         When using an input Paraver trace, use this\n"\
+"                             event types to determine the regions treated as\n"\
+"                             bursts\n"\
+"\n"\
 "  -d <clustering_def_xml>    XML containing the parameters definition\n"\
+"\n"\
 "  -c                         Extract CPI stack data for PPC970 native counters\n"\
+"\n"\
 "  -x                         Generate plot for *normalized* data from input\n"\
 "                             file (Default: *raw* data plot)\n"\
+"\n"\
 "  -m <eigen_matrix_file>     CSV file containing an eigenvectors matrix to\n"\
 "                             transform the original space\n"\
+"\n"\
 "  -i <input_trace>           Input trace\n"\
+"\n"\
 "  -o <output_data>           Output data file\n"
 
 
@@ -88,6 +106,8 @@ bool  ChangeBase                 = false;
 "%s v%s (%s)\n"\
 "(c) CEPBA Tools - Barcelona Supercomputing Center\n"\
 "\n"
+
+void GetEventParsingParameters(char* EventParsingArgs);
 
 void PrintUsage(char* ApplicationName)
 {
@@ -157,10 +177,13 @@ ReadArgs(int argc, char *argv[])
           OutputFileName     = argv[j];
           OutputFileNameRead = true;
           break;
-        /*
         case 'e':
-          ExtractOnlyExtraDimensions = true;
+          UseParaverEventParsing = true;
+          j++;
+          GetEventParsingParameters(argv[j]);
           break;
+
+        /*
         case 'g':
           GenerateGNUPlotScript = true;
           break;
@@ -195,6 +218,44 @@ ReadArgs(int argc, char *argv[])
   return;
 }
 
+void GetEventParsingParameters(char* EventParsingArgs)
+{
+  char* err;
+  
+  string       ArgsString (EventParsingArgs);
+  stringstream ArgsStream (ArgsString);
+  string       Buffer;
+
+  set<unsigned int>::iterator EventsIterator;
+
+  while(std::getline(ArgsStream, Buffer, ','))
+  {
+    unsigned int CurrentType;
+    
+    CurrentType = strtoul(Buffer.c_str(), &err, 0);
+    if (*err)
+    {
+      cerr << "Error on event parsing parameters (\'-e\'): Incorrect type ";
+      cerr << "(" << Buffer << ")" << endl;
+      exit (EXIT_FAILURE);
+    }
+    else
+    {
+      EventsToParse.insert(CurrentType);
+    }
+  }
+
+  /* DEBUG */
+  cout << "Events to parse: ";
+  for (EventsIterator  = EventsToParse.begin();
+       EventsIterator != EventsToParse.end();
+       ++EventsIterator)
+  {
+    cout << (*EventsIterator) << " ";
+  }
+  cout << endl;
+}
+
 int main(int argc, char *argv[])
 {
   libTraceClustering Clustering = libTraceClustering(true);
@@ -207,10 +268,21 @@ int main(int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  if (!Clustering.ExtractData(InputTraceName))
+  if (UseParaverEventParsing)
   {
-    cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
-    exit (EXIT_FAILURE);
+    if (!Clustering.ExtractData(InputTraceName, EventsToParse))
+    {
+      cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
+  }
+  else
+  {
+    if (!Clustering.ExtractData(InputTraceName))
+    {
+      cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
+      exit (EXIT_FAILURE);
+    }
   }
 
   if (!Clustering.FlushData(OutputFileName))

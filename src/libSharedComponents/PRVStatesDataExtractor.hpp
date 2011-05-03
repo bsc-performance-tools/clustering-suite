@@ -32,8 +32,8 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef PRVDATAEXTRACTOR_H
-#define PRVDATAEXTRACTOR_H
+#ifndef PRVSTATESDATAEXTRACTOR_H
+#define PRVSTATESDATAEXTRACTOR_H
 
 #include <trace_clustering_types.h>
 
@@ -55,7 +55,7 @@ class Event;
 #define HWC_GROUP_CHANGE_TYPE 42009999
 
 
-class PRVDataExtractor: public DataExtractor
+class PRVStatesDataExtractor: public DataExtractor
 {
   public:
     class TaskDataContainer
@@ -109,12 +109,16 @@ class PRVDataExtractor: public DataExtractor
     vector< vector<TaskDataContainer> > TaskData;
     vector< vector<TaskDataContainer> > FutureTaskData;
     double                              TimeFactor;
+
+    set<event_type_t> EventsToDealWith;
   
   public:
     
-    PRVDataExtractor(string InputTraceName);
-    ~PRVDataExtractor();
-      
+    PRVStatesDataExtractor(string InputTraceName);
+    ~PRVStatesDataExtractor();
+
+    bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith);
+    
     bool ExtractData(TraceData* TraceDataSet);
 
     input_file_t GetFileType(void) { return ParaverTrace; };
@@ -131,4 +135,4 @@ class PRVDataExtractor: public DataExtractor
                            State             *CurrentState);
 };
 
-#endif /* TRACEDATAEXTRACTOR_H */
+#endif /* PRVSTATESDATAEXTRACTOR_H */

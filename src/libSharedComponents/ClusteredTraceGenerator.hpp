@@ -41,61 +41,8 @@ using cepba_tools::Error;
 
 #include <CPUBurst.hpp>
 
-/* Classes for CPUBurst comparisons */
-class BeginTimeCompare
-{
-  public:
-    bool operator()(CPUBurst* P1, CPUBurst* P2)
-    {
-      if (P1->GetBeginTime() < P2->GetBeginTime())
-        return true;
-      else if (P1->GetBeginTime() == P2->GetBeginTime())
-        return (P1->GetLine() < P2->GetLine());
-        // return (P1->GetInstance() < P2->GetInstance());
-        // return (P1->GetEndTime() < P2->GetEndTime());
-        // return (P1->GetTaskId() < P2->GetTaskId());
-      else
-        return false;
-    };
-};
-
-class EndTimeCompare
-{
-  public:
-    bool operator()(CPUBurst* P1, CPUBurst* P2)
-    {
-      if (P1->GetEndTime() < P2->GetEndTime())
-        return true;
-      else if (P1->GetEndTime() == P2->GetEndTime())
-        return (P1->GetTaskId() < P2->GetTaskId());
-      else
-        return false;
-    };
-};
-
-class InstanceNumCompare
-{
-  public:
-    bool operator()(CPUBurst* P1, CPUBurst* P2)
-    {
-      if (P1->GetInstance() < P2->GetInstance())
-        return true;
-      else
-        return false;
-    }
-};
-
-class LineCompare
-{
-  public:
-    bool operator()(CPUBurst* P1, CPUBurst* P2)
-    {
-      if (P1->GetLine() < P2->GetLine())
-        return true;
-      else
-        return false;
-    }
-};
+#include <set>
+using std::set;
 
 class ClusteredTraceGenerator: public Error
 {
@@ -104,7 +51,7 @@ class ClusteredTraceGenerator: public Error
     FILE*  InputTraceFile;
     string OutputTraceName;
     FILE*  OutputTraceFile;
-    bool   DestroyClusteredFile ;
+    bool   DestroyClusteredFile;
   
   public:
     ClusteredTraceGenerator(string  InputTraceName,
@@ -112,7 +59,10 @@ class ClusteredTraceGenerator: public Error
   
     virtual bool Run(vector<CPUBurst*>&    Bursts,
                      vector<cluster_id_t>& IDs,
-                     size_t                NumberOfClusters) = 0;
+                     size_t                NumberOfClusters,
+                     bool                  MinimizeInformation = false) = 0;
+
+    virtual bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith) = 0;
 };
 
 #endif

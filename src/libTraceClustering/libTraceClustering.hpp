@@ -44,15 +44,20 @@ using std::string;
 #include <map>
 using std::map;
 
+#include <set>
+using std::set;
+
 #define DO_NOTHING              0x00
 #define CLUSTERING              0x01
 #define PLOTS                   0x02
 #define PARAMETER_APPROXIMATION 0x04
-#define MPI                     0x08
+#define CLUSTERING_REFINEMENT   0x08
+#define MPI                     0x10
 
 #define USE_CLUSTERING(x)              (x & CLUSTERING)
 #define USE_PLOTS(x)                   (x & PLOTS)
 #define USE_PARAMETER_APPROXIMATION(x) (x & PARAMETER_APPROXIMATION)
+#define USE_CLUSTERING_REFINEMENT(x)   (x & CLUSTERING_REFINEMENT)
 #define USE_MPI(x)                     (x & MPI)
 
 
@@ -74,17 +79,29 @@ class libTraceClustering
     bool InitTraceClustering(string        ClusteringDefinitionXML,
                              unsigned char Flags);
 
-    bool ExtractData(string InputFileName);
+    bool ExtractData(string            InputFileName,
+                     set<unsigned int> EventsToParse = set<unsigned int> ());
     
-    bool ExtractData(string InputFileName, string OutputCSVFileName);
+    bool ExtractData(string            InputFileName,
+                     string            OutputCSVFileName,
+                     set<unsigned int> EventsToParse = set<unsigned int> ());
 
     bool ClusterAnalysis (void);
 
-    bool ClusterRefinementAnalysis(void);
-
+    bool ClusterRefinementAnalysis(string OutputFileNamePrefix = "");
+    
+    bool ClusterRefinementAnalysis(int    MinPoints,
+                                   double MaxEps,
+                                   double MinEps,
+                                   int    Steps,
+                                   string OutputFileNamePrefix = "");
+    
     bool FlushClustersInformation(string OutputClustersInfoFileName);
     
     bool FlushData(string OutputCSVFileName);
+
+    bool ComputeSequenceScore(string OutputFilePrefix,
+                              bool   FASTASequenceFile);
 
     bool ReconstructInputTrace(string OutputTraceName);
 
@@ -94,8 +111,10 @@ class libTraceClustering
     bool ParametersApproximation(string              OutputFileNamePrefix,
                                  map<string, string> Parameters);
 
+    bool   GetError(void) { return Error; };
     string GetErrorMessage(void);
-
+    
+    bool   GetWarning(void) { return Warning; };
     string GetWarningMessage(void);
     
   protected:

@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  $RCSfile: ClusteredPRVGenerator.cpp,v $
+ *  $RCSfile: ClusteredEventsPRVGenerator.cpp,v $
  *
  *  Last modifier: $Author: jgonzale $
  *  Last check in: $Date: 2009/02/27 10:42:21 $
@@ -15,8 +15,8 @@
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 
-#include "ClusteredPRVGenerator.hpp"
-#include "ParaverTraceParser.hpp"
+#include "ClusteredEventsPRVGenerator.hpp"
+#include <ParaverTraceParser.hpp>
 #include <ParaverColors.h>
 
 #include <unistd.h>
@@ -41,8 +41,8 @@ using std::merge;
 "4\tThreshold Filtered\n"\
 "5\tNoise\n"
 
-ClusteredPRVGenerator::ClusteredPRVGenerator(string  InputTraceName,
-                                             string  OutputTraceName)
+ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
+                                                         string  OutputTraceName)
 :ClusteredTraceGenerator(InputTraceName, OutputTraceName)
 {
   string::size_type SubstrPos;
@@ -112,9 +112,26 @@ ClusteredPRVGenerator::ClusteredPRVGenerator(string  InputTraceName,
   return;
 }
 
-bool ClusteredPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
-                                vector<cluster_id_t>& IDs,
-                                size_t                NumberOfClusters)
+bool ClusteredEventsPRVGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith)
+{
+  this->EventsToDealWith = EventsToDealWith;
+
+  if (EventsToDealWith.size() == 0)
+  {
+    SetErrorMessage("no events definend in a PRV event parsing generator");
+    SetError(true);
+    
+    return false;
+  }
+
+  return true;
+}
+
+
+bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
+                                      vector<cluster_id_t>& IDs,
+                                      size_t                NumberOfClusters,
+                                      bool                  MinimizeInformation)
 {
   ParaverHeader*                  Header;
   vector<ApplicationDescription*> AppsDescription;
@@ -123,13 +140,23 @@ bool ClusteredPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
                     
   ParaverRecord                *CurrentRecord;
   Event                        *CurrentEvent;
-  State                        *CurrentState;
-  INT32                         CurrentPercentage = 0;
-  vector<timestamp_t>           BurstsEnd;
+  percentage_t                  CurrentPercentage = 0;
+  vector<vector<timestamp_t> >  BurstsEnd;
   size_t                        FilterBurstsEndIndex;
   size_t                        TotalBursts;
   double                        TimeFactor;
 
+  if (EventsToDealWith.size() == 0)
+  {
+    SetErrorMessage("no event types set in the trace reconstruction");
+    SetError(true);
+    return false;
+  }
+  
+  /* Sort all burst in terms of instance number, to guarantee the positional
+     assignment in the IDs vector */
+  sort(Bursts.begin(), Bursts.end(), InstanceNumCompare());
+  
   /* Create the single cluster IDs vector */
   size_t CurrentClusteringBurst = 0;
   for (size_t i = 0; i < Bursts.size(); i++)
@@ -196,13 +223,13 @@ bool ClusteredPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   /* Print all communicators */
   AppsDescription = TraceParser->GetApplicationsDescription();
   
-  for (INT32 i = 0; i < AppsDescription.size(); i++)
+  for (size_t i = 0; i < AppsDescription.size(); i++)
   {
     vector<Communicator*> Communicators;
     
     Communicators = AppsDescription[i]->GetCommunicators();
     
-    for (INT32 j = 0; j < Communicators.size(); j++)
+    for (size_t j = 0; j < Communicators.size(); j++)
     {
       if (!Communicators[j]->Flush(OutputTraceFile))
       {
@@ -214,9 +241,11 @@ bool ClusteredPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
     }
     
     /* This is buggy, because we need to capture a multi-application trace */
-    for (INT32 j = 0; j < AppsDescription[i]->GetTaskCount(); j++)
+    vector<TaskDescription_t> TasksInfo = AppsDescription[i]->GetTaskInfo();
+
+    for (size_t j = 0; j < TasksInfo.size(); j++)
     {
-      BurstsEnd.push_back(0);
+      BurstsEnd.push_back(vector<timestamp_t> (TasksInfo[j]->GetThreadCount()));
     }
   }
   
@@ -239,91 +268,60 @@ bool ClusteredPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
 
   while (CurrentRecord != NULL)
   {
-    INT32 PercentageRead;
+    percentage_t PercentageRead;
     bool  CurrentRecordFlushed = false;
     
     /* We are only interested on event and state records */
-    if (CurrentRecord->GetRecordType() == PARAVER_STATE)
+    if (CurrentRecord->GetRecordType() == PARAVER_EVENT)
     {
-      CurrentState = (State*) CurrentRecord;
-      CurrentEvent = NULL;
-    }
-    else if (CurrentRecord->GetRecordType() == PARAVER_EVENT)
-    {
-      CurrentState = NULL;
       CurrentEvent = (Event*) CurrentRecord;
-    }
-    else
-    {
-      CurrentState = NULL;
-      CurrentEvent = NULL;
-    }
-    
-    if (CurrentState != NULL)
-    {
-      if (CurrentState->GetStateValue() == RUNNING_STATE)
+
+      if (BurstOpeningEvent (CurrentEvent))
       {
-        /* Check if there is a pending cluster region to close */
-        if (BurstsEnd[CurrentState->GetTaskId()] == CurrentState->GetBeginTime()
-        &&  BurstsEnd[CurrentState->GetTaskId()] != 0)
+        if (BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] == CurrentEvent->GetTimestamp()
+            &&  BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] != 0) // In timestamp 0 it is impossible to close a burst
         {
           Event* NewEvent;
-            
+
           NewEvent = new Event(0, /* Line not needed */
-                               CurrentState->GetTimestamp(),
-                               CurrentState->GetCPU()+1,
-                               CurrentState->GetAppId()+1,
-                               CurrentState->GetTaskId()+1,
-                               CurrentState->GetThreadId()+1);
-          
+                               CurrentEvent->GetTimestamp(),
+                               CurrentEvent->GetCPU()+1,
+                               CurrentEvent->GetAppId()+1,
+                               CurrentEvent->GetTaskId()+1,
+                               CurrentEvent->GetThreadId()+1);
+
           NewEvent->AddTypeValue(90000001,0);
-          
-#ifdef DEBUG_PRV_OUTPUT
-          cout << "Flushing closing cluster event: " << *NewEvent;
-#endif
-          
+
           if (!NewEvent->Flush(OutputTraceFile))
           {
             SetError(true);
             SetErrorMessage("Error creating output trace",
-                            NewEvent->GetLastError());
+                      NewEvent->GetLastError());
             return false;
           }
-          
-          BurstsEnd[CurrentState->GetTaskId()] = 0;
+
+          BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] = 0;
         }
-          
-        /* DEBUG
-        cout << "BeginTimeIndex = " << BeginTimeIndex << " - ";
-        cout << "BeginTimePoints.size() = " << BeginTimePoints.size() << endl; */
-          
+
         if (BeginTimeIndex < Bursts.size())
         {
           CPUBurst* CurrentBurst = Bursts[BeginTimeIndex];
 
-          if (CurrentState->GetBeginTime() == CurrentBurst->GetBeginTime() &&
-              CurrentState->GetTaskId()    == CurrentBurst->GetTaskId())
+          if (CurrentEvent->GetTimestamp() == CurrentBurst->GetBeginTime() &&
+              CurrentEvent->GetTaskId()    == CurrentBurst->GetTaskId() &&
+              CurrentEvent->GetThreadId()  == CurrentBurst->GetThreadId())
           {
             Event* NewEvent;
             
             NewEvent = new Event(0, /* Line not needed */
-                                 CurrentState->GetTimestamp(),
-                                 CurrentState->GetCPU()+1,
-                                 CurrentState->GetAppId()+1,
-                                 CurrentState->GetTaskId()+1,
-                                 CurrentState->GetThreadId()+1);
+                                 CurrentEvent->GetTimestamp(),
+                                 CurrentEvent->GetCPU()+1,
+                                 CurrentEvent->GetAppId()+1,
+                                 CurrentEvent->GetTaskId()+1,
+                                 CurrentEvent->GetThreadId()+1);
             
             NewEvent->AddTypeValue(90000001,
                                    (INT64) CompleteIDs[CurrentBurst->GetInstance()]);
-            
-#ifdef DEBUG_PRV_OUTPUT
-            cout << "Flushing opening cluster event: " << *NewEvent;
-            
-            if (CompleteIDs[CurrentBurst->GetInstance() > 20)
-            {
-              cout << "Strange cluster id. Instance = " << CurrentBurst->GetInstance() << endl;
-            }
-#endif
 
             if (!NewEvent->Flush(OutputTraceFile))
             {
@@ -336,42 +334,41 @@ bool ClusteredPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
             BeginTimeIndex++;
             
             /* Set the end time */
-            BurstsEnd[CurrentState->GetTaskId()] = CurrentBurst->GetEndTime();
+            BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] =
+              CurrentBurst->GetEndTime();
           }
         }
       }
-    }
-    else if (CurrentEvent != NULL)
-    {
-      if (BurstsEnd[CurrentEvent->GetTaskId()] == CurrentEvent->GetTimestamp()
-      &&  BurstsEnd[CurrentEvent->GetTaskId()] != 0) // In timestamp 0 it is impossible to close a burst
+      else if (BurstClosingEvent (CurrentEvent))
       {
-        Event* NewEvent;
-        
-        NewEvent = new Event(0, /* Line not needed */
-                             CurrentEvent->GetTimestamp(),
-                             CurrentEvent->GetCPU()+1,
-                             CurrentEvent->GetAppId()+1,
-                             CurrentEvent->GetTaskId()+1,
-                             CurrentEvent->GetThreadId()+1);
-        
-        NewEvent->AddTypeValue(90000001,0);
-        
-        if (!NewEvent->Flush(OutputTraceFile))
+        if (BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] == CurrentEvent->GetTimestamp()
+        &&  BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] != 0) // In timestamp 0 it is impossible to close a burst
         {
-          SetError(true);
-          SetErrorMessage("Error creating output trace",
-                          NewEvent->GetLastError());
-          return false;
+          Event* NewEvent;
+          
+          NewEvent = new Event(0, /* Line not needed */
+                               CurrentEvent->GetTimestamp(),
+                               CurrentEvent->GetCPU()+1,
+                               CurrentEvent->GetAppId()+1,
+                               CurrentEvent->GetTaskId()+1,
+                               CurrentEvent->GetThreadId()+1);
+          
+          NewEvent->AddTypeValue(90000001,0);
+          
+          if (!NewEvent->Flush(OutputTraceFile))
+          {
+            SetError(true);
+            SetErrorMessage("Error creating output trace",
+                            NewEvent->GetLastError());
+            return false;
+          }
+
+          /* FilterBurstsEnd.pop_front(); */
+          BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] = 0;
         }
-        
-#ifdef DEBUG_PRV_OUTPUT
-        cout << "Flush closing cluster event [Filtered]: " << *NewEvent;
-#endif
-        
-        /* FilterBurstsEnd.pop_front(); */
-        BurstsEnd[CurrentEvent->GetTaskId()] = 0;
       }
+      
+      
       
       /* Show progress */
       PercentageRead = TraceParser->GetFilePercentage();
@@ -382,8 +379,9 @@ bool ClusteredPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
                                                   CurrentPercentage);
       }
     }
-    
-    if (!CurrentRecordFlushed)
+
+    /* If 'MinimizeInformation' is active, general records are not flushed */
+    if (!CurrentRecordFlushed && !MinimizeInformation)
     {
       if (!CurrentRecord->Flush(OutputTraceFile))
       {
@@ -438,7 +436,7 @@ bool ClusteredPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
 }
 
 bool
-ClusteredPRVGenerator::GenerateOutputPCF(size_t NumberOfClusters)
+ClusteredEventsPRVGenerator::GenerateOutputPCF(size_t NumberOfClusters)
 {
   char   Buffer[256], AuxBuffer[256];
   size_t BufferSize = sizeof(Buffer);
@@ -576,6 +574,38 @@ ClusteredPRVGenerator::GenerateOutputPCF(size_t NumberOfClusters)
           "%d\tCluster %d\n",
           i+PARAVER_OFFSET, /* It needs the offset, because it uses internal numbering */
           i);
+  }
+  
+  return true;
+}
+
+
+bool ClusteredEventsPRVGenerator::BurstOpeningEvent(Event* CurrentEvent)
+{
+  for (size_t i = 0; i < CurrentEvent->GetTypeValueCount(); i++)
+  {
+    event_type_t  EventType  = CurrentEvent->GetType(i);
+    event_value_t EventValue = CurrentEvent->GetValue(i);
+
+    if (EventsToDealWith.count(EventType) == 1 && EventValue != 0)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ClusteredEventsPRVGenerator::BurstClosingEvent(Event* CurrentEvent)
+{
+  for (size_t i = 0; i < CurrentEvent->GetTypeValueCount(); i++)
+  {
+    event_type_t  EventType  = CurrentEvent->GetType(i);
+    event_value_t EventValue = CurrentEvent->GetValue(i);
+
+    if (EventsToDealWith.count(EventType) == 1 && EventValue == 0)
+    {
+      return true;
+    }
   }
   
   return true;

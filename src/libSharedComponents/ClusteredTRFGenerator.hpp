@@ -45,9 +45,12 @@ class ClusteredTRFGenerator: public ClusteredTraceGenerator
       this->PrintClusterBlocks = PrintClusterBlocks;
     }
 
+    bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith);
+    
     bool Run(vector<CPUBurst*>&    ClusteringBursts,
              vector<cluster_id_t>& IDs,
-             size_t                NumberOfClusters);
+             size_t                NumberOfClusters,
+             bool                  MinimizeInformation = false);
 
   private:
     INT32 GetNextClusterId(void);

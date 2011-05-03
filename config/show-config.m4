@@ -41,4 +41,7 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
 	fi
 	echo
 
+	echo SeqAn support: ${seqan_enabled}
+
+
 ])

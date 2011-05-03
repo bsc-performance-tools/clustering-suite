@@ -1,9 +1,9 @@
-/*****************************************************************************\ 
+/*****************************************************************************\
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           *
+ *                                                                           * 
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,7 +23,7 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
   $URL::                                                                   $:
 
@@ -33,14 +33,13 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#include "SystemMessages.hpp"
+#include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 
-#include "MUSTER_DBSCAN.hpp"
+#include "OPTICS.hpp"
+
 #include "Point.hpp"
 #include "Partition.hpp"
-
-#include <density.h>
 
 #include <cstring>
 #include <cmath>
@@ -56,29 +55,29 @@ using std::sort;
 using std::cout;
 using std::endl;
 
+#include <fstream>
+using std::ofstream;
+
 using std::make_pair;
 
-const string MUSTER_DBSCAN::NAME              = "MUSTER_DBSCAN";
-const string MUSTER_DBSCAN::EPSILON_STRING    = "epsilon";
-const string MUSTER_DBSCAN::MIN_POINTS_STRING = "min_points";
+const string OPTICS::NAME              = "DBSCAN";
+const string OPTICS::EPSILON_STRING    = "epsilon";
+const string OPTICS::MIN_POINTS_STRING = "min_points";
 
 /*****************************************************************************
- * class MUSTER_DBSCAN implementation                                        *
+ * class OPTICS implementation                                               *
  ****************************************************************************/
-MUSTER_DBSCAN::MUSTER_DBSCAN()
-{
-}
 
-MUSTER_DBSCAN::MUSTER_DBSCAN(map<string, string> ClusteringParameters)
+OPTICS::OPTICS(map<string, string> ClusteringParameters)
 {
   map<string, string>::iterator ParametersIterator;
 
   /* Epsilon */
-  ParametersIterator = ClusteringParameters.find(MUSTER_DBSCAN::EPSILON_STRING);
+  ParametersIterator = ClusteringParameters.find(OPTICS::EPSILON_STRING);
   if (ParametersIterator == ClusteringParameters.end())
   {
     string ErrorMessage;
-    ErrorMessage = "parameter '" + MUSTER_DBSCAN::EPSILON_STRING + "' not found in MUSTER_DBSCAN definition";
+    ErrorMessage = "parameter '" + OPTICS::EPSILON_STRING + "' not found in OPTICS definition";
     
     SetErrorMessage(ErrorMessage);
     SetError(true);
@@ -92,7 +91,7 @@ MUSTER_DBSCAN::MUSTER_DBSCAN(map<string, string> ClusteringParameters)
     if (*err)
     {
       string ErrorMessage;
-      ErrorMessage = "incorrect value for MUSTER_DBSCAN parameter '"+ MUSTER_DBSCAN::EPSILON_STRING + "'";
+      ErrorMessage = "incorrect value for OPTICS parameter '"+ OPTICS::EPSILON_STRING + "'";
 
       SetErrorMessage(ErrorMessage);
       SetError(true);
@@ -101,11 +100,11 @@ MUSTER_DBSCAN::MUSTER_DBSCAN(map<string, string> ClusteringParameters)
   }
 
   /* MinPoints */
-  ParametersIterator = ClusteringParameters.find(MUSTER_DBSCAN::MIN_POINTS_STRING);
+  ParametersIterator = ClusteringParameters.find(OPTICS::MIN_POINTS_STRING);
   if (ParametersIterator == ClusteringParameters.end())
   {
     string ErrorMessage;
-    ErrorMessage = "parameter '" + MUSTER_DBSCAN::MIN_POINTS_STRING + "' not found in MUSTER_DBSCAN definition";
+    ErrorMessage = "parameter '" + OPTICS::MIN_POINTS_STRING + "' not found in OPTICS definition";
     
     SetErrorMessage(ErrorMessage);
     SetError(true);
@@ -119,75 +118,120 @@ MUSTER_DBSCAN::MUSTER_DBSCAN(map<string, string> ClusteringParameters)
     if (*err)
     {
       string ErrorMessage;
-      ErrorMessage = "incorrect value for MUSTER_DBSCAN parameter '"+ MUSTER_DBSCAN::MIN_POINTS_STRING + "'";
+      ErrorMessage = "incorrect value for OPTICS parameter '"+ OPTICS::MIN_POINTS_STRING + "'";
 
       SetErrorMessage(ErrorMessage);
       SetError(true);
       return;
     }
   }
-
+  
   return;
 }
 
-
-bool MUSTER_DBSCAN::Run(const vector<const Point*>& Data,
-                        Partition&                  DataPartition,
-                        bool                        SimpleRun)
+bool OPTICS::Run(const vector<const Point*>& Data,
+                 Partition&                  DataPartition,
+                 bool                        SimpleRun)
 {
-  if (Data.empty())
-  {
-    SetError(true);
-    SetErrorMessage("no data to apply clustering analysis");
-    return false;
-  }
+  cluster_id_t   ClusterId = MIN_CLUSTERID;
+  Point*         CurrentPoint;
+  INT32          CurrentPos, DimensionsCount;
+  size_t         ResultingClusters = 0;
 
-  system_messages::information("Using MUSTER's DBSCAN we can not provide algorithm progress information\n");
+  INT64          DataSize, Index;
+
+  /* TEMPORARY */
+  SetError(true);
+  SetErrorMessage("algorithm not implemented");
+  return false;
   
-  cluster::density muster_algorithm = cluster::density();
-  muster_algorithm.dbscan(Data, PointEuclideanDistance(), Eps, MinPoints);
-
-  cout << "Number of clusters found = " << muster_algorithm.num_clusters() << endl;
-
-  /* Translate MUSTER partition to 'libClustering' partition */
-  vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
-  set<cluster_id_t>&    DifferentIDs            = DataPartition.GetIDs();
-
-  ClusterAssignmentVector.clear();
-
-  for (size_t i = 0; i < Data.size(); i++)
+  if (Data.size() == 0)
   {
-    /* We had to substract 1 to each cluster id to control homogeneity with internal DBSCAN numbering */
-    ClusterAssignmentVector.push_back(muster_algorithm.cluster_ids[i]);
-    DifferentIDs.insert(muster_algorithm.cluster_ids[i]);
+    return true;
   }
+
+  /* DEBUG */
+  vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
+
+  if (Data.size() != ClusterAssignmentVector.size())
+  {
+    ClusterAssignmentVector.clear();
+
+    for (size_t i = 0; i < Data.size(); i++)
+    {
+      ClusterAssignmentVector.push_back(UNCLASSIFIED);
+    }
+  }
+  
+  /* Build KD-Tree */
+  BuildKDTree(Data);
+
+  system_messages::show_progress("Clustering points", 0, (int) Data.size());
+
+  system_messages::show_progress_end("Clustering points", (int) Data.size());
 
   /* NOISE cluster has to be considered as a cluster, to mantain coherence across the namings */
-  DataPartition.NumberOfClusters(DifferentIDs.size());
+  DataPartition.NumberOfClusters (ResultingClusters+1);
   DataPartition.HasNoise(true);
 
   return true;
 }
 
-
-string MUSTER_DBSCAN::GetClusteringAlgorithmName(void) const
+string OPTICS::GetClusteringAlgorithmName(void) const
 {
   ostringstream Result;
-  Result << "MUSTER_DBSCAN (Eps=" << Eps << ", MinPoints=" << MinPoints << ")";
+  Result << "OPTICS (Eps=" << Eps << ", MinPoints=" << MinPoints << ")";
+
   return Result.str();
 }
 
-
-string MUSTER_DBSCAN::GetClusteringAlgorithmNameFile(void) const
+string OPTICS::GetClusteringAlgorithmNameFile(void) const
 {
   ostringstream Result;
-  Result << "MUSTER_DBSCAN_Eps_" << Eps << "_MinPoints_" << MinPoints;
+  Result << "OPTICS_Eps_" << Eps << "_MinPoints_" << MinPoints;
+
   return Result.str();
 }
 
-
-bool MUSTER_DBSCAN::ComputeParamsApproximation(const vector<const Point*>& Data,
-INT32 ParametersCount, ...)
+bool OPTICS::BuildKDTree(const vector<const Point*>& Data)
 {
+  assert(Data.size() > 0);
+
+  size_t Dimensions = Data[0]->size();
+  
+#ifdef DEBUG
+/*  cout << "Current clustering has " << Dimensions << " dimensions" << endl; */
+#endif
+  
+  system_messages::show_progress("Building data spatial index", 0, Data.size());
+  
+  ANNDataPoints = annAllocPts(Data.size(), Dimensions);
+
+  for (size_t i = 0; i < Data.size(); i++)
+  {
+    system_messages::show_progress("Building data spatial index", i, Data.size());
+    ANNDataPoints[i] = ToANNPoint(Data[i]);
+  }
+
+  system_messages::show_progress_end("Building data spatial index", Data.size());
+
+  SpatialIndex = new ANNkd_tree(ANNDataPoints,
+                                Data.size(),
+                                Dimensions);
+  
   return true;
 }
+
+
+ANNpoint OPTICS::ToANNPoint(const Point* InputPoint)
+{
+  ANNpoint Result = annAllocPt(InputPoint->size());
+
+  for (size_t i = 0; i < InputPoint->size(); i++)
+  {
+    Result[i] = (*InputPoint)[i];
+  }
+
+  return Result;
+}
+

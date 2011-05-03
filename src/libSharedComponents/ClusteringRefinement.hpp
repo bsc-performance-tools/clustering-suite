@@ -39,15 +39,146 @@
 using cepba_tools::Error;
 
 #include <libClustering.hpp>
-#include "Partition.hpp"
 #include "TraceData.hpp"
+#include "Partition.hpp"
+#include "ClusteringStatistics.hpp"
+
+#include <list>
+using std::list;
+
+#include <set>
+using std::set;
+
+#include <fstream>
+using std::ofstream;
+
+class ClusterInformation: public Error
+{
+  private:
+    cluster_id_t              ID;
+
+    bool                      Discarded;
+
+    percentage_t              Score;
+    size_t                    Occurrences;
+
+    timestamp_t               TotalDuration;
+    size_t                    Individuals;
+    
+    vector<ClusterInformation*> Children;
+
+  public:
+    ClusterInformation(cluster_id_t ID,
+                       percentage_t Score,
+                       size_t       Occurrences,
+                       timestamp_t  TotalDuration,
+                       size_t       Individuals);
+
+    cluster_id_t GetID(void) { return ID; };
+
+    percentage_t GetScore(void)       { return Score; };
+    size_t       GetOccurrences(void) { return Occurrences; };
+    
+    timestamp_t  GetTotalDuration(void) { return TotalDuration; };
+    size_t       GetIndividuals(void)   { return Individuals; };
+
+    bool IsCandidate(size_t      TotalOccurrences,
+                     timestamp_t ClustersTotalDuration);
+    
+    bool AddChild(ClusterInformation*);
+
+    vector<ClusterInformation*>& GetChildren(void) { return Children; };
+
+    bool IsDiscarded(void) { return this->Discarded; };
+    
+    void Discard(void)     { 
+      /* DEBUG */
+      cout << "NODE = " << ID << " IS BEING DISCARDED" << endl;
+      this->Discarded = true; };
+
+};
 
 class ClusteringRefinement: public Error
 {
   private:
-    libClustering*    ClusteringCore;
-    vector<Partition> PartitionsHistory;
-    TraceData*        Data;
+    INT32  MinPoints;
+    
+    double MinEpsilon;
+    double MaxEpsilon;
+
+    size_t Steps;
+    size_t LastStep;
+
+    string OutputFilePrefix;
+    bool   PrintStepsInformation;
+    
+    libClustering*               ClusteringCore;
+    vector<Partition>            PartitionsHistory;
+    vector<ClusteringStatistics> StatisticsHistory;
+
+    vector<vector<CPUBurst*> >        BurstsPerStep;
+    map<instance_t, vector<size_t> >  InstancesTracking;
+
+    vector<ClusterInformation*>            OngoingCandidates;
+    map<cluster_id_t, ClusterInformation*> NewNodes;
+    
+    vector<set<ClusterInformation*> >   ClustersHierarchy;
+
+  public:
+    
+    ClusteringRefinement(INT32      MinPoints,
+                         double     MaxEpsilon,
+                         double     MinEpsilon,
+                         size_t     Steps);
+
+    bool Run(const vector<CPUBurst*>& Bursts,
+             vector<Partition>&       ResultingPartitions,
+             string                   OutputFilePrefix = "");
+
+  private:
+
+    /*
+    vector<CPUBurst*> GetBurstsSubset(vector<CPUBurst*>&   ClusteringBursts,
+                                      Partition&           CurrentPartition,
+                                      vector<cluster_id_t> Candidates);
+    */
+
+    bool RunStep(size_t Step,
+                 double Epsilon,
+                 bool&  NoMoreClusters);
+
+    bool LinkToPreviuosStep(size_t Step,
+                            bool&  Convergence);
+    
+    bool RunDBSCAN(const vector<const Point*>& CurrentData,
+                   double                      Epsilon,
+                   Partition&                  CurrentPartition);
+
+    bool GenerateCandidates(size_t Step);
+    
+    bool GenerateCurrentLevelNodes(size_t Step);
+
+    bool EvaluateSplit(ClusterInformation*          Parent,
+                       vector<ClusterInformation*>& Children,
+                       bool&                        SplitOK);
+
+    void ReassignNoisePartition(cluster_id_t ID,
+                                size_t Step);
+
+    bool CreateDefinitivePartitions(vector<Partition>& ResultingPartitions);
+
+    size_t ColapseNonDividedSubtrees(ClusterInformation* Node, size_t Level);
+
+    bool IsIDInSet(cluster_id_t       ID,
+                   set<cluster_id_t>& IDsSet);
+
+    bool PrintPlots(vector<CPUBurst*>& Bursts,
+                    Partition&         CurrentPartition,
+                    size_t             Step);
+
+    bool PrintTrees(void);
+
+    bool PrintNode(ofstream& str, ClusterInformation* Node, size_t Level);
 
 };
 

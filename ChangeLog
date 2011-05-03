@@ -10,6 +10,19 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-05-03 Juan Gonzalez <juan.gonzalez@bsc.es>
+
+	* Added a new Paraver parser to treat bursts based on events. Now
+	there are two different classes to parse 'PRVStatesDataExtractor'
+	and 'PRVEventsDataExtractor'. Consequently, a new Paraver trace
+	reconstructor has been added 'ClusteredEventsPRVGenerator'
+
+	* First implementation of Clustering Refinement, consisting on a
+	divisive (top-down) hierachical application of succesive DBSCAN's,
+	evaluated using the Sequence Alignment score. It generates partial
+	clusterings information, but has to be changed to clarify the
+	outputs, and make different levels independent (to parallelize it)
+
 2011-03-14 Juan Gonzalez <juan.gonzalez@bsc.es>
 
 	* Solved a problem when sorting the clusters to translated the cluster

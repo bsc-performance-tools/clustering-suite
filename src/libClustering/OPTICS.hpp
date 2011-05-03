@@ -1,9 +1,9 @@
-/*****************************************************************************\ 
+/*****************************************************************************\
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           *
+ *                                                                           * 
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -23,7 +23,7 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
   $URL::                                                                   $:
 
@@ -33,76 +33,98 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef _CLUSTERINGALGORITHM_HPP_
-#define _CLUSTERINGALGORITHM_HPP_
+#ifndef _OPTICS_HPP_
+#define _OPTICS_HPP_
 
-#include <Error.hpp>
-using cepba_tools::Error;
-
+#include "ClusteringAlgorithm.hpp"
 #include "clustering_types.h"
 
 /* Forward declarations */
 class Classifier;
-class Point;
 class Partition;
 
-#include <sys/stat.h>
+#include <ANN/ANN.h>
 
-#include <cstdio>
-#include <string>
-#include <cerrno>
-#include <cmath>
-#include <cfloat>
-
-#include <vector>
-using std::vector;
-
-#include <list>
-using std::list;
-
-#include <map>
-using std::map;
+#include <sstream>
+using std::ostringstream;
 
 #include <iostream>
 using std::ostream;
-using std::cout;
-using std::endl;
 
-class ClusteringAlgorithm: public Error
+#include <vector>
+using std::vector;
+#include <list>
+using std::list;
+
+using std::pair;
+
+class OPTICS: public ClusteringAlgorithm
 {
-  protected:
-    bool   ClusteringReady;
 
-    bool   Distributed;
+  typedef size_t point_idx;
+  
+  private:
+    double              Eps;
+    INT32               MinPoints;
+
+    /*
+    vector<INT32>       ClusterIdTranslation;
+    ClusterInformation* NoiseClusterInfo;
+    ClusterInformation* ThresholdFilteredClusterInfo; */
+
+    ANNpointArray       ANNDataPoints;
+    ANNkd_tree*         SpatialIndex;
 
   public:
+    static const string NAME;
+    
+    static const string EPSILON_STRING;
+    static const string MIN_POINTS_STRING;
 
-    virtual ~ClusteringAlgorithm(void) { };
+    /*
+    DBSCAN(double _Eps, INT32 _MinPoints, double FilterThreshold = 0.0)
+    :ClusteringAlgorithm(FilterThreshold),
+     Eps(_Eps),
+     MinPoints(_MinPoints)
+    {};
+    */
+    OPTICS(map<string, string> ClusteringParameters);
 
-    bool   IsClusteringReady(void) { return ClusteringReady; };
+    ~OPTICS(void) {};
 
-    virtual bool Run(const vector<const Point*>& Data,
-                     Partition&                  DataPartition,
-                     bool                        SimpleRun = false) = 0;
+    double GetEpsilon(void) const     { return Eps; };
+    void   SetEpsilon(double Epsilon) { Eps = Epsilon; };
+
+    INT32  GetMinPoints(void) const      { return MinPoints; };
+    void   SetMinPoints(INT32 MinPoints) { this->MinPoints = MinPoints; };
+    
+    bool Run(const vector<const Point*>& Data,
+             Partition&                  DataPartition,
+             bool                        SimpleRun);
+
+    /*
+    Classifier*
+    GetClassifier(void) { return new KDTreeClassifier(SpatialIndex, Eps); }; */
   
-    // virtual Classifier* GetClassifier(void) {}; //
-  
-    virtual string GetClusteringAlgorithmName(void) const = 0;
+    string GetClusteringAlgorithmName(void) const;
+    string GetClusteringAlgorithmNameFile(void) const;
 
-    virtual string GetClusteringAlgorithmNameFile(void) const = 0;
+    /*
+    bool
+    GetClustersInformation(vector<ClusterInformation*>& ClusterInfoVector);
+    */
 
-    virtual bool IsDistributed(void) { return false; };
+    /* bool GetDataPoints(vector<DataPoint*>& DataPoints); */
 
-    virtual bool HasNoise(void)      { return false; };
+    bool HasNoise(void) { return true; };
 
-    virtual bool ParametersApproximation(const vector<const Point*>& Data,
-                                         map<string, string>&  Parameters,
-                                         string                OutputFileNamePrefix)
-    {
-      SetErrorMessage("this algorithm does no have a parameter approximation defined");
-      return false;
-    };
+  private:
+    
+    bool BuildKDTree(const vector<const Point*>& Data);
+
+    ANNpoint ToANNPoint(const Point* const InputPoint);
 
 };
 
-#endif /* _CLUSTERINGALGORITHM_HPP_ */
+#endif /* _OPTICS_HPP_ */
+

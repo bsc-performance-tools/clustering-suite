@@ -383,7 +383,7 @@ ParametersManager::LoadParameters(ClusteringConfiguration* Configuration)
   }
 
   /* Clustering parameters creation */
-  for (INT32 i = 0; i < ClusteringParametersDefinitions.size(); i++)
+  for (size_t i = 0; i < ClusteringParametersDefinitions.size(); i++)
   {
     if (GetClusteringParameterPosition(ClusteringParametersNames[i]) != NOT_FOUND)
     {
@@ -434,7 +434,7 @@ ParametersManager::LoadParameters(ClusteringConfiguration* Configuration)
   if (!Configuration->GetExtrapolationParametersError())
   {
     /* Extrapolation parameters creation */
-    for (INT32 i = 0; i < ExtrapolationParametersDefinitions.size(); i++)
+    for (size_t i = 0; i < ExtrapolationParametersDefinitions.size(); i++)
     {
       if (GetExtrapolationParameterPosition(ExtrapolationParametersNames[i]) != NOT_FOUND)
       {
@@ -463,7 +463,6 @@ ParametersManager::LoadParameters(ClusteringConfiguration* Configuration)
         {
           /* Add parameter index */
           ExtrapolationParametersIndex[ExtrapolationParametersNames[i]] = ExtrapolationParameters.size();
-          
           ExtrapolationParameters.push_back(NewParameter);
         }
       }
@@ -472,7 +471,7 @@ ParametersManager::LoadParameters(ClusteringConfiguration* Configuration)
   else
   {
     SetWarning(true);
-    SetWarningMessage("extrapolation parameters from XML not used: ", 
+    SetWarningMessage("extrapolation parameters from XML not used", 
                       Configuration->GetExtrapolationParametersErrorMessage());
   }
   

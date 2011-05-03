@@ -483,7 +483,7 @@ ClusteringConfiguration::GetExtrapolationParametersError(void)
  * \param ExtrapolationParametersErrorMessage String describing the possible error in extrapolation metrics parsing
  */
 void
-ClusteringConfiguration::SetExtrapolationParametersErrorMessage(string ExtrapolationParametersMessage)
+ClusteringConfiguration::SetExtrapolationParametersErrorMessage(string ExtrapolationParametersErrorMessage)
 {
   this->ExtrapolationParametersErrorMessage = ExtrapolationParametersErrorMessage;
 }

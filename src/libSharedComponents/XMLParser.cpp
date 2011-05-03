@@ -500,9 +500,7 @@ XMLParser::ParseXMLClusteringParameters(
   return true;
 }
 
-bool
-XMLParser::ParseXMLExtrapolationParameters(
-  xmlNodePtr NodeExtraParameters)
+bool XMLParser::ParseXMLExtrapolationParameters(xmlNodePtr NodeExtraParameters)
 {
   xmlNodePtr CurrentNode;
   string     CurrentNodeName;
@@ -610,7 +608,16 @@ XMLParser::ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent)
 
     if (CurrentNodeName.compare(NODE_EVENTTYPE) == 0)
     {
-      EventType     = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+      string EventTypeStr = (const char*) xmlNodeGetContent(CurrentNode);
+      
+      if (EventTypeStr.compare(TEXT_DURATION) == 0)
+      {
+        EventType = DURATION_EVENT_TYPE;
+      }
+      else
+      {
+        EventType  = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+      }
       EventTypeRead = true;
     }
     else if (CurrentNodeName.compare(NODE_FACTOR) == 0)
@@ -755,40 +762,6 @@ XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
   Operation = AuxCharStr[0];
   xmlFree(AuxCharStr);
 
-  /*
-  switch (Operation)
-  {
-    case '+':
-      NewParameter.Operation = Add;
-      break;
-    case '-':
-      NewParameter.Operation = Substract;
-      break;
-    case '*':
-      NewParameter.Operation = Multiply;
-      break;
-    case '/':
-      NewParameter.Operation = Divide;
-      break;
-    default:
-      char line[15];
-      string ErrorMessage;
-
-      sprintf (line, "%d", CurrentMixedEvent->line);
-      
-      ErrorMessage += "Wrong operation type (";
-      ErrorMessage += Operation;
-      ErrorMessage += ") from \"";
-      ErrorMessage += NODE_MIXEDEVT;
-      ErrorMessage += "\" node on line ";
-      ErrorMessage += line;
-
-      SetErrorMessage (ErrorMessage);
-      SetError(true);
-      return false;
-  }
-  */
-
   AuxCharStr =
     (char*) xmlGetProp(CurrentMixedEvent, (const xmlChar*) ATTR_APPLYLOG);
 
@@ -870,13 +843,17 @@ XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
 
   if (!EventTypeARead)
   {
+    char line[15];
     string ErrorMessage;
+
+    sprintf(line, "%d", CurrentMixedEvent->line);
 
     ErrorMessage += "Mandatory element \"";
     ErrorMessage += NODE_EVENTTYPE_A;
     ErrorMessage += "\" not found on \"";
     ErrorMessage += NODE_MIXEDEVT;
-    ErrorMessage += "\" node";
+    ErrorMessage += "\" node on line ";
+    ErrorMessage += line;
 
     SetErrorMessage(ErrorMessage);
     SetError(true);
@@ -885,13 +862,17 @@ XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
 
   if (!EventTypeBRead)
   {
+    char line[15];
     string ErrorMessage;
 
+    sprintf(line, "%d", CurrentMixedEvent->line);
+    
     ErrorMessage = "Mandatory element \"";
     ErrorMessage += NODE_EVENTTYPE_B;
     ErrorMessage += "\" not found on \"";
     ErrorMessage += NODE_MIXEDEVT;
-    ErrorMessage += "\" node";
+    ErrorMessage += "\" node on line ";
+    ErrorMessage += line;
 
     SetErrorMessage(ErrorMessage);
     SetError(true);
@@ -909,7 +890,6 @@ XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
   NewParameter.Line       = CurrentMixedEvent->line;
   
   /* Set range if available */
-
   if (ReadingExtrapolationParameters)
   {
     ExtrapolationParametersNames.push_back(ParameterName);

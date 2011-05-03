@@ -190,8 +190,6 @@ bool MUSTER_CAPEK::Run(const vector<const Point*>& Data,
 {
   vector<CAPEK_Point> LocalData;
   ostringstream Messages;
-  set<size_t>           DifferentIds;
-  set<size_t>::iterator SetIterator;
   
   cluster::par_kmedoids muster_algorithm = cluster::par_kmedoids();
   cluster::dissimilarity_matrix DissimilarityMatrix;
@@ -224,13 +222,14 @@ bool MUSTER_CAPEK::Run(const vector<const Point*>& Data,
 
   /* Translate MUSTER partition to 'libClustering' partition */
   vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
+  set<cluster_id_t>&    DifferentIDs            = DataPartition.GetIDs();
 
   ClusterAssignmentVector.clear();
 
   for (size_t i = 0; i < Data.size(); i++)
   {
     ClusterAssignmentVector.push_back(muster_algorithm.cluster_ids[i]);
-    DifferentIds.insert(muster_algorithm.cluster_ids[i]);
+    DifferentIDs.insert(muster_algorithm.cluster_ids[i]);
   }
 
   // DEBUG
@@ -256,8 +255,8 @@ bool MUSTER_CAPEK::Run(const vector<const Point*>& Data,
   Messages.str("");
 
   Messages << "DIFFERENT IDS = [ ";
-  for (SetIterator  = DifferentIds.begin();
-       SetIterator != DifferentIds.end();
+  for (SetIterator  = DifferentIDs.begin();
+       SetIterator != DifferentIDs.end();
        SetIterator++)
   {
     Messages << *SetIterator << " ";
@@ -303,32 +302,27 @@ void MUSTER_CAPEK::ProcessClusterAssignment(cluster::par_kmedoids &muster_algori
                                             Partition             &DataPartition,
                                             size_t                 DataSize)
 {
-  vector<cluster_id_t>                  &ClusterAssignmentVector = DataPartition.GetAssignmentVector();
+  vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
+  set<cluster_id_>&     DifferentIDs            = DataPartition.GetIDs();
+
+  /*
   map<medoid_id, cluster_id_t>           ClusterTranslation;
   map<medoid_id, cluster_id_t>::iterator ClusterTranslationQuery;
   cluster_id_t                           CurrentClusterId = MIN_CLUSTERID;
+  */
   
   ClusterAssignmentVector.clear();
+  DifferentIDs.clear();
 
   for (size_t i = 0; i < DataSize; i++)
   {
-    ClusterTranslationQuery = ClusterTranslation.find(muster_algorithm.cluster_ids[i]);
+    ClusterAssignmentVector = muster_algorithm.cluster_ids[i];
+    DifferentIDs.insert(muster_algorithm.cluster_ids[i]);
 
-    if (ClusterTranslationQuery == ClusterTranslation.end())
-    {
-      ClusterTranslation.insert(std::make_pair(muster_algorithm.cluster_ids[i],
-                                               CurrentClusterId));
-      ClusterAssignmentVector.push_back(CurrentClusterId);
-      CurrentClusterId++;
-    }
-    else
-    {
-      ClusterAssignmentVector.push_back(ClusterTranslationQuery->second);
-    }
   }
 
   /* Add one more cluster, to avoid the non-existent NOISE cluster */
-  DataPartition.NumberOfClusters (muster_algorithm.num_clusters()+1);
+  DataPartition.NumberOfClusters (DifferentIDs.size());
   DataPartition.HasNoise(false);
 
   /* DEBUG 

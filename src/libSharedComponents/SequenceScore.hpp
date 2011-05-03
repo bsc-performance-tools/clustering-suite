@@ -38,15 +38,97 @@
 #include <Error.hpp>
 using cepba_tools::Error;
 
+#include <CPUBurst.hpp>
+
+#include <trace_clustering_types.h>
+
+#include <vector>
+using std::vector;
+
+#include <utility>
+using std::pair;
+using std::make_pair;
+
+#include <fstream>
+using std::ofstream;
+using std::ios_base;
+
+#include <seqan/align.h>
+#include <seqan/graph_align.h>
+#include <seqan/graph_msa.h>
+#include <seqan/score.h>
+#include <seqan/basic.h>
+
+// using namespace seqan;
+typedef seqan::String<cluster_id_t>                      TSequence;
+typedef seqan::Align<TSequence, seqan::ArrayGaps>        TAlign;
+typedef seqan::Row<TAlign>::Type                         TRow;
+typedef seqan::Iterator<TRow, seqan::Rooted>::Type       TIterator;
+typedef seqan::Position<seqan::Rows<TAlign>::Type>::Type TRowsPosition;
+typedef seqan::Position<TAlign>::Type                    TPosition;
+
+static const cluster_id_t SEQUENCE_GAP = NOISE_CLUSTERID-1;
+
+class SequenceScoreValue
+{
+  private:
+    cluster_id_t ID;
+    size_t       Occurrences;
+    double       AlignmentSum;
+    percentage_t Weight;
+
+  public:
+    SequenceScoreValue(cluster_id_t ID, percentage_t Weight);
+
+    void NewOccurrence(percentage_t PositionAlignment);
+
+    size_t GetOccurrences(void) { return Occurrences; };
+
+    double GetClusterScore(void);
+
+    double GetWeightedScore(void);
+};
 
 class SequenceScore: public Error 
 {
-public:
+  public:
 
-protected:
+    static bool                    TablesLoaded;
+    static int                     LastAminoacidValue;
+    static map<cluster_id_t, char> Clusters2Aminoacids;
+    static map<char, cluster_id_t> Aminoacids2Clusters;
 
-private:
+    static void LoadTranslationTables(void);
+    
+    bool ComputeScore(const vector<CPUBurst*>&   DataBursts,
+                     vector<cluster_id_t>&       ClusterIDs,
+                     vector<percentage_t>&       PercentageDurations,
+                     bool                        HasNoise,
+                     vector<SequenceScoreValue>& ClusterScores,
+                     double&                     GlobalScore,
+                     string                      FileNamePrefix = "",
+                     bool                        FASTA = false);
 
+  private:
+    void AlignmentToMatrix(TAlign&                        Alignment,
+                           vector<vector<cluster_id_t> >& SequencesMatrix);
+
+    bool EffectiveScoreComputation(vector<vector<cluster_id_t> >& SequencesMatrix,
+                                   vector<percentage_t>&          PercentageDurations,
+                                   vector<SequenceScoreValue>&    ClusterScores,
+                                   double&                        GlobalScore);
+    
+    bool FlushSequences(vector<pair<task_id_t, thread_id_t> >& ObjectIDs,
+                        vector<vector<cluster_id_t> >&         SequencesMatrix,
+                        ofstream&                              str,
+                        bool                                   FASTA);
+
+    bool FlushScores(vector<SequenceScoreValue>& ClusterScores,
+                     double&                     GlobalScore,
+                     bool                        HasNoise,
+                     ofstream&                   str);
+                               
+  protected:
 };
 
 #endif // _SEQUENCESCORE_HPP_

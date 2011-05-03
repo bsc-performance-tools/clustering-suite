@@ -162,33 +162,38 @@ void MUSTER_XCLARA::ProcessClusterAssignment(cluster::kmedoids &muster_algorithm
                                              Partition         &DataPartition,
                                              size_t             DataSize)
 {
-  vector<cluster_id_t>                  &ClusterAssignmentVector = DataPartition.GetAssignmentVector();
+  vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
+  set<cluster_id_>&     DifferentIDs            = DataPartition.GetIDs();
+
+  /*
   map<medoid_id, cluster_id_t>           ClusterTranslation;
   map<medoid_id, cluster_id_t>::iterator ClusterTranslationQuery;
   cluster_id_t                           CurrentClusterId = MIN_CLUSTERID;
+  */
   
-
   ClusterAssignmentVector.clear();
+  DifferentIDs.clear();
 
   for (size_t i = 0; i < DataSize; i++)
   {
-    ClusterTranslationQuery = ClusterTranslation.find(muster_algorithm.cluster_ids[i]);
+    ClusterAssignmentVector = muster_algorithm.cluster_ids[i];
+    DifferentIDs.insert(muster_algorithm.cluster_ids[i]);
 
-    if (ClusterTranslationQuery == ClusterTranslation.end())
-    {
-      ClusterTranslation.insert(std::make_pair(muster_algorithm.cluster_ids[i],
-                                               CurrentClusterId));
-      ClusterAssignmentVector.push_back(CurrentClusterId);
-      CurrentClusterId++;
-    }
-    else
-    {
-      ClusterAssignmentVector.push_back(ClusterTranslationQuery->second);
-    }
   }
 
   /* Add one more cluster, to avoid the non-existent NOISE cluster */
-  DataPartition.NumberOfClusters (muster_algorithm.num_clusters()+1);
+  DataPartition.NumberOfClusters (DifferentIDs.size());
   DataPartition.HasNoise(false);
+
+  /* DEBUG 
+  for (ClusterTranslationQuery  = ClusterTranslation.begin();
+       ClusterTranslationQuery != ClusterTranslation.end();
+       ++ClusterTranslationQuery)
+  {
+    cout << "medoid_id = " << ClusterTranslationQuery->first;
+    cout << " cluster_id = " << ClusterTranslationQuery->second;
+    cout << endl;
+  }
+  */
 }
 
