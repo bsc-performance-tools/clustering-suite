@@ -104,7 +104,7 @@ class ApplicationDescription: public Error
     vector<TaskDescription_t> GetTaskInfo(void) { return TaskInfo; };
 
     INT32 GetCommunicatorCount(void)             { return CommunicatorCount; };
-    vector<Communicator*> GetCommunicators(void) {return Communicators;}
+    vector<Communicator*> GetCommunicators(void) { return Communicators;}
     INT32 GetCOMM_WORLD_Id(void);
 
     void Write ( ostream & os ) const;

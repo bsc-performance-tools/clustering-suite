@@ -41,6 +41,8 @@ using cepba_tools::system_messages;
 
 #include "PlottingManager.hpp"
 
+#include <ParaverColors.h>
+
 #include <DBSCAN.hpp>
 
 #include <sstream>
@@ -58,6 +60,8 @@ using std::setprecision;
 #define CANDIDATES_TIME_PERCENTAGE 0.25
 #define CANDIDATES_TIME_SCORE      0.6
 
+node_id_t ClusterInformation::NodeIDNumber = 0;
+
 /******************************************************************************
  * CLASS 'ClusterInformation'
  *****************************************************************************/
@@ -68,6 +72,7 @@ ClusterInformation::ClusterInformation(cluster_id_t ID,
                                        timestamp_t  TotalDuration,
                                        size_t       Individuals)
 {
+  this->NodeID        = NodeIDNumber++;
   this->ID            = ID;
   this->Score         = Score;
   this->Occurrences   = Occurrences;
@@ -104,11 +109,135 @@ bool ClusterInformation::IsCandidate(size_t      TotalOccurrences,
   return false;
 }
 
+size_t ClusterInformation::TotalClusters(void)
+{
+  size_t Result = 0;
+
+  if (Discarded)
+  {
+    return Result;
+  }
+    
+  if (Children.size() == 0)
+  {
+    Result++;
+    return Result;
+  }
+
+  for (size_t i = 0; i < Children.size(); i++)
+  {
+    if (Children[i]->GetID() != NOISE_CLUSTERID &&
+        !Children[i]->IsDiscarded())
+    {
+      Result++;
+    }
+  }
+
+  return Result;
+}
+
+void ClusterInformation::RenameChildren(cluster_id_t& RestOfChildrenID)
+{
+  bool FirstChildVisited = false;
+  
+  for (size_t i = 0; i < Children.size(); i++)
+  {
+    if (Children[i]->GetID() != NOISE_CLUSTERID)
+    {
+      if (!FirstChildVisited)
+      {
+        Children[i]->SetID(ID);
+        FirstChildVisited = true;
+      }
+      else
+      {
+        Children[i]->SetID(RestOfChildrenID);
+        RestOfChildrenID++;
+      }
+    }
+  }
+  
+  return;
+}
+
 bool ClusterInformation::AddChild(ClusterInformation* NewChild)
 {
   Children.push_back(NewChild);
   
   return true;
+}
+
+string ClusterInformation::NodeName(void)
+{
+  ostringstream NodeNameStr;
+  NodeNameStr << "node" << NodeID;
+  return NodeNameStr.str();
+}
+
+string ClusterInformation::NodeLabel(void)
+{
+  ostringstream NodeLabelStr;
+  
+  NodeLabelStr << " [label=\"";
+
+  if (ID == NOISE_CLUSTERID)
+  {
+    NodeLabelStr << "Noise";
+  }
+  else
+  {
+    NodeLabelStr << "Cl. " << ID;
+  }
+
+  NodeLabelStr << " \\n Score = " << setw(3) << Score*100 << "%\\n";
+  NodeLabelStr << " Indiv. = " << Individuals;
+  NodeLabelStr << " Occr. = " << Occurrences << "\\n";
+  NodeLabelStr << " Duration = " << TotalDuration;
+  
+  if (Discarded)
+  {
+    NodeLabelStr << "\" color=\"" << Color() << "\"]";
+  }
+  else
+  {
+    NodeLabelStr << "\" style=\"filled\" color=\"" << Color() << "\"]";
+  }
+
+  
+
+  return NodeLabelStr.str();
+}
+
+string ClusterInformation::Color(void)
+{
+  char RGBColor[8];
+
+  if (ID+PARAVER_OFFSET < DEF_NB_COLOR_STATE)
+  {
+
+    if ((ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[0] == 0xFF) &&
+        (ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[1] == 0xFF) &&
+        (ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[2] == 0xFF))
+    {
+      sprintf(RGBColor, "#000000");
+    }
+    else
+    {
+      sprintf(RGBColor, "#%02x%02x%02x",
+        ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[0],
+        ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[1],
+        ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[2]);
+    }
+  }
+  else
+  {
+    sprintf(RGBColor, "#%02x%02x%02x",
+      ParaverDefaultPalette[DEF_NB_COLOR_STATE-1].RGB[0],
+      ParaverDefaultPalette[DEF_NB_COLOR_STATE-1].RGB[1],
+      ParaverDefaultPalette[DEF_NB_COLOR_STATE-1].RGB[2]);
+  }
+
+  return RGBColor;
 }
 
 /******************************************************************************
@@ -149,7 +278,7 @@ bool ClusteringRefinement::Run(const vector<CPUBurst*>& Bursts,
                                vector<Partition>&       ResultingPartitions,
                                string                   OutputFilePrefix)
 {
-  bool           Convergence = false, NoMoreClusters = false;
+  bool           Stop = false;
   double         StepSize    = (MaxEpsilon - MinEpsilon)/(Steps-1);
   vector<double> Epsilons;
 
@@ -165,6 +294,12 @@ bool ClusteringRefinement::Run(const vector<CPUBurst*>& Bursts,
   {
     PrintStepsInformation = true;
   }
+
+  if (Bursts.size() == 0)
+  {
+    SetErrorMessage("no bursts no analyze");
+    return false;
+  }
   
   if (Steps <= 1)
   {
@@ -172,10 +307,15 @@ bool ClusteringRefinement::Run(const vector<CPUBurst*>& Bursts,
     return false;
   }
 
-  PartitionsHistory = vector<Partition> (Steps);
-  ClustersHierarchy = vector<set<ClusterInformation*> > (Steps);
-  StatisticsHistory = vector<ClusteringStatistics> (Steps);
-  BurstsPerStep     = vector<vector<CPUBurst*> > (Steps);
+  for (size_t i = 0; i < Bursts.size(); i++)
+  {
+    Instance2Burst[Bursts[i]->GetInstance()] = i;
+  }
+
+  ResultingPartitions = vector<Partition> (Steps);
+  PartitionsHistory   = vector<Partition> (Steps);
+  StatisticsHistory   = vector<ClusteringStatistics> (Steps);
+  NodesPerLevel       = vector<vector<ClusterInformation*> > (Steps);
   
   Epsilons.push_back(MaxEpsilon);
   for (size_t i = 1; i < Steps; i++)
@@ -185,12 +325,10 @@ bool ClusteringRefinement::Run(const vector<CPUBurst*>& Bursts,
 
   ClusteringCore = new libClustering();
 
-  /* Execute initial clustering */
-  BurstsPerStep[0] = Bursts;
-  
+  Messages << "*** TOTAL NUMBER OF BURSTS = " << Bursts.size() << " ***" << endl;
   Messages << "*** STEP 1 (Eps = " << Epsilons[0] << ") ***" << endl;
   system_messages::information(Messages.str());  
-  if (!RunStep(0, Epsilons[0], NoMoreClusters))
+  if (!RunFirstStep(Bursts, Epsilons[0], ResultingPartitions[0]))
   {
     return false;
   }
@@ -198,23 +336,11 @@ bool ClusteringRefinement::Run(const vector<CPUBurst*>& Bursts,
   /* On step 0, all new nodes are part of the hierarchy */
   map<cluster_id_t, ClusterInformation*>::iterator NewNodesIt;
 
-  /* DEBUG 
-  cout << "Inserting top level nodes "; */
-  for (NewNodesIt  = NewNodes.begin();
-       NewNodesIt != NewNodes.end();
-       ++NewNodesIt)
-  {
-    /* DEBUG 
-    cout << NewNodesIt->second->GetID() << " "; */
-    ClustersHierarchy[0].insert((NewNodesIt->second));
-  }
-  // cout << endl;
-
   LastStep = 0;
 
   /* Iterate through the epsilon values, and generate the clusters hierarchy */
   for (size_t CurrentStep = 1; 
-       CurrentStep < Steps && !Convergence && !NoMoreClusters;
+       CurrentStep < Steps && !Stop;
        CurrentStep++)
   {
     double CurrentEpsilon = Epsilons[CurrentStep];
@@ -224,26 +350,19 @@ bool ClusteringRefinement::Run(const vector<CPUBurst*>& Bursts,
     Messages << "****** STEP " << (CurrentStep+1) << " (Eps = " << CurrentEpsilon;
     Messages << ") ******" << endl;
     system_messages::information(Messages.str());
-    
+
+    Stop = true;
     if (!RunStep(CurrentStep,
+                 Bursts,
                  CurrentEpsilon,
-                 NoMoreClusters))
+                 ResultingPartitions[CurrentStep-1],
+                 ResultingPartitions[CurrentStep],
+                 Stop))
     {
       return false;
     }
 
-    Messages.str("");
-    
-    Messages << "-> Linking to previous step" << endl;
-    system_messages::information(Messages.str());
-
-    Convergence = false;
-    if (!LinkToPreviuosStep(CurrentStep, Convergence))
-    {
-      return false;
-    }
-
-    if (!Convergence)
+    if (!Stop)
     {
       LastStep++;
     }
@@ -258,78 +377,47 @@ bool ClusteringRefinement::Run(const vector<CPUBurst*>& Bursts,
   /* DEBUG 
   cout << "My Last Step was = " << LastStep << endl; */
   
-  /* Create the partitions and statistics for all steps */
+  /* Create the partitions and statistics for all steps 
   if (!CreateDefinitivePartitions(ResultingPartitions))
   {
     return false;
   }
+  */
   
-  PrintTrees ();
+  // PrintTrees ();
   
   return true;
 }
 
 /**
- * Executes the i-th step in the refinement analysis
+ * Executes the first analysis of the hirearchy
  *
- * \param Step The number of step to execute
- * \param Epsilon Value of epsilon to be used in this step
- * \param NoMoreClusters I/O parameter to indicate that no more clusters were generated
+ * \param Epsilon Value of epsilon to be used
  *
- * \return True if the step was executed correctly, false otherwise
+ * \return True if the analysis was executed correctly, false otherwise
  *
- */ 
-bool ClusteringRefinement::RunStep(size_t Step,
-                                   double Epsilon,
-                                   bool&  NoMoreClusters)
+ */
+bool ClusteringRefinement::RunFirstStep(const vector<CPUBurst*>& Bursts,
+                                        double                   Epsilon,
+                                        Partition&               FirstPartition)
 {
-  ostringstream  Messages;
-  
-  /* Prepare the Bursts */
+  ostringstream        Messages;
+  ClusteringStatistics Statistics;
 
   Messages.str("");
-    
-  Messages << "-> Generating candidates" << endl;
+  Messages << "-> Running DBSCAN for top level" << endl;
   system_messages::information(Messages.str());
   
-  if (Step == 0)
-  {
-    for (size_t i = 0; i < BurstsPerStep[0].size(); i++)
-    {
-      InstancesTracking[BurstsPerStep[0][i]->GetInstance()].push_back(i);
-    }
-  }
-  else
-  {
-    GenerateCandidates(Step);
-  }
-
-  if (BurstsPerStep[Step].size() == 0)
-  {
-    NoMoreClusters = true;
-    return true;
-  }
-  
-  
-  /* Run DBSCAN */
-  Messages.str("");
-    
-  Messages << "-> Running DBSCAN" << endl;
-  system_messages::information(Messages.str());
-  if (!RunDBSCAN ((vector<const Point*>&) BurstsPerStep[Step],
+  if (!RunDBSCAN ((vector<const Point*>&) Bursts,
                                           Epsilon,
-                                          PartitionsHistory[Step]))
+                                          FirstPartition))
   {
     return false;
   }
 
-  /* Create current level nodes */
-  Messages.str("");
-    
-  Messages << "-> Generating resulting nodes" << endl;
-  system_messages::information(Messages.str());
-  
-  if (!GenerateCurrentLevelNodes(Step))
+  if (!GenerateNodes(Bursts,
+                     FirstPartition,
+                     NodesPerLevel[0]))
   {
     return false;
   }
@@ -337,184 +425,256 @@ bool ClusteringRefinement::RunStep(size_t Step,
   /* Print plots */
   if (PrintStepsInformation)
   {
-      Messages.str("");
-    
-    Messages << "-> Printing plots" << endl;
+    Messages.str("");
+    Messages << "|-> Printing trees" << endl;
     system_messages::information(Messages.str());
-    
-    if (!PrintPlots(BurstsPerStep[Step],
-                    PartitionsHistory[Step],
-                    Step))
+
+    if (!PrintTrees(0))
+    {
       return false;
+    }
+
+    Messages.str("");
+    Messages << "|-> Printing plots" << endl;
+    system_messages::information(Messages.str());
+    if (!PrintPlots(Bursts, FirstPartition, 0))
+    {
+      return false;
+    }
   }
   
   return true;
 }
 
 /**
- * Links the clusters of the i-the step with the clusters obtained in the previous
- * one.
+ * Executes the i-th step in the refinement analysis
  *
- * \param Step Number of step to be analyzed
- * \param Convergence I/O parameter to indicate that current step and the previous converge
+ * \param Step              The number of step to execute
+ * \param Bursts            Vector of bursts to analyze
+ * \param Epsilon           Value of epsilon to be used in this step
+ * \param PreviousPartition Results of the previous step
+ * \param NewPartition      Results of the current step
+ * \param Stop              I/O parameter to indicate that no more clusters 
+ *                          were generated
  *
  * \return True if the step was executed correctly, false otherwise
  *
- */ 
-bool ClusteringRefinement::LinkToPreviuosStep(size_t Step,
-                                              bool&  Convergence)
+ */
+bool ClusteringRefinement::RunStep(size_t                   Step,
+                                   const vector<CPUBurst*>& Bursts,
+                                   double                   Epsilon,
+                                   Partition&               PreviousPartition,
+                                   Partition&               NewPartition,
+                                   bool&                    Stop)
 {
-  SequenceScore              Scoring;
-  vector<SequenceScoreValue> CurrentClustersScores;
-  double                     GlobalScore;
-  vector<percentage_t>       PercentageDurations;
-  vector<double>             CurrentClustersDurations;
-  vector<size_t>             CurrentClustersIndividuals;
-
-  vector<CPUBurst*>& CurrentBursts = BurstsPerStep[Step];
-  Partition& CurrentPartition      = PartitionsHistory[Step];
+  ostringstream  Messages;
+  size_t         TotalParentOccurrences;
+  timestamp_t    TotalParentDurations;
+  size_t         NodesAnalyzed = 0;
   
-  if (Step == 0)
+  vector<ClusterInformation*>& ParentNodes   = NodesPerLevel[Step-1];
+  vector<ClusterInformation*>& ChildrenNodes = NodesPerLevel[Step];
+
+  /*
+  Messages.str("");
+  Messages << "|-> Generating candidates" << endl;
+  system_messages::information(Messages.str());
+  */
+ 
+  // GenerateCandidates(Step,);
+
+  /* Compute ParentNodes totalizations */
+  TotalParentOccurrences = 0;
+  TotalParentDurations   = 0;
+  for (size_t i = 0; i < ParentNodes.size(); i++)
   {
-    SetErrorMessage("unable to link first level on the hierarchy");
-    SetError(true);
-    return false;
-  }
-
-  /* Relationships between levels */
-  map<cluster_id_t, set<cluster_id_t> > Relationships;
-
-  /* Noise accounting */
-  map<cluster_id_t, timestamp_t> NoisesDuration;
-  map<cluster_id_t, size_t>      NoisesIndividuals;
-
-  for (size_t i = 0; i < OngoingCandidates.size(); i++)
-  {
-    NoisesDuration[OngoingCandidates[i]->GetID()]    = 0;
-    NoisesIndividuals[OngoingCandidates[i]->GetID()] = 0;
-
-    // Relationships[OngoingCandidates[i]->GetID()]
-  }
-
-  Partition& PreviousPartition = PartitionsHistory[Step-1];
-    
-  vector<cluster_id_t>& CurrentAssignment = 
-    CurrentPartition.GetAssignmentVector();
-
-  vector<cluster_id_t>& PreviousAssignment =
-    PreviousPartition.GetAssignmentVector();
-
-  /* Generate the relationships */
-  for (size_t i = 0; i < CurrentBursts.size(); i++)
-  {
-    size_t CurrentBurstPosition  = 
-      InstancesTracking[CurrentBursts[i]->GetInstance()][Step];
-
-    cluster_id_t CurrentID = CurrentAssignment[CurrentBurstPosition];
-
-    size_t PreviousBurstPosition = 
-      InstancesTracking[CurrentBursts[i]->GetInstance()][Step-1];
-
-    cluster_id_t PreviousID = PreviousAssignment[PreviousBurstPosition];
-    
-    if (CurrentID == NOISE_CLUSTERID)
+    if (ParentNodes[i]->GetID() != NOISE_CLUSTERID)
     {
-      NoisesDuration[PreviousID] += CurrentBursts[i]->GetDuration();
-      NoisesIndividuals[PreviousID]++;
+      TotalParentOccurrences += ParentNodes[i]->GetOccurrences();
     }
-    else
+    TotalParentDurations += ParentNodes[i]->GetTotalDuration();
+  }
+
+  /* Run different DBSCANs */
+  Stop = true;
+  for (size_t i = 0; i < ParentNodes.size(); i++)
+  {
+    if (ParentNodes[i]->IsCandidate(TotalParentOccurrences, TotalParentDurations))
     {
-      Relationships[PreviousID].insert(CurrentID);
+      vector<CPUBurst*>           BurstsSubset;
+      Partition                   ChildrenPartition;
+      vector<ClusterInformation*> CurrentChildrenNodes;
+
+      NodesAnalyzed++;
+      
+      /* Run DBSCAN in the subset of bursts */
+      BurstsSubset = GenerateBurstsSubset(Bursts, ParentNodes[i]);
+      
+      Messages.str("");
+      Messages << "|---> Running DBSCAN for ID = " << ParentNodes[i]->GetID();
+      Messages << " (" << BurstsSubset.size() << " bursts)" << endl;
+      system_messages::information(Messages.str());
+
+      if (!RunDBSCAN ((vector<const Point*>&) BurstsSubset,
+                                              Epsilon,
+                                              ChildrenPartition))
+      {
+        return false;
+      }
+
+      /* Create current node children */
+      Messages.str("");
+      Messages << "|---> Generating current nodes" << endl;
+      system_messages::information(Messages.str());
+
+
+      if (!GenerateNodes(BurstsSubset,
+                         ChildrenPartition,
+                         CurrentChildrenNodes))
+      {
+        return false;
+      }
+
+      Messages.str("");
+      Messages << "|---> " << CurrentChildrenNodes.size() << " nodes" << endl;
+      system_messages::information(Messages.str());
+
+      /* Add children to current node and current level nodes*/
+      for (size_t j = 0; j < CurrentChildrenNodes.size(); j++)
+      {
+        ParentNodes[i]->AddChild(CurrentChildrenNodes[j]);
+        ChildrenNodes.push_back(CurrentChildrenNodes[j]);
+      }
+
+      /* Evaluate split */
+      if (IsSplitOK(ParentNodes[i]))
+      {
+        Stop = false;
+      }
     }
   }
 
-  /* Update levels */
-  Convergence = true;
+  if (NodesAnalyzed == 0)
+  {
+    Messages.str("");
+    Messages << "|-> NO NODES ANALYZED" << endl;
+    system_messages::information(Messages.str());
+    return true;
+  }
   
-  for (size_t i = 0; i < OngoingCandidates.size(); i++)
+  /* Rename the children */
+  Messages.str("");
+  Messages << "|-> Renaming nodes" << endl;
+  system_messages::information(Messages.str());
+  
+  cluster_id_t MaxIDAssigned = NOISE_CLUSTERID;
+  for (size_t i = 0; i < ParentNodes.size(); i++)
   {
-    bool SplitOK;
-    
-    ClusterInformation* ParentNode = OngoingCandidates[i];
-    cluster_id_t        ParentID   = ParentNode->GetID();
-
-    set<cluster_id_t>&          ChildrenIDs = Relationships[ParentID];
-    set<cluster_id_t>::iterator ChildrenIDsIterator;
-    vector<ClusterInformation*> ChildrenNodes;
-
-    /* Fill the children vector */
-    /* First, noise cluster */
-    ChildrenNodes.push_back(new ClusterInformation(NOISE_CLUSTERID,
-                                                   0.0,
-                                                   0,
-                                                   NoisesDuration[ParentID],
-                                                   NoisesIndividuals[ParentID]));
-
-    /* The rest of children */
-    for (ChildrenIDsIterator  = ChildrenIDs.begin();
-         ChildrenIDsIterator != ChildrenIDs.end();
-         ++ChildrenIDsIterator)
+    if (ParentNodes[i]->GetID() > MaxIDAssigned)
     {
-      cluster_id_t CurrentChildID = (*ChildrenIDsIterator);
-      ChildrenNodes.push_back(NewNodes[CurrentChildID]);
+      MaxIDAssigned = ParentNodes[i]->GetID();
     }
+  }
+  MaxIDAssigned++;
 
-    /* Check if the split was OK */
-    if (!EvaluateSplit(ParentNode, ChildrenNodes, SplitOK))
+  for (size_t i = 0; i < ParentNodes.size(); i++)
+  {
+    ParentNodes[i]->RenameChildren(MaxIDAssigned);
+  }
+  
+  /* Join results for current level */
+  Messages.str("");
+  Messages << "|-> Joining results" << endl;
+  system_messages::information(Messages.str());
+  
+  map<instance_t, cluster_id_t>           Assignment;
+  map<instance_t, cluster_id_t>::iterator AssignmentIt;
+  vector<ClusterInformation*>             TopLevelNodes = NodesPerLevel[0];
+
+  for (size_t i = 0; i < TopLevelNodes.size(); i++)
+  {
+    vector<pair<instance_t, cluster_id_t> > PartialAssignment;
+
+    PartialAssignment = GetAssignment(TopLevelNodes[i]);
+
+    /* DEBUG */
+    cout << "PartialAssignment from ID = " << TopLevelNodes[i]->GetID();
+    cout << " sizes " << PartialAssignment.size() << endl;
+
+    for (size_t j = 0; j < PartialAssignment.size(); j++)
+    {
+      Assignment[PartialAssignment[j].first] = PartialAssignment[j].second;
+    }
+  }
+
+  vector<cluster_id_t>& CurrentAssignmentVector =
+    NewPartition.GetAssignmentVector();
+
+  set<cluster_id_t> DifferentIDs;
+
+  for (AssignmentIt  = Assignment.begin();
+       AssignmentIt != Assignment.end();
+       ++AssignmentIt)
+  {
+    CurrentAssignmentVector.push_back(AssignmentIt->second);
+    DifferentIDs.insert(AssignmentIt->second);
+  }
+
+  NewPartition.SetIDs(DifferentIDs);
+  NewPartition.NumberOfClusters(DifferentIDs.size());
+  NewPartition.HasNoise(true);
+
+  /* DEBUG
+  cout << "Current Assignment Vector Has " << CurrentAssignmentVector.size();
+  cout << " IDs" << endl; */
+
+  /* Print plots */
+  if (PrintStepsInformation)
+  {
+    Messages.str("");
+    Messages << "|-> Printing trees" << endl;
+    system_messages::information(Messages.str());
+
+    if (!PrintTrees(Step))
     {
       return false;
     }
     
-    if (SplitOK)
-    { /* Add children to parent node and current level hierarchy */
-      Convergence = false;
-
-      /* DEBUG 
-      cout << "ID " << ParentNode->GetID() << " Splits on ";
-      for (ChildrenIDsIterator  = ChildrenIDs.begin();
-         ChildrenIDsIterator != ChildrenIDs.end();
-         ++ChildrenIDsIterator)
-      {
-        cluster_id_t CurrentChildID = (*ChildrenIDsIterator);
-        // cout << CurrentChildID << " ";
-      }
-      cout << endl; */
-      
-      for (size_t j = 0; j < ChildrenNodes.size(); j++)
-      {
-        ParentNode->AddChild(ChildrenNodes[j]);
-
-        if (ChildrenNodes[j]->GetID() != NOISE_CLUSTERID)
-        {
-          ClustersHierarchy[Step].insert(ChildrenNodes[j]);
-        }
-      }
-    }
-    else
+    Messages.str("");
+    Messages << "|-> Printing plots" << endl;
+    system_messages::information(Messages.str());
+    
+    if (!PrintPlots(Bursts, NewPartition, Step))
     {
-      /* Delete children nodes */
-      /* EXPERIMENTAL inserted but discarded */
-      for (size_t j = 0; j < ChildrenNodes.size(); j++)
-      {
-        // delete ChildrenNodes[j];
-        ChildrenNodes[j]->Discard();
-
-        /* DEBUG */
-        cout << "Discarded ID " << ChildrenNodes[j]->GetID() << " on Level " << Step+1 << endl;
-        
-        ParentNode->AddChild(ChildrenNodes[j]);
-      }
-
-      /* Special case for those cluster that became all NOISE 
-      if(ChildrenNodes.size() == 1)
-      {
-        ReassignNoisePartition(ParentNode->GetID(), Step);
-      }
-      */
+      return false;
     }
   }
   
   return true;
+}
+
+/**
+ * Creates a vector which is a subset of those bursts from the input vector
+ * that belong to the given node
+ *
+ * \param Bursts The input bursts vector
+ * \param Node   The node that define the bursts
+ *
+ * \return A vector of bursts that have the selected ID in the partition
+ *
+ */
+vector<CPUBurst*> ClusteringRefinement::GenerateBurstsSubset(const vector<CPUBurst*>& Bursts,
+                                                             ClusterInformation*       Node)
+{
+  vector<CPUBurst*>   Result;
+  vector<instance_t>& Instances = Node->GetInstances();
+
+  for (size_t i = 0; i < Instances.size(); i++)
+  {
+    Result.push_back(Bursts[Instance2Burst[Instances[i]]]);
+  }
+
+  return Result;
 }
 
 /**
@@ -536,7 +696,6 @@ bool ClusteringRefinement::RunDBSCAN(const vector<const Point*>& CurrentData,
   ostringstream       Converter;
   string              EpsilonStr, MinPointsStr;
 
-
   ClusteringAlgorithmName   = DBSCAN::NAME;
 
   Converter << Epsilon;
@@ -553,476 +712,295 @@ bool ClusteringRefinement::RunDBSCAN(const vector<const Point*>& CurrentData,
     return false;
   }
 
+  bool verbose_state = system_messages::verbose;
+  system_messages::verbose = false;
+  
   if (!ClusteringCore->ExecuteClustering(CurrentData,
                                          CurrentPartition))
   {
+    system_messages::verbose = verbose_state;
     SetError(true);
     SetErrorMessage(ClusteringCore->GetErrorMessage());
     return false;
   }
+  system_messages::verbose = verbose_state;
   
   return true;
 }
 
 /**
- * Generates the candidates of the current step, evaluating the clusters obtained
- * in the previous one.
+ * Generate the nodes that describe a given partition. It generates the cluster
+ * statistics, rename the clusters depending on their duration, and also compute
+ * the sequence score of each cluster
  *
- * \param Step Number of step to be analyzed
+ * \Bursts    Set of bursts used in the cluster analysis
+ * \Partition Partition obtained using the clustering algorithm
+ * \Node      The set of nodes that describe the partition
  *
- * \return True if the step was executed correctly, false otherwise
- *
- */ 
-bool ClusteringRefinement::GenerateCandidates(size_t Step)
-{
-  size_t TotalOccurrences           = 0;
-  timestamp_t TotalClustersDuration = 0;
-  
-  set<ClusterInformation*>& PreviousStepClustersInfo = ClustersHierarchy[Step-1];
-  set<ClusterInformation*>::iterator PreviousStepClustersInfoIt;
-  
-  vector<CPUBurst*>& PreviousStepBursts = BurstsPerStep[Step-1];
-  vector<CPUBurst*>& CurrentStepBursts  = BurstsPerStep[Step];
-
-  set<cluster_id_t> CandidateIDs;
-
-  OngoingCandidates.clear();
-  
-  /* Chose the cluster candidates */
-  // for (size_t i = 0; i < PreviousStepClustersInfo.size(); i++)
-  for (PreviousStepClustersInfoIt  = PreviousStepClustersInfo.begin();
-       PreviousStepClustersInfoIt != PreviousStepClustersInfo.end();
-       ++PreviousStepClustersInfoIt)
-  {
-    // ClusterInformation* Node = PreviousStepClustersInfo[i];
-    ClusterInformation* Node = (*PreviousStepClustersInfoIt);
-    
-    TotalOccurrences      += Node->GetTotalDuration();
-    TotalClustersDuration += Node->GetOccurrences();
-  }
-  
-  // for (size_t i = 0; i < PreviousStepClustersInfo.size(); i++)
-  for (PreviousStepClustersInfoIt  = PreviousStepClustersInfo.begin();
-       PreviousStepClustersInfoIt != PreviousStepClustersInfo.end();
-       ++PreviousStepClustersInfoIt)
-  {
-    // ClusterInformation* Node = PreviousStepClustersInfo[i];
-    ClusterInformation* Node = (*PreviousStepClustersInfoIt);
-    if(Node->GetID() != NOISE_CLUSTERID)
-    {
-      if(Node->IsCandidate(TotalOccurrences,
-                           TotalClustersDuration))
-      {
-        OngoingCandidates.push_back(Node);
-        CandidateIDs.insert(Node->GetID());
-      }
-    }
-  }
-
-  /* Generate Candidate Bursts vector */
-  vector<cluster_id_t>& PreviuousAssignment =
-    PartitionsHistory[Step-1].GetAssignmentVector();
-  
-  for (size_t i = 0; i < PreviousStepBursts.size(); i++)
-  {
-    CPUBurst* Burst = PreviousStepBursts[i];
-    
-    cluster_id_t PreviousID = 
-      PreviuousAssignment[InstancesTracking[Burst->GetInstance()][Step-1]];
-
-    if(IsIDInSet(PreviousID, CandidateIDs))
-    {
-      CurrentStepBursts.push_back(Burst);
-
-      size_t CurrentPosition = CurrentStepBursts.size()-1;
-
-      /* Update instances tracking */
-      InstancesTracking[Burst->GetInstance()].push_back(CurrentPosition);
-    }
-  }
-
-  return true;
-}
-
-/**
- * Generate the nodes that describe the clusters obtained in the current step.
- * It generates the cluster statistics, renaming the clusters depending on
- * their duration, and also compute the scores of each cluster
- *
- * \param Step Number of step to be analyzed
- *
- * \return True if the step was executed correctly, false otherwise
+ * \return True if the the node were generated correctly, false otherwise
  *
  */ 
-bool ClusteringRefinement::GenerateCurrentLevelNodes(size_t Step)
+bool ClusteringRefinement::GenerateNodes(const vector<CPUBurst*>&     Bursts,
+                                         Partition&                   CurrentPartition,
+                                         vector<ClusterInformation*>& Nodes)
 {
-  SequenceScore              Scoring;
-  vector<SequenceScoreValue> CurrentClustersScores;
-  double                     GlobalScore;
-  vector<percentage_t>       PercentageDurations;
+  SequenceScore                            Scoring;
+  vector<SequenceScoreValue>               CurrentClustersScores;
+  double                                   GlobalScore;
+  vector<percentage_t>                     PercentageDurations;
+  map<cluster_id_t, vector<instance_t> >   BurstsPerNode;
+  map<cluster_id_t, vector<instance_t> >::iterator BurstPerNodeIt;
 
+  bool NoNoise = false;
+  
   ostringstream  Messages;
 
-  Partition&            CurrentPartition  = PartitionsHistory[Step];
-  ClusteringStatistics& CurrentStatistics = StatisticsHistory[Step];
+  ClusteringStatistics Statistics;
 
-  vector<CPUBurst*>& CurrentBursts = BurstsPerStep[Step];
-
-  /* Update Statistics */
-  CurrentStatistics.InitStatistics(CurrentPartition.GetIDs(),
-                                   CurrentPartition.HasNoise());
-
-  Messages.str("");
-  Messages << "|---> Computing statistics" << endl;
-  system_messages::information(Messages.str());
-  if (!CurrentStatistics.ComputeStatistics(CurrentBursts,
-                                           CurrentPartition.GetAssignmentVector()))
+  vector<cluster_id_t>& AssignmentVector = CurrentPartition.GetAssignmentVector();
+  if (Bursts.size() != AssignmentVector.size())
   {
-    SetErrorMessage(CurrentStatistics.GetLastError());
+    ostringstream ErrorMessage;
+
+    ErrorMessage << "number of points (" << Bursts.size();
+    ErrorMessage << ") different from number of IDs (" << AssignmentVector.size() << ")";
+    ErrorMessage << " when generating partition points";
+    
+    SetErrorMessage(ErrorMessage.str());
+    SetError(true);
     return false;
   }
   
-  CurrentStatistics.TranslatedIDs(CurrentPartition.GetAssignmentVector());
+  /* Update Statistics */
+  Statistics.InitStatistics(CurrentPartition.GetIDs(),
+                            CurrentPartition.HasNoise());
 
-  /* Compute Scores */
-  ostringstream SequencesFileNamePrefix;
-  
-  if (PrintStepsInformation)
+  //  Messages.str("");
+  // Messages << "|---> Computing statistics" << endl;
+  // system_messages::information(Messages.str());
+
+  if (!Statistics.ComputeStatistics(Bursts,
+                                    CurrentPartition.GetAssignmentVector()))
   {
-    SequencesFileNamePrefix << OutputFilePrefix << ".STEP" << Step+1;
-  }
-  else
-  {
-    SequencesFileNamePrefix.str("");
+    SetErrorMessage(Statistics.GetLastError());
+    return false;
   }
   
-  PercentageDurations = StatisticsHistory[Step].GetPercentageDurations(); 
+  Statistics.TranslatedIDs(CurrentPartition.GetAssignmentVector());
+  
+  PercentageDurations = Statistics.GetPercentageDurations(); 
 
   Messages.str("");
-  Messages << "|---> Computing score" << endl;
+  Messages << "|-----> Computing score" << endl;
   system_messages::information(Messages.str());
   
-  Scoring.ComputeScore((const vector<CPUBurst*>&) CurrentBursts,
+  Scoring.ComputeScore(Bursts,
                        CurrentPartition.GetAssignmentVector(),
                        PercentageDurations,
                        CurrentPartition.HasNoise(),
                        CurrentClustersScores,
                        GlobalScore,
-                       SequencesFileNamePrefix.str(),
+                       "TEST",
                        true);
 
   /* Generate current level hierarchy */
-  vector<double> CurrentClustersDurations   = StatisticsHistory[Step].GetDurationSums();
-  vector<size_t> CurrentClustersIndividuals = StatisticsHistory[Step].GetIndividuals();
+  vector<double> CurrentClustersDurations   = Statistics.GetDurationSums();
+  vector<size_t> CurrentClustersIndividuals = Statistics.GetIndividuals();
 
-  NewNodes.clear();
+  Nodes.clear();
   
   for (size_t i = 0; i < CurrentPartition.NumberOfClusters(); i++)
   {
-    if (i != NOISE_CLUSTERID || Step == 0)
-    {
-      ClusterInformation* NewNode = 
-        new ClusterInformation((cluster_id_t) i,
-                               CurrentClustersScores[i].GetClusterScore(),
-                               CurrentClustersScores[i].GetOccurrences(),
-                               CurrentClustersDurations[i],
-                               CurrentClustersIndividuals[i]);
+    /* DEBUG
+    cout << "Subcluster ID = " << i << " Score = " << CurrentClustersScores[i].GetClusterScore() << endl; */
 
-      NewNodes[i] = NewNode;
-    }
+    ClusterInformation* NewNode = 
+      new ClusterInformation((cluster_id_t) i,
+                              CurrentClustersScores[i].GetClusterScore(),
+                              CurrentClustersScores[i].GetOccurrences(),
+                              CurrentClustersDurations[i],
+                              CurrentClustersIndividuals[i]);
+
+    Nodes.push_back(NewNode);
+
+
+    BurstsPerNode[i] = vector<instance_t> (0);
+  }
+
+  /* Fill each node with the instances */
+  for (size_t i = 0; i < Bursts.size(); i++)
+  {
+    BurstsPerNode[AssignmentVector[i]].push_back(Bursts[i]->GetInstance());
+    /* DEBUG 
+    cout << "NODE ID = " << AssignmentVector[i] << " INSTANCE = " << Bursts[i]->GetInstance() << endl; */
+  }
+
+  for (size_t i = 0; i < Nodes.size(); i++)
+  {
+    /* DEBUG 
+    cout << "NODE with ID = " << Nodes[i]->GetID() << " has " << BurstsPerNode[i].size() << " instances" << endl; */
+    Nodes[i]->SetInstances(BurstsPerNode[i]);
   }
   
   return true;
 }
 
 /**
- * Compares the result of two steps, using ClusterInformation objects, to 
- * decide if it is better to split the cluster of keep it as a single one
+ * Returns an assignment vector based on instances for the tree which root is 
+ * the given node
  *
- * \param Parent Node that contains the information of the parent in the hierarchy
- * \param Children Nodes that contain the information of the different children
- *        obtained applying a more restricted value of epsilon
- * \param SplitOK I/O parameter to show if it is worth to split the parent cluster
- *        or not
+ * \param Node The root of a tree where we want to extract the assignment
  *
- * \return True if the step was executed correctly, false otherwise
+ * \return A vector of pairs burst instance/ID correspondig to the refinement
+ *         happened in the current tree
+ */
+vector<pair<instance_t, cluster_id_t> > ClusteringRefinement::GetAssignment(ClusterInformation* Node)
+{
+  vector<pair<instance_t, cluster_id_t> > Result =
+    vector<pair<instance_t, cluster_id_t> > (0);
+
+  /* Node not taken into account */
+  if (Node->IsDiscarded())
+  {
+    return Result;
+  }
+
+  vector<ClusterInformation*>& Children = Node->GetChildren();
+
+  if (Children.size() == 0)
+  { /* Leaf node, generate the assignemnt vector */
+    vector<instance_t>& Instances = Node->GetInstances();
+
+    for (size_t i = 0; i < Instances.size(); i++)
+    {
+      Result.push_back(make_pair(Instances[i], Node->GetID()));
+    }
+
+    return Result;
+  }
+  else
+  {
+    if (!Children[0]->IsDiscarded())
+    {
+      for (size_t i = 0; i < Children.size(); i++)
+      {
+        vector<pair<instance_t, cluster_id_t> > PartialResult;
+
+        PartialResult = GetAssignment(Children[i]);
+
+        for (size_t j = 0; j < PartialResult.size(); j++)
+        {
+          Result.push_back(PartialResult[j]);
+        }
+      }
+    }
+    else
+    {
+      /* Leaf node, generate the assignemnt vector */
+      vector<instance_t>& Instances = Node->GetInstances();
+
+      for (size_t i = 0; i < Instances.size(); i++)
+      {
+        Result.push_back(make_pair(Instances[i], Node->GetID()));
+      }
+
+      return Result;
+    }
+
+    /* DEBUG 
+    cout << "NODE with ID = " << Node->GetID() << " has ";
+    cout << Result.size() << " instances in its assignment" << endl; */
+    
+    return Result;
+  }
+}
+
+/**
+ * Heuristic to Decide if it is better to split the current cluster (represented 
+ * as a top node) of keep it as a single one
+ *
+ * \param Parent Node that contains the information of the hierarchy
+ *
+ * \return True if the split is OK, false otherwise
  *
  */ 
-bool ClusteringRefinement::EvaluateSplit(ClusterInformation*          Parent,
-                                         vector<ClusterInformation*>& Children,
-                                         bool&                        SplitOK)
+bool ClusteringRefinement::IsSplitOK(ClusterInformation* Parent)
 {
   timestamp_t          ParentDuration = 0, NoiseDuration = 0;
   timestamp_t          TotalChildrenDuration = 0;
   size_t               TotalChildrenOccurrences = 0;
   percentage_t         ChildrenWeightedScore = 0, ParentWeightedScore = 0;
 
+  bool Result;
+
+  vector<ClusterInformation*>& Children = Parent->GetChildren();
+  
   if (Children.size() == 0)
-  {
+  { /* No children */
+    /* DEBUG 
+    cout << "No children!" << endl; */
     return false;
   }
 
-  if (Children.size() == 1)
-  { /* Everything turn into noise */
-    SplitOK = false;
-    return true;
+  if (Children.size() == 1 && Children[0]->GetID() == NOISE_CLUSTERID)
+  { /* Everything turned into noise */
+    /* DEBUG 
+    cout << "Everything turned into noise!" << endl; */
+    Children[0]->Discard();
+    return false;
   }
 
   ParentDuration = Parent->GetTotalDuration();
-  
-  NoiseDuration = Children[0]->GetTotalDuration();
+
+  for (size_t i = 0; i < Children.size(); i++)
+  {
+    if (Children[i]->GetID() == NOISE_CLUSTERID)
+    {
+      NoiseDuration = Children[i]->GetTotalDuration();
+      break;
+    }
+  }
 
   /* Noise >= 60% of parent duration. CHECK PERCENTAGE TO REFINE */
   if (NoiseDuration >= 0.6*ParentDuration)
   {
-    SplitOK = false;
-    return true;
+    for (size_t i = 0; i < Children.size(); i++)
+    {
+      Children[i]->Discard();
+    }
+
+    /* DEBUG 
+    cout << "Noise duration (" << NoiseDuration << ")";
+    cout << " bigger than 80% of parent duration (" << ParentDuration << ")" << endl; */
+    
+    return false;
   }
 
-  for (size_t i = 1; i < Children.size(); i++)
+  for (size_t i = 0; i < Children.size(); i++)
   {
-    TotalChildrenDuration += Children[i]->GetTotalDuration();
-    ChildrenWeightedScore += (Children[i]->GetScore()*Children[i]->GetTotalDuration());
+    if (Children[i]->GetID() != NOISE_CLUSTERID)
+    {
+      TotalChildrenDuration += Children[i]->GetTotalDuration();
+      ChildrenWeightedScore += (Children[i]->GetScore()*Children[i]->GetTotalDuration());
+    }
   }
-
   ChildrenWeightedScore /= TotalChildrenDuration;
+
 
   /* Weighted children score < 80% of parent score */
   if (ChildrenWeightedScore < (0.8*Parent->GetScore()))
   {
-    SplitOK = false;
-    return true;
-  }
-
-  SplitOK = true;
-  return true;
-}
-
-/**
- * Reassigns the IDs of the previous step, to those clusters that were split
- * into NOISE
- *
- * \param ID The value of the ID in the previous step
- * \param Step Step where the ID was transformed into NOISE
- *
- */
-void ClusteringRefinement::ReassignNoisePartition(cluster_id_t ID,
-                                                  size_t Step)
-{
-  Partition& PreviousPartition = PartitionsHistory[Step-1];
-  Partition& CurrentPartition  = PartitionsHistory[Step];
-  
-  vector<cluster_id_t>& PreviousAssignement = PreviousPartition.GetAssignmentVector();
-  vector<cluster_id_t>& CurrentAssignement  = CurrentPartition.GetAssignmentVector();
-
-  set<cluster_id_t>& CurrentIDs = CurrentPartition.GetIDs();
-  set<cluster_id_t>::iterator IDsIt;
-
-  cluster_id_t MaxID = NOISE_CLUSTERID;
-
-  for (IDsIt  = CurrentIDs.begin();
-       IDsIt != CurrentIDs.end();
-       ++IDsIt)
-  {
-    if ((*IDsIt) > MaxID)
+    for (size_t i = 0; i < Children.size(); i++)
     {
-      MaxID = (*IDsIt);
-    }
-  }
-  
-  vector<CPUBurst*>& Bursts = BurstsPerStep[Step];
-
-  for (size_t i = 0; i < Bursts.size(); i++)
-  {
-    size_t PreviousPosition = InstancesTracking[Bursts[i]->GetInstance()][Step-1];
-
-    if (PreviousAssignement[PreviousPosition] == ID)
-    {
-      CurrentAssignement[i] = MaxID+1;
-    }
-  }
-
-  /* Increase the number of clusters */
-  size_t NumberOfClusters = CurrentPartition.NumberOfClusters();
-  CurrentPartition.NumberOfClusters(NumberOfClusters+1);
-  
-  return;
-}
-
-/**
- * Generates the 'full partitions' for each step (level) traversing the clusters 
- * tree obtained after the different runs
- *
- * \return True if the methods was executed correctly, false otherwise
- *
- */  
-bool ClusteringRefinement::CreateDefinitivePartitions(vector<Partition>& ResultingPartitions)
-{
-  ResultingPartitions    = vector<Partition> (LastStep+1);
-  ResultingPartitions[0] = PartitionsHistory[0];
-  
-  set<ClusterInformation*>::iterator ClustersInfoIt;
-  
-  vector<CPUBurst*>& Bursts = BurstsPerStep[0];
-
-  /* DEBUG 
-  cout << "Last Step executed = " << LastStep << endl; */
-  
-  /* DEBUG 
-  cout << "Bursts size = " << Bursts.size() << endl; */
-  
-  /* DEBUG 
-  cout << __FUNCTION__ << "ResultingPartitions[0] NumberOfClusters = " << ResultingPartitions[0].NumberOfClusters() << endl;
-  */
-  
-  for (ClustersInfoIt  = ClustersHierarchy[0].begin();
-       ClustersInfoIt != ClustersHierarchy[0].end();
-       ++ClustersInfoIt)
-  {
-    if ((*ClustersInfoIt)->GetID() != NOISE_CLUSTERID)
-    {
-      size_t TotalDivisions = ColapseNonDividedSubtrees((*ClustersInfoIt), 0);
-
-      /* DEBUG 
-      cout << "MASTER NODE " << (*ClustersInfoIt)->GetID() << " ";
-      cout << "GENERATED " << TotalDivisions << " DIVISION(S)" << endl;
-      */
-    }
-  }
-
-  /*
-  for (size_t i = 0; i < ClustersHierarchy[0].size(); i++)
-  {
-    if (ClustersHierarchy[0][i]->GetID() != NOISE_CLUSTERID)
-    {
-      ColapseNonDividedSubtrees(ClustersHierarchy[0][i], 0);
-    }
-  }
-  */
-
-  size_t PreviousNumberOfClusters = 0;
-  
-  for (size_t Step = 1; Step <= LastStep; Step++)
-  {
-    PreviousNumberOfClusters += ResultingPartitions[Step-1].NumberOfClusters();
-
-    /* DEBUG
-    cout << "Previous Number of Clusters = " << PreviousNumberOfClusters << endl;
-    */
-     
-    vector<cluster_id_t>& PreviousIDs = ResultingPartitions[Step-1].GetAssignmentVector();
-    vector<cluster_id_t>& ComputedIDs = PartitionsHistory[Step].GetAssignmentVector();
-    vector<cluster_id_t>& OutputIDs   = ResultingPartitions[Step].GetAssignmentVector();
-    
-    set<cluster_id_t> OutputIDsSet;
-    set<cluster_id_t>::iterator OutputIDsSetIt;
-
-    /* DEBUG 
-    cout << "PreviousIDs size = " << PreviousIDs.size() << endl; */
-
-    OutputIDs.clear();
-    OutputIDsSet.clear();
-
-    set<cluster_id_t> StepAcceptedIDs;
-
-    /* DEBUG
-    cout << "Level " << Step+1 << " Accepted IDS = "; */
-      
-    for (ClustersInfoIt  = ClustersHierarchy[Step].begin();
-         ClustersInfoIt != ClustersHierarchy[Step].end();
-         ++ClustersInfoIt)
-    {
-      // cout << (*ClustersInfoIt)->GetID() << " ";
-      StepAcceptedIDs.insert((*ClustersInfoIt)->GetID());
-    }
-    // cout << endl;
-
-    /*
-    for (size_t i = 0; i < ClustersHierarchy[Step].size(); i++)
-    {
-      StepAcceptedIDs.insert(ClustersHierarchy[Step][i]->GetID());
-    }
-    */
-
-    OutputIDsSet.insert(NOISE_CLUSTERID);
-    
-    for (size_t i = 0; i < Bursts.size(); i++)
-    {
-      if(InstancesTracking[Bursts[i]->GetInstance()].size() <= Step)
-      {
-        /* Current burst was not used in this step */
-                
-        cluster_id_t PreviousID = PreviousIDs[i];
-        OutputIDs.push_back(PreviousID);
-        OutputIDsSet.insert(PreviousID);
-      }
-      else
-      { 
-        cluster_id_t CurrentID;
-        size_t CurrentBurstPosition = InstancesTracking[Bursts[i]->GetInstance()][Step];
-
-        CurrentID = ComputedIDs[CurrentBurstPosition];
-
-        if (CurrentID == NOISE_CLUSTERID)
-        {
-          OutputIDs.push_back(NOISE_CLUSTERID);
-        }
-        else if (CurrentID == UNCLASSIFIED)
-        {
-          cluster_id_t PreviousID = PreviousIDs[i];
-
-          OutputIDs.push_back(PreviousID);
-          OutputIDsSet.insert(PreviousID);
-        }
-        else
-        {
-          if (IsIDInSet (CurrentID, StepAcceptedIDs))
-          {
-            /* DEBUG 
-            cout << "Accepted ID -> " << CurrentID << endl; */
-            OutputIDs.push_back(CurrentID+PreviousNumberOfClusters);
-            OutputIDsSet.insert(CurrentID+PreviousNumberOfClusters);
-          }
-          else
-          {
-            cluster_id_t PreviousID = PreviousIDs[i];
-            
-            OutputIDs.push_back(PreviousID);
-            OutputIDsSet.insert(PreviousID);
-          }
-        }
-      }
+      Children[i]->Discard();
     }
 
     /* DEBUG 
-    cout << "Step " << Step+1 << " Assignment" << endl;
-    for (size_t i = 0; i < Bursts.size(); i++)
-    {
-      cout << OutputIDs[i] << " ";
-    }
-    cout << endl;
-    */
-
-    ResultingPartitions[Step].HasNoise(true);
-    ResultingPartitions[Step].NumberOfClusters(OutputIDsSet.size());
-    ResultingPartitions[Step].SetIDs(OutputIDsSet);
-
-    /* DEBUG 
-    cout << "Different IDs in Step " << Step << " = ";
-    for (OutputIDsSetIt  = OutputIDsSet.begin();
-         OutputIDsSetIt != OutputIDsSet.end();
-         ++OutputIDsSetIt)
-    {
-      cout << (*OutputIDsSetIt) << " ";
-    }
-    cout << endl;
-
-    cout << __FUNCTION__ << "ResultingPartitions[" << Step;
-    cout << "] NumberOfClusters = " << ResultingPartitions[Step].NumberOfClusters() << endl;
-    */
-    
+    cout << "ChildrenWeightedScore (" << ChildrenWeightedScore << ") ";
+    cout << " less than 80% of Parent Score (" << Parent->GetScore() << ")" << endl; */
+    return false;
   }
-  
+
   return true;
 }
 
@@ -1067,8 +1045,6 @@ size_t ClusteringRefinement::ColapseNonDividedSubtrees(ClusterInformation* Node,
     cout << "** Collapsing node " << Node->GetID() << " on level " << Level+1;
     cout << " (" << Children[1] << ") **" << endl;
 
-    ClustersHierarchy[Level+1].erase(Children[1]);
-
     /* EXPERIMENTAL, do not delete nodes, just mark them as discarded */
     Children[0]->Discard();
     if (NumberOfDivisions == 1)
@@ -1078,28 +1054,6 @@ size_t ClusteringRefinement::ColapseNonDividedSubtrees(ClusterInformation* Node,
     // delete Children[0];
     // delete Children[1];
     // Children.clear();
-
-    /* Mark all assignment in next level as UNDEFINED */
-    Partition& CurrentPartition = PartitionsHistory[Level];
-    Partition& NextPartition    = PartitionsHistory[Level+1];
-    
-    vector<cluster_id_t>& CurrentAssignment = CurrentPartition.GetAssignmentVector();
-    vector<cluster_id_t>& NextAssignment    = NextPartition.GetAssignmentVector();
-
-    vector<CPUBurst*>& Bursts = BurstsPerStep[Level];
-
-    for (size_t i = 0; i < Bursts.size(); i++)
-    {
-      
-
-      if (CurrentAssignment[i] == Node->GetID())
-      {
-        size_t NextPosition = InstancesTracking[Bursts[i]->GetInstance()][Level+1];
-        
-        NextAssignment[NextPosition] = UNCLASSIFIED;
-      }
-    }
-    
   }
 
   if (NumberOfDivisions == 0)
@@ -1139,13 +1093,14 @@ bool ClusteringRefinement::IsIDInSet(cluster_id_t       ID,
  *
  * \param Bursts Vector containing the bursts of the current step
  * \param CurrentPartition Partition object of the burst vector
+ * \param Step Depth of the current step
  *
  * \return True ID is inside IDsSet, false otherwise
  *
  */ 
-bool ClusteringRefinement::PrintPlots(vector<CPUBurst*>& Bursts,
-                                      Partition&         CurrentPartition,
-                                      size_t             Step)
+bool ClusteringRefinement::PrintPlots(const vector<CPUBurst*>& Bursts,
+                                      Partition&               CurrentPartition,
+                                      size_t                   Step)
 {
   ostringstream         CurrentDataFileName;
   ostringstream         CurrentPlotFileNamePrefix;
@@ -1158,7 +1113,13 @@ bool ClusteringRefinement::PrintPlots(vector<CPUBurst*>& Bursts,
 
   if (Bursts.size() != IDs.size())
   {
-    SetErrorMessage("number of points different of number of IDs");
+    ostringstream ErrorMessage;
+
+    ErrorMessage << "number of points (" << Bursts.size();
+    ErrorMessage << ") different from number of IDs (" << IDs.size() << ")";
+    ErrorMessage << " when printing plots";
+    
+    SetErrorMessage(ErrorMessage.str());
     SetError(true);
     return false;
   }
@@ -1226,10 +1187,13 @@ bool ClusteringRefinement::PrintPlots(vector<CPUBurst*>& Bursts,
 
   /* DEBUG 
   cout << __FUNCTION__ << "Algorithm name = " << ClusteringCore->GetClusteringAlgorithmName() << endl;
-  */
+  cout << "Current partition has " << CurrentPartition.NumberOfClusters() << " clusters" << endl; */
   
   PlotTitle << "REFINEMENT STEP " << Step+1 << " - ";
   PlotTitle << ClusteringCore->GetClusteringAlgorithmName();
+
+  bool verbose_state = system_messages::verbose;
+  system_messages::verbose = false;
   
   if (!Plots->PrintPlots(CurrentDataFileName.str(),
                          CurrentPlotFileNamePrefix.str(),
@@ -1237,10 +1201,14 @@ bool ClusteringRefinement::PrintPlots(vector<CPUBurst*>& Bursts,
                          CurrentPartition.NumberOfClusters(),
                          CurrentPartition.HasNoise()))
   {
+    system_messages::verbose = verbose_state;
     SetError(true);
     SetErrorMessage(Plots->GetLastError());
     return false;
   }
+  
+  system_messages::verbose = verbose_state;
+  
   
   return true;
 }
@@ -1251,15 +1219,16 @@ bool ClusteringRefinement::PrintPlots(vector<CPUBurst*>& Bursts,
  * \return True if the tree was written correctly, false otherwise
  *
  */  
-bool ClusteringRefinement::PrintTrees(void)
+bool ClusteringRefinement::PrintTrees(size_t Step)
 {
   ofstream* Output;
-  set<ClusterInformation*>::iterator ClustersInfoIt;
+
+  vector<ClusterInformation*>& TopLevelNodes = NodesPerLevel[0];
   
   if (PrintStepsInformation)
   {
     ostringstream TreeFileName;
-    TreeFileName << OutputFilePrefix << ".TREE";
+    TreeFileName << OutputFilePrefix << ".STEP" << (Step+1) << ".TREE.dot";
 
     Output = new ofstream(TreeFileName.str().c_str(), ios_base::trunc);
 
@@ -1276,117 +1245,68 @@ bool ClusteringRefinement::PrintTrees(void)
     Output = (ofstream*) &cout;
   }
 
+  (*Output) << "digraph Tree {" << endl;
+
+  
+  for (size_t i = 0; i < TopLevelNodes.size(); i++)
+  {
+    
+    PrintTreeNodes ((*Output), TopLevelNodes[i]);
+
+    (*Output) << endl;
+
+    PrintTreeLinks ((*Output), TopLevelNodes[i]);
+    
+    (*Output) << endl;
+  }
+
+  (*Output) << "}" << endl << endl;
+  
   /* DEBUG 
   cout << "TOP LEVEL HAS " << ClustersHierarchy[0].size() << " NODES" << endl; */
-  //for (size_t i = 0; i < ClustersHierarchy[0].size(); i++)
-
-  for (size_t i = 0; i <= LastStep; i++)
-  {
-    (*Output) << setiosflags(ios::right);
-    (*Output) << setfill(' ') << setw(26);
-    (*Output) << i+1 << "|";
-    (*Output) << "   ";
-  }
-  (*Output) << endl;
-  
-  for (ClustersInfoIt  = ClustersHierarchy[0].begin();
-       ClustersInfoIt != ClustersHierarchy[0].end();
-       ++ClustersInfoIt)
-  {
-    // if ((ClustersHierarchy[0][i]->GetID() != NOISE_CLUSTERID))
-    if ((*ClustersInfoIt)->GetID() != NOISE_CLUSTERID)
-    {
-      // (*Output) << "***** Cluster " << ClustersHierarchy[0][i]->GetID() << " *****" << '\n';
-      (*Output) << "***** Cluster " << (*ClustersInfoIt)->GetID() << " *****" << '\n';
-
-      PrintNode((*Output), (*ClustersInfoIt), 0);
-    }
-  }
 
   Output->close();
   
   return true;
 }
 
-bool ClusteringRefinement::PrintNode(ofstream&           str,
-                                     ClusterInformation* Node,
-                                     size_t              Level)
+bool ClusteringRefinement::PrintTreeNodes(ofstream&           str,
+                                          ClusterInformation* Node)
 {
   vector<ClusterInformation*>& Children = Node->GetChildren();
 
-  if (Children.size() == 0)
+  if (Node->GetID() != NOISE_CLUSTERID || Node->GetIndividuals() != 0)
   {
-    if (Node->IsDiscarded())
-    {
-      str << " X ";
-    }
-    else
-    {
-      str << "   ";
-    }
+    str << Node->NodeName() << " " << Node->NodeLabel() << ";" << endl;
     
-    str << setfill(' ') << setw(5);
-    
-    if (Node->GetID() == NOISE_CLUSTERID)
-      str << "NOISE";
-    else
-      str << Node->GetID();
-    
-    str << " (";                                                        // 3
-    str << setfill (' ') << setw(3) << Node->GetOccurrences();          // 3
-    str << " : ";                                                       // 3
-    str << setfill (' ') << setw(6) << setiosflags(ios::fixed);
-    str << setprecision(2);
-    str << (Node->GetScore()*100.0) << "%";                             // 6
-    str << " )";                                                        // 2
-    str << " |" << '\n';
-  }
-  else
-  {
     for (size_t i = 0; i < Children.size(); i++)
     {
-      if (i == 0)
-      {
-        if (Node->IsDiscarded())
-        {
-          str << " X ";
-        }
-        else
-        {
-          str << "   ";
-        }
-        
-        str << setfill(' ') << setw(5);
-        if (Node->GetID() == NOISE_CLUSTERID)
-          str << "NOISE";
-        else
-          str << Node->GetID();
+      PrintTreeNodes(str, Children[i]);
+    }
+  }
 
-        str << " (";                                                        // 3
-        str << setfill (' ') << setw(3) << Node->GetOccurrences();          // 3
-        str << " : ";                                                       // 3
-        str << setfill (' ') << setw(6) << setiosflags(ios::fixed);
-        str << setprecision(2);
-        str << (Node->GetScore()*100.0) << "%";                             // 6
-        str << " )";                                                        // 2
-        str << " --> ";
-      }
-      else
-      {
-        for (size_t j = 0; j < Level+1; j++)
-        {
-          // 30 chars in total
-          str << "                         ";
-          
-          if (j < Level)
-          {
-            str << "     ";
-          }
-        }
-        str << " |-> ";
-      }
+  return true;
+}
 
-      PrintNode(str, Children[i], Level+1);
+bool ClusteringRefinement::PrintTreeLinks(ofstream&           str,
+                                          ClusterInformation* Node)
+{
+  vector<ClusterInformation*>& Children = Node->GetChildren();
+  
+  for (size_t i = 0; i < Children.size(); i++)
+  {
+    if (Children[i]->GetID() != NOISE_CLUSTERID || Children[i]->GetIndividuals() != 0)
+    {
+      str << "\"" << Node->NodeName() << "\" ->  \"" << Children[i]->NodeName() << "\"";
+      str << ";" << endl;
+    }
+  }
+
+  for (size_t i = 0; i < Children.size(); i++)
+  {
+    if (Children[i]->GetID() != NOISE_CLUSTERID || Children[i]->GetIndividuals() != 0)
+    {
+      PrintTreeLinks(str, Children[i]);
     }
   }
   

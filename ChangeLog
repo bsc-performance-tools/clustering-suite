@@ -10,6 +10,12 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-05-12 Juan Gonzalez <juan.gonzalez@bsc.es>
+
+	* Revision of Clustering Refinement. Now each subclustering is executed
+	independently, adding the possibility to be parallelized. It also
+	generates 'Graphviz' files to plot the hierarchy tree.
+
 2011-05-03 Juan Gonzalez <juan.gonzalez@bsc.es>
 
 	* Added a new Paraver parser to treat bursts based on events. Now

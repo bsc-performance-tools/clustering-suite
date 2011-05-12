@@ -52,18 +52,26 @@ using std::set;
 #include <fstream>
 using std::ofstream;
 
+typedef UINT32 node_id_t;
+
 class ClusterInformation: public Error
 {
+  public:
+    static node_id_t NodeIDNumber;
+    
   private:
-    cluster_id_t              ID;
+    UINT32                      NodeID;
+    
+    cluster_id_t                ID;
 
-    bool                      Discarded;
+    bool                        Discarded;
 
-    percentage_t              Score;
-    size_t                    Occurrences;
+    percentage_t                Score;
+    size_t                      Occurrences;
+    timestamp_t                 TotalDuration;
+    size_t                      Individuals;
 
-    timestamp_t               TotalDuration;
-    size_t                    Individuals;
+    vector<instance_t>          Instances;
     
     vector<ClusterInformation*> Children;
 
@@ -74,7 +82,10 @@ class ClusterInformation: public Error
                        timestamp_t  TotalDuration,
                        size_t       Individuals);
 
-    cluster_id_t GetID(void) { return ID; };
+    node_id_t    GetNodeID(void)        { return this->NodeID; };
+    
+    void         SetID(cluster_id_t ID) { this->ID = ID; };
+    cluster_id_t GetID(void)            { return this->ID; };
 
     percentage_t GetScore(void)       { return Score; };
     size_t       GetOccurrences(void) { return Occurrences; };
@@ -84,18 +95,30 @@ class ClusterInformation: public Error
 
     bool IsCandidate(size_t      TotalOccurrences,
                      timestamp_t ClustersTotalDuration);
-    
+
+    void SetInstances(vector<instance_t>& Instances) { this->Instances = Instances; };
+    vector<instance_t>& GetInstances(void) { return this->Instances; };
+
     bool AddChild(ClusterInformation*);
 
     vector<ClusterInformation*>& GetChildren(void) { return Children; };
 
+    size_t TotalClusters(void);
+
+    void RenameChildren(cluster_id_t& RestOfChildrenID);
+
     bool IsDiscarded(void) { return this->Discarded; };
     
-    void Discard(void)     { 
-      /* DEBUG */
-      cout << "NODE = " << ID << " IS BEING DISCARDED" << endl;
+    void Discard(void) {
+      /* DEBUG 
+      cout << "NODE = " << ID << " IS BEING DISCARDED" << endl; */
       this->Discarded = true; };
 
+    string NodeName(void);
+
+    string NodeLabel(void);
+
+    string Color(void);
 };
 
 class ClusteringRefinement: public Error
@@ -113,16 +136,12 @@ class ClusteringRefinement: public Error
     bool   PrintStepsInformation;
     
     libClustering*               ClusteringCore;
-    vector<Partition>            PartitionsHistory;
-    vector<ClusteringStatistics> StatisticsHistory;
 
-    vector<vector<CPUBurst*> >        BurstsPerStep;
-    map<instance_t, vector<size_t> >  InstancesTracking;
-
-    vector<ClusterInformation*>            OngoingCandidates;
-    map<cluster_id_t, ClusterInformation*> NewNodes;
+    map<instance_t, size_t> Instance2Burst;
     
-    vector<set<ClusterInformation*> >   ClustersHierarchy;
+    vector<Partition>                    PartitionsHistory;
+    vector<ClusteringStatistics>         StatisticsHistory;
+    vector<vector<ClusterInformation*> > NodesPerLevel;
 
   public:
     
@@ -136,49 +155,45 @@ class ClusteringRefinement: public Error
              string                   OutputFilePrefix = "");
 
   private:
+    bool IsSplitOK(ClusterInformation* Parent);
+    
+    vector<CPUBurst*> GenerateBurstsSubset(const vector<CPUBurst*>& Bursts,
+                                           ClusterInformation*      Node);
 
-    /*
-    vector<CPUBurst*> GetBurstsSubset(vector<CPUBurst*>&   ClusteringBursts,
-                                      Partition&           CurrentPartition,
-                                      vector<cluster_id_t> Candidates);
-    */
+    bool RunFirstStep(const vector<CPUBurst*>& Bursts,
+                      double                   Epsilon,
+                      Partition&               FirstPartition);
 
-    bool RunStep(size_t Step,
-                 double Epsilon,
-                 bool&  NoMoreClusters);
-
-    bool LinkToPreviuosStep(size_t Step,
-                            bool&  Convergence);
+    bool RunStep(size_t                   Step,
+                 const vector<CPUBurst*>& Bursts,
+                 double                   Epsilon,
+                 Partition&               PreviousPartition,
+                 Partition&               NewPartition,
+                 bool&                    Stop);
     
     bool RunDBSCAN(const vector<const Point*>& CurrentData,
                    double                      Epsilon,
                    Partition&                  CurrentPartition);
 
-    bool GenerateCandidates(size_t Step);
-    
-    bool GenerateCurrentLevelNodes(size_t Step);
+    bool GenerateNodes(const vector<CPUBurst*>&     Bursts,
+                       Partition&                   CurrentPartition,
+                       vector<ClusterInformation*>& Nodes);
 
-    bool EvaluateSplit(ClusterInformation*          Parent,
-                       vector<ClusterInformation*>& Children,
-                       bool&                        SplitOK);
-
-    void ReassignNoisePartition(cluster_id_t ID,
-                                size_t Step);
-
-    bool CreateDefinitivePartitions(vector<Partition>& ResultingPartitions);
+    vector<pair<instance_t, cluster_id_t> > GetAssignment(ClusterInformation* Node);
 
     size_t ColapseNonDividedSubtrees(ClusterInformation* Node, size_t Level);
 
     bool IsIDInSet(cluster_id_t       ID,
                    set<cluster_id_t>& IDsSet);
 
-    bool PrintPlots(vector<CPUBurst*>& Bursts,
-                    Partition&         CurrentPartition,
-                    size_t             Step);
+    bool PrintPlots(const vector<CPUBurst*>& Bursts,
+                    Partition&               CurrentPartition,
+                    size_t                   Step);
 
-    bool PrintTrees(void);
+    bool PrintTrees(size_t Level);
 
-    bool PrintNode(ofstream& str, ClusterInformation* Node, size_t Level);
+    bool PrintTreeNodes(ofstream& str, ClusterInformation* Node);
+    bool PrintTreeLinks(ofstream& str, ClusterInformation* Node);
 
 };
 

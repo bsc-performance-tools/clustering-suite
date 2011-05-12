@@ -71,7 +71,7 @@ class CPUBurst: public Point, public Error
     // static char Separator;
 
   protected:
-    instance_t       Instance;
+    instance_t   Instance;
 
     task_id_t    TaskId;
     thread_id_t  ThreadId;

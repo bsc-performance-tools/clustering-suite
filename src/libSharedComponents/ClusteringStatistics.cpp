@@ -411,7 +411,7 @@ bool ClusteringStatistics::ComputeStatistics(const vector<CPUBurst*>&    Bursts,
   if (Bursts.size() != IDs.size())
   {
     SetError(true);
-    SetErrorMessage("number of bursts different to number of IDs when computing statistics");
+    SetErrorMessage("number of bursts different from number of IDs when computing statistics");
     return false;
   }
 

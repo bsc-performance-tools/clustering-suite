@@ -173,7 +173,7 @@ bool ClusteredStatesPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   /* Sort all bursts in terms of trace appearance, using the line comparison */
   sort(Bursts.begin(), Bursts.end(), LineCompare());
 
-  /* DEBUG */
+  /* DEBUG
   for (size_t i = 0; i < Bursts.size(); i++)
   {
     cout << "Burst Line = " << Bursts[i]->GetLine() << " ";
@@ -181,7 +181,7 @@ bool ClusteredStatesPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
     cout << "BeginTime = " << Bursts[i]->GetBeginTime() << " ";
     cout << "EndTime = " << Bursts[i]->GetEndTime() << " ";
     cout << "ID = " << CompleteIDs[Bursts[i]->GetInstance()] << endl;
-  }
+  } */
   
   if (!TraceParser->InitTraceParsing())
   {

@@ -82,8 +82,8 @@ PlottingManager* PlottingManager::_PlottingManager = NULL;
 PlottingManager*
 PlottingManager::GetInstance(bool DataExtraction)
 {
-  /* DEBUG */
-  cout << "GETTING A PLOT INSTANCE WITH DataExtraction SET TO " << DataExtraction << endl;
+  /* DEBUG
+  cout << "GETTING A PLOT INSTANCE WITH DataExtraction SET TO " << DataExtraction << endl; */
   if (PlottingManager::_PlottingManager == NULL)
   {
     PlottingManager::_PlottingManager = new PlottingManager(DataExtraction);
@@ -650,7 +650,7 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
         OutputStream << ",\\" << '\n';
       }
     
-      for (cluster_id_t Cluster = 1; Cluster < NumberOfClusters; Cluster++)
+      for (cluster_id_t Cluster = 1; Cluster <= NumberOfClusters; Cluster++)
       {
         ostringstream ClusterName;
 
@@ -658,7 +658,7 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
 
         Write3D_Definition (OutputStream, X, Y, Z, Cluster+PARAVER_OFFSET, ClusterName.str(), DataFileName);
 
-        if (Cluster != NumberOfClusters -1 )
+        if (Cluster != NumberOfClusters )
           OutputStream << ",\\" << endl;
       }
     }
@@ -721,14 +721,14 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
         OutputStream << ",\\" << '\n';
       }
       
-      for (size_t Cluster = 1; Cluster < NumberOfClusters; Cluster++)
+      for (size_t Cluster = 1; Cluster <= NumberOfClusters; Cluster++)
       {
         ostringstream ClusterName;
         ClusterName << "Cluster " << Cluster;
 
         Write2D_Definition (OutputStream, X, Y, Cluster+PARAVER_OFFSET, ClusterName.str(), DataFileName);
 
-        if (Cluster != NumberOfClusters -1 )
+        if (Cluster != NumberOfClusters )
           OutputStream << ",\\" << endl;
 
       }
@@ -801,8 +801,7 @@ PlottingManager::Write3D_Definition(ostream& str,
  *
  * \return A string containing the RGB codification of the given state number
  */
-string
-PlottingManager::RGBStateColor(INT32 StateValue)
+string PlottingManager::RGBStateColor(INT32 StateValue)
 {
   char RGBColor[8];
 

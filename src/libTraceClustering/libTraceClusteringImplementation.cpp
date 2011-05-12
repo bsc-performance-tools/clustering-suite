@@ -564,19 +564,23 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(int    MinPoint
                                                           OutputTraceName.str());
       }
 
-      /* DEBUG */
+      /* DEBUG
       cout << "All Burst size = " << Data->GetAllBursts().size() << endl;
-      cout << "IDs size = " << PartitionsHierarchy[i].GetAssignmentVector().size() << endl;
-      
+      cout << "IDs size = " << PartitionsHierarchy[i].GetAssignmentVector().size() << endl; */
+
+      bool verbose_state = system_messages::verbose;
+      system_messages::verbose = false;
+
       if (!TraceGenerator->Run(Data->GetAllBursts(),
                                PartitionsHierarchy[i].GetAssignmentVector(),
                                PartitionsHierarchy[i].NumberOfClusters(),
                                true)) // Minimize information
       {
-   
+          system_messages::verbose = verbose_state;
           SetErrorMessage(TraceGenerator->GetLastError());
           return false;
       }
+      system_messages::verbose = verbose_state;
 
       delete TraceGenerator;
     }

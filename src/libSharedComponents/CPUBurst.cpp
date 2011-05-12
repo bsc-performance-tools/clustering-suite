@@ -34,7 +34,7 @@
 
 #include <CPUBurst.hpp>
 
-UINT64 CPUBurst::InstanceNumber = 0;
+instance_t CPUBurst::InstanceNumber = 0;
 
 CPUBurst::CPUBurst(task_id_t            TaskId,
                    thread_id_t          ThreadId,
