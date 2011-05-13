@@ -18,7 +18,7 @@ AC_HEADER_STDC
 dnl =========================================================================
 dnl Revision numbering
 dnl =========================================================================
-SVN_REVISION="$Rev:: $"
+SVN_REVISION="$Rev$"
 REVISION_LENGTH=${#SVN_REVISION}
 REVISION_LENGTH=`expr ${REVISION_LENGTH} - 4`
 REVISION_NUMBER=${SVN_REVISION:2:$REVISION_LENGTH}
