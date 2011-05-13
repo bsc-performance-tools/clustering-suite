@@ -88,9 +88,11 @@ class libTraceClustering
 
     bool ClusterAnalysis (void);
 
-    bool ClusterRefinementAnalysis(string OutputFileNamePrefix = "");
+    bool ClusterRefinementAnalysis(bool   Divisive,
+                                   string OutputFileNamePrefix = "");
     
-    bool ClusterRefinementAnalysis(int    MinPoints,
+    bool ClusterRefinementAnalysis(bool   Divisive,
+                                   int    MinPoints,
                                    double MaxEps,
                                    double MinEps,
                                    int    Steps,

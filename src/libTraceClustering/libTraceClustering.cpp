@@ -150,13 +150,18 @@ bool libTraceClustering::ClusterAnalysis()
  * Performs a DBSCAN cluster analysis with auto refinement based on sequence
  * score. The exploration range is guessed automatically
  *
- * \param OutputFileNamePrefix Prefix of the output files for each step data and plots
+ * \param Divisive             True if the refinement will be top down, false if
+ *                             it would be bottom up
+ * \param OutputFileNamePrefix Prefix of the output files for each step data and 
+ *                             plots
  *
  * \result True if the analysis finished correctly, false otherwise
  */
-bool libTraceClustering::ClusterRefinementAnalysis(string OutputFileNamePrefix)
+bool libTraceClustering::ClusterRefinementAnalysis(bool   Divisive,
+                                                   string OutputFileNamePrefix)
 {
-  if (!Implementation->ClusterRefinementAnalysis(OutputFileNamePrefix))
+  if (!Implementation->ClusterRefinementAnalysis(Divisive,
+                                                 OutputFileNamePrefix))
   {
     Error = true;
     ErrorMessage = Implementation->GetLastError();
@@ -170,21 +175,26 @@ bool libTraceClustering::ClusterRefinementAnalysis(string OutputFileNamePrefix)
  * Performs a DBSCAN cluster analysis with auto refinement based on sequence
  * score. The exploration range is provided by the user
  *
- * \param MinPoints Fixed MinPoints value used in all runs of DBSCAN
- * \param MaxEps Maximum value of Epsilon
- * \param MinEps Minimum value of Epsilon
- * \param Steps  Number of iterarions of the algorithm
- * \param OutputFileNamePrefix Prefix of the output files for each step data and plots
+ * \param Divisive             True if the refinement will be top down, false if
+ *                             it would be bottom up
+ * \param MinPoints            Fixed MinPoints value used in all runs of DBSCAN
+ * \param MaxEps               Maximum value of Epsilon
+ * \param MinEps               Minimum value of Epsilon
+ * \param Steps                Number of iterarions of the algorithm
+ * \param OutputFileNamePrefix Prefix of the output files for each step data and 
+ *                             plots
  *
  * \result True if the analysis finished correctly, false otherwise
  */
-bool libTraceClustering::ClusterRefinementAnalysis(int    MinPoints,
+bool libTraceClustering::ClusterRefinementAnalysis(bool   Divisive,
+                                                   int    MinPoints,
                                                    double MaxEps,
                                                    double MinEps,
                                                    int    Steps,
                                                    string OutputFileNamePrefix)
 {
-  if (!Implementation->ClusterRefinementAnalysis(MinPoints,
+  if (!Implementation->ClusterRefinementAnalysis(Divisive,
+                                                 MinPoints,
                                                  MaxEps,
                                                  MinEps,
                                                  Steps,

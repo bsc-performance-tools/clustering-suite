@@ -53,7 +53,8 @@ using cepba_tools::FileNameManipulator;
 
 #ifdef HAVE_SEQAN
 #include "SequenceScore.hpp"
-#include "ClusteringRefinement.hpp"
+#include "ClusteringRefinementDivisive.hpp"
+#include "ClusteringRefinementAggregative.hpp"
 #endif
 
 #include <cerrno>
@@ -432,11 +433,14 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
  * Performs a DBSCAN cluster analysis with auto refinement based on sequence
  * score. The exploration range is guessed automatically
  *
+ * \param Divisive             True if the refinement will be top down, false if
+ *                             it would be bottom up
  * \param OutputFileNamePrefix Prefix of the output files for each step data and plots
  *
  * \result True if the analysis finished correctly, false otherwise
  */
-bool libTraceClusteringImplementation::ClusterRefinementAnalysis(string OutputFileNamePrefix)
+bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive,
+                                                                 string OutputFileNamePrefix)
 {
   return true;
 }
@@ -445,6 +449,8 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(string OutputFi
  * Performs a DBSCAN cluster analysis with auto refinement based on sequence
  * score. The exploration range is provided by the user
  *
+ * \param Divisive             True if the refinement will be top down, false if
+ *                             it would be bottom up
  * \param MinPoints Fixed MinPoints value used in all runs of DBSCAN
  * \param MaxEps Maximum value of Epsilon
  * \param MinEps Minimum value of Epsilon
@@ -453,7 +459,8 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(string OutputFi
  *
  * \result True if the analysis finished correctly, false otherwise
  */
-bool libTraceClusteringImplementation::ClusterRefinementAnalysis(int    MinPoints,
+bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive,
+                                                                 int    MinPoints,
                                                                  double MaxEps,
                                                                  double MinEps,
                                                                  int    Steps,
@@ -461,27 +468,48 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(int    MinPoint
 {
 #ifdef HAVE_SEQAN
 
-  ParametersManager       *Parameters;
-  vector<Partition> PartitionsHierarchy;
+  ParametersManager *Parameters;
+  vector<Partition>  PartitionsHierarchy;
   
   if (Data == NULL)
   {
     SetErrorMessage("data not initialized");
     return false;
   }
-  
-  ClusteringRefinement RefinementAnalyzer((INT32) MinPoints,
-                                          MaxEps,
-                                          MinEps,
-                                          (size_t) Steps);
 
-  if (!RefinementAnalyzer.Run(Data->GetClusteringBursts(),
-                              PartitionsHierarchy,
-                              OutputFileNamePrefix))
+  if (Divisive)
   {
-    SetErrorMessage(RefinementAnalyzer.GetLastError());
-    SetError(true);
-    return false;
+    ClusteringRefinementDivisive RefinementAnalyzer((INT32) MinPoints,
+                                                    MaxEps,
+                                                    MinEps,
+                                                    (size_t) Steps);
+
+    if (!RefinementAnalyzer.Run(Data->GetClusteringBursts(),
+                              PartitionsHierarchy,
+                              LastPartition,
+                              OutputFileNamePrefix))
+    {
+      SetErrorMessage(RefinementAnalyzer.GetLastError());
+      SetError(true);
+      return false;
+    }
+  }
+  else
+  {
+    ClusteringRefinementAggregative RefinementAnalyzer((INT32) MinPoints,
+                                                        MaxEps,
+                                                        MinEps,
+                                                        (size_t) Steps);
+
+    if (!RefinementAnalyzer.Run(Data->GetClusteringBursts(),
+                                PartitionsHierarchy,
+                                LastPartition,
+                                OutputFileNamePrefix))
+    {
+      SetErrorMessage(RefinementAnalyzer.GetLastError());
+      SetError(true);
+      return false;
+    }
   }
 
   /* DEBUG 
@@ -502,8 +530,6 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(int    MinPoint
   }
   */
 
-  LastPartition = PartitionsHierarchy[PartitionsHierarchy.size()-1];
-
   /* Statistics */
   Parameters = ParametersManager::GetInstance();
   
@@ -521,7 +547,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(int    MinPoint
     return false;
   }
   
-  Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
+  // Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
 
   /* Generate all intermediate (event) traces */
   if (OutputFileNamePrefix.compare("") != 0)

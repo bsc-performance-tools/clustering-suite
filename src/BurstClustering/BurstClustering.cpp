@@ -78,6 +78,7 @@ string ClusterSequencesFileName;
 bool   GenerateClusterSequences = false;
 
 bool   ClusteringRefinement = false;
+bool   DivisiveRefinement   = true;
 
 double MaxEps, MinEps;
 int    MinPoints, Steps;
@@ -116,13 +117,14 @@ bool   ApplyCPIStack = false;
 "  -a[f]                       Generate a file containing the cluster sequences\n"\
 "                              (using 'f' generates a FASTA aminoacid sequences)\n"\
 "\n"\
-"  -r[p] <min_points>,<max_eps>,<min_eps>,<steps>\n"\
+"  -r<d|a>[p] <min_points>,<max_eps>,<min_eps>,<steps>\n"\
 "\n"\
-"                              Applies a clustering refinement based on DBSCAN\n"\
-"                              using min_ the epsilon range introduced\n"\
+"                              Applies a clustering refinement (d = divisve,\n"\
+"                              a = aggregative) based on DBSCAN using min_points\n"\
+"                              the epsilon range introduced\n"\
 "                              Ignores the cluster algorithm used in the XML\n"\
-"                              If 'p' option is included, plots of each step\n"\
-"                              are print\n"\
+"                              If 'p' option is included, plots traces and trees\n"\
+"                              of each step are printed\n"\
 "\n"\
 "  -i <input_file>             Input CSV / Dimemas trace / Paraver trace\n"\
 "\n"\
@@ -143,7 +145,7 @@ void GetEventParsingParameters(char*);
 void PrintUsage(char* ApplicationName)
 {
   cout << "Usage: " << ApplicationName << " [-s] -d <clustering_def.xml> ";
-  cout << "-i <input_file> -o <output_file>" << endl;
+  cout << "-a[f] -r<d|a>[p] <min_points>,<max_eps>,<min_eps>,<steps> -i <input_file> -o <output_file>" << endl;
 }
 
 void
@@ -198,7 +200,22 @@ ReadArgs(int argc, char *argv[])
           break;
         case 'r':
           ClusteringRefinement = true;
-          if (argv[j][2] == 'p')
+          if (argv[j][2] == 'd')
+          {
+            DivisiveRefinement = true;
+          }
+          else if (argv[j][2] == 'a')
+          {
+            DivisiveRefinement = false;
+          }
+          else
+          {
+            cerr << "Wrong type of refinement \'" << argv[j][2] << "\'" << endl;
+            cerr << "It should be 'd' for divise or 'a' for aggregative" << endl;
+            exit(EXIT_FAILURE);
+          }
+            
+          if (argv[j][3] == 'p')
           {
             PrintRefinementSteps = true;
           }
@@ -436,7 +453,8 @@ int main(int argc, char *argv[])
   if (ClusteringRefinement)
   {
     system_messages::information("** CLUSTER REFINEMENT ANALYSIS **\n");
-    if (!Clustering.ClusterRefinementAnalysis(MinPoints,
+    if (!Clustering.ClusterRefinementAnalysis(DivisiveRefinement,
+                                              MinPoints,
                                               MaxEps,
                                               MinEps,
                                               Steps,

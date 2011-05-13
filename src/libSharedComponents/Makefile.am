@@ -70,8 +70,12 @@ libSharedComponents_la_SOURCES = \
 
 if HAVE_SEQAN
 libSharedComponents_la_SOURCES += \
-	ClusteringRefinement.hpp \
-	ClusteringRefinement.cpp \
+	ClusterInformation.hpp \
+	ClusterInformation.cpp \
+	ClusteringRefinementDivisive.hpp \
+	ClusteringRefinementDivisive.cpp \
+	ClusteringRefinementAggregative.hpp \
+	ClusteringRefinementAggregative.cpp \
 	SequenceScore.hpp \
 	SequenceScore.cpp
 endif

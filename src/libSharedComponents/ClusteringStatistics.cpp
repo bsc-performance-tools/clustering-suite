@@ -189,8 +189,6 @@ void StatisticsContainer::NewBurst(CPUBurst* Burst)
   size_t i;
   double x;
 
-  Individuals++;
-  
   /* Update Duration Sum/Mean/StdDeviation */
   x = Burst->GetDuration();
   

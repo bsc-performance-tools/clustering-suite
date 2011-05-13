@@ -32,8 +32,8 @@
   $Date:: 2011-02-04 12:39:47 +0100#$:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-#ifndef _CLUSTERINGREFINEMENT_HPP_
-#define _CLUSTERINGREFINEMENT_HPP_
+#ifndef _CLUSTERINGREFINEMENTDIVISIVE_HPP_
+#define _CLUSTERINGREFINEMENTDIVISIVE_HPP_
 
 #include <Error.hpp>
 using cepba_tools::Error;
@@ -42,6 +42,7 @@ using cepba_tools::Error;
 #include "TraceData.hpp"
 #include "Partition.hpp"
 #include "ClusteringStatistics.hpp"
+#include "ClusterInformation.hpp"
 
 #include <list>
 using std::list;
@@ -52,76 +53,7 @@ using std::set;
 #include <fstream>
 using std::ofstream;
 
-typedef UINT32 node_id_t;
-
-class ClusterInformation: public Error
-{
-  public:
-    static node_id_t NodeIDNumber;
-    
-  private:
-    UINT32                      NodeID;
-    
-    cluster_id_t                ID;
-
-    bool                        Discarded;
-
-    percentage_t                Score;
-    size_t                      Occurrences;
-    timestamp_t                 TotalDuration;
-    size_t                      Individuals;
-
-    vector<instance_t>          Instances;
-    
-    vector<ClusterInformation*> Children;
-
-  public:
-    ClusterInformation(cluster_id_t ID,
-                       percentage_t Score,
-                       size_t       Occurrences,
-                       timestamp_t  TotalDuration,
-                       size_t       Individuals);
-
-    node_id_t    GetNodeID(void)        { return this->NodeID; };
-    
-    void         SetID(cluster_id_t ID) { this->ID = ID; };
-    cluster_id_t GetID(void)            { return this->ID; };
-
-    percentage_t GetScore(void)       { return Score; };
-    size_t       GetOccurrences(void) { return Occurrences; };
-    
-    timestamp_t  GetTotalDuration(void) { return TotalDuration; };
-    size_t       GetIndividuals(void)   { return Individuals; };
-
-    bool IsCandidate(size_t      TotalOccurrences,
-                     timestamp_t ClustersTotalDuration);
-
-    void SetInstances(vector<instance_t>& Instances) { this->Instances = Instances; };
-    vector<instance_t>& GetInstances(void) { return this->Instances; };
-
-    bool AddChild(ClusterInformation*);
-
-    vector<ClusterInformation*>& GetChildren(void) { return Children; };
-
-    size_t TotalClusters(void);
-
-    void RenameChildren(cluster_id_t& RestOfChildrenID);
-
-    bool IsDiscarded(void) { return this->Discarded; };
-    
-    void Discard(void) {
-      /* DEBUG 
-      cout << "NODE = " << ID << " IS BEING DISCARDED" << endl; */
-      this->Discarded = true; };
-
-    string NodeName(void);
-
-    string NodeLabel(void);
-
-    string Color(void);
-};
-
-class ClusteringRefinement: public Error
+class ClusteringRefinementDivisive: public Error
 {
   private:
     INT32  MinPoints;
@@ -139,19 +71,19 @@ class ClusteringRefinement: public Error
 
     map<instance_t, size_t> Instance2Burst;
     
-    vector<Partition>                    PartitionsHistory;
     vector<ClusteringStatistics>         StatisticsHistory;
     vector<vector<ClusterInformation*> > NodesPerLevel;
 
   public:
     
-    ClusteringRefinement(INT32      MinPoints,
-                         double     MaxEpsilon,
-                         double     MinEpsilon,
-                         size_t     Steps);
+    ClusteringRefinementDivisive(INT32      MinPoints,
+                                 double     MaxEpsilon,
+                                 double     MinEpsilon,
+                                 size_t     Steps);
 
     bool Run(const vector<CPUBurst*>& Bursts,
-             vector<Partition>&       ResultingPartitions,
+             vector<Partition>&       IntermediatePartitions,
+             Partition&               LastPartition,
              string                   OutputFilePrefix = "");
 
   private:
@@ -179,9 +111,14 @@ class ClusteringRefinement: public Error
                        Partition&                   CurrentPartition,
                        vector<ClusterInformation*>& Nodes);
 
+    void GeneratePartition(Partition& NewPartition);
+
     vector<pair<instance_t, cluster_id_t> > GetAssignment(ClusterInformation* Node);
 
-    size_t ColapseNonDividedSubtrees(ClusterInformation* Node, size_t Level);
+    size_t ColapseNonDividedSubtrees(ClusterInformation* Node);
+    void   ReclassifyNoise(const vector<CPUBurst*>& Bursts, 
+                           ClusterInformation*      Node,
+                           size_t                   Level);
 
     bool IsIDInSet(cluster_id_t       ID,
                    set<cluster_id_t>& IDsSet);
@@ -190,11 +127,11 @@ class ClusteringRefinement: public Error
                     Partition&               CurrentPartition,
                     size_t                   Step);
 
-    bool PrintTrees(size_t Level);
+    bool PrintTrees(size_t Level, bool LastTree = false);
 
     bool PrintTreeNodes(ofstream& str, ClusterInformation* Node);
     bool PrintTreeLinks(ofstream& str, ClusterInformation* Node);
 
 };
 
-#endif // _CLUSTERINGREFINEMENT_HPP_
+#endif // _CLUSTERINGREFINEMENTDIVISIVE_HPP_

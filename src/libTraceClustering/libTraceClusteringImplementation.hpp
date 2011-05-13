@@ -77,9 +77,11 @@ class libTraceClusteringImplementation: public Error
     
     bool ClusterAnalysis(void);
 
-    bool ClusterRefinementAnalysis(string OutputFileNamePrefix);
+    bool ClusterRefinementAnalysis(bool   Divisve,
+                                   string OutputFileNamePrefix);
     
-    bool ClusterRefinementAnalysis(int    MinPoints,
+    bool ClusterRefinementAnalysis(bool   Divisive,
+                                   int    MinPoints,
                                    double MaxEps,
                                    double MinEps,
                                    int    Steps,

@@ -10,6 +10,24 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-05-13 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added two prunes in the last levels of the refinement tree: 
+	1) collapse nodes that only expand in themselves and noise, 2) re-classify
+	noise points on leaves.
+
+	* Refinement is divided in two classes 'ClusteringRefinementDivisive'
+	and 'ClusteringRefinementAggregative'. The first one correspond to
+	the implemented top-down approach. The second one is still to be
+	implemented and will correspond to a bottom-up approach, merging
+	clusters with bad score, to obtain new ones better alligned.
+
+	* ClusterInformation class, that correspond to the nodes in the
+	clustering refinement tree, has now its own source files. In the
+	previous version, it was part of 'ClusteringRefinement' source files
+
+	* Solved a bug when accounting the number of individuals in the
+	ClusteringStatistics class
+
 2011-05-12 Juan Gonzalez <juan.gonzalez@bsc.es>
 
 	* Revision of Clustering Refinement. Now each subclustering is executed

@@ -36,7 +36,7 @@
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 
-#include "ClusteringRefinement.hpp"
+#include "ClusteringRefinementAggregative.hpp"
 #include "SequenceScore.hpp"
 
 #include "PlottingManager.hpp"
@@ -51,197 +51,8 @@ using std::setfill;
 using std::setw;
 using std::setprecision;
 
-/* PARAMETERS TO TUNE CANDIDATE GENERATION */
-#define CANDIDATES_GENERAL_SCORE 0.9
-
-#define CANDIDATES_OCCURENCES_PERCENTAGE 0.25
-#define CANDIDATES_OCCURENCES_SCORE 0.6
-
-#define CANDIDATES_TIME_PERCENTAGE 0.25
-#define CANDIDATES_TIME_SCORE      0.6
-
-node_id_t ClusterInformation::NodeIDNumber = 0;
-
 /******************************************************************************
- * CLASS 'ClusterInformation'
- *****************************************************************************/
-
-ClusterInformation::ClusterInformation(cluster_id_t ID,
-                                       percentage_t Score,
-                                       size_t       Occurrences,
-                                       timestamp_t  TotalDuration,
-                                       size_t       Individuals)
-{
-  this->NodeID        = NodeIDNumber++;
-  this->ID            = ID;
-  this->Score         = Score;
-  this->Occurrences   = Occurrences;
-  this->TotalDuration = TotalDuration;
-  this->Individuals   = Individuals;
-  this->Discarded     = false;
-}
-
-bool ClusterInformation::IsCandidate(size_t      TotalOccurrences,
-                                     timestamp_t ClustersTotalDuration)
-{
-  if (Discarded)
-  {
-    return false;
-  }
-  
-  if (Occurrences > 1 && Score > CANDIDATES_GENERAL_SCORE)
-  {
-    return true;
-  }
-
-  if ( (TotalDuration/ClustersTotalDuration) > CANDIDATES_TIME_PERCENTAGE &&
-       Score > CANDIDATES_TIME_SCORE)
-  {
-    return true;
-  }
-  
-  if ( (Occurrences/TotalOccurrences) > CANDIDATES_OCCURENCES_PERCENTAGE &&
-        Score > CANDIDATES_OCCURENCES_SCORE)
-  {
-    return true;
-  }
-    
-  return false;
-}
-
-size_t ClusterInformation::TotalClusters(void)
-{
-  size_t Result = 0;
-
-  if (Discarded)
-  {
-    return Result;
-  }
-    
-  if (Children.size() == 0)
-  {
-    Result++;
-    return Result;
-  }
-
-  for (size_t i = 0; i < Children.size(); i++)
-  {
-    if (Children[i]->GetID() != NOISE_CLUSTERID &&
-        !Children[i]->IsDiscarded())
-    {
-      Result++;
-    }
-  }
-
-  return Result;
-}
-
-void ClusterInformation::RenameChildren(cluster_id_t& RestOfChildrenID)
-{
-  bool FirstChildVisited = false;
-  
-  for (size_t i = 0; i < Children.size(); i++)
-  {
-    if (Children[i]->GetID() != NOISE_CLUSTERID)
-    {
-      if (!FirstChildVisited)
-      {
-        Children[i]->SetID(ID);
-        FirstChildVisited = true;
-      }
-      else
-      {
-        Children[i]->SetID(RestOfChildrenID);
-        RestOfChildrenID++;
-      }
-    }
-  }
-  
-  return;
-}
-
-bool ClusterInformation::AddChild(ClusterInformation* NewChild)
-{
-  Children.push_back(NewChild);
-  
-  return true;
-}
-
-string ClusterInformation::NodeName(void)
-{
-  ostringstream NodeNameStr;
-  NodeNameStr << "node" << NodeID;
-  return NodeNameStr.str();
-}
-
-string ClusterInformation::NodeLabel(void)
-{
-  ostringstream NodeLabelStr;
-  
-  NodeLabelStr << " [label=\"";
-
-  if (ID == NOISE_CLUSTERID)
-  {
-    NodeLabelStr << "Noise";
-  }
-  else
-  {
-    NodeLabelStr << "Cl. " << ID;
-  }
-
-  NodeLabelStr << " \\n Score = " << setw(3) << Score*100 << "%\\n";
-  NodeLabelStr << " Indiv. = " << Individuals;
-  NodeLabelStr << " Occr. = " << Occurrences << "\\n";
-  NodeLabelStr << " Duration = " << TotalDuration;
-  
-  if (Discarded)
-  {
-    NodeLabelStr << "\" color=\"" << Color() << "\"]";
-  }
-  else
-  {
-    NodeLabelStr << "\" style=\"filled\" color=\"" << Color() << "\"]";
-  }
-
-  
-
-  return NodeLabelStr.str();
-}
-
-string ClusterInformation::Color(void)
-{
-  char RGBColor[8];
-
-  if (ID+PARAVER_OFFSET < DEF_NB_COLOR_STATE)
-  {
-
-    if ((ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[0] == 0xFF) &&
-        (ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[1] == 0xFF) &&
-        (ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[2] == 0xFF))
-    {
-      sprintf(RGBColor, "#000000");
-    }
-    else
-    {
-      sprintf(RGBColor, "#%02x%02x%02x",
-        ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[0],
-        ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[1],
-        ParaverDefaultPalette[ID+PARAVER_OFFSET].RGB[2]);
-    }
-  }
-  else
-  {
-    sprintf(RGBColor, "#%02x%02x%02x",
-      ParaverDefaultPalette[DEF_NB_COLOR_STATE-1].RGB[0],
-      ParaverDefaultPalette[DEF_NB_COLOR_STATE-1].RGB[1],
-      ParaverDefaultPalette[DEF_NB_COLOR_STATE-1].RGB[2]);
-  }
-
-  return RGBColor;
-}
-
-/******************************************************************************
- * CLASS 'ClusteringRefinement'
+ * CLASS 'ClusteringRefinementAggregative'
  *****************************************************************************/
 
 /**
@@ -253,10 +64,10 @@ string ClusterInformation::Color(void)
  * \param Steps Number of refinement steps
  *
  */ 
-ClusteringRefinement::ClusteringRefinement(INT32      MinPoints,
-                                           double     MaxEpsilon,
-                                           double     MinEpsilon,
-                                           size_t     Steps)
+ClusteringRefinementAggregative::ClusteringRefinementAggregative(INT32      MinPoints,
+                                                                 double     MaxEpsilon,
+                                                                 double     MinEpsilon,
+                                                                 size_t     Steps)
 {
   this->MinPoints  = MinPoints;
   this->MinEpsilon = MinEpsilon;
@@ -274,9 +85,10 @@ ClusteringRefinement::ClusteringRefinement(INT32      MinPoints,
  * \return True if the refinement worked properly, false otherwise
  *
  */ 
-bool ClusteringRefinement::Run(const vector<CPUBurst*>& Bursts,
-                               vector<Partition>&       ResultingPartitions,
-                               string                   OutputFilePrefix)
+bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
+                                          vector<Partition>&       ResultingPartitions,
+                                          Partition&               LastPartition,
+                                          string                   OutputFilePrefix)
 {
   bool           Stop = false;
   double         StepSize    = (MaxEpsilon - MinEpsilon)/(Steps-1);
@@ -397,7 +209,7 @@ bool ClusteringRefinement::Run(const vector<CPUBurst*>& Bursts,
  * \return True if the analysis was executed correctly, false otherwise
  *
  */
-bool ClusteringRefinement::RunFirstStep(const vector<CPUBurst*>& Bursts,
+bool ClusteringRefinementAggregative::RunFirstStep(const vector<CPUBurst*>& Bursts,
                                         double                   Epsilon,
                                         Partition&               FirstPartition)
 {
@@ -460,7 +272,7 @@ bool ClusteringRefinement::RunFirstStep(const vector<CPUBurst*>& Bursts,
  * \return True if the step was executed correctly, false otherwise
  *
  */
-bool ClusteringRefinement::RunStep(size_t                   Step,
+bool ClusteringRefinementAggregative::RunStep(size_t        Step,
                                    const vector<CPUBurst*>& Bursts,
                                    double                   Epsilon,
                                    Partition&               PreviousPartition,
@@ -663,8 +475,8 @@ bool ClusteringRefinement::RunStep(size_t                   Step,
  * \return A vector of bursts that have the selected ID in the partition
  *
  */
-vector<CPUBurst*> ClusteringRefinement::GenerateBurstsSubset(const vector<CPUBurst*>& Bursts,
-                                                             ClusterInformation*       Node)
+vector<CPUBurst*> ClusteringRefinementAggregative::GenerateBurstsSubset(const vector<CPUBurst*>& Bursts,
+                                                                        ClusterInformation*      Node)
 {
   vector<CPUBurst*>   Result;
   vector<instance_t>& Instances = Node->GetInstances();
@@ -687,7 +499,7 @@ vector<CPUBurst*> ClusteringRefinement::GenerateBurstsSubset(const vector<CPUBur
  * \return True if the step was executed correctly, false otherwise
  *
  */ 
-bool ClusteringRefinement::RunDBSCAN(const vector<const Point*>& CurrentData,
+bool ClusteringRefinementAggregative::RunDBSCAN(const vector<const Point*>& CurrentData,
                                      double                      Epsilon,
                                      Partition&                  CurrentPartition)
 {
@@ -740,7 +552,7 @@ bool ClusteringRefinement::RunDBSCAN(const vector<const Point*>& CurrentData,
  * \return True if the the node were generated correctly, false otherwise
  *
  */ 
-bool ClusteringRefinement::GenerateNodes(const vector<CPUBurst*>&     Bursts,
+bool ClusteringRefinementAggregative::GenerateNodes(const vector<CPUBurst*>&     Bursts,
                                          Partition&                   CurrentPartition,
                                          vector<ClusterInformation*>& Nodes)
 {
@@ -854,7 +666,7 @@ bool ClusteringRefinement::GenerateNodes(const vector<CPUBurst*>&     Bursts,
  * \return A vector of pairs burst instance/ID correspondig to the refinement
  *         happened in the current tree
  */
-vector<pair<instance_t, cluster_id_t> > ClusteringRefinement::GetAssignment(ClusterInformation* Node)
+vector<pair<instance_t, cluster_id_t> > ClusteringRefinementAggregative::GetAssignment(ClusterInformation* Node)
 {
   vector<pair<instance_t, cluster_id_t> > Result =
     vector<pair<instance_t, cluster_id_t> > (0);
@@ -924,7 +736,7 @@ vector<pair<instance_t, cluster_id_t> > ClusteringRefinement::GetAssignment(Clus
  * \return True if the split is OK, false otherwise
  *
  */ 
-bool ClusteringRefinement::IsSplitOK(ClusterInformation* Parent)
+bool ClusteringRefinementAggregative::IsSplitOK(ClusterInformation* Parent)
 {
   timestamp_t          ParentDuration = 0, NoiseDuration = 0;
   timestamp_t          TotalChildrenDuration = 0;
@@ -1014,7 +826,7 @@ bool ClusteringRefinement::IsSplitOK(ClusterInformation* Parent)
  * \return The total number of divisions in the subtree
  *
  */  
-size_t ClusteringRefinement::ColapseNonDividedSubtrees(ClusterInformation* Node,
+size_t ClusteringRefinementAggregative::ColapseNonDividedSubtrees(ClusterInformation* Node,
                                                        size_t              Level)
 {
   size_t NumberOfDivisions = 0;
@@ -1077,7 +889,7 @@ size_t ClusteringRefinement::ColapseNonDividedSubtrees(ClusterInformation* Node,
  * \return True ID is inside IDsSet, false otherwise
  *
  */ 
-bool ClusteringRefinement::IsIDInSet(cluster_id_t       ID,
+bool ClusteringRefinementAggregative::IsIDInSet(cluster_id_t       ID,
                                      set<cluster_id_t>& IDsSet)
 {
   set<cluster_id_t>::iterator SetIterator;
@@ -1098,7 +910,7 @@ bool ClusteringRefinement::IsIDInSet(cluster_id_t       ID,
  * \return True ID is inside IDsSet, false otherwise
  *
  */ 
-bool ClusteringRefinement::PrintPlots(const vector<CPUBurst*>& Bursts,
+bool ClusteringRefinementAggregative::PrintPlots(const vector<CPUBurst*>& Bursts,
                                       Partition&               CurrentPartition,
                                       size_t                   Step)
 {
@@ -1219,7 +1031,7 @@ bool ClusteringRefinement::PrintPlots(const vector<CPUBurst*>& Bursts,
  * \return True if the tree was written correctly, false otherwise
  *
  */  
-bool ClusteringRefinement::PrintTrees(size_t Step)
+bool ClusteringRefinementAggregative::PrintTrees(size_t Step)
 {
   ofstream* Output;
 
@@ -1270,7 +1082,7 @@ bool ClusteringRefinement::PrintTrees(size_t Step)
   return true;
 }
 
-bool ClusteringRefinement::PrintTreeNodes(ofstream&           str,
+bool ClusteringRefinementAggregative::PrintTreeNodes(ofstream&           str,
                                           ClusterInformation* Node)
 {
   vector<ClusterInformation*>& Children = Node->GetChildren();
@@ -1288,7 +1100,7 @@ bool ClusteringRefinement::PrintTreeNodes(ofstream&           str,
   return true;
 }
 
-bool ClusteringRefinement::PrintTreeLinks(ofstream&           str,
+bool ClusteringRefinementAggregative::PrintTreeLinks(ofstream&           str,
                                           ClusterInformation* Node)
 {
   vector<ClusterInformation*>& Children = Node->GetChildren();
