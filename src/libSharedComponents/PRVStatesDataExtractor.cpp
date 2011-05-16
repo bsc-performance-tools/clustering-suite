@@ -50,7 +50,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-// #define DEBUG_PARAVER_INPUT 0
+// #define DEBUG_PARAVER_INPUT 1
 
 PRVStatesDataExtractor::PRVStatesDataExtractor(string InputTraceName)
 :DataExtractor(InputTraceName)
@@ -74,8 +74,6 @@ PRVStatesDataExtractor::PRVStatesDataExtractor(string InputTraceName)
   
   return;
 }
-
-
 
 PRVStatesDataExtractor::~PRVStatesDataExtractor()
 {

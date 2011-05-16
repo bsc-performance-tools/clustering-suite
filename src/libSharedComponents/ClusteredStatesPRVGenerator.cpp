@@ -201,7 +201,8 @@ bool ClusteredStatesPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
     cout << "BeginTime = " << Bursts[i]->GetBeginTime() << " ";
     cout << "EndTime = " << Bursts[i]->GetEndTime() << " ";
     cout << "ID = " << CompleteIDs[Bursts[i]->GetInstance()] << endl;
-  } */
+  }
+  */
   
   if (!TraceParser->InitTraceParsing())
   {
@@ -273,28 +274,15 @@ bool ClusteredStatesPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
 
   while (CurrentRecord != NULL)
   {
-    INT32 PercentageRead;
-    bool  CurrentRecordFlushed = false;
+    percentage_t PercentageRead;
+    bool         CurrentRecordFlushed = false;
     
     /* We are only interested on event and state records */
+
     if (CurrentRecord->GetRecordType() == PARAVER_STATE)
     {
       CurrentState = (State*) CurrentRecord;
-      CurrentEvent = NULL;
-    }
-    else if (CurrentRecord->GetRecordType() == PARAVER_EVENT)
-    {
-      CurrentState = NULL;
-      CurrentEvent = (Event*) CurrentRecord;
-    }
-    else
-    {
-      CurrentState = NULL;
-      CurrentEvent = NULL;
-    }
-    
-    if (CurrentState != NULL)
-    {
+      
       if (CurrentState->GetStateValue() == RUNNING_STATE)
       {
         /* Check if there is a pending cluster region to close */
@@ -377,8 +365,10 @@ bool ClusteredStatesPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
         }
       }
     }
-    else if (CurrentEvent != NULL)
+    else if (CurrentRecord->GetRecordType() == PARAVER_EVENT)
     {
+      CurrentEvent = (Event*) CurrentRecord;
+      
       if (BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] == CurrentEvent->GetTimestamp()
       &&  BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] != 0) // In timestamp 0 it is impossible to close a burst
       {
@@ -436,8 +426,7 @@ bool ClusteredStatesPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   }
   
   /* DEBUG 
-  cout << "Points used = " << BeginTimeIndex << endl;
-  */
+  cout << "Points used = " << BeginTimeIndex << endl; */
   
   if (TraceParser->GetError())
   {
@@ -455,7 +444,7 @@ bool ClusteredStatesPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   
   system_messages::show_percentage_end("Generating Paraver Output Trace");
 
-  /* DEBUG
+  /* DEBUG 
   printf("BeginTimeIndex = %d, EndTimeIndex = %d FilterBurstsEndIndex = %d\n",
          BeginTimeIndex,
          EndTimeIndex,

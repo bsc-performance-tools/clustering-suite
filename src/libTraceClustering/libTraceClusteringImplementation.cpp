@@ -548,9 +548,17 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   
   // Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
 
-  /* Generate all intermediate (event) traces */
+  
+
+  /* Generate score and all intermediate (event) traces */
   if (OutputFileNamePrefix.compare("") != 0)
   {
+    /* Compute resulting score */
+    if (!ComputeSequenceScore (OutputFileNamePrefix, true))
+    {
+      return false;
+    }
+    
     for (size_t i = 0; i < PartitionsHierarchy.size(); i++)
     {
       ClusteredTraceGenerator* TraceGenerator;

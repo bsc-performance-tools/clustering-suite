@@ -11,6 +11,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 2011-05-16 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Workaround to avoid problematic Bursts when changing HWC groups
+
+	* Generation sequences of the last partition when applying refinement
+
 	* Added better support to control the SVN revision
 
 	* Cleaned headers and SVN keywords for all files

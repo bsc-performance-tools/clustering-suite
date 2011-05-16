@@ -183,7 +183,7 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
   system_messages::show_progress_end("Clustering points", (int) Data.size());
 
   /* NOISE cluster is not accounted as a cluster */
-  DataPartition.NumberOfClusters (DifferentIDs.size()-1);
+  DataPartition.NumberOfClusters (DifferentIDs.size());
   DataPartition.HasNoise(true);
 
   return true;

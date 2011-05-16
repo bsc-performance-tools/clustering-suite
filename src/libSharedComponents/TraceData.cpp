@@ -294,6 +294,11 @@ TraceData::NewBurst(task_id_t                         TaskId,
     BurstType = DurationFilteredBurst;
   }
 
+  if (Line == 0 && BurstDuration == 0)
+  { /* Burst not valid */
+    return true;
+  }
+
   Burst = new CPUBurst (TaskId,
                         ThreadId,
                         Line,
