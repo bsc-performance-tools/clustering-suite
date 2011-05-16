@@ -1,7 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl Created by Anjuta application wizard.
 
-AC_INIT(ClusteringSuite, 2.00, tools@bsc.es)
+define([svnversion], esyscmd([sh -c "svnversion | tr -d '\n'"]))dnl
+AC_INIT(ClusteringSuite, [2.00.svnversion], tools@bsc.es)
 
 AC_CONFIG_AUX_DIR(config)
 AC_CANONICAL_SYSTEM
@@ -14,16 +15,6 @@ AC_ISC_POSIX
 AC_PROG_CXX
 AM_PROG_CC_STDC
 AC_HEADER_STDC
-
-dnl =========================================================================
-dnl Revision numbering
-dnl =========================================================================
-SVN_REVISION="$Rev$"
-REVISION_LENGTH=${#SVN_REVISION}
-REVISION_LENGTH=`expr ${REVISION_LENGTH} - 4`
-REVISION_NUMBER=${SVN_REVISION:2:$REVISION_LENGTH}
-
-VERSION="$VERSION.$REVISION_NUMBER"
 
 echo -n $VERSION>$srcdir/VERSION
 

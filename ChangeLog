@@ -11,6 +11,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 2011-05-16 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added better support to control the SVN revision
+
+	* Cleaned headers and SVN keywords for all files
+
 	* Solved a bug in the generation of step traces when applying the
 	clustering refinement. It caused that the intermediate trace had a 
 	different naming of the clusters

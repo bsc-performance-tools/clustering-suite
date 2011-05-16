@@ -25,10 +25,10 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $URL:: https://svn.bsc.#$:  File
-  $Rev:: 20               $:  Revision of last commit
-  $Author:: jgonzale      $:  Author of last commit
-  $Date:: 2010-03-09 17:1#$:  Date of last commit
+  $URL::                                          $:  File
+  $Rev::                                          $:  Revision of last commit
+  $Author::                                       $:  Author of last commit
+  $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
