@@ -121,9 +121,14 @@ bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
     Instance2Burst[Bursts[i]->GetInstance()] = i;
   }
 
-  IntermediatePartitions = vector<Partition> (Steps);
-  StatisticsHistory      = vector<ClusteringStatistics> (Steps);
-  NodesPerLevel          = vector<vector<ClusterInformation*> > (Steps);
+  IntermediatePartitions.clear();
+  IntermediatePartitions.push_back(Partition());
+
+  StatisticsHistory.clear();
+  StatisticsHistory.push_back(ClusteringStatistics());
+  
+  NodesPerLevel.clear();
+  NodesPerLevel.push_back(vector<ClusterInformation*>(0));
   
   Epsilons.push_back(MaxEpsilon);
   for (size_t i = 1; i < Steps; i++)
@@ -159,6 +164,10 @@ bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
     Messages << ") ******" << endl;
     system_messages::information(Messages.str());
 
+    IntermediatePartitions.push_back(Partition());
+    StatisticsHistory.push_back(ClusteringStatistics());
+    NodesPerLevel.push_back(vector<ClusterInformation*>(0));
+    
     Stop = true;
     if (!RunStep(CurrentStep,
                  Bursts,
@@ -291,11 +300,11 @@ bool ClusteringRefinementDivisive::RunFirstStep(const vector<CPUBurst*>& Bursts,
  *
  */
 bool ClusteringRefinementDivisive::RunStep(size_t                   Step,
-                                   const vector<CPUBurst*>& Bursts,
-                                   double                   Epsilon,
-                                   Partition&               PreviousPartition,
-                                   Partition&               NewPartition,
-                                   bool&                    Stop)
+                                           const vector<CPUBurst*>& Bursts,
+                                           double                   Epsilon,
+                                           Partition&               PreviousPartition,
+                                           Partition&               NewPartition,
+                                           bool&                    Stop)
 {
   ostringstream  Messages;
   size_t         TotalParentOccurrences;
@@ -393,11 +402,24 @@ bool ClusteringRefinementDivisive::RunStep(size_t                   Step,
   }
   
   /* Rename the children */
+  /* THAT'S BUGGY! TAKE INTO ACCOUNT ALL LEVEL NODES */
   Messages.str("");
   Messages << "|-> Renaming nodes" << endl;
   system_messages::information(Messages.str());
   
   cluster_id_t MaxIDAssigned = NOISE_CLUSTERID;
+  for (size_t i = 0; i < Step; i++)
+  {
+    for (size_t j = 0; j < NodesPerLevel[i].size(); j++)
+    {
+      if (!NodesPerLevel[i][j]->IsDiscarded() &&
+          NodesPerLevel[i][j]->GetID() > MaxIDAssigned)
+      {
+        MaxIDAssigned = NodesPerLevel[i][j]->GetID();
+      }
+    }
+  }
+  /*
   for (size_t i = 0; i < ParentNodes.size(); i++)
   {
     if (ParentNodes[i]->GetID() > MaxIDAssigned)
@@ -405,6 +427,7 @@ bool ClusteringRefinementDivisive::RunStep(size_t                   Step,
       MaxIDAssigned = ParentNodes[i]->GetID();
     }
   }
+  */
   MaxIDAssigned++;
 
   for (size_t i = 0; i < ParentNodes.size(); i++)
@@ -720,6 +743,8 @@ vector<pair<instance_t, cluster_id_t> > ClusteringRefinementDivisive::GetAssignm
   }
   else
   {
+    LeafNode = true;
+    
     for (size_t i = 0; i < Children.size(); i++)
     {
       if (!Children[i]->IsDiscarded())
@@ -764,6 +789,7 @@ vector<pair<instance_t, cluster_id_t> > ClusteringRefinementDivisive::GetAssignm
     return Result;
   }
 }
+
 
 /**
  * Heuristic to Decide if it is better to split the current cluster (represented 

@@ -552,7 +552,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   /* Generate all intermediate (event) traces */
   if (OutputFileNamePrefix.compare("") != 0)
   {
-    for (size_t i = 0; i < PartitionsHierarchy.size()-1; i++)
+    for (size_t i = 0; i < PartitionsHierarchy.size(); i++)
     {
       ClusteredTraceGenerator* TraceGenerator;
       ostringstream OutputTraceName;
@@ -576,7 +576,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
         return false;
       }
       
-      Stats.TranslatedIDs(PartitionsHierarchy[i].GetAssignmentVector());
+      // Stats.TranslatedIDs(PartitionsHierarchy[i].GetAssignmentVector());
 
 
       if (PRVEventsParsing)

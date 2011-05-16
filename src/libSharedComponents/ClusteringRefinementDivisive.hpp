@@ -87,6 +87,7 @@ class ClusteringRefinementDivisive: public Error
              string                   OutputFilePrefix = "");
 
   private:
+    
     bool IsSplitOK(ClusterInformation* Parent);
     
     vector<CPUBurst*> GenerateBurstsSubset(const vector<CPUBurst*>& Bursts,

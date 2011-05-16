@@ -10,6 +10,26 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-05-16 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a bug in the generation of step traces when applying the
+	clustering refinement. It caused that the intermediate trace had a 
+	different naming of the clusters
+
+	* Solved a bug when seting the actual number of clusters different to
+	noise in a partition. It caused the plotting manager to generate a
+	plot with one more cluster that the actual number
+
+2011-05-15 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a bug in the merge step that forced to capture discarded
+	leaves
+
+	* Solved a bug when renaming new nodes, that doesn't take in
+	consideration those nodes in previous levels that didn't expand
+
+	* Solved a bug when the refinement didn't expand all possible steps
+	due to 'convergence', that cause a fault when reconstructing all
+	partial traces
+
 2011-05-13 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Added two prunes in the last levels of the refinement tree: 
 	1) collapse nodes that only expand in themselves and noise, 2) re-classify

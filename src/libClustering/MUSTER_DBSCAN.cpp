@@ -162,8 +162,7 @@ bool MUSTER_DBSCAN::Run(const vector<const Point*>& Data,
     DifferentIDs.insert(muster_algorithm.cluster_ids[i]);
   }
 
-  /* NOISE cluster has to be considered as a cluster, to mantain coherence across the namings */
-  DataPartition.NumberOfClusters(DifferentIDs.size());
+  DataPartition.NumberOfClusters(DifferentIDs.size()-1);
   DataPartition.HasNoise(true);
 
   return true;
