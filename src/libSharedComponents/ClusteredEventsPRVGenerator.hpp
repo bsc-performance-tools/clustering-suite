@@ -25,7 +25,7 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $URL::                                          $:  File
+  $Id::                                           $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
@@ -54,7 +54,11 @@ class ClusteredEventsPRVGenerator: public ClusteredTraceGenerator
     FILE  *InputPCFFile;
     string OutputPCFName;
     FILE  *OutputPCFFile;
-  
+
+    bool   ROWPresent;
+    string InputROWName;
+    string OutputROWName;
+    
     vector<CPUBurst*> BurstsBeginTime;
 
     set<event_type_t> EventsToDealWith;
@@ -79,6 +83,8 @@ class ClusteredEventsPRVGenerator: public ClusteredTraceGenerator
     bool BurstOpeningEvent(Event* CurrentEvent);
 
     bool BurstClosingEvent(Event* CurrentEvent);
+
+    bool CopyROWFile();
 };
 
 #endif

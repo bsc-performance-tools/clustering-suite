@@ -25,7 +25,7 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $URL::                                          $:  File
+  $Id::                                           $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
@@ -54,6 +54,10 @@ class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
     FILE  *InputPCFFile;
     string OutputPCFName;
     FILE  *OutputPCFFile;
+
+    bool   ROWPresent;
+    string InputROWName;
+    string OutputROWName;
   
     vector<CPUBurst*> BurstsBeginTime;
   
@@ -69,8 +73,10 @@ class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
              vector<cluster_id_t>& IDs,
              size_t                NumberOfClusters,
              bool                  MinimizeInformation = false);
-  
+
     bool GenerateOutputPCF(size_t NumberOfClusters);
+
+    bool CopyROWFile(void);
   
   private:
     

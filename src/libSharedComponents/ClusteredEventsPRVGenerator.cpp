@@ -25,7 +25,7 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $URL::                                          $:  File
+  $Id::                                           $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
@@ -45,6 +45,13 @@ using cepba_tools::system_messages;
 #include <algorithm>
 using std::sort;
 using std::merge;
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+using std::ifstream;
+using std::ofstream;
+using std::ostringstream;
 
 // #define DEBUG_PRV_OUTPUT 0
 
@@ -72,22 +79,25 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
 
   TraceParser = new ParaverTraceParser(InputTraceName, InputTraceFile);
   
-  /* Search for a possible PCF file */
+  /* Search for a possible PCF and ROW files */
   PCFPresent = false;
+  ROWPresent = false;
   
-  /* Check the PCF file name */
+  /* Check the PCF/ROW file name */
   SubstrPos = InputTraceName.rfind(".prv");
   
   if (SubstrPos == string::npos)
   {
     InputPCFName = InputTraceName+".pcf";
+    InputROWName = InputTraceName+".row";
   }
   else
   {
-    string InputPCFBaseName;
+    string InputBaseName;
     
-    InputPCFBaseName = InputTraceName.substr(0, SubstrPos);
-    InputPCFName     = InputPCFBaseName+".pcf";
+    InputBaseName = InputTraceName.substr(0, SubstrPos);
+    InputPCFName  = InputBaseName+".pcf";
+    InputROWName  = InputBaseName+".row";
   }
   
   if ((InputPCFFile = fopen(InputPCFName.c_str(), "r" )) != NULL)
@@ -103,10 +113,10 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
     }
     else
     {
-      string OutputPCFBaseName;
+      string OutputBaseName;
       
-      OutputPCFBaseName = OutputTraceName.substr(0, SubstrPos);
-      OutputPCFName     = OutputPCFBaseName+".pcf";
+      OutputBaseName = OutputTraceName.substr(0, SubstrPos);
+      OutputPCFName  = OutputBaseName+".pcf";
     }
     
     if ((OutputPCFFile = fopen(OutputPCFName.c_str(), "w")) == NULL)
@@ -117,17 +127,52 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
       PCFPresent = false;
     }
   }
+
+  FILE* InputROWFile, *OutputROWFile;
+  if ((InputROWFile = fopen(InputROWName.c_str(), "r" )) != NULL)
+  {
+    ROWPresent = true;
+
+    SubstrPos = OutputTraceName.rfind(".prv");
   
-  /* DEBUG 
+    if (SubstrPos == string::npos)
+    {
+      OutputROWName = InputTraceName+".row";
+    }
+    else
+    {
+      string OutputBaseName;
+      
+      OutputBaseName = OutputTraceName.substr(0, SubstrPos);
+      OutputROWName  = OutputBaseName+".row";
+    }
+    
+    if ((OutputROWFile = fopen(OutputROWName.c_str(), "w")) == NULL)
+    {
+      /* We are unable to open the output PCF file. The PCF managment is
+         disabled */
+      ROWPresent = false;
+    }
+  }
+  
+  /* DEBUG */
   if (PCFPresent)
   {
     printf("PCF FOUND!!!!\n");
   }
-  
+
+  if (ROWPresent)
+  {
+    printf("ROW FOUND!!!!\n");
+  }
+
   printf("Input PCF = %s\nOutput PCF = %s\n",
            InputPCFName.c_str(),
            OutputPCFName.c_str());
-  */
+
+  printf("Input ROW = %s\nOutput ROW = %s\n",
+           InputROWName.c_str(),
+           OutputROWName.c_str());
   
   return;
 }
@@ -451,6 +496,11 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   {
     GenerateOutputPCF(NumberOfClusters);
   }
+
+  if (ROWPresent)
+  {
+    CopyROWFile();
+  }
   
   return true;
 }
@@ -627,6 +677,34 @@ bool ClusteredEventsPRVGenerator::BurstClosingEvent(Event* CurrentEvent)
       return true;
     }
   }
+  
+  return true;
+}
+
+bool ClusteredEventsPRVGenerator::CopyROWFile(void)
+{
+  ifstream InputROW(InputROWName.c_str(), std::ios::binary);
+  if (!InputROW)
+  {
+    ostringstream WarningMessage;
+
+    WarningMessage << "unable to open input .row file '" << InputROWName << "'";
+    SetWarning(true);
+    SetWarningMessage(WarningMessage.str());
+    return false;
+  }
+  
+  ofstream OutputROW(OutputROWName.c_str(), std::ios::binary);
+  if (!OutputROW)
+  {
+    ostringstream WarningMessage;
+
+    WarningMessage << "unable to open output .row file '" << OutputROWName << "'";
+    SetWarningMessage(WarningMessage.str());
+    return false;
+  }
+  
+  OutputROW << InputROW.rdbuf();
   
   return true;
 }
