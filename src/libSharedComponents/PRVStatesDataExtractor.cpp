@@ -111,10 +111,21 @@ bool PRVStatesDataExtractor::ExtractData(TraceData* TraceDataSet)
   /* Create the structure to manage the different bursts foreach task/thread */
   AppsDescription = TraceParser->GetApplicationsDescription();
   
-  if (AppsDescription.size() != 1)
+  if (TraceParser->GetError())
   {
     SetError(true);
-    SetErrorMessage("unable to clusterize a trace with more than one application");
+    SetErrorMessage("unable to start data extraction",
+                    TraceParser->GetLastError());
+    return false;
+  }
+  
+  if (AppsDescription.size() != 1)
+  {
+    /* DEBUG */
+    cout << "Application description size is " << AppsDescription.size() << endl;
+    
+    SetError(true);
+    SetErrorMessage("unable to apply cluster analysis on a trace with more than one application");
     return false;
   }
   

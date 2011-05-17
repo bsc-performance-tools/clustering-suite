@@ -120,6 +120,14 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
   /* Create the structure to manage the different bursts foreach task/thread */
   AppsDescription = TraceParser->GetApplicationsDescription();
   
+  if (TraceParser->GetError())
+  {
+    SetError(true);
+    SetErrorMessage("unable to start data extraction",
+                    TraceParser->GetLastError());
+    return false;
+  }
+  
   if (AppsDescription.size() != 1)
   {
     SetError(true);

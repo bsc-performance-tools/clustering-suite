@@ -630,9 +630,9 @@ bool ClusteringRefinementDivisive::GenerateNodes(const vector<CPUBurst*>&     Bu
   
   for (size_t i = 0; i < CurrentPartition.NumberOfClusters(); i++)
   {
-    /* DEBUG */
+    /* DEBUG
     cout << "Subcluster ID = " << i << " Score = " << CurrentClustersScores[i].GetClusterScore();
-    cout << " Individuals = " << CurrentClustersIndividuals[i] << endl;
+    cout << " Individuals = " << CurrentClustersIndividuals[i] << endl; */
 
     ClusterInformation* NewNode = 
       new ClusterInformation((cluster_id_t) i,

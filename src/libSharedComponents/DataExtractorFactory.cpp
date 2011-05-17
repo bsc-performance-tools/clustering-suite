@@ -104,6 +104,13 @@ bool DataExtractorFactory::GetExtractor(string          InputFileName,
       return false;
   }
 
+  if (DataExtractorObject->GetError())
+  {
+    SetError(true);
+    SetErrorMessage(DataExtractorObject->GetLastError());
+    return false;
+  }
+
   return true;
 }
 

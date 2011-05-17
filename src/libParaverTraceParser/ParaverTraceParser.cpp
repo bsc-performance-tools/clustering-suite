@@ -170,7 +170,6 @@ ParaverTraceParser::GetHeader(void)
   return Header;
 }
 
-
 INT32
 ParaverTraceParser::GetTimeUnits(void)
 {

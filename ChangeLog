@@ -15,6 +15,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* Changed SVN keywords. Added 'Id'
 
+	* Workaround to parse traces with incoherent number of communicators
+
+	* Build SVN numbering changed again :D
+
 2011-05-16 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Workaround to avoid problematic Bursts when changing HWC groups
 

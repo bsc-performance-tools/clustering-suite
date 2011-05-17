@@ -115,7 +115,7 @@ ParaverHeader::ParaverHeader(char* ASCIIHeader, INT32 HeaderLength)
     return;
   }
   
-  /*
+  /* DEBUG
   cout << "Number of applications: " << AppNumber;
   cout << " (" << AppsDescription.size() << ")" << endl;
   for (int i = 0; i < AppNumber; i++)
@@ -236,7 +236,7 @@ ParaverHeader::ProcessApplicationList (char* ASCIIAppList)
                                               CurrentAppInfo);
       if (CurrentApp->GetError())
       {
-        SetErrorMessage("Error parsing aaplication "+AppCount,
+        SetErrorMessage("Error parsing aplication "+AppCount,
                         CurrentApp->GetLastError().c_str());
         return false;
       }
@@ -254,7 +254,7 @@ ParaverHeader::ProcessApplicationList (char* ASCIIAppList)
                                               CurrentAppInfo);
       if (CurrentApp->GetError())
       {
-        SetErrorMessage("Error parsing aaplication "+AppCount,
+        SetErrorMessage("Error parsing aplication "+AppCount,
                         CurrentApp->GetLastError().c_str());
         return false;
       }
@@ -272,7 +272,7 @@ ParaverHeader::ProcessApplicationList (char* ASCIIAppList)
                                               CurrentAppInfo);
       if (CurrentApp->GetError())
       {
-        SetErrorMessage("Error parsing aaplication "+AppCount,
+        SetErrorMessage("Error parsing aplication "+AppCount,
                         CurrentApp->GetLastError().c_str());
         return false;
       }
@@ -283,7 +283,7 @@ ParaverHeader::ProcessApplicationList (char* ASCIIAppList)
     {
       char ErrorMessage[128];
       
-      sprintf(ErrorMessage, "Error parsing application %d", AppCount);
+      sprintf(ErrorMessage, "Error parsing pplication %d", AppCount);
       SetErrorMessage(ErrorMessage);
       return false;
     }
