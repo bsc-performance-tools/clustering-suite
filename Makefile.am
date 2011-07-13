@@ -6,6 +6,9 @@ INCLUDES = \
     -I@common_filesdir@
 
 SUBDIRS = include src 
+if GENERATE_DOCUMENTATION
+SUBDIRS += doc
+endif
 
 instdir = $(includedir)
 

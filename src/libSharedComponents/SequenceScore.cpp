@@ -84,7 +84,7 @@ double SequenceScoreValue::GetWeightedScore(void)
  * CLASS 'SequenceScore'
  *****************************************************************************/
 bool                    SequenceScore::TablesLoaded = false;
-int                     SequenceScore::LastAminoacidValue = 23;
+int                     SequenceScore::LastAminoacidValue = 22;
 map<cluster_id_t, char> SequenceScore::Clusters2Aminoacids;
 map<char, cluster_id_t> SequenceScore::Aminoacids2Clusters;
 
@@ -113,8 +113,7 @@ void SequenceScore::LoadTranslationTables(void)
     Clusters2Aminoacids.insert(make_pair(18, 'T'));
     Clusters2Aminoacids.insert(make_pair(19, 'V'));
     Clusters2Aminoacids.insert(make_pair(20, 'W'));
-    Clusters2Aminoacids.insert(make_pair(21, 'X'));
-    Clusters2Aminoacids.insert(make_pair(22, 'Y'));
+    Clusters2Aminoacids.insert(make_pair(21, 'Y'));
 
     Aminoacids2Clusters.insert(make_pair('Z', NOISE_CLUSTERID));
     Aminoacids2Clusters.insert(make_pair('A', 1));
@@ -137,8 +136,7 @@ void SequenceScore::LoadTranslationTables(void)
     Aminoacids2Clusters.insert(make_pair('T', 18));
     Aminoacids2Clusters.insert(make_pair('V', 19));
     Aminoacids2Clusters.insert(make_pair('W', 20));
-    Aminoacids2Clusters.insert(make_pair('X', 21));
-    Aminoacids2Clusters.insert(make_pair('Y', 22));
+    Aminoacids2Clusters.insert(make_pair('Y', 21));
   }
 
   SequenceScore::TablesLoaded = true;
@@ -173,14 +171,13 @@ struct TraceObjectsCompare
   }
 };
 
-bool SequenceScore::ComputeScore(const vector<CPUBurst*>&    DataBursts,
-                                 vector<cluster_id_t>&       ClusterIDs,
-                                 vector<percentage_t>&       PercentageDurations,
-                                 bool                        HasNoise,
-                                 vector<SequenceScoreValue>& ClusterScores,
-                                 double&                     GlobalScore,
-                                 string                      FileNamePrefix,
-                                 bool                        FASTA)
+bool SequenceScore::ComputeScore(const vector<CPUBurst*>&         DataBursts,
+                                 vector<cluster_id_t>&            AssignmentVector,
+                                 map<cluster_id_t, percentage_t>& PercentageDurations,
+                                 vector<SequenceScoreValue>&      ClusterScores,
+                                 double&                          GlobalScore,
+                                 string                           FileNamePrefix,
+                                 bool                             FASTA)
 {
   vector<pair<task_id_t, thread_id_t> >                             ObjectIDs;
   
@@ -188,6 +185,8 @@ bool SequenceScore::ComputeScore(const vector<CPUBurst*>&    DataBursts,
   map<pair<task_id_t, thread_id_t>, TSequence >::iterator           SequencesIterator;
 
   vector<vector<cluster_id_t> > SequencesMatrix;
+  
+  set<cluster_id_t>::iterator   DifferentIDsIterator;
 
   size_t NumberOfClusters = PercentageDurations.size();
   
@@ -204,7 +203,20 @@ bool SequenceScore::ComputeScore(const vector<CPUBurst*>&    DataBursts,
     CurrentKey.first  = DataBursts[i]->GetTaskId();
     CurrentKey.second = DataBursts[i]->GetThreadId();
 
-    appendValue(SequencesMap[CurrentKey], (ClusterIDs[i]));
+    appendValue(SequencesMap[CurrentKey], (AssignmentVector[i]));
+    
+    DifferentIDs.insert(AssignmentVector[i]);
+  }
+
+  if (DifferentIDs.size() != PercentageDurations.size())
+  {
+    ostringstream Message;
+    
+    Message << "Number of IDs used (" << DifferentIDs.size() << ") ";
+    Message << "different from number of durations given (" << PercentageDurations.size() << ")";
+    
+    SetErrorMessage(Message.str());
+    SetError(true);
   }
 
   resize(rows(Alignment), SequencesMap.size());
@@ -222,10 +234,10 @@ bool SequenceScore::ComputeScore(const vector<CPUBurst*>&    DataBursts,
   globalMsaAlignment(Alignment, TestScore);
 
   /* Generate the output vector */
-  AlignmentToMatrix (Alignment, SequencesMatrix);
+  AlignmentToMatrix (Alignment);
 
   /* Compute the actual score per cluster */
-  EffectiveScoreComputation(SequencesMatrix, PercentageDurations, ClusterScores, GlobalScore);
+  EffectiveScoreComputation(PercentageDurations, ClusterScores, GlobalScore);
 
   /* Compute the global score */
   GlobalScore = 0.0;
@@ -233,7 +245,6 @@ bool SequenceScore::ComputeScore(const vector<CPUBurst*>&    DataBursts,
   {
     GlobalScore += ClusterScores[i].GetWeightedScore();
   }
-  
 
   /* If needed, generate the sequences file */
   if (FileNamePrefix.compare("") != 0)
@@ -245,19 +256,18 @@ bool SequenceScore::ComputeScore(const vector<CPUBurst*>&    DataBursts,
     ScoresFileName    << FileNamePrefix << ".SCORES.csv";
     
     ofstream SequencesStream(SequencesFileName.str().c_str(), ios_base::trunc);
-    FlushSequences (ObjectIDs, SequencesMatrix, SequencesStream, FASTA);
+    FlushSequences (ObjectIDs, SequencesStream, FASTA);
     SequencesStream.close();
 
     ofstream ScoresStream(ScoresFileName.str().c_str(), ios_base::trunc);
-    FlushScores(ClusterScores, GlobalScore, HasNoise, ScoresStream);
+    FlushScores(ClusterScores, GlobalScore, ScoresStream);
     ScoresStream.close();
   }
   
   return true;
 }
 
-void SequenceScore::AlignmentToMatrix(TAlign&                        Alignment,
-                                      vector<vector<cluster_id_t> >& SequencesMatrix)
+void SequenceScore::AlignmentToMatrix(TAlign& Alignment)
 {
   TPosition begin = beginPosition(cols(Alignment));
   TPosition end   = endPosition(cols(Alignment));
@@ -288,21 +298,33 @@ void SequenceScore::AlignmentToMatrix(TAlign&                        Alignment,
   }
 }
 
-bool SequenceScore::EffectiveScoreComputation(vector<vector<cluster_id_t> >& SequencesMatrix,
-                                              vector<percentage_t>&          PercentageDurations,
-                                              vector<SequenceScoreValue>&    ClusterScores,
-                                              double&                        GlobalScore)
+bool SequenceScore::EffectiveScoreComputation(map<cluster_id_t, percentage_t>& PercentageDurations,
+                                              vector<SequenceScoreValue>&      ClusterScores,
+                                              double&                          GlobalScore)
 {
   size_t SequencesLength;
   size_t NumberOfSequences;
   size_t NumberOfClusters = PercentageDurations.size();
-
+  
+  map<cluster_id_t, bool>     ClusterAppears;
+  map<cluster_id_t, size_t>   NumberOfOccurrences;
+  set<cluster_id_t>::iterator DifferentIDsIterator;
+  map<cluster_id_t, size_t>   ScorePosition;
+  size_t                      Position;
+  
   ClusterScores.clear();
   
-  for (size_t Cluster = 0; Cluster < NumberOfClusters; Cluster++)
+  for (DifferentIDsIterator  = DifferentIDs.begin(), Position = 0;
+       DifferentIDsIterator != DifferentIDs.end();
+       ++DifferentIDsIterator, Position++)
+  // for (size_t Cluster = 0; Cluster < DifferentIDs.size(); Cluster++)
   {
-    ClusterScores.push_back(SequenceScoreValue(Cluster,
-                                               PercentageDurations[Cluster]));
+    cluster_id_t CurrentID = (*DifferentIDsIterator);
+    ClusterScores.push_back(SequenceScoreValue(CurrentID,
+                                               PercentageDurations[CurrentID]));
+    
+    
+    ScorePosition[CurrentID]       = Position;
   }
 
   NumberOfSequences = SequencesMatrix.size();
@@ -319,8 +341,14 @@ bool SequenceScore::EffectiveScoreComputation(vector<vector<cluster_id_t> >& Seq
   /* i -> iterator over sequences length */
   for (size_t i = 0; i < SequencesLength; i++)
   {
-    vector<bool>   ClusterAppears      = vector<bool> (NumberOfClusters, false);
-    vector<size_t> NumberOfOccurrences = vector<size_t> (NumberOfClusters, 0);
+    for (DifferentIDsIterator  = DifferentIDs.begin();
+         DifferentIDsIterator != DifferentIDs.end();
+         ++DifferentIDsIterator)
+    {
+      cluster_id_t CurrentID = (*DifferentIDsIterator);
+      ClusterAppears[CurrentID]      = false;
+      NumberOfOccurrences[CurrentID] = 0;
+    }
     
     /* j -> iterator over sequence positions (columns) */
     for (size_t j = 0; j < NumberOfSequences; j++)
@@ -332,15 +360,19 @@ bool SequenceScore::EffectiveScoreComputation(vector<vector<cluster_id_t> >& Seq
         NumberOfOccurrences[CurrentCluster]++;
       }
     }
-
-    for (size_t Cluster = 0; Cluster < NumberOfClusters; Cluster++)
+    
+    for (DifferentIDsIterator  = DifferentIDs.begin();
+         DifferentIDsIterator != DifferentIDs.end();
+         ++DifferentIDsIterator)
     {
-      if (ClusterAppears[Cluster])
+      cluster_id_t CurrentID = (*DifferentIDsIterator);
+      
+      if (ClusterAppears[CurrentID])
       {
         double ClusterAlignment = 
-          (1.0*NumberOfOccurrences[Cluster])/NumberOfSequences;
+          (1.0*NumberOfOccurrences[CurrentID])/NumberOfSequences;
         
-        ClusterScores[Cluster].NewOccurrence(ClusterAlignment);
+        ClusterScores[ScorePosition[CurrentID]].NewOccurrence(ClusterAlignment);
       }
     }
   }
@@ -349,7 +381,6 @@ bool SequenceScore::EffectiveScoreComputation(vector<vector<cluster_id_t> >& Seq
 }
 
 bool SequenceScore::FlushSequences(vector<pair<task_id_t, thread_id_t> >& ObjectIDs,
-                                   vector<vector<cluster_id_t> >&         SequencesMatrix,
                                    ofstream&                              str,
                                    bool                                   FASTA)
 {
@@ -383,7 +414,7 @@ bool SequenceScore::FlushSequences(vector<pair<task_id_t, thread_id_t> >& Object
   for (size_t i = 0; i < NumSequences; i++)
   {
   
-    str << ">Thread_" << ObjectIDs[i].first << "." << ObjectIDs[i].second << '\n';
+    str << ">Thread_" << (ObjectIDs[i].first+1) << "." << (ObjectIDs[i].second+1) << '\n';
 
     for (size_t j = 0; j < SequencesLength; j++)
     {
@@ -396,13 +427,13 @@ bool SequenceScore::FlushSequences(vector<pair<task_id_t, thread_id_t> >& Object
       {
         if (FASTA)
         {
-          if (SequencesMatrix[i][j] <= SequenceScore::LastAminoacidValue)
+          if (SequencesMatrix[i][j] < SequenceScore::LastAminoacidValue)
           {
             str << SequenceScore::Clusters2Aminoacids[SequencesMatrix[i][j]];
           }
           else
           {
-            str << '*';
+            str << 'X';
           }
         }
         else
@@ -426,7 +457,6 @@ bool SequenceScore::FlushSequences(vector<pair<task_id_t, thread_id_t> >& Object
 
 bool SequenceScore::FlushScores(vector<SequenceScoreValue>& ClusterScores,
                                 double&                     GlobalScore,
-                                bool                        HasNoise,
                                 ofstream&                   str)
 {
   str << "Cluster,Cluster Score,Occurrences,WeightedScore" << '\n';
@@ -436,22 +466,19 @@ bool SequenceScore::FlushScores(vector<SequenceScoreValue>& ClusterScores,
   {
     if (i == NOISE_CLUSTERID)
     {
-      if (HasNoise)
-      {
-        str << "NOISE";
+      str << "NOISE";
         
-        str.precision(5);
-        str << "," << ClusterScores[i].GetClusterScore();
-        str.precision(0);
-        str << "," << ClusterScores[i].GetOccurrences();
-        str.precision(5);
-        str << "," << ClusterScores[i].GetWeightedScore();
-        str << '\n';
-      }
+      str.precision(5);
+      str << "," << ClusterScores[i].GetClusterScore();
+      str.precision(0);
+      str << "," << ClusterScores[i].GetOccurrences();
+      str.precision(5);
+      str << "," << ClusterScores[i].GetWeightedScore();
+      str << '\n';
     }
     else
     {
-      str << "Cluster " << i;
+      str << "Cluster " << ClusterScores[i].GetID();
       str.precision(5);
       str << "," << ClusterScores[i].GetClusterScore();
       str.precision(0);

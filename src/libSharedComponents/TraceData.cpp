@@ -197,6 +197,7 @@ TraceData::TraceData(void)
 
   /* NO distribution defaults */
   ReadAllTasks = true;
+  Master       = false;
 }
 
 /*

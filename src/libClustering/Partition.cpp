@@ -34,14 +34,25 @@
 
 #include "Partition.hpp"
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 /**
  * Default constructor
  */
 Partition::Partition(void)
 {
-  _NumberOfClusters        = 0;
-  _HasNoise                = false;
   _ClusterAssignmentVector = vector<cluster_id_t> (0);
+}
+
+/**
+ * Clear the contents of the partition
+ */
+void Partition::clear(void)
+{
+  _ClusterAssignmentVector.clear();
+  _IDs.clear();
 }
 
 /**
@@ -85,13 +96,59 @@ void Partition::SetIDs(set<cluster_id_t>& IDs)
 }
 
 /**
- * Sets the number of clusters discovered
- *
- * \param NumberOfClusters Number of clusters discovered in the data
+ * Returns the value of the maximum cluster id used in this partition
+ * 
+ * \return Maximum cluster ID used in this partition
  */
-void Partition::NumberOfClusters(size_t NumberOfClusters)
+cluster_id_t Partition::GetMaxID(void)
 {
-  _NumberOfClusters = NumberOfClusters;
+  cluster_id_t                Result = NOISE_CLUSTERID;
+  set<cluster_id_t>::iterator IDsIterator;
+  
+  for (IDsIterator  = _IDs.begin();
+       IDsIterator != _IDs.end();
+       ++IDsIterator)
+  {
+    if ((*IDsIterator) > Result)
+    {
+      Result = (*IDsIterator);
+    }
+  }
+  
+  return Result;
+}
+
+/**
+ * Changes all IDs of the OriginalIDs set to the ID DifinitiveID
+ * 
+ * \param OriginalIDs  Set of IDs to be merged
+ * \param DefinitiveID Resulting ID
+ * 
+ */
+void Partition::MergeIDs(set<cluster_id_t>& OriginalIDs,
+                         cluster_id_t       DefinitiveID)
+{
+  for (size_t i = 0; i < _ClusterAssignmentVector.size(); i++)
+  {
+    cluster_id_t CurrentID = _ClusterAssignmentVector[i];
+    
+    if (OriginalIDs.count(CurrentID) != 0)
+    {
+      _ClusterAssignmentVector[i] = DefinitiveID;
+      // cout << "Merging" << endl;
+    }
+  }
+  
+  set<cluster_id_t>::iterator OriginalIDsIt;
+  
+  for (OriginalIDsIt  = OriginalIDs.begin();
+       OriginalIDsIt != OriginalIDs.end();
+       ++OriginalIDsIt)
+  {
+    _IDs.erase((*OriginalIDsIt));
+  }
+  
+  return;
 }
 
 /**
@@ -101,16 +158,7 @@ void Partition::NumberOfClusters(size_t NumberOfClusters)
  */
 size_t Partition::NumberOfClusters(void) const
 {
-  return _NumberOfClusters;
-}
-
-/**
- * Sets if current partition has a noise cluster
- *
- */
-void Partition::HasNoise(bool HasNoise)
-{
-  _HasNoise = HasNoise;
+  return _IDs.size();
 }
 
 /**
@@ -120,7 +168,14 @@ void Partition::HasNoise(bool HasNoise)
  */ 
 bool Partition::HasNoise(void) const
 {
-  return _HasNoise;
+  if (_IDs.count(NOISE_CLUSTERID) > 0)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 

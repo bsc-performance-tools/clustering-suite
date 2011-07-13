@@ -58,42 +58,40 @@ using std::setprecision;
 /**
  * Parametrized constructor.
  *
- * \param MinPoints MinPoints value to be used in all DBSCAN runs
- * \param MaxEpsilon Maximum value of Epsilon 
- * \param MinEpsilon Minimum value of Epislon
- * \param Steps Number of refinement steps
+ * \param MinPoints        MinPoints value to be used in all DBSCAN runs
+ * \param EpsilonsPerLevel Different values of epsilons to be used
  *
  */ 
-ClusteringRefinementAggregative::ClusteringRefinementAggregative(INT32      MinPoints,
-                                                                 double     MaxEpsilon,
-                                                                 double     MinEpsilon,
-                                                                 size_t     Steps)
+ClusteringRefinementAggregative::ClusteringRefinementAggregative(INT32          MinPoints,
+                                                                 vector<double> EpsilonPerLevel)
 {
-  this->MinPoints  = MinPoints;
-  this->MinEpsilon = MinEpsilon;
-  this->MaxEpsilon = MaxEpsilon;
-  this->Steps      = Steps;
+  this->MinPoints       = MinPoints;
+  this->EpsilonPerLevel = EpsilonPerLevel;
+  this->Steps           = EpsilonPerLevel.size();
+  MaxIDAssigned         = NOISE_CLUSTERID;
 }
 
 
 /**
  * Executes the refinement analysis
  *
- * \param OutputFilePrefix If different of empty string, it indicates that
- *        every step should be printed
+ * \param Bursts                 Vector of bursts that must be analyzed
+ * \param IntermediatePartitions Vector of partitions corresponding to each 
+ *                               refinement step
+ * \param LastPartition          Definitive partition obtained after the 
+ *                               refinement analysis
+ * \param OutputFilePrefix       If different of empty string, it indicates 
+ *                               that every step should be printed
  *
  * \return True if the refinement worked properly, false otherwise
  *
  */ 
 bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
-                                          vector<Partition>&       ResultingPartitions,
+                                          vector<Partition>&       IntermediatePartitions,
                                           Partition&               LastPartition,
                                           string                   OutputFilePrefix)
 {
-  bool           Stop = false;
-  double         StepSize    = (MaxEpsilon - MinEpsilon)/(Steps-1);
-  vector<double> Epsilons;
-
+  bool   Stop;
   ostringstream  Messages;
 
   this->OutputFilePrefix = OutputFilePrefix;
@@ -118,121 +116,125 @@ bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
     SetErrorMessage("number of steps in a refinement should be higher than 1");
     return false;
   }
-
+  
+  ClusteringCore = new libClustering();
+  
+  /* Generate Instances to Bursts translation table */
   for (size_t i = 0; i < Bursts.size(); i++)
   {
     Instance2Burst[Bursts[i]->GetInstance()] = i;
   }
-
-  ResultingPartitions = vector<Partition> (Steps);
-  PartitionsHistory   = vector<Partition> (Steps);
-  StatisticsHistory   = vector<ClusteringStatistics> (Steps);
-  NodesPerLevel       = vector<vector<ClusterInformation*> > (Steps);
   
-  Epsilons.push_back(MaxEpsilon);
-  for (size_t i = 1; i < Steps; i++)
-  {
-    Epsilons.push_back(Epsilons[i-1] - StepSize);
-  }
-
-  ClusteringCore = new libClustering();
-
-  Messages << "*** TOTAL NUMBER OF BURSTS = " << Bursts.size() << " ***" << endl;
-  Messages << "*** STEP 1 (Eps = " << Epsilons[0] << ") ***" << endl;
+  Messages << "****** STEP 1 (Eps = " << EpsilonPerLevel[0] << ") ******" << endl;
   system_messages::information(Messages.str());  
-  if (!RunFirstStep(Bursts, Epsilons[0], ResultingPartitions[0]))
+  
+  IntermediatePartitions.clear();
+  IntermediatePartitions.push_back(Partition());
+  
+  NodesPerLevel.clear();
+  NodesPerLevel.push_back(vector<ClusterInformation*>(0));
+  
+  /* Generate top level leaves :D */
+  if (!RunFirstAnalysis(Bursts,
+                        IntermediatePartitions[0]))
   {
     return false;
   }
-
-  /* On step 0, all new nodes are part of the hierarchy */
-  map<cluster_id_t, ClusterInformation*>::iterator NewNodesIt;
-
-  LastStep = 0;
-
+  
   /* Iterate through the epsilon values, and generate the clusters hierarchy */
+  Stop = false;
   for (size_t CurrentStep = 1; 
-       CurrentStep < Steps && !Stop;
-       CurrentStep++)
+              CurrentStep < Steps && !Stop;
+              CurrentStep++)
   {
-    double CurrentEpsilon = Epsilons[CurrentStep];
-
-    Messages.str("");
+    IntermediatePartitions.push_back(Partition());
+    NodesPerLevel.push_back(vector<ClusterInformation*>(0));
     
-    Messages << "****** STEP " << (CurrentStep+1) << " (Eps = " << CurrentEpsilon;
+    Messages.str("");
+    Messages << "****** STEP " << (CurrentStep+1) << " (Eps = " << EpsilonPerLevel[CurrentStep];;
     Messages << ") ******" << endl;
     system_messages::information(Messages.str());
-
-    Stop = true;
+    
     if (!RunStep(CurrentStep,
                  Bursts,
-                 CurrentEpsilon,
-                 ResultingPartitions[CurrentStep-1],
-                 ResultingPartitions[CurrentStep],
+                 IntermediatePartitions[CurrentStep-1],
+                 IntermediatePartitions[CurrentStep],
                  Stop))
     {
+      SetError(true);
       return false;
     }
-
-    if (!Stop)
+    
+    if (Stop)
     {
-      LastStep++;
-    }
-    else
-    {
+      /* Last partition is empty! */
+      NodesPerLevel.pop_back();
+      IntermediatePartitions.pop_back();
       Messages.str("");
       Messages << "****** CONVERGENCE ******" << endl;
       system_messages::information(Messages.str());
     }
+    else
+    {
+      Messages.str("");
+      Messages << "****** STEP " << CurrentStep+1 << " FINISHED ******" << endl;
+      system_messages::information(Messages.str());
+    }
   }
-
-  /* DEBUG 
-  cout << "My Last Step was = " << LastStep << endl; */
   
-  /* Create the partitions and statistics for all steps 
-  if (!CreateDefinitivePartitions(ResultingPartitions))
+  LastPartition = IntermediatePartitions.back();
+  
+  if (!GenerateLastPartition(Bursts,
+                             IntermediatePartitions.size(),
+                             IntermediatePartitions.back(),
+                             LastPartition))
   {
     return false;
   }
-  */
   
-  // PrintTrees ();
+  /* DEBUG 
+  cout << "Last Partition Number of Clusters = " << LastPartition.NumberOfClusters() << endl;
+  cout << "Last Partition Number of IDs = " << LastPartition.GetAssignmentVector().size() << endl;
+  */
   
   return true;
 }
 
-/**
- * Executes the first analysis of the hirearchy
- *
- * \param Epsilon Value of epsilon to be used
- *
- * \return True if the analysis was executed correctly, false otherwise
- *
- */
-bool ClusteringRefinementAggregative::RunFirstStep(const vector<CPUBurst*>& Bursts,
-                                        double                   Epsilon,
-                                        Partition&               FirstPartition)
+bool ClusteringRefinementAggregative::RunFirstAnalysis(const vector<CPUBurst*>& Bursts,
+                                                       Partition&               FirstPartition)
 {
   ostringstream        Messages;
   ClusteringStatistics Statistics;
+  double               Epsilon = EpsilonPerLevel[0];
 
   Messages.str("");
-  Messages << "-> Running DBSCAN for top level" << endl;
+  Messages << "|---> Running DBSCAN (" << Bursts.size() << " bursts)" << endl;
   system_messages::information(Messages.str());
   
-  if (!RunDBSCAN ((vector<const Point*>&) Bursts,
-                                          Epsilon,
-                                          FirstPartition))
+  if (!RunDBSCAN ((const vector<const Point*>&) Bursts,
+                                                Epsilon,
+                                                FirstPartition))
   {
     return false;
   }
 
-  if (!GenerateNodes(Bursts,
+  if (!GenerateNodes(0,
+                     Bursts,
                      FirstPartition,
                      NodesPerLevel[0]))
   {
     return false;
   }
+  
+  ComputeScores(0, Bursts, NodesPerLevel[0], FirstPartition, false);
+  
+  vector<cluster_id_t>& AssignmentVector = FirstPartition.GetAssignmentVector();
+  for (size_t i = 0; i < Bursts.size(); i++)
+  {
+    IDPerLevel[Bursts[i]->GetInstance()].push_back(AssignmentVector[i]);
+  }
+
+  MaxIDAssigned = FirstPartition.GetMaxID();
 
   /* Print plots */
   if (PrintStepsInformation)
@@ -263,7 +265,6 @@ bool ClusteringRefinementAggregative::RunFirstStep(const vector<CPUBurst*>& Burs
  *
  * \param Step              The number of step to execute
  * \param Bursts            Vector of bursts to analyze
- * \param Epsilon           Value of epsilon to be used in this step
  * \param PreviousPartition Results of the previous step
  * \param NewPartition      Results of the current step
  * \param Stop              I/O parameter to indicate that no more clusters 
@@ -272,169 +273,113 @@ bool ClusteringRefinementAggregative::RunFirstStep(const vector<CPUBurst*>& Burs
  * \return True if the step was executed correctly, false otherwise
  *
  */
-bool ClusteringRefinementAggregative::RunStep(size_t        Step,
-                                   const vector<CPUBurst*>& Bursts,
-                                   double                   Epsilon,
-                                   Partition&               PreviousPartition,
-                                   Partition&               NewPartition,
-                                   bool&                    Stop)
+bool ClusteringRefinementAggregative::RunStep(size_t                   Step,
+                                              const vector<CPUBurst*>& Bursts,
+                                              Partition&               PreviousPartition,
+                                              Partition&               NewPartition,
+                                              bool&                    Stop)
 {
   ostringstream  Messages;
-  size_t         TotalParentOccurrences;
-  timestamp_t    TotalParentDurations;
-  size_t         NodesAnalyzed = 0;
+  double         Epsilon = EpsilonPerLevel[Step];
   
+  vector<CPUBurst*>            BurstsSubset;
   vector<ClusterInformation*>& ParentNodes   = NodesPerLevel[Step-1];
-  vector<ClusterInformation*>& ChildrenNodes = NodesPerLevel[Step];
-
+  vector<ClusterInformation*>  CandidateNodes;
+  
+  Partition                    ChildrenPartition;
+  vector<ClusterInformation*>  ChildrenNodes;
+  
   /*
   Messages.str("");
   Messages << "|-> Generating candidates" << endl;
   system_messages::information(Messages.str());
   */
  
-  // GenerateCandidates(Step,);
-
-  /* Compute ParentNodes totalizations */
-  TotalParentOccurrences = 0;
-  TotalParentDurations   = 0;
-  for (size_t i = 0; i < ParentNodes.size(); i++)
+  if (!GenerateCandidatesAndBurstSubset(Bursts, ParentNodes, BurstsSubset, CandidateNodes))
   {
-    if (ParentNodes[i]->GetID() != NOISE_CLUSTERID)
-    {
-      TotalParentOccurrences += ParentNodes[i]->GetOccurrences();
-    }
-    TotalParentDurations += ParentNodes[i]->GetTotalDuration();
-  }
-
-  /* Run different DBSCANs */
-  Stop = true;
-  for (size_t i = 0; i < ParentNodes.size(); i++)
-  {
-    if (ParentNodes[i]->IsCandidate(TotalParentOccurrences, TotalParentDurations))
-    {
-      vector<CPUBurst*>           BurstsSubset;
-      Partition                   ChildrenPartition;
-      vector<ClusterInformation*> CurrentChildrenNodes;
-
-      NodesAnalyzed++;
-      
-      /* Run DBSCAN in the subset of bursts */
-      BurstsSubset = GenerateBurstsSubset(Bursts, ParentNodes[i]);
-      
-      Messages.str("");
-      Messages << "|---> Running DBSCAN for ID = " << ParentNodes[i]->GetID();
-      Messages << " (" << BurstsSubset.size() << " bursts)" << endl;
-      system_messages::information(Messages.str());
-
-      if (!RunDBSCAN ((vector<const Point*>&) BurstsSubset,
-                                              Epsilon,
-                                              ChildrenPartition))
-      {
-        return false;
-      }
-
-      /* Create current node children */
-      Messages.str("");
-      Messages << "|---> Generating current nodes" << endl;
-      system_messages::information(Messages.str());
-
-
-      if (!GenerateNodes(BurstsSubset,
-                         ChildrenPartition,
-                         CurrentChildrenNodes))
-      {
-        return false;
-      }
-
-      Messages.str("");
-      Messages << "|---> " << CurrentChildrenNodes.size() << " nodes" << endl;
-      system_messages::information(Messages.str());
-
-      /* Add children to current node and current level nodes*/
-      for (size_t j = 0; j < CurrentChildrenNodes.size(); j++)
-      {
-        ParentNodes[i]->AddChild(CurrentChildrenNodes[j]);
-        ChildrenNodes.push_back(CurrentChildrenNodes[j]);
-      }
-
-      /* Evaluate split */
-      if (IsSplitOK(ParentNodes[i]))
-      {
-        Stop = false;
-      }
-    }
-  }
-
-  if (NodesAnalyzed == 0)
-  {
-    Messages.str("");
-    Messages << "|-> NO NODES ANALYZED" << endl;
-    system_messages::information(Messages.str());
+    Stop = true;
     return true;
   }
-  
-  /* Rename the children */
-  Messages.str("");
-  Messages << "|-> Renaming nodes" << endl;
-  system_messages::information(Messages.str());
-  
-  cluster_id_t MaxIDAssigned = NOISE_CLUSTERID;
-  for (size_t i = 0; i < ParentNodes.size(); i++)
+
+  /* DEBUG
+  cout << "Candidate Bursts" << endl;
+  for (size_t i = 0; i < BurstsSubset.size(); i++)
   {
-    if (ParentNodes[i]->GetID() > MaxIDAssigned)
+    cout << "Instance = " << BurstsSubset[i]->GetInstance() << endl;
+  }
+  */
+  Messages.str("");
+  Messages << "|---> Candidate IDs = ";
+  for (size_t i = 0; i < CandidateNodes.size(); i++)
+  {
+    if (CandidateNodes[i]->GetID() == NOISE_CLUSTERID)
     {
-      MaxIDAssigned = ParentNodes[i]->GetID();
+      Messages << "NOISE ";
+    }
+    else
+    {
+      Messages << CandidateNodes[i]->GetID() << " ";
     }
   }
-  MaxIDAssigned++;
+  Messages << endl;
+  system_messages::information(Messages.str());
 
-  for (size_t i = 0; i < ParentNodes.size(); i++)
+  /* Run DBSCAN in the subset of bursts */
+  Messages.str("");
+  Messages << "|---> Running DBSCAN (" << BurstsSubset.size() << " bursts)" << endl;
+  system_messages::information(Messages.str());
+
+  if (!RunDBSCAN ((vector<const Point*>&) BurstsSubset,
+                                          Epsilon,
+                                          ChildrenPartition))
   {
-    ParentNodes[i]->RenameChildren(MaxIDAssigned);
+    return false;
+  }
+
+  /* Create children nodes */
+  Messages.str("");
+  Messages << "|---> Generating current nodes" << endl;
+  system_messages::information(Messages.str());
+
+  if (!GenerateNodes(Step,
+                     BurstsSubset,
+                     ChildrenPartition,
+                     ChildrenNodes))
+  {
+    return false;
+  }
+
+  Messages.str("");
+  Messages << "|---> " << ChildrenNodes.size() << " nodes" << endl;
+  system_messages::information(Messages.str());
+
+  /* Link this level with the previous one */
+  LinkNodes(BurstsSubset,
+            CandidateNodes,
+            ChildrenNodes,
+            PreviousPartition,
+            ChildrenPartition);
+  
+  /* Rename the children and put them in the current level vector */
+  for (size_t i = 0; i < CandidateNodes.size(); i++)
+  {
+    CandidateNodes[i]->Visited(false);
+  }
+  
+  for (size_t i = 0; i < ChildrenNodes.size(); i++)
+  {
+    ChildrenNodes[i]->RenameNode(MaxIDAssigned);
+    NodesPerLevel[Step].push_back(ChildrenNodes[i]);
   }
   
   /* Join results for current level */
   Messages.str("");
   Messages << "|-> Joining results" << endl;
   system_messages::information(Messages.str());
+
+  GeneratePartition(NewPartition);
   
-  map<instance_t, cluster_id_t>           Assignment;
-  map<instance_t, cluster_id_t>::iterator AssignmentIt;
-  vector<ClusterInformation*>             TopLevelNodes = NodesPerLevel[0];
-
-  for (size_t i = 0; i < TopLevelNodes.size(); i++)
-  {
-    vector<pair<instance_t, cluster_id_t> > PartialAssignment;
-
-    PartialAssignment = GetAssignment(TopLevelNodes[i]);
-
-    /* DEBUG */
-    cout << "PartialAssignment from ID = " << TopLevelNodes[i]->GetID();
-    cout << " sizes " << PartialAssignment.size() << endl;
-
-    for (size_t j = 0; j < PartialAssignment.size(); j++)
-    {
-      Assignment[PartialAssignment[j].first] = PartialAssignment[j].second;
-    }
-  }
-
-  vector<cluster_id_t>& CurrentAssignmentVector =
-    NewPartition.GetAssignmentVector();
-
-  set<cluster_id_t> DifferentIDs;
-
-  for (AssignmentIt  = Assignment.begin();
-       AssignmentIt != Assignment.end();
-       ++AssignmentIt)
-  {
-    CurrentAssignmentVector.push_back(AssignmentIt->second);
-    DifferentIDs.insert(AssignmentIt->second);
-  }
-
-  NewPartition.SetIDs(DifferentIDs);
-  NewPartition.NumberOfClusters(DifferentIDs.size());
-  NewPartition.HasNoise(true);
+  ComputeScores(Step, Bursts, ChildrenNodes, NewPartition, false);
 
   /* DEBUG
   cout << "Current Assignment Vector Has " << CurrentAssignmentVector.size();
@@ -461,32 +406,8 @@ bool ClusteringRefinementAggregative::RunStep(size_t        Step,
       return false;
     }
   }
-  
+
   return true;
-}
-
-/**
- * Creates a vector which is a subset of those bursts from the input vector
- * that belong to the given node
- *
- * \param Bursts The input bursts vector
- * \param Node   The node that define the bursts
- *
- * \return A vector of bursts that have the selected ID in the partition
- *
- */
-vector<CPUBurst*> ClusteringRefinementAggregative::GenerateBurstsSubset(const vector<CPUBurst*>& Bursts,
-                                                                        ClusterInformation*      Node)
-{
-  vector<CPUBurst*>   Result;
-  vector<instance_t>& Instances = Node->GetInstances();
-
-  for (size_t i = 0; i < Instances.size(); i++)
-  {
-    Result.push_back(Bursts[Instance2Burst[Instances[i]]]);
-  }
-
-  return Result;
 }
 
 /**
@@ -500,8 +421,8 @@ vector<CPUBurst*> ClusteringRefinementAggregative::GenerateBurstsSubset(const ve
  *
  */ 
 bool ClusteringRefinementAggregative::RunDBSCAN(const vector<const Point*>& CurrentData,
-                                     double                      Epsilon,
-                                     Partition&                  CurrentPartition)
+                                                double                      Epsilon,
+                                                Partition&                  CurrentPartition)
 {
   string              ClusteringAlgorithmName;
   map<string, string> ClusteringAlgorithmParameters;
@@ -536,8 +457,160 @@ bool ClusteringRefinementAggregative::RunDBSCAN(const vector<const Point*>& Curr
     return false;
   }
   system_messages::verbose = verbose_state;
+
   
   return true;
+}
+
+/**
+ * Generates the candidates nodes vector and candidates bursts vector
+ * 
+ * \param Bursts       Vector of all bursts
+ * \param ParentNodes  Nodes of previous level
+ * \param BurstsSubset Output vector of those nodes that will take part in the
+ *                     further analysis
+ * \param NodesSubset  Output vector of nodes that will be analyzed in the  
+ *                     further analysis
+ * 
+ * \return True if there are candidates available for this level, false if
+ *         no more candidates are generated (convergence)
+ */
+bool ClusteringRefinementAggregative::GenerateCandidatesAndBurstSubset(
+  const vector<CPUBurst*>&     Bursts,
+  vector<ClusterInformation*>& ParentNodes,
+  vector<CPUBurst*>&           BurstsSubset,
+  vector<ClusterInformation*>& NodesSubset
+)
+{
+  BurstsSubset.clear();
+  
+  vector<ClusterInformation*> Leaves;
+  
+  double SumOfScores   = 0.0;
+  size_t NumberOfNodes = 0;
+  
+  bool MoreThan90 = false;
+  bool LessThan10 = false;
+  
+  if (StopCondition())
+  {
+    return false;
+  }
+  
+  for (size_t i = 0; i < ParentNodes.size(); i++)
+  {
+    SumOfScores += ParentNodes[i]->GetScore();
+    NumberOfNodes++;
+    if (!ParentNodes[i]->IsDiscarded())
+    {
+      if (ParentNodes[i]->GetScore() < 1)
+      {
+        if(ParentNodes[i]->GetScore() > 0.9)
+        {
+          MoreThan90 = true;
+        }
+        else if (ParentNodes[i]->GetScore() < 0.1)
+        {
+          LessThan10 = true;
+        }
+        
+        NodesSubset.push_back(ParentNodes[i]);
+      }
+    }
+  }
+  
+  
+  
+  // Prune to stop aggregating when all clusters have more than 90% score and
+  // there are no small ones (less than 10% score)
+  /*
+  if (MoreThan90 && !LessThan10)
+  {
+    NodesSubset.clear();
+  }
+  */
+  
+  if (NodesSubset.size() == 0)
+  {
+    return false;
+  }
+  
+  for (size_t i = 0; i < NodesSubset.size(); i++)
+  {
+    vector<instance_t>& NodeInstances = NodesSubset[i]->GetInstances();
+    
+    for (size_t j = 0; j < NodeInstances.size(); j++)
+    {
+      CPUBurst* CurrentBurst = Bursts[Instance2Burst[NodeInstances[j]]];
+      BurstsSubset.push_back(CurrentBurst);
+    }
+  }
+  
+  if (BurstsSubset.size() == 0)
+  {
+    return false;
+  }
+  
+  sort(BurstsSubset.begin(), BurstsSubset.end(), InstanceNumCompare());
+  
+  return true;
+}
+
+/**
+ * Checks the current state of the tree and decides if it is correct enough to
+ * stop the aggregation
+ * 
+ * \return True if the stop condition has reached, false otherwise
+ *
+ */
+bool ClusteringRefinementAggregative::StopCondition(void)
+{
+  ostringstream               Messages;
+  vector<ClusterInformation*> Leaves;
+  double                      SumOfScores   = 0.0;
+  
+  for (size_t i = 0; i < NodesPerLevel.size(); i++)
+  {
+    for (size_t j = 0; j < NodesPerLevel[i].size(); j++)
+    {
+      if (NodesPerLevel[i][j]->IsLeaf() && !NodesPerLevel[i][j]->IsDiscarded())
+      {
+        Leaves.push_back(NodesPerLevel[i][j]);
+      }
+    }
+  }
+  
+  for (size_t i = 0; i < Leaves.size(); i++)
+  {
+    SumOfScores += Leaves[i]->GetScore();
+  }
+  
+  Messages.str("");
+  Messages << "|---> Sum. of Scores = " << SumOfScores << " | Number of Nodes = ";
+  Messages << Leaves.size() << " | Avg. Score per Node = " << SumOfScores/Leaves.size() << endl;
+  system_messages::information(Messages.str());
+  
+  /*
+  double Remainder = SumOfScores - floor(SumOfScores);
+  
+  if (Remainder > 0.95 || Remainder < 0.05)
+  {
+    Messages.str("");
+    Messages << "|---> Remainder of Sum. of Scores = " << Remainder << endl;
+    Messages << "|---> ** It could be a good point to STOP **" << endl;
+    system_messages::information(Messages.str());
+  }
+  
+  if ((SumOfScores/Leaves.size()) > 0.9)
+  {
+    Messages.str("");
+    Messages << "|---> Average Score per node > 90% STOP" << endl;
+    system_messages::information(Messages.str());
+    return true;
+  }
+  */
+  
+  return false;
 }
 
 /**
@@ -545,23 +618,32 @@ bool ClusteringRefinementAggregative::RunDBSCAN(const vector<const Point*>& Curr
  * statistics, rename the clusters depending on their duration, and also compute
  * the sequence score of each cluster
  *
- * \Bursts    Set of bursts used in the cluster analysis
- * \Partition Partition obtained using the clustering algorithm
- * \Node      The set of nodes that describe the partition
+ * \param Step          The number of step to execute
+ * \param Bursts        Set of bursts used in the cluster analysis
+ * \param Partition     Partition obtained using the clustering algorithm
+ * \param Node          The set of nodes that describe the partition
+ * \param LastPartition Indicates if the nodes to generate come from the a
+ *                      merge, of the last partition
  *
  * \return True if the the node were generated correctly, false otherwise
  *
  */ 
-bool ClusteringRefinementAggregative::GenerateNodes(const vector<CPUBurst*>&     Bursts,
-                                         Partition&                   CurrentPartition,
-                                         vector<ClusterInformation*>& Nodes)
+bool ClusteringRefinementAggregative::GenerateNodes(size_t                       Step,
+                                                    const vector<CPUBurst*>&     Bursts,
+                                                    Partition&                   CurrentPartition,
+                                                    vector<ClusterInformation*>& Nodes,
+                                                    bool                         LastPartition)
 {
-  SequenceScore                            Scoring;
-  vector<SequenceScoreValue>               CurrentClustersScores;
-  double                                   GlobalScore;
-  vector<percentage_t>                     PercentageDurations;
+  SequenceScore              Scoring;
+  vector<SequenceScoreValue> CurrentClustersScores;
+  double                     GlobalScore;
+ 
+  map<cluster_id_t, percentage_t>          PercentageDurations;
   map<cluster_id_t, vector<instance_t> >   BurstsPerNode;
   map<cluster_id_t, vector<instance_t> >::iterator BurstPerNodeIt;
+  
+  set<cluster_id_t>           DifferentIDs;
+  set<cluster_id_t>::iterator IDsIterator;
 
   bool NoNoise = false;
   
@@ -584,8 +666,7 @@ bool ClusteringRefinementAggregative::GenerateNodes(const vector<CPUBurst*>&    
   }
   
   /* Update Statistics */
-  Statistics.InitStatistics(CurrentPartition.GetIDs(),
-                            CurrentPartition.HasNoise());
+  Statistics.InitStatistics(CurrentPartition.GetIDs());
 
   //  Messages.str("");
   // Messages << "|---> Computing statistics" << endl;
@@ -598,10 +679,15 @@ bool ClusteringRefinementAggregative::GenerateNodes(const vector<CPUBurst*>&    
     return false;
   }
   
-  Statistics.TranslatedIDs(CurrentPartition.GetAssignmentVector());
+  if (!LastPartition)
+  { // Last partition needs to have the same numbering because it doesn't get
+    // renamed
+    Statistics.TranslatedIDs(CurrentPartition.GetAssignmentVector());
+  }
   
   PercentageDurations = Statistics.GetPercentageDurations(); 
 
+  /*
   Messages.str("");
   Messages << "|-----> Computing score" << endl;
   system_messages::information(Messages.str());
@@ -609,34 +695,36 @@ bool ClusteringRefinementAggregative::GenerateNodes(const vector<CPUBurst*>&    
   Scoring.ComputeScore(Bursts,
                        CurrentPartition.GetAssignmentVector(),
                        PercentageDurations,
-                       CurrentPartition.HasNoise(),
                        CurrentClustersScores,
                        GlobalScore,
-                       "TEST",
+                       CurrentSequenceFileNamePrefix.str(),
                        true);
+  */
 
   /* Generate current level hierarchy */
-  vector<double> CurrentClustersDurations   = Statistics.GetDurationSums();
-  vector<size_t> CurrentClustersIndividuals = Statistics.GetIndividuals();
-
-  Nodes.clear();
+  map<cluster_id_t, double> CurrentClustersDurations   = Statistics.GetDurationSums();
+  map<cluster_id_t, size_t> CurrentClustersIndividuals = Statistics.GetIndividuals();
   
-  for (size_t i = 0; i < CurrentPartition.NumberOfClusters(); i++)
+  Nodes.clear();
+  DifferentIDs = CurrentPartition.GetIDs();
+
+  for (IDsIterator  = DifferentIDs.begin();
+       IDsIterator != DifferentIDs.end();
+       ++IDsIterator)
   {
-    /* DEBUG
-    cout << "Subcluster ID = " << i << " Score = " << CurrentClustersScores[i].GetClusterScore() << endl; */
+    cluster_id_t CurrentID = (*IDsIterator);
 
     ClusterInformation* NewNode = 
-      new ClusterInformation((cluster_id_t) i,
-                              CurrentClustersScores[i].GetClusterScore(),
-                              CurrentClustersScores[i].GetOccurrences(),
-                              CurrentClustersDurations[i],
-                              CurrentClustersIndividuals[i]);
+      new ClusterInformation(CurrentID,
+                             CurrentClustersDurations[CurrentID],
+                             CurrentClustersIndividuals[CurrentID]);
 
     Nodes.push_back(NewNode);
-
-
-    BurstsPerNode[i] = vector<instance_t> (0);
+    BurstsPerNode[CurrentID] = vector<instance_t> (0);
+    
+    /* DEBUG 
+    cout << "Subcluster ID = " << CurrentID << " Score = " << CurrentClustersScores[i].GetClusterScore();
+    cout << " Individuals = " << CurrentClustersIndividuals[CurrentID] << endl; */
   }
 
   /* Fill each node with the instances */
@@ -651,7 +739,239 @@ bool ClusteringRefinementAggregative::GenerateNodes(const vector<CPUBurst*>&    
   {
     /* DEBUG 
     cout << "NODE with ID = " << Nodes[i]->GetID() << " has " << BurstsPerNode[i].size() << " instances" << endl; */
-    Nodes[i]->SetInstances(BurstsPerNode[i]);
+    Nodes[i]->SetInstances(BurstsPerNode[Nodes[i]->GetID()]);
+  }
+  
+  return true;
+}
+
+/**
+ * Link parent and children nodes from two consecutive steps
+ * 
+ * \param BurstsSubset      Vector of the burst used in the cluster analysis of
+ *                          the last step
+ * \param Parent            Vector of parent (candidate) nodes
+ * \param Children          Vector of children nodes
+ * \param PreviousPartition Partition obtained in the previous step
+ * \param NewPartition      Partition obtained in the current step
+ * 
+ */
+
+void ClusteringRefinementAggregative::LinkNodes(const vector<CPUBurst*>&     BurstsSubset,
+                                                vector<ClusterInformation*>& Parent,
+                                                vector<ClusterInformation*>& Children,
+                                                Partition&                   PreviousPartition,
+                                                Partition&                   NewPartition)
+{
+  vector<cluster_id_t>& ChildrenAssignment = NewPartition.GetAssignmentVector();
+  
+  map<cluster_id_t, set<cluster_id_t> > Links;
+  
+  for (size_t i = 0; i < BurstsSubset.size(); i++)
+  {
+    cluster_id_t PreviousID;
+    cluster_id_t CurrentID;
+    
+    PreviousID = IDPerLevel[BurstsSubset[i]->GetInstance()].back();
+    CurrentID  = ChildrenAssignment[i];
+    
+    Links[PreviousID].insert(CurrentID);
+  }
+  
+  /* DEBUG 
+  map<cluster_id_t, set<cluster_id_t> >::iterator LinksIt;
+  cout << "LINKS!" << endl;
+  for (LinksIt  = Links.begin();
+       LinksIt != Links.end();
+       ++LinksIt)
+  {
+    set<cluster_id_t>::iterator SetIterator;
+    for (SetIterator  = LinksIt->second.begin();
+         SetIterator != LinksIt->second.end();
+         ++SetIterator)
+    {
+      cout << LinksIt->first << " --> " <<  (*SetIterator) << endl;
+    }
+  }
+  */
+  
+  for (size_t i = 0; i < Parent.size(); i++)
+  {
+    ClusterInformation* ParentNode = Parent[i];
+    cluster_id_t        ParentID;
+    set<cluster_id_t>   ChildIDs;
+    
+    ParentID = ParentNode->GetID();
+    ChildIDs  = Links[ParentID];
+    
+    for (size_t j = 0; j < Children.size(); j++)
+    {
+      if (ChildIDs.count(Children[j]->GetID()) > 0)
+      {
+        ParentNode->AddChild(Children[j]);
+        Children[j]->AddParent(ParentNode);
+      }
+    }
+  }
+  
+  /* Prune condition -> if a children reduces the Score of a parent, discard it 
+  for (size_t i = 0; i < Children.size(); i++)
+  {
+    if (Children[i]->GetID() != NOISE_CLUSTERID)
+    {
+      vector<ClusterInformation*>& Parents = Children[i]->GetParents();
+      ClusterInformation*          MaxScoreParent;
+      double                       MaxParentScore = 0;
+      
+      for (size_t j = 0; j < Parents.size(); j++)
+      {
+        if (Parents[j]->GetID() != NOISE_CLUSTERID && 
+            Parents[j]->GetScore() > MaxParentScore)
+        {
+          MaxParentScore = Parents[j]->GetScore();
+          MaxScoreParent = Parents[j];
+        }
+      }
+      
+      if (MaxParentScore > Children[i]->GetScore() && MaxScoreParent->GetChildren().size() == 1)
+      {
+        Children[i]->Discard();
+      }
+    }
+  }
+  */
+
+  return;
+}
+
+/**
+ * Generate a partition with the current state of the tree
+ *
+ * \param NewPartition Object to store the partition obtained
+ *
+ */
+void ClusteringRefinementAggregative::GeneratePartition(Partition& NewPartition)
+{
+  map<instance_t, cluster_id_t>           Assignment;
+  map<instance_t, cluster_id_t>::iterator AssignmentIt;
+  vector<ClusterInformation*>             TopLevelNodes = NodesPerLevel[0];
+
+  for (size_t i = 0; i < TopLevelNodes.size(); i++)
+  {
+    vector<pair<instance_t, cluster_id_t> > PartialAssignment;
+
+    PartialAssignment = GetAssignment(TopLevelNodes[i]);
+
+    /* DEBUG
+    cout << "PartialAssignment from ID = " << TopLevelNodes[i]->GetID();
+    cout << " sizes " << PartialAssignment.size() << endl; */
+
+    for (size_t j = 0; j < PartialAssignment.size(); j++)
+    {
+      Assignment[PartialAssignment[j].first] = PartialAssignment[j].second;
+    }
+  }
+
+  vector<cluster_id_t>& CurrentAssignmentVector =
+    NewPartition.GetAssignmentVector();
+
+  set<cluster_id_t> DifferentIDs;
+
+  for (AssignmentIt  = Assignment.begin();
+       AssignmentIt != Assignment.end();
+       ++AssignmentIt)
+  {
+    CurrentAssignmentVector.push_back(AssignmentIt->second);
+    DifferentIDs.insert(AssignmentIt->second);
+  }
+
+  NewPartition.SetIDs(DifferentIDs);
+
+  return;
+}
+
+/**
+ * Computes the score of a given partition, taking into account the cluster
+ * from all possible levels
+ * 
+ * \param Bursts           A vector of all bursts
+ * \param NewNodes         Nodes from last level that must whose score needs to be updated
+ * \param CurrentPartition The last partition obtained
+ * 
+ * \return True if the score was correctly computed, false otherwise
+ */
+bool ClusteringRefinementAggregative::ComputeScores(size_t                       Step,
+                                                    const vector<CPUBurst*>&     Bursts,
+                                                    vector<ClusterInformation*>& NewNodes,
+                                                    Partition&                   CurrentPartition,
+                                                    bool                         LastPartition)
+{
+  ostringstream        CurrentSequenceFileNamePrefix, Messages;
+  
+  SequenceScore              Scoring;
+  vector<SequenceScoreValue> CurrentClustersScores;
+  double                     GlobalScore;
+  
+  ClusteringStatistics            Statistics;
+  map<cluster_id_t, percentage_t> PercentageDurations;
+  
+  if (LastPartition)
+  {
+    CurrentSequenceFileNamePrefix << OutputFilePrefix << ".MERGE";
+  }
+  else
+  {
+    CurrentSequenceFileNamePrefix << OutputFilePrefix << ".STEP" << (Step+1);
+  }
+  
+  /* Update Statistics */
+  Statistics.InitStatistics(CurrentPartition.GetIDs());
+  
+  if (!Statistics.ComputeStatistics(Bursts, 
+                                    CurrentPartition.GetAssignmentVector()))
+  {
+    SetErrorMessage(Statistics.GetLastError());
+    return false;
+  }
+  
+  /* Compute Score */
+  Messages.str("");
+  Messages << "|-----> Computing score" << endl;
+  system_messages::information(Messages.str());
+  
+  if (!Scoring.ComputeScore(Bursts,
+                            CurrentPartition.GetAssignmentVector(),
+                            PercentageDurations,
+                            CurrentClustersScores,
+                            GlobalScore,
+                            CurrentSequenceFileNamePrefix.str(),
+                            true))
+  {
+    ostringstream ErrorMessage;
+    ErrorMessage << "unable to compute sequence score:" << Scoring.GetLastError();
+    
+    SetError(true);
+    SetErrorMessage(ErrorMessage.str());
+    
+    return false;
+  }
+
+  GlobalScoresPerLevel.push_back(GlobalScore);
+  
+  /* Assign Score to each node */
+  for (size_t i = 0; i < NewNodes.size(); i++)
+  {
+    ClusterInformation* CurrentNode = NewNodes[i];
+    cluster_id_t CurrentID          = CurrentNode->GetID();
+    
+    for (size_t j = 0; j < CurrentClustersScores.size(); j++)
+    {
+      if (CurrentClustersScores[j].GetID() == CurrentID)
+      {
+        CurrentNode->SetScore(CurrentClustersScores[j].GetClusterScore());
+        CurrentNode->SetOccurrences(CurrentClustersScores[j].GetOccurrences());
+      }
+    }
   }
   
   return true;
@@ -671,52 +991,44 @@ vector<pair<instance_t, cluster_id_t> > ClusteringRefinementAggregative::GetAssi
   vector<pair<instance_t, cluster_id_t> > Result =
     vector<pair<instance_t, cluster_id_t> > (0);
 
-  /* Node not taken into account */
-  if (Node->IsDiscarded())
-  {
-    return Result;
-  }
-
   vector<ClusterInformation*>& Children = Node->GetChildren();
 
   if (Children.size() == 0)
-  { /* Leaf node, generate the assignemnt vector */
+  { 
     vector<instance_t>& Instances = Node->GetInstances();
 
     for (size_t i = 0; i < Instances.size(); i++)
     {
-      Result.push_back(make_pair(Instances[i], Node->GetID()));
+      if (!Node->IsDiscarded())
+      {
+        Result.push_back(make_pair(Instances[i], Node->GetID()));
+      
+        /* Update the history of id's */
+        IDPerLevel[Instances[i]].push_back(Node->GetID());
+      }
+      else
+      {
+        cluster_id_t LastID = IDPerLevel[Instances[i]].back();
+        Result.push_back(make_pair(Instances[i], LastID));
+        IDPerLevel[Instances[i]].push_back(LastID);
+      }
     }
-
-    return Result;
   }
   else
   {
-    if (!Children[0]->IsDiscarded())
+    for (size_t i = 0; i < Children.size(); i++)
     {
-      for (size_t i = 0; i < Children.size(); i++)
-      {
-        vector<pair<instance_t, cluster_id_t> > PartialResult;
+      vector<pair<instance_t, cluster_id_t> > PartialResult;
 
+      // if (!Children[i]->IsDiscarded())
+      // {
         PartialResult = GetAssignment(Children[i]);
 
         for (size_t j = 0; j < PartialResult.size(); j++)
         {
           Result.push_back(PartialResult[j]);
         }
-      }
-    }
-    else
-    {
-      /* Leaf node, generate the assignemnt vector */
-      vector<instance_t>& Instances = Node->GetInstances();
-
-      for (size_t i = 0; i < Instances.size(); i++)
-      {
-        Result.push_back(make_pair(Instances[i], Node->GetID()));
-      }
-
-      return Result;
+      // }
     }
 
     /* DEBUG 
@@ -725,179 +1037,300 @@ vector<pair<instance_t, cluster_id_t> > ClusteringRefinementAggregative::GetAssi
     
     return Result;
   }
+  
+  return Result;
 }
 
 /**
- * Heuristic to Decide if it is better to split the current cluster (represented 
- * as a top node) of keep it as a single one
- *
- * \param Parent Node that contains the information of the hierarchy
- *
- * \return True if the split is OK, false otherwise
- *
- */ 
-bool ClusteringRefinementAggregative::IsSplitOK(ClusterInformation* Parent)
+ * Generates the Last Partition, that joins those clusters that doesn't get
+ * a perfect allignment, but appear simultaneously in the last alignment
+ * 
+ * \param Burst         Vector containing the set of bursts
+ * 
+ * \param LastStep      Value of the last step executed in the refinement
+ * 
+ * \param PreviousPartition Partition obtained in the last step of refinement
+ * 
+ * \param LastPartition I/O partition container. As input, it contains the 
+ *                      last assignment obtained in the aggregation process.
+ *                      As output, it contains an assignment that merges those
+ *                      clusters that apperar simultaneosly in the sequences
+ * 
+ * \return              True if the last partition was correctly generated,
+ *                      false otherwise
+ */
+bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurst*>& Bursts,
+                                                            size_t                   LastStep,
+                                                            Partition&               PreviousPartition,
+                                                            Partition&               LastPartition)
 {
-  timestamp_t          ParentDuration = 0, NoiseDuration = 0;
-  timestamp_t          TotalChildrenDuration = 0;
-  size_t               TotalChildrenOccurrences = 0;
-  percentage_t         ChildrenWeightedScore = 0, ParentWeightedScore = 0;
-
-  bool Result;
-
-  vector<ClusterInformation*>& Children = Parent->GetChildren();
+  ostringstream                   Messages;
+  ClusteringStatistics            Statistics;
+  map<cluster_id_t, percentage_t> PercentageDurations;
+  SequenceScore                   Scoring;
+  vector<SequenceScoreValue>      CurrentClustersScores;
+  double                          GlobalScore;
+  ostringstream                   CurrentSequenceFileNamePrefix;
   
-  if (Children.size() == 0)
-  { /* No children */
-    /* DEBUG 
-    cout << "No children!" << endl; */
+  size_t NumberOfSequences, SequencesLength;
+  
+  map<pair<cluster_id_t, cluster_id_t>, size_t> Pairings;
+  
+  /* Update Statistics */
+  Statistics.InitStatistics(LastPartition.GetIDs());
+  
+  if (!Statistics.ComputeStatistics(Bursts, 
+                                    LastPartition.GetAssignmentVector()))
+  {
+    SetErrorMessage(Statistics.GetLastError());
     return false;
   }
+  
+  Scoring.ComputeScore(Bursts,
+                       LastPartition.GetAssignmentVector(),
+                       PercentageDurations,
+                       CurrentClustersScores,
+                       GlobalScore,
+                       CurrentSequenceFileNamePrefix.str(),
+                       true);
+                       
+  
+  vector<vector<cluster_id_t> >& Sequences = Scoring.GetSequencesMatrix();
 
-  if (Children.size() == 1 && Children[0]->GetID() == NOISE_CLUSTERID)
-  { /* Everything turned into noise */
-    /* DEBUG 
-    cout << "Everything turned into noise!" << endl; */
-    Children[0]->Discard();
+  NumberOfSequences = Sequences.size();
+  if (NumberOfSequences == 0)
+  {
+    SetErrorMessage("empty sequences when computing last partition");
+    SetError(true);
     return false;
   }
-
-  ParentDuration = Parent->GetTotalDuration();
-
-  for (size_t i = 0; i < Children.size(); i++)
+  
+  /* Check each position in the sequences to detect the simultaneous clusters */
+  SequencesLength = Sequences[0].size();
+  for (size_t i = 0; i < SequencesLength; i++)
   {
-    if (Children[i]->GetID() == NOISE_CLUSTERID)
-    {
-      NoiseDuration = Children[i]->GetTotalDuration();
-      break;
-    }
-  }
-
-  /* Noise >= 60% of parent duration. CHECK PERCENTAGE TO REFINE */
-  if (NoiseDuration >= 0.6*ParentDuration)
-  {
-    for (size_t i = 0; i < Children.size(); i++)
-    {
-      Children[i]->Discard();
-    }
-
-    /* DEBUG 
-    cout << "Noise duration (" << NoiseDuration << ")";
-    cout << " bigger than 80% of parent duration (" << ParentDuration << ")" << endl; */
+    set<pair<cluster_id_t, cluster_id_t> > CurrentPositionPairing;
     
-    return false;
-  }
-
-  for (size_t i = 0; i < Children.size(); i++)
-  {
-    if (Children[i]->GetID() != NOISE_CLUSTERID)
+    for (size_t j = 0; j < NumberOfSequences; j++)
     {
-      TotalChildrenDuration += Children[i]->GetTotalDuration();
-      ChildrenWeightedScore += (Children[i]->GetScore()*Children[i]->GetTotalDuration());
+      cluster_id_t FirstID = Sequences[j][i];
+      
+      if (FirstID != NOISE_CLUSTERID && FirstID != SEQUENCE_GAP)
+      { /* Noise and Gaps not taken into account */
+        for (size_t k = j+1; k < NumberOfSequences; k++)
+        {
+          pair<cluster_id_t, cluster_id_t> NewPair;
+          size_t CurrentValue;
+          
+          cluster_id_t SecondID = Sequences[k][i];
+          
+          if (SecondID != NOISE_CLUSTERID && SecondID != SEQUENCE_GAP)
+          {
+          
+            if (FirstID != SecondID)
+            { /* Different clusters */
+              if (FirstID < SecondID)
+              {
+                NewPair = make_pair(FirstID, SecondID);
+              }
+              else
+              {
+                NewPair = make_pair(SecondID, FirstID);
+              }
+              
+              if (CurrentPositionPairing.count(NewPair) == 0)
+              {
+                CurrentValue = Pairings[NewPair];
+                CurrentValue++;
+                Pairings[NewPair] = CurrentValue;
+                CurrentPositionPairing.insert(NewPair);
+              }
+            }
+          }
+        }
+      }
     }
   }
-  ChildrenWeightedScore /= TotalChildrenDuration;
-
-
-  /* Weighted children score < 80% of parent score */
-  if (ChildrenWeightedScore < (0.8*Parent->GetScore()))
+  
+  /* Generate all merge sets */
+  map<pair<cluster_id_t, cluster_id_t>, size_t>::iterator PairingsIt;
+  map<cluster_id_t, set<cluster_id_t> > Merges;
+  /* DEBUG */
+  for (PairingsIt  = Pairings.begin();
+       PairingsIt != Pairings.end();
+       ++PairingsIt)
   {
-    for (size_t i = 0; i < Children.size(); i++)
-    {
-      Children[i]->Discard();
-    }
-
-    /* DEBUG 
-    cout << "ChildrenWeightedScore (" << ChildrenWeightedScore << ") ";
-    cout << " less than 80% of Parent Score (" << Parent->GetScore() << ")" << endl; */
-    return false;
+    // cout << (*PairingsIt).first.first << "->" << (*PairingsIt).first.second;
+    // cout << " " << (*PairingsIt).second << endl;
+    
+    // if (((1.0*(*PairingsIt).second) / SequencesLength) > 0.05) // More than 5% apparences
+    // {
+      map<cluster_id_t, set<cluster_id_t> >::iterator PreviousMerges;
+      bool Inserted = false;
+      
+      for (PreviousMerges  = Merges.begin();
+           PreviousMerges != Merges.end();
+           ++PreviousMerges)
+      {
+        set<cluster_id_t>& PreviousSet = (*PreviousMerges).second;
+        
+        if (PreviousSet.count((*PairingsIt).first.first) != 0)
+        {
+          PreviousSet.insert((*PairingsIt).first.second);
+          Inserted = true;
+          break;
+        }
+      }
+      
+      if (!Inserted)
+      {
+        Merges[(*PairingsIt).first.first].insert((*PairingsIt).first.second);
+      }
+    // }
   }
+  
+  if (Merges.size() > 0)
+  {
+  
+    map<cluster_id_t, set<cluster_id_t> >::iterator MergesIt;
+    
+    Messages << "|-> Merging clusters " << endl;
+    system_messages::information(Messages.str());
+    
+    for (MergesIt  = Merges.begin();
+         MergesIt != Merges.end();
+         ++MergesIt)
+    {
+      set<cluster_id_t>::iterator SetIt;
+      set<cluster_id_t>& Set = (*MergesIt).second;
+    
+      Messages.str("");
+      Messages << "|---> " << (*MergesIt).first << " => ";
+      for (SetIt  = Set.begin();
+           SetIt != Set.end();
+           ++SetIt)
+      {
+        Messages << (*SetIt) << " ";
+      }
+      Messages << endl;
+      system_messages::information(Messages.str());
+      
+      LastPartition.MergeIDs(Set, (*MergesIt).first);
+    }
+    
+    vector<ClusterInformation*> NewNodes;
+    
+    GenerateNodes(0, Bursts, LastPartition, NewNodes, true); // true => indicate last partition nodes
+    
+    Messages << "|-> Merging Tree Nodes " << endl;
+    system_messages::information(Messages.str());
+    
+    vector<ClusterInformation*> LastLevelNodes;
+    
+    for (MergesIt  = Merges.begin();
+         MergesIt != Merges.end();
+         ++MergesIt)
+    {
+      cluster_id_t        MainClusterID = (*MergesIt).first;
+      set<cluster_id_t>&  Merges = (*MergesIt).second;
+      ClusterInformation* MergeNode = NULL;
+      
+      for (size_t i = 0; i < NewNodes.size(); i++)
+      {
+        if (NewNodes[i]->GetID() == MainClusterID)
+        {
+          MergeNode = NewNodes[i];
+          break;
+        }
+      }
+      
+      LinkLastNodes(MainClusterID, Merges, MergeNode);
+      LastLevelNodes.push_back(MergeNode);
+    }
+    
+    
+    NodesPerLevel.push_back(LastLevelNodes);
+    
+    LastPartition.clear();
+    GeneratePartition(LastPartition);
+    
+    if (!ComputeScores(0, Bursts, LastLevelNodes, LastPartition, true))
+    {
+      return false;
+    }
+  }
+  
+  if (PrintStepsInformation)
+  {
+    Messages.str("");
+    Messages << "|-> Printing last trees" << endl;
+    system_messages::information(Messages.str());
 
+    if (!PrintTrees(LastStep, true)) /* Last tree */
+    {
+      return false;
+    }
+  }
+  
   return true;
 }
 
+
 /**
- * Collapses the current node if the subtree where it is root has no divisions.
- * It also add the non-colapsed children to the ClustersHierarchy vectors
- *
- * \param Node ClusterInformation node to be treated
- * \param Level The current level on the tree
- *
- * \return The total number of divisions in the subtree
- *
- */  
-size_t ClusteringRefinementAggregative::ColapseNonDividedSubtrees(ClusterInformation* Node,
-                                                       size_t              Level)
+ * Merges the nodes in the tree resulting from the sequence based merge
+ * 
+ * \param MainClusterID Cluster ID of the parent with lower ID
+ * \param Merges        Set of cluster ids that got merge
+ * \param NewNode       Node that defines the merge
+ */
+void ClusteringRefinementAggregative::LinkLastNodes(cluster_id_t        MainClusterID, 
+                                                    set<cluster_id_t>&  Merges,
+                                                    ClusterInformation* NewNode)
 {
-  size_t NumberOfDivisions = 0;
+  vector<ClusterInformation*> Parents;
+  set<cluster_id_t>::iterator MergesIt;
   
-  vector<ClusterInformation*>& Children = Node->GetChildren();
+  ClusterInformation* MasterParent = LocateNode(MainClusterID);
+  Parents.push_back(MasterParent);
   
-  if (Children.size() == 0) /* Base Case */
-  { 
-      /* DEBUG 
-    cout << "ID " << Node->GetID() << " on Level " << Level+1 << " is a LEAF" << endl; */
-
-    return 1;
-  }
-
-  for (size_t i = 0; i < Children.size(); i++)
+  MasterParent->AddChild(NewNode);
+  
+  for (MergesIt  = Merges.begin();
+       MergesIt != Merges.end();
+       ++MergesIt)
   {
-    if (Children[i]->GetID() != NOISE_CLUSTERID &&
-        !Children[i]->IsDiscarded())
-    {
-      NumberOfDivisions += ColapseNonDividedSubtrees(Children[i], Level+1);
-    }
-  }
-
-  if (NumberOfDivisions == 1 || NumberOfDivisions == 0)
-  { /* Delete the subtree! */
-
-    /* DEBUG */
-    cout << "** Collapsing node " << Node->GetID() << " on level " << Level+1;
-    cout << " (" << Children[1] << ") **" << endl;
-
-    /* EXPERIMENTAL, do not delete nodes, just mark them as discarded */
-    Children[0]->Discard();
-    if (NumberOfDivisions == 1)
-    {
-      Children[1]->Discard();
-    }
-    // delete Children[0];
-    // delete Children[1];
-    // Children.clear();
-  }
-
-  if (NumberOfDivisions == 0)
-  {
-    NumberOfDivisions++;
+    ClusterInformation* Node = LocateNode((*MergesIt));
+    
+    Node->AddChild(NewNode);
   }
   
-  /* DEBUG */
-  cout << "ID " << Node->GetID() << " on Level " << Level+1 << " ";
-  cout << "has " << NumberOfDivisions << " divisions" << endl;
-  
-  return NumberOfDivisions;
+  return;
 }
 
 /**
- * Checks if an ID is inside a set of IDs
- *
- * \param ID Value to check
- * \param IDsSet Set of IDs
- *
- * \return True ID is inside IDsSet, false otherwise
- *
- */ 
-bool ClusteringRefinementAggregative::IsIDInSet(cluster_id_t       ID,
-                                     set<cluster_id_t>& IDsSet)
+ * Locate a node with a the given cluster ID in the deepest level
+ * 
+ * \param  ClusterID The cluster ID to be located into the tree
+ * 
+ * \return A pointer to the node with the given cluster ID in the deepest level
+ *         of a tree, NULL if doesn't exist
+ */
+ClusterInformation* ClusteringRefinementAggregative::LocateNode(cluster_id_t ClusterID)
 {
-  set<cluster_id_t>::iterator SetIterator;
 
-  if (IDsSet.count(ID) > 0)
-    return true;
-  else
-    return false;
+  for (size_t i = NodesPerLevel.size()-1; i >= 0; i--)
+  {
+    for (size_t j = 0; j < NodesPerLevel[i].size(); j++)
+    {
+      ClusterInformation* Node = NodesPerLevel[i][j];
+      
+      if (Node->GetID() == ClusterID)
+      {
+        return Node;
+      }
+    }
+  }
+  return NULL;
 }
 
 /**
@@ -907,12 +1340,12 @@ bool ClusteringRefinementAggregative::IsIDInSet(cluster_id_t       ID,
  * \param CurrentPartition Partition object of the burst vector
  * \param Step Depth of the current step
  *
- * \return True ID is inside IDsSet, false otherwise
+ * \return True if plots were printed correctly, false otherwise
  *
  */ 
 bool ClusteringRefinementAggregative::PrintPlots(const vector<CPUBurst*>& Bursts,
-                                      Partition&               CurrentPartition,
-                                      size_t                   Step)
+                                                 Partition&               CurrentPartition,
+                                                 size_t                   Step)
 {
   ostringstream         CurrentDataFileName;
   ostringstream         CurrentPlotFileNamePrefix;
@@ -1010,8 +1443,7 @@ bool ClusteringRefinementAggregative::PrintPlots(const vector<CPUBurst*>& Bursts
   if (!Plots->PrintPlots(CurrentDataFileName.str(),
                          CurrentPlotFileNamePrefix.str(),
                          PlotTitle.str(),
-                         CurrentPartition.NumberOfClusters(),
-                         CurrentPartition.HasNoise()))
+                         CurrentPartition.GetIDs()))
   {
     system_messages::verbose = verbose_state;
     SetError(true);
@@ -1027,20 +1459,33 @@ bool ClusteringRefinementAggregative::PrintPlots(const vector<CPUBurst*>& Bursts
 
 /**
  * Generates a representation of the resulting partitioning tree to a file
- *
+ * 
+ * \param Step    Current step to be printed
+ * \param Epsilon Epsilon used in the current
+ * 
  * \return True if the tree was written correctly, false otherwise
  *
- */  
-bool ClusteringRefinementAggregative::PrintTrees(size_t Step)
+ */
+bool ClusteringRefinementAggregative::PrintTrees(size_t Step,
+                                                 bool   LastTree)
 {
   ofstream* Output;
 
   vector<ClusterInformation*>& TopLevelNodes = NodesPerLevel[0];
+  vector<string>               LevelNames;
   
   if (PrintStepsInformation)
   {
     ostringstream TreeFileName;
-    TreeFileName << OutputFilePrefix << ".STEP" << (Step+1) << ".TREE.dot";
+
+    if (!LastTree)
+    {
+      TreeFileName << OutputFilePrefix << ".STEP" << (Step+1) << ".TREE.dot";
+    }
+    else
+    {
+      TreeFileName << OutputFilePrefix << ".MERGE.TREE.dot";
+    }
 
     Output = new ofstream(TreeFileName.str().c_str(), ios_base::trunc);
 
@@ -1059,18 +1504,92 @@ bool ClusteringRefinementAggregative::PrintTrees(size_t Step)
 
   (*Output) << "digraph Tree {" << endl;
 
+  /* Level Information */
+  (*Output) << endl << "{" << endl;
+  (*Output) << "node [shape=plaintext]" << endl;
+
+  for (size_t i = 0; i <= Step; i++)
+  {
+    ostringstream LevelName;
+    
+    if (LastTree && i == Steps)
+    {
+      (*Output) << "\"SEQUENCE BASED MERGE | Global Score =";
+      (*Output) << GlobalScoresPerLevel[i]*100 << "% \"" << endl;
+    }
+    else
+    {
+      (*Output) << "\"STEP " << i+1 << " Eps = " << EpsilonPerLevel[i];
+      (*Output) << " | Global Score = " << GlobalScoresPerLevel[i]*100 << "% \"";
+      // LevelNames.push_back(LevelName.str());
+    
+      (*Output) << LevelName.str();
+    }
+    
+    if (i != Step)
+    {
+      (*Output) << "->";
+    }
+  }
+  (*Output) << ";" << endl;
+  (*Output) << "}" << endl;
   
+  /* Print the tree itself */
+  (*Output) << "{" << endl;
+  
+  /*
+  for (size_t i = 0; i < NodesPerLevel.size(); i++)
+  {
+    vector<ClusterInformation*>& CurrentLevelNodes = NodesPerLevel[i];
+    
+    (*Output) << "subgraph cluster" << i+1 << " {" << endl;
+    for (size_t j = 0; j < CurrentLevelNodes.size(); j++)
+    {
+      ClusterInformation* Node = CurrentLevelNodes[j];
+      
+      if (Node->GetID() != NOISE_CLUSTERID || Node->GetIndividuals() != 0)
+      {
+        (*Output) << Node->NodeName() << " " << Node->NodeLabel() << ";" << endl;
+      }
+    }
+    (*Output) << "label = \"Step " << i+1 << " Epsilon = ";
+    (*Output) << EpsilonPerLevel[i] << "\"" << endl;
+    (*Output) << "}" << endl;
+  }
+  */
+
+  /*
   for (size_t i = 0; i < TopLevelNodes.size(); i++)
   {
-    
-    PrintTreeNodes ((*Output), TopLevelNodes[i]);
-
+  */
+    PrintTreeNodes ((*Output));
     (*Output) << endl;
-
-    PrintTreeLinks ((*Output), TopLevelNodes[i]);
-    
+    PrintTreeLinks ((*Output));
     (*Output) << endl;
+  // }
+  (*Output) << "}" << endl;
+  
+  /* Rank nodes per level 
+  (*Output) << "{" << endl;
+  
+  for (size_t i = 0; i <= Step; i++)
+  {
+    vector<ClusterInformation*>& LevelNodes = NodesPerLevel[i];
+    
+    (*Output) << "{ rank = same; " << LevelNames[i];
+    for (size_t j = 0; j < LevelNodes.size(); j++)
+    {
+      ClusterInformation* Node = LevelNodes[j];
+      if (Node->GetID() != NOISE_CLUSTERID || Node->GetIndividuals() != 0)
+      {
+        (*Output) << "; " << Node->GetNodeID();
+      }
+    }
+    (*Output) << " }" << endl;
   }
+
+  (*Output) << "}" << endl;
+  */
 
   (*Output) << "}" << endl << endl;
   
@@ -1082,11 +1601,40 @@ bool ClusteringRefinementAggregative::PrintTrees(size_t Step)
   return true;
 }
 
-bool ClusteringRefinementAggregative::PrintTreeNodes(ofstream&           str,
-                                          ClusterInformation* Node)
+bool ClusteringRefinementAggregative::PrintTreeNodes(ofstream& str)
 {
-  vector<ClusterInformation*>& Children = Node->GetChildren();
+  
+  
+  for (size_t i = 0; i < NodesPerLevel.size(); i++)
+  {
+    str << "// Level " << i << endl;
+    
+    str << "{rank=same; ";
+    for (size_t j = 0; j < NodesPerLevel[i].size(); j++)
+    {
+      ClusterInformation* Node = NodesPerLevel[i][j];
+      
+      if (Node->GetID() != NOISE_CLUSTERID || Node->GetIndividuals() != 0)
+      {
+        str << Node->NodeName() << ";";
+      }
+    }
+    str << "}" << endl;
+    
+    for (size_t j = 0; j < NodesPerLevel[i].size(); j++)
+    {
+      ClusterInformation* Node = NodesPerLevel[i][j];
+      
+      if (Node->GetID() != NOISE_CLUSTERID || Node->GetIndividuals() != 0)
+      {
+        str << Node->NodeName() << " " << Node->NodeLabel() << ";" << endl;
+      }
+    }
+  }
 
+  /*
+  vector<ClusterInformation*>& Children = Node->GetChildren();
+  
   if (Node->GetID() != NOISE_CLUSTERID || Node->GetIndividuals() != 0)
   {
     str << Node->NodeName() << " " << Node->NodeLabel() << ";" << endl;
@@ -1096,13 +1644,32 @@ bool ClusteringRefinementAggregative::PrintTreeNodes(ofstream&           str,
       PrintTreeNodes(str, Children[i]);
     }
   }
+  */
 
   return true;
 }
 
-bool ClusteringRefinementAggregative::PrintTreeLinks(ofstream&           str,
-                                          ClusterInformation* Node)
+bool ClusteringRefinementAggregative::PrintTreeLinks(ofstream& str)
 {
+  for (size_t i = 0; i < NodesPerLevel.size(); i++)
+  {
+    for (size_t j = 0; j < NodesPerLevel[i].size(); j++)
+    {
+      ClusterInformation* Node = NodesPerLevel[i][j];
+      
+      if (Node->GetID() != NOISE_CLUSTERID || Node->GetIndividuals() != 0)
+      {
+        vector<ClusterInformation*>& Children = Node->GetChildren();
+      
+        for (size_t k = 0; k < Children.size(); k++)
+        {
+          str << "\"" << Node->NodeName() << "\" ->  \"" << Children[k]->NodeName() << "\"";
+          str << ";" << endl;
+        }
+      }
+    }
+  }
+  /*
   vector<ClusterInformation*>& Children = Node->GetChildren();
   
   for (size_t i = 0; i < Children.size(); i++)
@@ -1121,7 +1688,10 @@ bool ClusteringRefinementAggregative::PrintTreeLinks(ofstream&           str,
       PrintTreeLinks(str, Children[i]);
     }
   }
+  */
   
   return true;
 }
+
+
 

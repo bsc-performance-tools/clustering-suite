@@ -170,8 +170,6 @@ bool OPTICS::Run(const vector<const Point*>& Data,
   system_messages::show_progress_end("Clustering points", (int) Data.size());
 
   /* NOISE cluster has to be considered as a cluster, to mantain coherence across the namings */
-  DataPartition.NumberOfClusters (ResultingClusters+1);
-  DataPartition.HasNoise(true);
 
   return true;
 }

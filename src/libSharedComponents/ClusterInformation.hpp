@@ -58,6 +58,7 @@ class ClusterInformation: public Error
 
     bool                        Discarded;
     bool                        Reclassification;
+    bool                        _Visited; 
 
     percentage_t                Score;
     size_t                      Occurrences;
@@ -66,12 +67,17 @@ class ClusterInformation: public Error
 
     vector<instance_t>          Instances;
     
-    vector<ClusterInformation*> Children;
+    vector<ClusterInformation*> Children; /* Both divisive and aggregative */
+    vector<ClusterInformation*> Parents;  /* Just for aggregative */
 
   public:
     ClusterInformation(cluster_id_t ID,
                        percentage_t Score,
                        size_t       Occurrences,
+                       timestamp_t  TotalDuration,
+                       size_t       Individuals);
+                       
+    ClusterInformation(cluster_id_t ID,
                        timestamp_t  TotalDuration,
                        size_t       Individuals);
 
@@ -80,8 +86,11 @@ class ClusterInformation: public Error
     void         SetID(cluster_id_t ID) { this->ID = ID; };
     cluster_id_t GetID(void)            { return this->ID; };
 
-    percentage_t GetScore(void)       { return Score; };
-    size_t       GetOccurrences(void) { return Occurrences; };
+    void         SetScore(percentage_t Score) { this->Score = Score; };
+    percentage_t GetScore(void)               { return Score; };
+    
+    void         SetOccurrences(size_t Occurrences) { this->Occurrences = Occurrences; };
+    size_t       GetOccurrences(void)               { return Occurrences; };
     
     timestamp_t  GetTotalDuration(void) { return TotalDuration; };
     size_t       GetIndividuals(void)   { return Individuals; };
@@ -97,11 +106,17 @@ class ClusterInformation: public Error
                                             Instances.push_back(Instance); };
 
     bool AddChild(ClusterInformation*);
-
     vector<ClusterInformation*>& GetChildren(void) { return Children; };
+    
+    bool AddParent(ClusterInformation*);
+    vector<ClusterInformation*>& GetParents(void)  { return Parents; };
 
     size_t TotalClusters(void);
 
+    /* Used in the aggregative */
+    void RenameNode(cluster_id_t& MaxIDAssigned);
+
+    /* Used in the divisive */
     void RenameChildren(cluster_id_t& RestOfChildrenID);
 
     bool IsLeaf(void);
@@ -118,11 +133,30 @@ class ClusterInformation: public Error
       Reclassification = true;
     }
 
+    bool Visited(void)         { return _Visited; };
+    void Visited(bool Visited) { _Visited = Visited; };
+
     string NodeName(void);
 
     string NodeLabel(void);
 
     string Color(void);
+};
+
+class ClusterInformationIDOrder
+{
+  public:
+    bool operator()(ClusterInformation* Node1, ClusterInformation* Node2)
+    {
+      if (Node1->GetID() <= Node2->GetID())
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
 };
 
 #endif /* _CLUSTERINFORMATION_HPP_ */

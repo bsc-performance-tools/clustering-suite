@@ -374,10 +374,6 @@ bool GMEANS::Run(const vector<const Point*>& Data,
     DifferentIDs.insert((cluster_id_t) assigned_centers[i]);
   }
 
-  /* Add one more cluster, to avoid the non-existent NOISE cluster */
-  DataPartition.NumberOfClusters (DifferentIDs.size());
-  DataPartition.HasNoise(false);
-
   free(centers);
   free(records);
   free(assigned_centers);

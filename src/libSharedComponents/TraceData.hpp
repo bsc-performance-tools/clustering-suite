@@ -61,12 +61,11 @@ class TraceData: public Error
   protected:
 
     static TraceData* Instance;
+    
     TraceData(void);
 
-    /*
-    static char  AminoacidTranslation[];
-    static INT32 AminoacidTranslationSize;
-    */
+    /* Number of total objects present in the trace = Tasks x (Threads x Task) */
+    size_t TraceObjects;
 
     /* The main containers */
     vector<CPUBurst*> AllBursts;
@@ -113,6 +112,9 @@ class TraceData: public Error
     typedef vector<CPUBurst*>::iterator iterator;
 
     static TraceData* GetInstance(void);
+    
+    void   SetTraceObjects(size_t TraceObjects) { this->TraceObjects = TraceObjects; };
+    size_t GetTraceObjects(void) { return TraceObjects; };
     
     bool NewBurst(task_id_t                         TaskId,
                   thread_id_t                       ThreadId,

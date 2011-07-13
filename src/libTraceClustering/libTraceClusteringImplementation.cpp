@@ -35,6 +35,8 @@
 #include "libTraceClusteringImplementation.hpp"
 #include "libTraceClustering.hpp"
 
+#include <DBSCAN.hpp>
+
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 #include <FileNameManipulator.hpp>
@@ -330,7 +332,7 @@ libTraceClusteringImplementation::FlushData(string OutputFileName)
     return false;
   }
 
-  if (USE_CLUSTERING(UseFlags))
+  if (USE_CLUSTERING(UseFlags) || USE_CLUSTERING_REFINEMENT(UseFlags))
   {
     AllData = false;
   }
@@ -338,7 +340,7 @@ libTraceClusteringImplementation::FlushData(string OutputFileName)
   {
     AllData = true;
   }
-  
+
   if (!Data->FlushPoints(OutputStream, LastPartition.GetAssignmentVector(), AllData))
   {
     SetError(true);
@@ -410,7 +412,6 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
   Parameters = ParametersManager::GetInstance();
   
   Statistics.InitStatistics(LastPartition.GetIDs(),
-                            ClusteringCore->HasNoise(),
                             Parameters->GetClusteringParametersNames(),
                             Parameters->GetClusteringParametersPrecision(),
                             Parameters->GetExtrapolationParametersNames(),
@@ -441,7 +442,189 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
 bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive,
                                                                  string OutputFileNamePrefix)
 {
-  return true;
+  map<string, string> ClusteringAlgorithmParameters;
+  ostringstream       Converter;
+  ostringstream       Messages;
+  
+  vector<double>      Distances;
+  vector<double>      Epsilons;
+  
+  size_t StopPosition;
+  
+  size_t TraceObjects;
+  int    MinPoints;
+  
+  if (Data == NULL)
+  {
+    SetErrorMessage("data not initialized");
+    return false;
+  }
+  
+  if ((TraceObjects = Data->GetTraceObjects()) == 0)
+  {
+    SetErrorMessage("number of objects not available. Automatic refinement not available on TRF traces");
+    return false;
+  }
+  
+  MinPoints = TraceObjects/4;
+  
+  if (MinPoints <= 1)
+  {
+    MinPoints = 2;
+  }
+  
+  Messages.str("");
+  Messages << "|-> Selected MinPoints = " << MinPoints << endl;
+  system_messages::information(Messages.str());
+  
+  /* Compute the k-neighbours distance */
+  
+  Messages.str("");
+  Messages << "|-> Computing K-Neighbour Data" << endl;
+  system_messages::information(Messages.str());
+  
+  
+  Converter << 0.0;
+  ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::EPSILON_STRING, string(Converter.str())));
+  Converter.str("");
+  Converter << MinPoints;
+  ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::MIN_POINTS_STRING, string(Converter.str())));
+  
+  DBSCAN DBSCANCore = DBSCAN(ClusteringAlgorithmParameters);
+  
+  bool verbose_state = system_messages::verbose;
+  system_messages::verbose = false;
+  DBSCANCore.ComputeNeighbourhood(Data->GetClusteringPoints(), MinPoints, Distances);
+  system_messages::verbose = verbose_state;
+  
+  /* 10 different epsilons 1% to 10% "NOISE" 
+  for (size_t i = 0; i < Distances.size(); i++)
+  {
+    if (Distances[i] < 0.001)
+    {
+      StopPosition = i;
+      break;
+    }
+  }
+  */
+  
+  /*
+  cout << "POSITIONS = ";
+  for (size_t i = 0; i < 10; i++)
+  {
+    int Position = (StopPosition*(i+1))/100;
+    /* DEBUG 
+    cout << Position << " ";
+    Epsilons.push_back(Distances[Position]);
+  }
+  cout << endl;
+  
+  srand(time(NULL));
+  
+  size_t MinPos = (Distances.size()*1)/100;
+  size_t MaxPos = (Distances.size()*10)/100;
+  
+  /*
+  cout << "POSITIONS = ";
+  for (size_t i = 0; i < 10; i++)
+  {
+    int Position = (rand()%(MaxPos-MinPos+1))+MinPos;
+    /* DEBUG 
+    cout << Position << " ";
+    Epsilons.push_back(Distances[Position]);
+  }
+  cout << endl; */
+  
+  /* New way to find Epsilons */
+  size_t Elements   = Distances.size();
+  // size_t MinX = (Elements*5)/1000;
+  // size_t MaxX = (Elements*995)/1000;
+  size_t MinX = 0;
+  size_t MaxX = Elements - 1;
+  
+  double SumEps = 0;
+  for (size_t i = 0; i < Distances.size(); i++)
+  {
+    SumEps += Distances[i];
+  }
+  
+  double AvgEps     = SumEps/Distances.size();
+  double MaxEpsilon = Distances[MinX];   // < 0.5%  data discarded
+  double MinEpsilon = Distances[MaxX]; // > 99.5% data discarded
+
+  /*  
+  cout << "MaxEpsilon = " << MaxEpsilon << " ";
+  cout << "MinEpsilon = " << MinEpsilon << " ";
+  cout << "Avg.Epsilon = " << AvgEps << endl;
+  */
+  
+  double Intercept = MaxEpsilon;
+  double Slope     = -1.0*(MaxEpsilon/(MaxX/2));
+  
+  size_t MaxIndex = 0;
+  double MaxDelta = 0;
+  
+  for (size_t i = MinX; i <= (MaxX/2); i++)
+  {
+    double Delta = ((Slope * i) + Intercept) - Distances[i];
+    
+    if (Delta > MaxDelta)
+    {
+      MaxIndex = i;
+      MaxDelta = Delta;
+    }
+  }
+  
+  // cout << "Candidate MinEpsilon = " << Distances[MaxIndex] << endl;
+  
+  MinEpsilon        = Distances[MaxIndex];
+  size_t IndexRange = MaxIndex - MinX;
+  
+  if (IndexRange < 10)
+  {
+    for (size_t i = 0; i <= IndexRange; i++)
+    {
+      Epsilons.push_back(Distances[MinX+i]);
+    }
+  }
+  else
+  {
+    // double StepSize   = (MaxEpsilon - MinEpsilon)/10;
+    // cout << "Elements = " << Elements << endl;
+    // cout << "MinX = " << MinX << " MaxIndex = " << MaxIndex << endl;
+    // cout << "Positions = [ ";
+    for (size_t i = 0; i < 10; i++)
+    {
+      // Epsilons.push_back(MinEpsilon + (StepSize*(i+1)));
+      size_t CurrentIndex = MinX + ((10*(i+1)*IndexRange)/100);
+      // cout << CurrentIndex << " ";
+      Epsilons.push_back(Distances[CurrentIndex]);
+    }
+    // cout << "]" << endl;
+  }
+    
+  if (Divisive)
+  {
+    sort(Epsilons.rbegin(), Epsilons.rend());
+  }
+  else
+  { /* When using aggregative version, Epsilons should be sorted increasing */
+    sort(Epsilons.begin(), Epsilons.end());
+  }
+  
+  Messages.str("");
+  Messages << "|-> Epsilon Values = [ ";
+
+  /* DEBUG */
+  for (size_t i = 0; i < Epsilons.size(); i++)
+  {
+    Messages << Epsilons[i] << " ";
+    
+  }
+  Messages << "]" << endl;
+  system_messages::information(Messages.str());
+  
+  return GenericRefinement(Divisive, MinPoints, Epsilons, OutputFileNamePrefix);
 }
 
 /**
@@ -456,7 +639,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
  * \param Steps  Number of iterarions of the algorithm
  * \param OutputFileNamePrefix Prefix of the output files for each step data and plots
  *
- * \result True if the analysis finished correctly, false otherwise
+ * \return True if the analysis finished correctly, false otherwise
  */
 bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive,
                                                                  int    MinPoints,
@@ -466,10 +649,9 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
                                                                  string OutputFileNamePrefix)
 {
 #ifdef HAVE_SEQAN
-
-  ParametersManager *Parameters;
-  vector<Partition>  PartitionsHierarchy;
-  
+  vector<double>     EpsilonPerLevel;
+  double             StepSize    = (MaxEps - MinEps)/(Steps-1);
+    
   if (Data == NULL)
   {
     SetErrorMessage("data not initialized");
@@ -478,15 +660,61 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
 
   if (Divisive)
   {
-    ClusteringRefinementDivisive RefinementAnalyzer((INT32) MinPoints,
-                                                    MaxEps,
-                                                    MinEps,
-                                                    (size_t) Steps);
+    EpsilonPerLevel.push_back(MaxEps);
+    for (size_t i = 1; i < Steps; i++)
+    {
+      EpsilonPerLevel.push_back(EpsilonPerLevel[i-1] - StepSize);
+    }
+  }
+  else
+  {
+    EpsilonPerLevel.push_back(MinEps);
+    for (size_t i = 1; i < Steps; i++)
+    {
+      EpsilonPerLevel.push_back(EpsilonPerLevel[i-1] + StepSize);
+    }
+  }
+  
+  return GenericRefinement(Divisive, MinPoints, EpsilonPerLevel, OutputFileNamePrefix);
+  
+#else
+
+  SetErrorMessage("Refinement analysis is not available due to the unavailability of SeqAn library");
+  SetError(true);
+  return false;
+  
+#endif
+
+}
+
+/**
+ * Effectively executes the refinement analysis
+ * 
+ * \param Divisive             True if the refinement will be top down, false if
+ *                             it would be bottom up
+ * \param MinPoints Fixed MinPoints value used in all runs of DBSCAN
+ * \param EpsilonPerLevel      Vector with all values of epsilon to be used
+ * \param OutputFileNamePrefix Prefix of the output files for each step data and plots
+ * 
+ * \return True if the analysis finished correctly, false otherwise
+ */
+bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive,
+                                                         int            MinPoints,
+                                                         vector<double> EpsilonPerLevel,
+                                                         string         OutputFileNamePrefix)
+{
+  ParametersManager *Parameters;
+  vector<Partition>  PartitionsHierarchy;
+  
+  if (Divisive)
+  {
+    ClusteringRefinementDivisive RefinementAnalyzer(MinPoints,
+                                                    EpsilonPerLevel);
 
     if (!RefinementAnalyzer.Run(Data->GetClusteringBursts(),
-                              PartitionsHierarchy,
-                              LastPartition,
-                              OutputFileNamePrefix))
+                                PartitionsHierarchy,
+                                LastPartition,
+                                OutputFileNamePrefix))
     {
       SetErrorMessage(RefinementAnalyzer.GetLastError());
       SetError(true);
@@ -495,10 +723,8 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   }
   else
   {
-    ClusteringRefinementAggregative RefinementAnalyzer((INT32) MinPoints,
-                                                        MaxEps,
-                                                        MinEps,
-                                                        (size_t) Steps);
+    ClusteringRefinementAggregative RefinementAnalyzer(MinPoints,
+                                                       EpsilonPerLevel);
 
     if (!RefinementAnalyzer.Run(Data->GetClusteringBursts(),
                                 PartitionsHierarchy,
@@ -533,13 +759,12 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   Parameters = ParametersManager::GetInstance();
   
   Statistics.InitStatistics(LastPartition.GetIDs(),
-                            LastPartition.HasNoise(),
                             Parameters->GetClusteringParametersNames(),
                             Parameters->GetClusteringParametersPrecision(),
                             Parameters->GetExtrapolationParametersNames(),
                             Parameters->GetExtrapolationParametersPrecision());
   
-  if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
+  if (!Statistics.ComputeStatistics(Data->GetClusteringBursts(),
                                     LastPartition.GetAssignmentVector()))
   {
     SetErrorMessage(Statistics.GetLastError());
@@ -547,8 +772,6 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   }
   
   // Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
-
-  
 
   /* Generate score and all intermediate (event) traces */
   if (OutputFileNamePrefix.compare("") != 0)
@@ -562,15 +785,17 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
     for (size_t i = 0; i < PartitionsHierarchy.size(); i++)
     {
       ClusteredTraceGenerator* TraceGenerator;
-      ostringstream OutputTraceName;
+      ostringstream OutputTraceName, Messages;
 
       OutputTraceName << OutputFileNamePrefix << ".STEP" << i+1 << ".prv";
 
       ClusteringStatistics Stats;
 
+      Messages << "****** Writing events trace of STEP " << i+1 << " ******" << endl;
+      system_messages::information(Messages.str());
+
       /* Sort IDs */
       Stats.InitStatistics(PartitionsHierarchy[i].GetIDs(),
-                           PartitionsHierarchy[i].HasNoise(),
                            Parameters->GetClusteringParametersNames(),
                            Parameters->GetClusteringParametersPrecision(),
                            Parameters->GetExtrapolationParametersNames(),
@@ -601,19 +826,19 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
       cout << "All Burst size = " << Data->GetAllBursts().size() << endl;
       cout << "IDs size = " << PartitionsHierarchy[i].GetAssignmentVector().size() << endl; */
 
-      bool verbose_state = system_messages::verbose;
-      system_messages::verbose = false;
+      // bool verbose_state = system_messages::verbose;
+      // system_messages::verbose = false;
 
       if (!TraceGenerator->Run(Data->GetAllBursts(),
                                PartitionsHierarchy[i].GetAssignmentVector(),
-                               PartitionsHierarchy[i].NumberOfClusters(),
+                               PartitionsHierarchy[i].GetIDs(),
                                true)) // Minimize information
       {
-          system_messages::verbose = verbose_state;
+          // system_messages::verbose = verbose_state;
           SetErrorMessage(TraceGenerator->GetLastError());
           return false;
       }
-      system_messages::verbose = verbose_state;
+      // system_messages::verbose = verbose_state;
 
       delete TraceGenerator;
     }
@@ -622,15 +847,6 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   ClusteringExecuted = true;
   
   return true;
-  
-#else
-
-  SetErrorMessage("Refinement analysis is not available due to the unavailability of SeqAn library");
-  SetError(true);
-  return false;
-  
-#endif
-
 }
 
 /**
@@ -677,10 +893,10 @@ bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePre
                                                             bool   FASTASequencesFile)
 {
 #ifdef HAVE_SEQAN
-  vector<percentage_t>       PercentageDurations;
-  SequenceScore              Scoring;
-  vector<SequenceScoreValue> ScoresPerCluster;
-  double                     GlobalScore;
+  map<cluster_id_t, percentage_t> PercentageDurations;
+  SequenceScore                   Scoring;
+  vector<SequenceScoreValue>      ScoresPerCluster;
+  double                          GlobalScore;
   
   
   if (Data == NULL)
@@ -689,13 +905,11 @@ bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePre
     return false;
   }
 
-  // This assignement is needed pass the reference
   PercentageDurations = Statistics.GetPercentageDurations();
   
   if(!Scoring.ComputeScore(Data->GetClusteringBursts(),
                            LastPartition.GetAssignmentVector(),
                            PercentageDurations,
-                           LastPartition.HasNoise(),
                            ScoresPerCluster,
                            GlobalScore,
                            OutputFilePrefix,
@@ -770,8 +984,8 @@ bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceN
   }
 
   if (!TraceReconstructor->Run(Data->GetAllBursts(),
-                               IDs,
-                               LastPartition.NumberOfClusters()))
+                               LastPartition.GetAssignmentVector(),
+                               LastPartition.GetIDs()))
   {
     SetErrorMessage(TraceReconstructor->GetLastError());
     return false;
@@ -823,8 +1037,7 @@ bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
   if (!Plots->PrintPlots(DataFileName,
                          Prefix,
                          PlotTitle,
-                         LastPartition.NumberOfClusters(),
-                         LastPartition.HasNoise()))
+                         LastPartition.GetIDs()))
   {
     SetError(true);
     SetErrorMessage(Plots->GetLastError());
@@ -1061,11 +1274,11 @@ bool libTraceClusteringImplementation::ReconstructMasterPartition(vector<vector<
     }
   }
 
-  /* DEBUG */
+  /* DEBUG 
   Messages.str("");
   Messages << "CompleteBursts size = " << CompleteBursts.size() << " ";
   Messages << "LineToID size = " << LineToID.size() << endl;
-  system_messages::information(Messages.str().c_str());
+  system_messages::information(Messages.str().c_str()); */
 
   if (CompleteBursts.size() != LineToID.size())
   {

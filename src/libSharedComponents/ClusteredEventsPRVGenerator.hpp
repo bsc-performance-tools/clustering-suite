@@ -73,18 +73,23 @@ class ClusteredEventsPRVGenerator: public ClusteredTraceGenerator
     
     bool Run(vector<CPUBurst*>&    Bursts,
              vector<cluster_id_t>& IDs,
-             size_t                NumberOfClusters,
+             set<cluster_id_t>&    DifferentIDs,
              bool                  MinimizeInformation = false);
   
-    bool GenerateOutputPCF(size_t NumberOfClusters);
-  
   private:
+    bool GenerateOutputPCF(set<cluster_id_t>& DifferentIDs);
 
     bool BurstOpeningEvent(Event* CurrentEvent);
 
     bool BurstClosingEvent(Event* CurrentEvent);
 
     bool CopyROWFile();
+    
+    void PrepareClusterIDsVector(vector<cluster_id_t>& ClusterIDs,
+                                 set<cluster_id_t>&    DifferentIDs,
+                                 cluster_id_t&         MaxIDUsed);
+                                 
+    string GetClusterName(cluster_id_t ID);
 };
 
 #endif

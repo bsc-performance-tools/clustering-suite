@@ -59,7 +59,7 @@ class ClusteredTraceGenerator: public Error
   
     virtual bool Run(vector<CPUBurst*>&    Bursts,
                      vector<cluster_id_t>& IDs,
-                     size_t                NumberOfClusters,
+                     set<cluster_id_t>&    DifferentIDs,
                      bool                  MinimizeInformation = false) = 0;
 
     virtual bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith) = 0;

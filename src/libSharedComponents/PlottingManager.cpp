@@ -56,6 +56,9 @@ using std::ostringstream;
 using std::cout;
 using std::endl;
 
+#include <algorithm>
+using std::sort;
+
 #include <cerrno>
 #include <cstring>
 
@@ -127,16 +130,19 @@ PlottingManager::GetPlotsWarning(void)
 
 /**
  * Print all plots correctly defined
- * \param PlotsFileNameHeader Heading text for the scripts file names
- * \param PlotsDataFileName Name of the file where data plots data will be located
+ * 
+ * \param PlotsDataFileName   Name of the file where data plots data will be located
+ * \param PlotsFileNamePrefix Prefix to be used in the resulting .gnuplot files 
+ * \param ClusteringAlgorithmName Name of the clustering algorithm that 
+ *                                corresponds to the plots
+ * \param DifferentIDs Set with the different IDs present in the data
+ * 
  * \return True if all plots have been written correctly, false otherwise
  */
-bool
-PlottingManager::PrintPlots(string PlotsDataFileName,
-                            string PlotsFileNamePrefix,
-                            string ClusteringAlgorithmName,
-                            size_t NumberOfClusters,
-                            bool   PrintNoiseCluster)
+bool PlottingManager::PrintPlots(string             PlotsDataFileName,
+                                 string             PlotsFileNamePrefix,
+                                 string             ClusteringAlgorithmName,
+                                 set<cluster_id_t>& DifferentIDs)
 {
 
   // system_messages::show_progress("Writing plots to disc", 0, Plots.size());
@@ -153,8 +159,7 @@ PlottingManager::PrintPlots(string PlotsDataFileName,
                             PlotsDataFileName,
                             Plots[i],
                             ClusteringAlgorithmName,
-                            NumberOfClusters,
-                            PrintNoiseCluster))
+                            DifferentIDs))
       {
         SetError(true);
         return false;
@@ -492,21 +497,44 @@ PlottingManager::CheckParameterPosition(string             ParameterName,
  * Writes to disc a single plot of the plots vector
  *
  * \param FileNamePrefix Prefix of the output script
+ * \param DataFileName Name of the file that contains the data of the current plot
  * \param Definition Container of the plot definition
+ * \param ClusteringAlgorithmName Name of the clustering algorithm that 
+ *                                corresponds to the plots
+ * \param DifferentIDs Set with the different IDs present in the data
  * 
  * \return True if the plot has been written correctly, false otherwise
  */
-bool
-PlottingManager::PrintSinglePlot(string          FileNamePrefix,
-                                 string          DataFileName,
-                                 PlotDefinition *Definition,
-                                 string          ClusteringAlgorithmName,
-                                 size_t          NumberOfClusters,
-                                 bool            PrintNoiseCluster)
+bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
+                                      string             DataFileName,
+                                      PlotDefinition    *Definition,
+                                      string             ClusteringAlgorithmName,
+                                      set<cluster_id_t>& DifferentIDs)
 {
-  ofstream      OutputStream;
-  string        OutputFileName;
-  ostringstream ScreenPlotName;
+  ofstream                    OutputStream;
+  string                      OutputFileName;
+  ostringstream               ScreenPlotName;
+  set<cluster_id_t>::iterator IDsIterator;
+  vector<cluster_id_t>        IDs;
+  
+  /* Transform the set of different IDs into a vector and sort it */
+  if (DifferentIDs.size() == 0)
+  { /* Data not clustered */
+    IDs.push_back(UNCLASSIFIED);
+    IDs.push_back(MISSING_DATA_CLUSTERID);
+    IDs.push_back(DURATION_FILTERED_CLUSTERID);
+    IDs.push_back(RANGE_FILTERED_CLUSTERID);
+  }
+  else
+  {
+    for (IDsIterator  = DifferentIDs.begin();
+         IDsIterator != DifferentIDs.end();
+         ++IDsIterator)
+    {
+      IDs.push_back((*IDsIterator));
+    }
+    sort(IDs.begin(), IDs.end());
+  }
 
   if (!Definition->ThreeDimensions)
   {
@@ -631,6 +659,18 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
     
     /* Actual plot */
     OutputStream << "splot ";
+    for (size_t i = 0; i < IDs.size(); i++)
+    {
+      Write3D_Definition (OutputStream, X, Y, Z,
+                          IDs[i]+PARAVER_OFFSET,
+                          GetClusterName(IDs[i]),
+                          DataFileName);
+                          
+      if (i != IDs.size()-1)
+        OutputStream << ",\\" << endl;
+    }
+    
+    /*
     if (NumberOfClusters == 0)
     {
       Write3D_Definition (OutputStream, X, Y, Z, UNCLASSIFIED+PARAVER_OFFSET, "Unclassified", DataFileName);
@@ -662,6 +702,7 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
           OutputStream << ",\\" << endl;
       }
     }
+    */
   }
   else
   {
@@ -702,6 +743,17 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
 
     /* Actual plot */
     OutputStream << "plot ";
+    for (size_t i = 0; i < IDs.size(); i++)
+    {
+      Write2D_Definition(OutputStream, X, Y,
+                         IDs[i]+PARAVER_OFFSET,
+                         GetClusterName(IDs[i]),
+                         DataFileName);
+                          
+      if (i != IDs.size()-1)
+        OutputStream << ",\\" << endl;
+    }
+    /*
     if (NumberOfClusters == 0)
     {
       Write2D_Definition (OutputStream, X, Y, UNCLASSIFIED+PARAVER_OFFSET, "Unclassified", DataFileName);
@@ -733,6 +785,7 @@ PlottingManager::PrintSinglePlot(string          FileNamePrefix,
 
       }
     }
+    */
   }
 
   /* Print clusters */
@@ -832,3 +885,40 @@ string PlottingManager::RGBStateColor(INT32 StateValue)
 
   return RGBColor;
 }
+
+/**
+ * Returns the cluster name using the ID
+ * 
+ * \param ID ID value to generate the cluster name
+ * 
+ * \return The name of the cluster, taking into account the special cluster ids
+ */
+string PlottingManager::GetClusterName(cluster_id_t ID)
+{
+  ostringstream ClusterName;
+  
+  switch (ID)
+  {
+    case UNCLASSIFIED:
+      ClusterName << "Unclassified";
+      break;
+    case DURATION_FILTERED_CLUSTERID:
+      ClusterName << "Duration Filtered";
+      break;
+    case RANGE_FILTERED_CLUSTERID:
+      ClusterName << "Range Filtered";
+      break;
+    case THRESHOLD_FILTERED_CLUSTERID:
+      ClusterName << "Threshold Filtered";
+      break;
+    case NOISE_CLUSTERID:
+      ClusterName << "Noise";
+      break;
+    default:
+      ClusterName << "Cluster " << ID;
+      break;
+  }
+
+  return ClusterName.str();
+}
+

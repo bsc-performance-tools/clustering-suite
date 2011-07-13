@@ -100,6 +100,8 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
   map<event_type_t, event_value_t> EventsData;
   map<event_type_t, event_value_t>::iterator EventsDataIterator;
   
+  
+  
   percentage_t  CurrentPercentage = 0;
 
   /*

@@ -45,6 +45,12 @@ using cepba_tools::Error;
 #include <vector>
 using std::vector;
 
+#include <map>
+using std::map;
+
+#include <set>
+using std::set;
+
 #include <utility>
 using std::pair;
 using std::make_pair;
@@ -78,7 +84,11 @@ class SequenceScoreValue
     percentage_t Weight;
 
   public:
+    SequenceScoreValue(void) {};
+    
     SequenceScoreValue(cluster_id_t ID, percentage_t Weight);
+
+    cluster_id_t GetID(void) { return ID; };
 
     void NewOccurrence(percentage_t PositionAlignment);
 
@@ -91,41 +101,44 @@ class SequenceScoreValue
 
 class SequenceScore: public Error 
 {
-  public:
+  private:
 
     static bool                    TablesLoaded;
     static int                     LastAminoacidValue;
     static map<cluster_id_t, char> Clusters2Aminoacids;
     static map<char, cluster_id_t> Aminoacids2Clusters;
 
+    vector<vector<cluster_id_t> > SequencesMatrix;
+    set<cluster_id_t>             DifferentIDs;
+
     static void LoadTranslationTables(void);
-    
-    bool ComputeScore(const vector<CPUBurst*>&   DataBursts,
-                     vector<cluster_id_t>&       ClusterIDs,
-                     vector<percentage_t>&       PercentageDurations,
-                     bool                        HasNoise,
-                     vector<SequenceScoreValue>& ClusterScores,
-                     double&                     GlobalScore,
-                     string                      FileNamePrefix = "",
-                     bool                        FASTA = false);
+
+  public:
+    bool ComputeScore(const vector<CPUBurst*>&         DataBursts,
+                      vector<cluster_id_t>&            AssignmentVector,
+                      map<cluster_id_t, percentage_t>& PercentageDurations,
+                      vector<SequenceScoreValue>&      ClusterScores,
+                      double&                          GlobalScore,
+                      string                           FileNamePrefix = "",
+                      bool                             FASTA = false);
+
+    vector<vector<cluster_id_t> >& GetSequencesMatrix(void) { return SequencesMatrix; };
 
   private:
-    void AlignmentToMatrix(TAlign&                        Alignment,
-                           vector<vector<cluster_id_t> >& SequencesMatrix);
+    
+  
+    void AlignmentToMatrix(TAlign& Alignment);
 
-    bool EffectiveScoreComputation(vector<vector<cluster_id_t> >& SequencesMatrix,
-                                   vector<percentage_t>&          PercentageDurations,
-                                   vector<SequenceScoreValue>&    ClusterScores,
-                                   double&                        GlobalScore);
+    bool EffectiveScoreComputation(map<cluster_id_t, percentage_t>& PercentageDurations,
+                                   vector<SequenceScoreValue>&      ClusterScores,
+                                   double&                          GlobalScore);
     
     bool FlushSequences(vector<pair<task_id_t, thread_id_t> >& ObjectIDs,
-                        vector<vector<cluster_id_t> >&         SequencesMatrix,
                         ofstream&                              str,
                         bool                                   FASTA);
 
     bool FlushScores(vector<SequenceScoreValue>& ClusterScores,
                      double&                     GlobalScore,
-                     bool                        HasNoise,
                      ofstream&                   str);
                                
   protected:

@@ -45,8 +45,11 @@ using std::setfill;
 using std::setw;
 using std::setprecision;
 
+#include <algorithm>
+using std::sort;
+
 /* PARAMETERS TO TUNE CANDIDATE GENERATION */
-#define CANDIDATES_GENERAL_SCORE 0.9
+#define CANDIDATES_GENERAL_SCORE 0.85
 
 #define CANDIDATES_OCCURENCES_PERCENTAGE 0.25
 #define CANDIDATES_OCCURENCES_SCORE 0.6
@@ -74,6 +77,22 @@ ClusterInformation::ClusterInformation(cluster_id_t ID,
   this->Individuals      = Individuals;
   this->Discarded        = false;
   this->Reclassification = false;
+  this->_Visited         = false;
+}
+
+ClusterInformation::ClusterInformation(cluster_id_t ID,
+                                       timestamp_t  TotalDuration,
+                                       size_t       Individuals)
+{
+  this->NodeID           = NodeIDNumber++;
+  this->ID               = ID;
+  this->Score            = 0;
+  this->Occurrences      = 0;
+  this->TotalDuration    = TotalDuration;
+  this->Individuals      = Individuals;
+  this->Discarded        = false;
+  this->Reclassification = false;
+  this->_Visited         = false;
 }
 
 bool ClusterInformation::IsCandidate(size_t      TotalOccurrences,
@@ -131,13 +150,58 @@ size_t ClusterInformation::TotalClusters(void)
   return Result;
 }
 
+/**
+ * Rename the current node taking into the values of the parents. If the 
+ * current node was isolated from a noise cluster, it will take the ID
+ * received by parameter. If not, it will take the ID of the most important
+ * parent (min id)
+ * 
+ * \param MaxIDAssigned Value of the cluster id to be used if the current
+ *                      node came frome a noise cluster
+ */
+void ClusterInformation::RenameNode(cluster_id_t& MaxIDAssigned)
+{
+  if (ID == NOISE_CLUSTERID)
+  { // Noise is not translated
+    return;
+  }
+  
+  sort(Parents.begin(), Parents.end(), ClusterInformationIDOrder());
+  
+  ID = UNCLASSIFIED;
+  for (size_t i = 0; i < Parents.size(); i++)
+  {
+    if (Parents[i]->GetID() != NOISE_CLUSTERID && !Parents[i]->Visited())
+    {
+      ID = Parents[i]->GetID();
+      Parents[i]->Visited(true);
+      break;
+    }
+  }
+  
+  if (ID == UNCLASSIFIED)
+  {
+    MaxIDAssigned++;
+    ID = MaxIDAssigned;
+  }
+  
+  return;
+}
+
+/**
+ * Rename all children of the current node. First child receives the parent ID.
+ * The rest of the nodes are named using the parameter. Used in the divisive
+ * refinement analysis
+ * 
+ * \param RestOfChildrenID Minimun ID to be used after the biggest child
+ */
 void ClusterInformation::RenameChildren(cluster_id_t& RestOfChildrenID)
 {
   bool FirstChildVisited = false;
   
   for (size_t i = 0; i < Children.size(); i++)
   {
-    if (Children[i]->GetID() != NOISE_CLUSTERID)
+    if (Children[i]->GetID() != NOISE_CLUSTERID && !Children[i]->IsDiscarded())
     {
       if (!FirstChildVisited)
       {
@@ -157,22 +221,36 @@ void ClusterInformation::RenameChildren(cluster_id_t& RestOfChildrenID)
 
 bool ClusterInformation::IsLeaf(void)
 {
+  /* A node is a leaf if... */
+  
+  /* ... do not have any children or...*/
   if (Children.size() == 0)
   {
     return true;
   }
 
-  if (Children[0]->IsDiscarded())
+  /* ... all children are discarded! */
+  for (size_t i = 0; i < Children.size(); i++)
   {
-    return true;
+    if (!Children[i]->IsDiscarded())
+    {
+      return false;
+    }
   }
-
-  return false;
+  
+  return true;
 }
 
 bool ClusterInformation::AddChild(ClusterInformation* NewChild)
 {
   Children.push_back(NewChild);
+  
+  return true;
+}
+
+bool ClusterInformation::AddParent(ClusterInformation* NewParent)
+{
+  Parents.push_back(NewParent);
   
   return true;
 }
@@ -205,6 +283,9 @@ string ClusterInformation::NodeLabel(void)
     NodeLabelStr << " Indiv. = " << Individuals;
     NodeLabelStr << " Occr. = " << Occurrences << "\\n";
     NodeLabelStr << " Duration = " << TotalDuration;
+    /* DEBUG
+    NodeLabelStr << "\\nChildren = " << Children.size(); */
+    NodeLabelStr << "\\nInstances = " << Instances.size();
   }
   else
   {
@@ -221,14 +302,23 @@ string ClusterInformation::NodeLabel(void)
   
   if (Discarded)
   {
-    NodeLabelStr << "\" color=\"" << Color() << "\"]";
+    NodeLabelStr << "\" color=\"" << Color() << "\"";
   }
   else
   {
-    NodeLabelStr << "\" style=\"filled\" color=\"" << Color() << "\"]";
+    NodeLabelStr << "\" color=\"" << Color() << "\"";
+  }
+  
+  if (Score == 1)
+  {
+    NodeLabelStr << "shape=\"box\" style=\"rounded, filled\" ";
+  }
+  else
+  {
+    NodeLabelStr << "shape=\"oval\" style=\"filled\"  ";
   }
 
-  
+   NodeLabelStr << " ]";
 
   return NodeLabelStr.str();
 }

@@ -10,6 +10,17 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-07-13 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added clusters merge using last partition sequences on aggregative
+	refinement
+
+	* Solved a bug when generating the partition using the sequences merge
+
+	* THIS VERSION WAS USED IN THE ICPADS PAPER *
+
+2011-05-21 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a bug when renaming nodes that didn't expand
+
 2011-05-16 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Added copy of input .row files when clustering Paraver traces
 

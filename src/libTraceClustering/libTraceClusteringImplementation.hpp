@@ -77,7 +77,7 @@ class libTraceClusteringImplementation: public Error
     
     bool ClusterAnalysis(void);
 
-    bool ClusterRefinementAnalysis(bool   Divisve,
+    bool ClusterRefinementAnalysis(bool   Divisive,
                                    string OutputFileNamePrefix);
     
     bool ClusterRefinementAnalysis(bool   Divisive,
@@ -101,6 +101,11 @@ class libTraceClusteringImplementation: public Error
                                  map<string, string> Parameters);
     
   private:
+    bool GenericRefinement(bool           Divisive,
+                           int            MinPoints,
+                           vector<double> EpsilonPerLevel,
+                           string         OutputFileNamePrefix);
+  
     void GetTaskSet(size_t TotalTasksInTrace);
     
     bool GatherMPIPartition(void);

@@ -31,8 +31,8 @@
   $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-#ifndef _CLUSTERINGREFINEMENTAGGREGATIVE_HPP_
-#define _CLUSTERINGREFINEMENTAGGREGATIVE_HPP_
+#ifndef _CLUSTERINGREFINEMENT_HPP_
+#define _CLUSTERINGREFINEMENT_HPP_
 
 #include <Error.hpp>
 using cepba_tools::Error;
@@ -52,45 +52,52 @@ using std::set;
 #include <fstream>
 using std::ofstream;
 
-class ClusteringRefinementAggregative: public Error
+class ClusteringRefinement: public Error
 {
-  private:
-    INT32          MinPoints;
+  protected:
+    INT32  MinPoints;
+    
+    double MinEpsilon;
+    double MaxEpsilon;
+
     vector<double> EpsilonPerLevel;
 
-    size_t         Steps;
-    size_t         LastStep;
-    
-    bool           PrintStepsInformation;
-    string         OutputFilePrefix;
-    
-    libClustering*                         ClusteringCore;
+    size_t Steps;
+    size_t LastStep;
 
-    map<instance_t, size_t>                Instance2Burst;
-    map<instance_t, vector<cluster_id_t> > IDPerLevel;
+    string OutputFilePrefix;
+    bool   PrintStepsInformation;
     
-    vector<ClusteringStatistics>           StatisticsHistory;
-    vector<vector<ClusterInformation*> >   NodesPerLevel;
+    libClustering*                       ClusteringCore;
+
+    map<instance_t, size_t>              Instance2Burst;
     
-    cluster_id_t                           MaxIDAssigned;
-    
-    vector<percentage_t>                   GlobalScoresPerLevel;
+    vector<ClusteringStatistics>         StatisticsHistory;
+    vector<vector<ClusterInformation*> > NodesPerLevel;
 
   public:
     
-    ClusteringRefinementAggregative(INT32          MinPoints,
-                                    vector<double> EpsilonPerLevel);
+    ClusteringRefinement(INT32      MinPoints,
+                         double     MaxEpsilon,
+                         double     MinEpsilon,
+                         size_t     Steps);
+
+    ~ClusteringRefinement(void);
 
     bool Run(const vector<CPUBurst*>& Bursts,
              vector<Partition>&       IntermediatePartitions,
              Partition&               LastPartition,
              string                   OutputFilePrefix = "");
 
-  private:
-  
-    bool RunFirstAnalysis(const vector<CPUBurst*>& Bursts,
-                          Partition&               FirstPartition);
+  protected:
     
+    
+    
+    bool IsSplitOK(ClusterInformation* Parent);
+    
+    bool RunFirstStep(const vector<CPUBurst*>& Bursts,
+                      Partition&               FirstPartition);
+
     bool RunStep(size_t                   Step,
                  const vector<CPUBurst*>& Bursts,
                  Partition&               PreviousPartition,
@@ -100,59 +107,42 @@ class ClusteringRefinementAggregative: public Error
     bool RunDBSCAN(const vector<const Point*>& CurrentData,
                    double                      Epsilon,
                    Partition&                  CurrentPartition);
-                   
-    bool GenerateCandidatesAndBurstSubset(const vector<CPUBurst*>&     Bursts,
-                                          vector<ClusterInformation*>& ParentNodes,
-                                          vector<CPUBurst*>&           BurstsSubset,
-                                          vector<ClusterInformation*>& NodesSubset);
 
-    bool StopCondition(void);
+    vector<CPUBurst*> GenerateBurstsSubset(const vector<CPUBurst*>& Bursts,
+                                           ClusterInformation*      Node);
 
-    bool GenerateNodes(size_t                       Step,
-                       const vector<CPUBurst*>&     Bursts,
-                       Partition&                   CurrentPartition,
-                       vector<ClusterInformation*>& Nodes,
-                       bool                         LastPartition = false);
-    
-    void LinkNodes(const vector<CPUBurst*>&     BurstsSubset,
-                   vector<ClusterInformation*>& Parent,
-                   vector<ClusterInformation*>& Children,
-                   Partition&                   PreviousPartition,
-                   Partition&                   NewPartition);
-
-    void GeneratePartition(Partition& NewPartition);
-    
-    bool ComputeScores(size_t                       Step,
-                       const vector<CPUBurst*>&     Bursts,
-                       vector<ClusterInformation*>& NewNodes,
-                       Partition&                   CurrentPartition,
-                       bool                         LastPartition);
-    
-    vector<pair<instance_t, cluster_id_t> > GetAssignment(ClusterInformation* Node);
-    
-    bool GenerateLastPartition(const vector<CPUBurst*>& Bursts,
-                               size_t                   LastStep,
-                               Partition&               PreviousPartition,
-                               Partition&               LastPartition);
-  
-    void LinkLastNodes(cluster_id_t        MainClusterID,
-                       set<cluster_id_t>&  Merges,
-                       ClusterInformation* NewNode);
-    
-    ClusterInformation* LocateNode(cluster_id_t ClusterID);
-  
     bool PrintPlots(const vector<CPUBurst*>& Bursts,
                     Partition&               CurrentPartition,
                     size_t                   Step);
-                       
-    bool PrintTrees(size_t Step,
-                    bool   LastTree = false);
-    
-    bool PrintTreeNodes(ofstream& str);
-    bool PrintTreeLinks(ofstream& str);
-    
-    
 
+    bool IsIDInSet(cluster_id_t       ID,
+                   set<cluster_id_t>& IDsSet);
+
+    bool PrintTrees(size_t          Level,
+                    bool            LastTree = false);
+
+    bool PrintTreeNodes(ofstream& str, ClusterInformation* Node);
+    bool PrintTreeLinks(ofstream& str, ClusterInformation* Node);
+
+    /* VIRTUAL METHODS TO BE IMPLEMENTED ON THE SPECIFIC CLASSES */
+    virtual void GenerateEpsilons(void);
+    
+    
+    virtual vector<ClusterInformation*> GenerateCandidates(size_t Step);
+
+    virtual bool GenerateNodes(const vector<CPUBurst*>&     Bursts,
+                               Partition&                   CurrentPartition,
+                               vector<ClusterInformation*>& Nodes);
+
+    virtual void GeneratePartition(Partition& NewPartition);
+
+    vector<pair<instance_t, cluster_id_t> > GetAssignment(ClusterInformation* Node);
+
+    size_t ColapseNonDividedSubtrees(ClusterInformation* Node);
+    
+    void   ReclassifyNoise(const vector<CPUBurst*>& Bursts, 
+                           ClusterInformation*      Node,
+                           size_t                   Level);
 };
 
-#endif // _CLUSTERINGREFINEMENTAGGREGATIVE_HPP_
+#endif // _CLUSTERINGREFINEMENT_HPP_

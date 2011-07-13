@@ -68,14 +68,14 @@ class ClusteredTRFGenerator: public ClusteredTraceGenerator
     
     bool Run(vector<CPUBurst*>&    ClusteringBursts,
              vector<cluster_id_t>& IDs,
-             size_t                NumberOfClusters,
+             set<cluster_id_t>&    DifferentIDs,
              bool                  MinimizeInformation = false);
 
   private:
     INT32 GetNextClusterId(void);
 
-    bool CheckFirstBlockDefinition(char*  Buffer,
-                                   size_t NumberOfClusters);
+    bool CheckFirstBlockDefinition(char*              Buffer,
+                                   set<cluster_id_t>& DifferentIDs);
                                    
 
     bool PrintClusteredBurst(FILE        *Trace,
@@ -84,6 +84,12 @@ class ClusteredTRFGenerator: public ClusteredTraceGenerator
                              double       BurstDuration,
                              cluster_id_t ClusterId,
                              bool         ReplaceDurations = false);
+    
+    void PrepareClusterIDsVector(vector<cluster_id_t>& ClusterIDs,
+                                 set<cluster_id_t>&    DifferentIDs,
+                                 cluster_id_t&         MaxIDUsed);
+    
+    string GetClusterName(cluster_id_t ID);
 };
 
 typedef ClusteredTRFGenerator* ClusteredTRFGenerator_t;

@@ -138,17 +138,19 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
   size_t         ResultingClusters = 0;
 
   INT64          DataSize, Index;
+  
+  point_idx      Offset;
 
   if (Data.size() == 0)
   {
     return true;
   }
 
+  NoisePoints++;
+
   /* DEBUG */
   vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
-  set<cluster_id_t>& DifferentIDs = DataPartition.GetIDs();
-
-  DifferentIDs.insert(NOISE_CLUSTERID);
+  set<cluster_id_t>& DifferentIDs               = DataPartition.GetIDs();
 
   if (Data.size() != ClusterAssignmentVector.size())
   {
@@ -166,13 +168,19 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
   system_messages::show_progress("Clustering points", 0, (int) Data.size());
   Index = 0; // Double counter: total points vs. clustering points!
 
+  srandom((unsigned int) time(NULL));
+  // Offset = random();
+  Offset = 0;
+
   for (point_idx i = 0; i < Data.size(); i++)
   {
     system_messages::show_progress("Clustering points", i, (int) Data.size());
+    
+    point_idx index = (i + Offset) % Data.size();
 
-    if (ClusterAssignmentVector[i] == UNCLASSIFIED)
+    if (ClusterAssignmentVector[index] == UNCLASSIFIED)
     {
-      if (ExpandCluster(Data, i, ClusterAssignmentVector, ClusterId))
+      if (ExpandCluster(Data, index, ClusterAssignmentVector, ClusterId))
       {
         DifferentIDs.insert(ClusterId);
         ClusterId++;
@@ -180,11 +188,12 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
     }
   }
 
-  system_messages::show_progress_end("Clustering points", (int) Data.size());
+  if (NoisePoints != 0)
+  {
+    DifferentIDs.insert(NOISE_CLUSTERID);
+  }
 
-  /* NOISE cluster is not accounted as a cluster */
-  DataPartition.NumberOfClusters (DifferentIDs.size());
-  DataPartition.HasNoise(true);
+  system_messages::show_progress_end("Clustering points", (int) Data.size());
 
   return true;
 }
@@ -317,6 +326,34 @@ bool DBSCAN::ParametersApproximation(const vector<const Point*>& Data,
   return ComputeKNeighbourhoods(Data, k_begin, k_end, OutputFileNamePrefix);
 }
 
+bool DBSCAN::ComputeNeighbourhood(const vector<const Point*>& Data,
+                                  size_t                      K,
+                                  vector<double>&             Distances)
+{
+  vector<vector<double> > ResultingDistances (1, vector<double> ());
+  
+  /* Build KD tree */
+  BuildKDTree(Data);
+  
+  for (size_t i = 0; i < Data.size(); i++)
+  {
+    
+#ifdef EXTRA_DEBUG
+    cout << "Searching for K-Neigbour of point (" << i << "): ";
+    cout << *InputData[i] << endl;
+#endif
+
+    ComputeNeighboursDistance(Data[i], K, K, ResultingDistances);
+
+    system_messages::show_progress("Computing K-Neighbour distance", i, Data.size());
+  }
+  
+  Distances = ResultingDistances[0];
+  sort(Distances.rbegin(), Distances.rend());
+  
+  return true;
+}
+
 bool DBSCAN::BuildKDTree(const vector<const Point*>& Data)
 {
   assert(Data.size() > 0);
@@ -390,6 +427,7 @@ bool DBSCAN::ExpandCluster(const vector<const Point*>& Data,
   if (SeedList.size() < MinPoints)
   {
     ClusterAssignmentVector[CurrentPoint] = NOISE_CLUSTERID;
+    NoisePoints++;
 
     return false;
   }
@@ -433,6 +471,10 @@ bool DBSCAN::ExpandCluster(const vector<const Point*>& Data,
           {
             SeedList.push_back(CurrentNeighbourNeighbour);
           }
+          else
+          {
+            NoisePoints--;
+          }
 
           ClusterAssignmentVector[CurrentNeighbourNeighbour] = CurrentClusterId;
 
@@ -469,12 +511,12 @@ void DBSCAN::EpsilonRangeQuery(const Point* const QueryPoint,
 
   ANNQueryPoint = ToANNPoint(QueryPoint);
   
-  ResultSize = SpatialIndex->annkFRSearch(ANNQueryPoint, pow(Eps, 2.0), 0);
+  ResultSize = SpatialIndex->annkFRSearch(ANNQueryPoint, pow(Eps, 2), 0);
   
   Results = new ANNidx[ResultSize];
   
   ResultSize = SpatialIndex->annkFRSearch(ANNQueryPoint,
-                                          pow(Eps, 2.0),
+                                          pow(Eps, 2),
                                           ResultSize,
                                           Results);
 
@@ -649,7 +691,7 @@ void DBSCAN::ComputeNeighboursDistance(const Point*             QueryPoint,
 
 #ifdef EXTRA_DEBUG
   cout << __FUNCTION__  << " QueryPoint [";
-  for (INT32 i = 0; i < QueryPoint->size(); i++)
+  for (size_t i = 0; i < QueryPoint->size(); i++)
   {
     cout << QueryPoint[i];
     if (i < QueryPoint->size()-1)
@@ -661,7 +703,7 @@ void DBSCAN::ComputeNeighboursDistance(const Point*             QueryPoint,
   SpatialIndex->annkSearch(ANNQueryPoint, k_end+1, ResultPoints, Distances);
   
 #ifdef EXTRA_DEBUG
-  for (INT32 i = 0; i < k+1; i++)
+  for (size_t i = 0; i < k+1; i++)
   {
     cout << "[" << i << "]: " << Distances[i] << " ";
   }
@@ -673,7 +715,7 @@ void DBSCAN::ComputeNeighboursDistance(const Point*             QueryPoint,
     ResultingDistances[i].push_back(ANN_ROOT(Distances[k_begin+i]));
   }
   
-  delete    QueryPoint;
+  delete    ANNQueryPoint;
   delete [] ResultPoints;
   delete [] Distances;
 }

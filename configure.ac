@@ -184,11 +184,28 @@ if test "x${seqan_enabled}" = "xyes"; then
 	CFLAGS="${CFLAGS} ${SEQAN_CPPFLAGS}"
 fi
 
-dnl src/BurstClustering/Makefile
-dnl src/libANN/Makefile
-dnl src/libClusteringAlgorithms/Makefile
-dnl src/libClustering/Makefile
-dnl src/libParaverTraceParser/Makefile
+dnl =========================================================================
+dnl Enable the generation of the ClusteringSuite manual
+dnl =========================================================================
+AC_ARG_ENABLE(doc,
+   AC_HELP_STRING(
+      [--enable-doc],
+      [Generates the documentation of this instrumentation package (disabled by default)]
+   ),
+   [enable_doc="${enableval}"],
+   [enable_doc="no"]
+)
+AM_CONDITIONAL(GENERATE_DOCUMENTATION, test "${enable_doc}" = "yes" )
+
+AC_CHECK_PROGS(latex,[latex elatex lambda],no)
+AC_CHECK_PROGS(dvips,[dvips],no)
+AC_CHECK_PROGS(dvipdf,[dvipdf],no)
+AC_CHECK_PROGS(latex2html,[latex2html],no)
+
+AM_CONDITIONAL(BUILD_DOCS_PS, test "${latex}" != "no" -a "${dvips}" != "no")
+AM_CONDITIONAL(BUILD_DOCS_PDF, test "${latex}" != "no" -a "${dvipdf}" != "no")
+AM_CONDITIONAL(BUILD_HTML_DOCS, test "${latex}" != "no" -a "${latex2html}" != "no")
+
 
 AC_CONFIG_FILES([
 Makefile
@@ -204,6 +221,7 @@ src/libTraceClustering/Makefile
 src/ClusteringDataExtractor/Makefile
 src/DBSCANParametersApproximation/Makefile
 src/BurstClustering/Makefile
+doc/Makefile
 ])
 
 if test "${MPI_INSTALLED}" = "yes" -a "x$muster_enabled" = "xyes"; then

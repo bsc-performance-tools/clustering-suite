@@ -78,6 +78,7 @@ bool   GenerateClusterSequences = false;
 
 bool   ClusteringRefinement = false;
 bool   DivisiveRefinement   = true;
+bool   AutomaticRefinement  = false;
 
 double MaxEps, MinEps;
 int    MinPoints, Steps;
@@ -144,7 +145,8 @@ void GetEventParsingParameters(char*);
 void PrintUsage(char* ApplicationName)
 {
   cout << "Usage: " << ApplicationName << " [-s] -d <clustering_def.xml> ";
-  cout << "-a[f] -r<d|a>[p] <min_points>,<max_eps>,<min_eps>,<steps> -i <input_file> -o <output_file>" << endl;
+  cout << "-a[f] -r<d|a>[p] <min_points>,<max_eps>,<min_eps>,<steps> ";
+  cout << "-i <input_file> -o <output_file>" << endl;
 }
 
 void
@@ -219,7 +221,17 @@ ReadArgs(int argc, char *argv[])
             PrintRefinementSteps = true;
           }
           j++;
-          GetRefinementParameters(argv[j]);
+          
+          if (argv[j][0] != '-')
+          {
+            GetRefinementParameters(argv[j]);
+          }
+          else
+          {
+            AutomaticRefinement = true;
+            j--;
+          }
+          
           break;
         case 'e':
 
@@ -273,7 +285,7 @@ void GetRefinementParameters(char* RefinementArgs)
 
   while(std::getline(ArgsStream, Buffer, ','))
   {
-      Args.push_back(Buffer);
+    Args.push_back(Buffer);
   }
 
   if (Args.size() != 4)
@@ -452,15 +464,27 @@ int main(int argc, char *argv[])
   if (ClusteringRefinement)
   {
     system_messages::information("** CLUSTER REFINEMENT ANALYSIS **\n");
-    if (!Clustering.ClusterRefinementAnalysis(DivisiveRefinement,
-                                              MinPoints,
-                                              MaxEps,
-                                              MinEps,
-                                              Steps,
-                                              RefinementPrefixFileName))
+    if (AutomaticRefinement)
     {
-      cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
-      exit (EXIT_FAILURE);
+      if (!Clustering.ClusterRefinementAnalysis(DivisiveRefinement,
+                                                RefinementPrefixFileName))
+      {
+        cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
+        exit (EXIT_FAILURE);
+      }
+    }
+    else
+    {
+      if (!Clustering.ClusterRefinementAnalysis(DivisiveRefinement,
+                                                MinPoints,
+                                                MaxEps,
+                                                MinEps,
+                                                Steps,
+                                                RefinementPrefixFileName))
+      {
+        cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
+        exit (EXIT_FAILURE);
+      }
     }
   }
   else

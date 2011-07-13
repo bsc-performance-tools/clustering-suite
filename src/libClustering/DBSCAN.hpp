@@ -74,6 +74,8 @@ class DBSCAN: public ClusteringAlgorithm
 
     ANNpointArray       ANNDataPoints;
     ANNkd_tree*         SpatialIndex;
+    
+    size_t              NoisePoints;
 
   public:
     static const string NAME;
@@ -124,6 +126,10 @@ class DBSCAN: public ClusteringAlgorithm
     bool ParametersApproximation(const vector<const Point*>& Data,
                                  map<string, string>&        Parameters,
                                  string                      OutputFileNamePrefix);
+                                 
+    bool ComputeNeighbourhood(const vector<const Point*>& Data,
+                              size_t                      K,
+                              vector<double>&             Distances);
 
   private:
     

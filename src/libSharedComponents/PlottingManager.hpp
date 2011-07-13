@@ -41,6 +41,9 @@ using cepba_tools::Error;
 
 #include <ParametersManager.hpp>
 
+#include <set>
+using std::set;
+
 class PlotDefinition;
 
 class PlottingManager: public Error 
@@ -65,11 +68,10 @@ class PlottingManager: public Error
     vector<bool>   GetCorrectPlots(void);
     vector<string> GetPlotsWarning(void);
     
-    bool   PrintPlots(string PlotsDataFileName,
-                      string PlotsFileNamePrefix,
-                      string ClusteringAlgorithmName,
-                      size_t NumberOfClusters  = 0,
-                      bool   PrintNoiseCluster = false);
+    bool   PrintPlots(string             PlotsDataFileName,
+                      string             PlotsFileNamePrefix,
+                      string             ClusteringAlgorithmName,
+                      set<cluster_id_t>& DifferentIDs);
 
   private:
     PlottingManager(bool DataExtraction);
@@ -83,12 +85,11 @@ class PlottingManager: public Error
                                  bool               RawMetric,
                                  ParametersManager *Parameters);
 
-    bool  PrintSinglePlot(string          FileNamePrefix,
-                          string          DataFileName,
-                          PlotDefinition *Definition,
-                          string          ClusteringAlgorithmName,
-                          size_t          NumberOfClusters,
-                          bool            PrintNoiseCluster);
+    bool  PrintSinglePlot(string             FileNamePrefix,
+                          string             DataFileName,
+                          PlotDefinition    *Definition,
+                          string             ClusteringAlgorithmName,
+                          set<cluster_id_t>& DifferentIDs);
 
     void  Write2D_Definition(ostream& str,
                              INT32    X,
@@ -106,6 +107,8 @@ class PlottingManager: public Error
                              string   DataFileName);
 
     string RGBStateColor(INT32 StateValue);
+    
+    string GetClusterName(cluster_id_t ID);
 };
 
 #endif // _PLOTTINGMANAGER_HPP_

@@ -61,12 +61,7 @@ using std::ostringstream;
 "EVENT_TYPE\n"\
 "9\t90000001\tCluster ID\n"\
 "VALUES\n"\
-"0\tEnd\n"\
-"1\tMissing Data\n"\
-"2\tDuration Filtered\n"\
-"3\tRange Filtered\n"\
-"4\tThreshold Filtered\n"\
-"5\tNoise\n"
+"0\tEnd\n"
 
 ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
                                                          string  OutputTraceName)
@@ -195,7 +190,7 @@ bool ClusteredEventsPRVGenerator::SetEventsToDealWith (set<event_type_t>& Events
 
 bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
                                       vector<cluster_id_t>& IDs,
-                                      size_t                NumberOfClusters,
+                                      set<cluster_id_t>&    DifferentIDs,
                                       bool                  MinimizeInformation)
 {
   ParaverHeader*                  Header;
@@ -233,13 +228,13 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
         CurrentClusteringBurst++;
         break;
       case DurationFilteredBurst:
-        CompleteIDs.push_back(DURATION_FILTERED_CLUSTERID);
+        CompleteIDs.push_back(DURATION_FILTERED_CLUSTERID+PARAVER_OFFSET);
         break;
       case RangeFilteredBurst:
-        CompleteIDs.push_back(RANGE_FILTERED_CLUSTERID);
+        CompleteIDs.push_back(RANGE_FILTERED_CLUSTERID+PARAVER_OFFSET);
         break;
       case MissingDataBurst:
-        CompleteIDs.push_back(MISSING_DATA_CLUSTERID);
+        CompleteIDs.push_back(MISSING_DATA_CLUSTERID+PARAVER_OFFSET);
         break;
       default:
         /* This option should never happen */
@@ -494,7 +489,7 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   
   if (PCFPresent)
   {
-    GenerateOutputPCF(NumberOfClusters);
+    GenerateOutputPCF(DifferentIDs);
   }
 
   if (ROWPresent)
@@ -505,14 +500,18 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   return true;
 }
 
-bool
-ClusteredEventsPRVGenerator::GenerateOutputPCF(size_t NumberOfClusters)
+bool ClusteredEventsPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& DifferentIDs)
 {
   char   Buffer[256], AuxBuffer[256];
   size_t BufferSize = sizeof(Buffer);
   bool   ColorsSectionRead     = false;
   bool   ColorsSectionFinished = false;
   bool   FlushBuffer = false;
+
+  vector<cluster_id_t> ClusterIDs;
+  
+  cluster_id_t MaxIDUsed;
+  PrepareClusterIDsVector(ClusterIDs, DifferentIDs, MaxIDUsed);
 
   while (true)
   {
@@ -536,9 +535,8 @@ ClusteredEventsPRVGenerator::GenerateOutputPCF(size_t NumberOfClusters)
           return false;
         }
         
-        for (INT32 i = 0;
-             i < (NumberOfClusters+PARAVER_OFFSET);
-             i++)
+        /* Print all state colors up to maximum cluster ID */
+        for (size_t i = 0; i < MaxIDUsed+PARAVER_OFFSET; i++)
         {
           if (i >= DEF_NB_COLOR_STATE)
           {
@@ -610,44 +608,18 @@ ClusteredEventsPRVGenerator::GenerateOutputPCF(size_t NumberOfClusters)
     unlink(OutputPCFName.c_str());
     return false;
   }
-
-  /* Predefined cluster ids */
-  fprintf(OutputPCFFile,
-          "%d\t%s\n",
-          MISSING_DATA_CLUSTERID,
-          "Missing Data");
-
-  fprintf(OutputPCFFile,
-          "%d\t%s\n",
-          DURATION_FILTERED_CLUSTERID,
-          "Duration Filtered");
-
-  fprintf(OutputPCFFile,
-          "%d\t%s\n",
-          RANGE_FILTERED_CLUSTERID,
-          "Range Filtered");
-
-  fprintf(OutputPCFFile,
-          "%d\t%s\n",
-          THRESHOLD_FILTERED_CLUSTERID,
-          "Threshold Filtered");
-
-  fprintf(OutputPCFFile,
-          "%d\t%s\n",
-          NOISE_CLUSTERID+PARAVER_OFFSET, /* It needs the offset, because it uses internal numbering */
-          "Noise");
   
-  /* The numbering of clusters starts at 1 */
-  for (size_t i = 1; i <= NumberOfClusters; i++)
+  for (size_t i = 0; i < ClusterIDs.size(); i++)
   {
     fprintf(OutputPCFFile,
-          "%d\tCluster %d\n",
-          i+PARAVER_OFFSET, /* It needs the offset, because it uses internal numbering */
-          i);
+            "%d\t%s\n",
+            ClusterIDs[i]+PARAVER_OFFSET, /* It needs the offset, because it uses internal numbering */
+            GetClusterName(ClusterIDs[i]).c_str());
   }
   
   return true;
 }
+
 
 
 bool ClusteredEventsPRVGenerator::BurstOpeningEvent(Event* CurrentEvent)
@@ -707,4 +679,83 @@ bool ClusteredEventsPRVGenerator::CopyROWFile(void)
   OutputROW << InputROW.rdbuf();
   
   return true;
+}
+
+void ClusteredEventsPRVGenerator::PrepareClusterIDsVector(vector<cluster_id_t>& ClusterIDs,
+                                                          set<cluster_id_t>&    DifferentIDs,
+                                                          cluster_id_t&         MaxIDUsed)
+{
+  set<cluster_id_t>::iterator DifferentIDsIterator;
+  
+  MaxIDUsed = NOISE_CLUSTERID;
+  
+  if (DifferentIDs.count(DURATION_FILTERED_CLUSTERID) == 0)
+  {
+    ClusterIDs.push_back(DURATION_FILTERED_CLUSTERID);
+  }
+  
+  if (DifferentIDs.count(RANGE_FILTERED_CLUSTERID) == 0)
+  {
+    ClusterIDs.push_back(RANGE_FILTERED_CLUSTERID);
+  }
+  
+  if (DifferentIDs.count(THRESHOLD_FILTERED_CLUSTERID) == 0)
+  {
+    ClusterIDs.push_back(THRESHOLD_FILTERED_CLUSTERID);
+  }
+  
+  if (DifferentIDs.count(NOISE_CLUSTERID) == 0)
+  {
+    ClusterIDs.push_back(NOISE_CLUSTERID);
+  }
+  
+  for (DifferentIDsIterator  = DifferentIDs.begin();
+       DifferentIDsIterator != DifferentIDs.end();
+       ++DifferentIDsIterator)
+  {
+    ClusterIDs.push_back((*DifferentIDsIterator));
+    if ((*DifferentIDsIterator) > MaxIDUsed)
+    {
+      MaxIDUsed = (*DifferentIDsIterator);
+    }
+  }
+  sort(ClusterIDs.begin(), ClusterIDs.end());
+  
+  return;
+}
+
+/**
+ * Returns the cluster name using the ID
+ * 
+ * \param ID ID value to generate the cluster name
+ * 
+ * \return The name of the cluster, taking into account the special cluster ids
+ */
+string ClusteredEventsPRVGenerator::GetClusterName(cluster_id_t ID)
+{
+  ostringstream ClusterName;
+  
+  switch (ID)
+  {
+    case UNCLASSIFIED:
+      ClusterName << "Unclassified";
+      break;
+    case DURATION_FILTERED_CLUSTERID:
+      ClusterName << "Duration Filtered";
+      break;
+    case RANGE_FILTERED_CLUSTERID:
+      ClusterName << "Range Filtered";
+      break;
+    case THRESHOLD_FILTERED_CLUSTERID:
+      ClusterName << "Threshold Filtered";
+      break;
+    case NOISE_CLUSTERID:
+      ClusterName << "Noise";
+      break;
+    default:
+      ClusterName << "Cluster " << ID;
+      break;
+  }
+
+  return ClusterName.str();
 }

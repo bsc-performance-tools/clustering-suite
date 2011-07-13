@@ -73,10 +73,10 @@ static const UINT64 DEFAULT_DURATION_FILTER     = 0;
 static const double DEFAULT_FILTER_THRESHOLD    = 3.0;
 
 /* Filtered cluster ids for Paraver Output */
-static const cluster_id_t MISSING_DATA_CLUSTERID       = 1;
-static const cluster_id_t DURATION_FILTERED_CLUSTERID  = 2;
-static const cluster_id_t RANGE_FILTERED_CLUSTERID     = 3;
-static const cluster_id_t THRESHOLD_FILTERED_CLUSTERID = 4;
+static const cluster_id_t MISSING_DATA_CLUSTERID       = UNCLASSIFIED+1;
+static const cluster_id_t DURATION_FILTERED_CLUSTERID  = UNCLASSIFIED+2;
+static const cluster_id_t RANGE_FILTERED_CLUSTERID     = UNCLASSIFIED+3;
+static const cluster_id_t THRESHOLD_FILTERED_CLUSTERID = UNCLASSIFIED+4;
 
 /* Paraver offset (add the previous cluster ids + reserved 0 value (Paraver End) */
 static const INT32 PARAVER_OFFSET = 5;

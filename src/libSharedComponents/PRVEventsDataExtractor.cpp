@@ -103,6 +103,7 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
 {
   vector<ApplicationDescription_t> AppsDescription;
   vector<TaskDescription_t>        TaskInfo;
+  size_t                           TraceObjects = 0;
   
   ParaverRecord *CurrentRecord;
   State         *CurrentState;
@@ -142,10 +143,13 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
   
   for (size_t i = 0; i < TaskInfo.size(); i++)
   {
+    TraceObjects += TaskInfo[i]->GetThreadCount();
     TaskData.push_back(vector<TaskDataContainer>(TaskInfo[i]->GetThreadCount()));
     FutureTaskData.push_back(vector<TaskDataContainer>(TaskInfo[i]->GetThreadCount()));
     EventsStack.push_back(vector<stack<event_type_t> > (TaskInfo[i]->GetThreadCount()));
   }
+  
+  TraceDataSet->SetTraceObjects(TraceObjects);
   
   for (size_t i = 0; i < TaskData.size(); i++)
   {

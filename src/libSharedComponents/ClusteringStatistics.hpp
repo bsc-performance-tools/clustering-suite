@@ -146,20 +146,20 @@ class ClusteringStatistics: public Error
     vector<bool>                ClusteringParametersPrecision;
     vector<string>              ExtrapolationMetricsNames;
     vector<bool>                ExtrapolationMetricsPrecision;
+    
+    bool                        Translated;
 
   public:
 
     ClusteringStatistics() {} ;
     
     ClusteringStatistics(set<cluster_id_t>& IDs,
-                         bool               HasNoise,
                          vector<string> ClusteringParametersNames     = vector<string>(0),
                          vector<bool>   ClusteringParametersPrecision = vector<bool>(0),
                          vector<string> ExtrapolationMetricsNames     = vector<string>(0),
                          vector<bool>   ExtrapolationMetricsPrecision = vector<bool>(0));
 
     void InitStatistics(set<cluster_id_t>& IDs,
-                        bool               HasNoise,
                         vector<string> ClusteringParametersNames     = vector<string>(0),
                         vector<bool>   ClusteringParametersPrecision = vector<bool>(0),
                         vector<string> ExtrapolationMetricsNames     = vector<string>(0),
@@ -169,9 +169,9 @@ class ClusteringStatistics: public Error
     
     void TranslatedIDs(vector<cluster_id_t>& NewIDs);
 
-    vector<percentage_t> GetPercentageDurations(void);
-    vector<double>       GetDurationSums(void);
-    vector<size_t>       GetIndividuals(void);
+    map<cluster_id_t, percentage_t> GetPercentageDurations(void);
+    map<cluster_id_t, double>       GetDurationSums(void);
+    map<cluster_id_t, size_t>       GetIndividuals(void);
 
 
     bool Flush(ostream& str);
