@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 dnl Created by Anjuta application wizard.
 
 define([svnversion], esyscmd([sh -c "svnversion -n . | cut -d: -f2 | cut -dS -f1 | tr -d '\n'"]))
-AC_INIT(ClusteringSuite, [2.00.svnversion], tools@bsc.es)
+AC_INIT(ClusteringSuite, [2.1.svnversion], tools@bsc.es)
 
 AC_CONFIG_AUX_DIR(config)
 AC_CANONICAL_SYSTEM

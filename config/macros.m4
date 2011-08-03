@@ -767,8 +767,9 @@ cgal_enabled=no
 AX_CHECK_MPFR()
 
 if test "x$mpfr_enabled" = "xyes"; then
-
-	BOOST_THREADS()
+	
+	BOOST_REQUIRE(1.36)
+	BOOST_THREADS
   
 	dnl AC_MSG_CHECKING([for CGAL installation])
 

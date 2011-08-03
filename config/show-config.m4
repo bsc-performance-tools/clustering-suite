@@ -24,14 +24,12 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
 	echo Muster clustering library: ${muster_enabled}
 	if test "${muster_enabled}" = "yes"; then
 		echo -e \\\tMuster home:         ${muster_dir}
-		echo
 	fi
 
 	echo MPI support: ${MPI_INSTALLED}
 	if test "${MPI_INSTALLED}" = "yes" ; then
 		echo -e \\\tMPI home:            ${MPI_HOME}
 		echo -e \\\tshared libraries?    ${MPI_SHARED_LIB_FOUND}
-		echo
 	fi
 
 	echo CGAL support: ${cgal_enabled}
@@ -39,7 +37,6 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
 		echo -e \\\tCGAL_CPPFLAGS:       ${CGAL_CPPFLAGS}
 		echo -e \\\tCGAL_LDFLAGS:        ${CGAL_LDFLAGS}
 	fi
-	echo
 
 	echo SeqAn support: ${seqan_enabled}
 
