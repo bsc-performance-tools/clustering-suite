@@ -40,7 +40,8 @@
 #include "DataExtractorFactory.hpp"
 #include "ClusteringStatistics.hpp"
 #include "ClusteredTraceGenerator.hpp"
-#include "ClusteredPRVGenerator.hpp"
+#include "ClusteredStatesPRVGenerator.hpp"
+#include "ClusteredEventsPRVGenerator.hpp"
 #include "ClusteredTRFGenerator.hpp"
 #include "PlottingManager.hpp"
 
@@ -82,8 +83,6 @@ libDistributedClusteringImplementation::libDistributedClusteringImplementation(i
       system_messages::verbose                 = false;
       break;
   }
-  
-  
 }
 
 bool libDistributedClusteringImplementation::InitClustering(string ClusteringDefinitionXML,
@@ -135,7 +134,7 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
   ClusteringCore = new libClustering();
 
   /* Ignore the clustering algorithm defined in the XML and force it to DBSCAN */
-  ClusteringAlgorithmName       = DBSCAN::NAME;
+  ClusteringAlgorithmName = DBSCAN::NAME;
 
   Converter << Epsilon;
   ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::EPSILON_STRING, string(Converter.str())));
@@ -169,8 +168,9 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
 }
 
 
-bool libDistributedClusteringImplementation::ExtractData(string    InputFileName,
-                                                         set<int>& TasksToRead)
+bool libDistributedClusteringImplementation::ExtractData(string            InputFileName,
+                                                         set<int>&         TasksToRead,
+                                                         set<event_type_t> EventsToDealWith)
 {
   DataExtractorFactory*    ExtractorFactory;
   DataExtractor*           Extractor;
@@ -184,7 +184,20 @@ bool libDistributedClusteringImplementation::ExtractData(string    InputFileName
   
   /* Get input file extractor */
   ExtractorFactory = DataExtractorFactory::GetInstance();
-  if (!ExtractorFactory->GetExtractor(InputFileName, Extractor))
+  
+  if (EventsToDealWith.size() > 0)
+  {
+    PRVEventsParsing       = true;
+    this->EventsToDealWith = EventsToDealWith;
+  }
+  else
+  {
+    PRVEventsParsing = false;
+  }
+  
+  if (!ExtractorFactory->GetExtractor(InputFileName,
+                                      Extractor,
+                                      PRVEventsParsing))
   {
     SetError(true);
     SetErrorMessage(ExtractorFactory->GetLastError());
@@ -193,6 +206,16 @@ bool libDistributedClusteringImplementation::ExtractData(string    InputFileName
 
   this->InputFileName = InputFileName;
   InputFileType       = Extractor->GetFileType();
+  
+  if (PRVEventsParsing)
+  {
+    if (!Extractor->SetEventsToDealWith(EventsToDealWith))
+    {
+      SetError(true);
+      SetErrorMessage(Extractor->GetLastError());
+      return false;
+    }
+  }
   
   if (!Extractor->ExtractData(Data))
   {
@@ -204,7 +227,8 @@ bool libDistributedClusteringImplementation::ExtractData(string    InputFileName
   return true;
 }
 
-bool libDistributedClusteringImplementation::ExtractData(string InputFileName)
+bool libDistributedClusteringImplementation::ExtractData(string            InputFileName,
+                                                         set<event_type_t> EventsToDealWith)
 {
   DataExtractorFactory*    ExtractorFactory;
   DataExtractor*           Extractor;
@@ -217,7 +241,20 @@ bool libDistributedClusteringImplementation::ExtractData(string InputFileName)
   
   /* Get input file extractor */
   ExtractorFactory = DataExtractorFactory::GetInstance();
-  if (!ExtractorFactory->GetExtractor(InputFileName, Extractor))
+  
+  if (EventsToDealWith.size() > 0)
+  {
+    PRVEventsParsing       = true;
+    this->EventsToDealWith = EventsToDealWith;
+  }
+  else
+  {
+    PRVEventsParsing = false;
+  }
+  
+  if (!ExtractorFactory->GetExtractor(InputFileName,
+                                      Extractor,
+                                      PRVEventsParsing))
   {
     SetError(true);
     SetErrorMessage(ExtractorFactory->GetLastError());
@@ -226,6 +263,16 @@ bool libDistributedClusteringImplementation::ExtractData(string InputFileName)
 
   this->InputFileName = InputFileName;
   InputFileType       = Extractor->GetFileType();
+  
+  if (PRVEventsParsing)
+  {
+    if (!Extractor->SetEventsToDealWith(EventsToDealWith))
+    {
+      SetError(true);
+      SetErrorMessage(Extractor->GetLastError());
+      return false;
+    }
+  }
   
   if (!Extractor->ExtractData(Data))
   {
@@ -372,8 +419,7 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
   /* Statistics */
 
   Parameters = ParametersManager::GetInstance();
-  Statistics.InitStatistics(LastPartition.NumberOfClusters(),
-                            true, // We alway use DBSCAN 
+  Statistics.InitStatistics(LastPartition.GetIDs(),
                             Parameters->GetClusteringParametersNames(),
                             Parameters->GetClusteringParametersPrecision(),
                             Parameters->GetExtrapolationParametersNames(),
@@ -437,7 +483,15 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
   switch(InputFileType)
   {
     case ParaverTrace:
-      TraceReconstructor = new ClusteredPRVGenerator(InputFileName, OutputTraceName);
+      if (PRVEventsParsing)
+      {
+        TraceReconstructor = new ClusteredEventsPRVGenerator(InputFileName, OutputTraceName);
+        TraceReconstructor->SetEventsToDealWith (EventsToDealWith);
+      }
+      else
+      { 
+        TraceReconstructor = new ClusteredStatesPRVGenerator(InputFileName, OutputTraceName);
+      }
       break;
     case DimemasTrace:
       /* TBI -> Dimemas Cluster blocks not implemented */
@@ -454,9 +508,11 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
     return false;
   }
 
+
+
   if (!TraceReconstructor->Run(Data->GetAllBursts(),
-                               IDs,
-                               ClassificationPartition.NumberOfClusters()))
+                               ClassificationPartition.GetAssignmentVector(),
+                               ClassificationPartition.GetIDs()))
   {
     SetErrorMessage(TraceReconstructor->GetLastError());
     return false;
@@ -492,8 +548,7 @@ bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileNam
   if (!Plots->PrintPlots(DataFileName,
                          Prefix,
                          ClusteringCore->GetClusteringAlgorithmName(),
-                         LastPartition.NumberOfClusters(),
-                         LastPartition.HasNoise()))
+                         LastPartition.GetIDs()))
   {
     SetError(true);
     SetErrorMessage(Plots->GetLastError());

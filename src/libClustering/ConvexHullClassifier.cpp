@@ -48,6 +48,7 @@ bool ConvexHullClassifier::Classify(vector<const Point*>& Data,
 {
   cluster_id_t          CurrentClusterId;
   vector<cluster_id_t>& AssignmentVector = DataPartition.GetAssignmentVector();
+  set<cluster_id_t>&    DifferentIDs     = DataPartition.GetIDs();
 
   ostringstream Message;
 
@@ -60,6 +61,8 @@ bool ConvexHullClassifier::Classify(vector<const Point*>& Data,
       
     Classify(Data[i], CurrentClusterId);
     AssignmentVector.push_back(CurrentClusterId);
+    
+    DifferentIDs.insert(CurrentClusterId);
 
     /* DEBUG 
     Message.str("");
@@ -67,8 +70,8 @@ bool ConvexHullClassifier::Classify(vector<const Point*>& Data,
     system_messages::information(Message.str()); */
   }
 
-  DataPartition.NumberOfClusters(HullModels.size()+1);
-  DataPartition.HasNoise(true);
+  // DataPartition.NumberOfClusters(HullModels.size()+1);
+  // DataPartition.HasNoise(true);
 
   /* DEBUG
   Message.str("");

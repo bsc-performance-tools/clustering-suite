@@ -62,6 +62,9 @@ class libDistributedClusteringImplementation: public Error
     double         Epsilon;
     INT32          MinPoints;
     
+    bool              PRVEventsParsing;
+    set<event_type_t> EventsToDealWith;
+    
     /*
     bool                  ClusteringExecuted;
     bool                  HWCGroupSet;
@@ -79,9 +82,12 @@ class libDistributedClusteringImplementation: public Error
                         INT32  MyRank,
                         INT32  TotalRanks);
 
-    bool ExtractData(string InputFileName, set<int>& TasksToRead);
+    bool ExtractData(string            InputFileName,
+                     set<int>&         TasksToRead,
+                     set<event_type_t> EventsToDealWith = set<event_type_t> ());
 
-    bool ExtractData(string InputFileName);
+    bool ExtractData(string            InputFileName,
+                     set<event_type_t> EventsToDealWith = set<event_type_t> ());
 
     bool ClusterAnalysis(vector<ConvexHullModel>& ClusterModels);
 
