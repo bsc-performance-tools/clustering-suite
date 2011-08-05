@@ -222,6 +222,7 @@ bool MUSTER_CAPEK::Run(const vector<const Point*>& Data,
   /* Translate MUSTER partition to 'libClustering' partition */
   vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
   set<cluster_id_t>&    DifferentIDs            = DataPartition.GetIDs();
+  set<cluster_id_t>::iterator SetIterator;
 
   ClusterAssignmentVector.clear();
 
@@ -231,7 +232,7 @@ bool MUSTER_CAPEK::Run(const vector<const Point*>& Data,
     DifferentIDs.insert(muster_algorithm.cluster_ids[i]);
   }
 
-  // DEBUG
+  /* DEBUG
   vector<size_t> ClusterSizes;
 
   muster_algorithm.get_sizes(ClusterSizes);
@@ -262,6 +263,7 @@ bool MUSTER_CAPEK::Run(const vector<const Point*>& Data,
   }
   Messages << "]" << endl;
   system_messages::information(Messages.str().c_str());
+  */
 
    /* Translate MUSTER partition to 'libClustering' partition */
   ProcessClusterAssignment (muster_algorithm, DataPartition, Data.size());
@@ -302,7 +304,7 @@ void MUSTER_CAPEK::ProcessClusterAssignment(cluster::par_kmedoids &muster_algori
                                             size_t                 DataSize)
 {
   vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
-  set<cluster_id_>&     DifferentIDs            = DataPartition.GetIDs();
+  set<cluster_id_t>&    DifferentIDs            = DataPartition.GetIDs();
 
   /*
   map<medoid_id, cluster_id_t>           ClusterTranslation;
@@ -315,14 +317,15 @@ void MUSTER_CAPEK::ProcessClusterAssignment(cluster::par_kmedoids &muster_algori
 
   for (size_t i = 0; i < DataSize; i++)
   {
-    ClusterAssignmentVector = muster_algorithm.cluster_ids[i];
+    ClusterAssignmentVector.push_back(muster_algorithm.cluster_ids[i]);
     DifferentIDs.insert(muster_algorithm.cluster_ids[i]);
 
   }
 
   /* Add one more cluster, to avoid the non-existent NOISE cluster */
+  /* Not needed any more
   DataPartition.NumberOfClusters (DifferentIDs.size());
-  DataPartition.HasNoise(false);
+  DataPartition.HasNoise(false); */
 
   /* DEBUG 
   for (ClusterTranslationQuery  = ClusterTranslation.begin();

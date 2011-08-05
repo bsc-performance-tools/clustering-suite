@@ -162,7 +162,7 @@ void MUSTER_XCLARA::ProcessClusterAssignment(cluster::kmedoids &muster_algorithm
                                              size_t             DataSize)
 {
   vector<cluster_id_t>& ClusterAssignmentVector = DataPartition.GetAssignmentVector();
-  set<cluster_id_>&     DifferentIDs            = DataPartition.GetIDs();
+  set<cluster_id_t>&    DifferentIDs            = DataPartition.GetIDs();
 
   /*
   map<medoid_id, cluster_id_t>           ClusterTranslation;
@@ -175,14 +175,15 @@ void MUSTER_XCLARA::ProcessClusterAssignment(cluster::kmedoids &muster_algorithm
 
   for (size_t i = 0; i < DataSize; i++)
   {
-    ClusterAssignmentVector = muster_algorithm.cluster_ids[i];
+    ClusterAssignmentVector.push_back(muster_algorithm.cluster_ids[i]);
     DifferentIDs.insert(muster_algorithm.cluster_ids[i]);
 
   }
 
   /* Add one more cluster, to avoid the non-existent NOISE cluster */
+  /* Not needed any more
   DataPartition.NumberOfClusters (DifferentIDs.size());
-  DataPartition.HasNoise(false);
+  DataPartition.HasNoise(false); */
 
   /* DEBUG 
   for (ClusterTranslationQuery  = ClusterTranslation.begin();

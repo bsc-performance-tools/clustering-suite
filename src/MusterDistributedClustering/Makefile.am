@@ -14,7 +14,7 @@ MusterDistributedClustering_SOURCES = \
 
 MusterDistributedClustering_LDADD = \
 	$(top_srcdir)/src/libTraceClustering/libTraceClustering.la \
-    $(top_srcdir)/src/BasicClasses/libBasicClasses.la
+	$(top_srcdir)/src/BasicClasses/libBasicClasses.la
 
 MusterDistributedClustering_CXXFLAGS = ${CXXFLAGS} @MUSTER_CXXFLAGS@ @MPI_CFLAGS@
 MusterDistributedClustering_CFLAGS   = ${CFLAGS} @MUSTER_CXXFLAGS@ @MPI_CFLAGS@

@@ -9,8 +9,12 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	to myfile.ext but completely unrelated to the above
 
 	* anotherfile.ext (somefunction): more changes
+
+2011-08-05 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Fixed regressions in the implementation of MUSTER interface
+
 2011-08-04 Juan Gonzalez <juan.gonzalez@bsc.es>
-	* Fixed regressions in the the implementation of 'libDistributedClustering'
+	* Fixed regressions in the implementation of 'libDistributedClustering'
 
 2011-08-03 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Corrected a bug in the building system that prevented to compile
