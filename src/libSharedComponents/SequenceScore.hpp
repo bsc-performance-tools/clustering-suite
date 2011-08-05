@@ -65,14 +65,6 @@ using std::ios_base;
 #include <seqan/score.h>
 #include <seqan/basic.h>
 
-// using namespace seqan;
-typedef seqan::String<cluster_id_t>                      TSequence;
-typedef seqan::Align<TSequence, seqan::ArrayGaps>        TAlign;
-typedef seqan::Row<TAlign>::Type                         TRow;
-typedef seqan::Iterator<TRow, seqan::Rooted>::Type       TIterator;
-typedef seqan::Position<seqan::Rows<TAlign>::Type>::Type TRowsPosition;
-typedef seqan::Position<TAlign>::Type                    TPosition;
-
 static const cluster_id_t SEQUENCE_GAP = NOISE_CLUSTERID-1;
 
 class SequenceScoreValue
@@ -101,6 +93,14 @@ class SequenceScoreValue
 
 class SequenceScore: public Error 
 {
+  // using namespace seqan;
+  typedef seqan::String<cluster_id_t>                      TSequence;
+  typedef seqan::Align<TSequence, seqan::ArrayGaps>        TAlign;
+  typedef seqan::Row<TAlign>::Type                         TRow;
+  typedef seqan::Iterator<TRow, seqan::Rooted>::Type       TIterator;
+  typedef seqan::Position<seqan::Rows<TAlign>::Type>::Type TRowsPosition;
+  typedef seqan::Position<TAlign>::Type                    TPosition;
+
   private:
 
     static bool                    TablesLoaded;
