@@ -47,6 +47,21 @@ libDistributedClustering::libDistributedClustering(int verbose)
   Error = Warning = false;
 }
 
+/**
+ * Full initialization of the library. To be used in the leaf nodes. It 
+ * contains the definition of the events to be extracted as well as the
+ * identification of the ranks
+ * 
+ * \param ClusteringDefinitionXML XML to define the data extraction
+ * \param Epsilon                 Epsilon parameter for DBSCAN
+ * \param MinPoints               MinPoints parameter for DBSCAN
+ * \param                         Root boolean to express if current task is 
+ *                                the root of the analysis
+ * \param MyRank                  Rank identifier
+ * \param TotalRanks              Total number of analysis tasks
+ * 
+ * \return  True if the initialization was performed correctly, false otherwise
+ */
 bool libDistributedClustering::InitClustering(string ClusteringDefinitionXML,
                                               double Epsilon,
                                               int    MinPoints,
@@ -77,7 +92,15 @@ bool libDistributedClustering::InitClustering(string ClusteringDefinitionXML,
   return true;
 }
 
-
+/**
+ * Performs the extraction of the data from the trace file whose name is 
+ * received by parameter
+ * 
+ * \param InputFileName Name of the trace file where the data will be extracted
+ * \param TasksToRead   Set of TaskIDs to be read by this analysis 
+ * 
+ * \return True if the data extraction was performed correctly, false otherwise
+ */
 bool libDistributedClustering::ExtractData(string    InputFileName,
                                            set<int>& TasksToRead)
 {
@@ -91,6 +114,14 @@ bool libDistributedClustering::ExtractData(string    InputFileName,
   return true;
 }
 
+/**
+ * Performs the extraction of the data from the trace file whose name is 
+ * received by parameter
+ * 
+ * \param InputFileName Name of the trace file where the data will be extracted
+ * 
+ * \return True if the data extraction was performed correctly, false otherwise
+ */
 bool libDistributedClustering::ExtractData(string InputFileName)
 {
   if (!Implementation->ExtractData(InputFileName))
@@ -103,6 +134,15 @@ bool libDistributedClustering::ExtractData(string InputFileName)
   return true;
 }
 
+/**
+ * Performs the extraction of the data from the trace file whose name is 
+ * received by parameter, just loading the bursts from those Tasks indicated
+ * 
+ * \param InputFileName Name of the trace file where the data will be extracted
+ * \param TasksToRead   Set of TaskIDs to be read by this analysis 
+ * 
+ * \return True if the data extraction was performed correctly, false otherwise
+ */
 bool libDistributedClustering::ClusterAnalysis(vector<ConvexHullModel>& ClusterModels)
 {
   if (!Implementation->ClusterAnalysis(ClusterModels))
@@ -115,22 +155,14 @@ bool libDistributedClustering::ClusterAnalysis(vector<ConvexHullModel>& ClusterM
   return true;
 }
 
-bool libDistributedClustering::PrintModels(vector<ConvexHullModel>& ClusterModels, 
-                                           string                   ModelsFileName,
-                                           string                   ScriptsFileNamePrefix)
-{
-  
-  if (!Implementation->PrintModels(ClusterModels,
-                                   ModelsFileName,
-                                   ScriptsFileNamePrefix))
-  {
-    Error        = true;
-    ErrorMessage = Implementation->GetLastError();
-    return false;
-  }
-  return true;
-}
-
+/**
+ * Classifies the loaded data using the Convex Hull models received
+ * 
+ * \param ClusterModes Vector of Convex Hull models per cluster
+  * 
+ * \return True if the data classification was performed correctly, false 
+ *         otherwise
+ */
 bool libDistributedClustering::ClassifyData(vector<ConvexHullModel>& ClusterModels)
 {
   if (!Implementation->ClassifyData(ClusterModels))
@@ -143,6 +175,15 @@ bool libDistributedClustering::ClassifyData(vector<ConvexHullModel>& ClusterMode
   return true;
 }
 
+/**
+ * Reconstruct the input trace adding the data partition computed. Only 
+ * executes in the Root node
+ * 
+ * \param OutputTraceName Name of the output trace with the cluster information
+ * 
+ * \return True if the analysis task is not root or the trace has been 
+ *         generated correctly, false otherwise
+ */
 bool libDistributedClustering::ReconstructInputTrace(string OutputTraceName)
 {
   if (!Root)
@@ -160,6 +201,141 @@ bool libDistributedClustering::ReconstructInputTrace(string OutputTraceName)
   return true;
 }
 
+/**
+ * Initialization of the library to be used in the filter nodes. This 
+ * initialization is intended to be used supplying the data set, not using
+ * any data extraction
+ * 
+ * \param Epsilon                 Epsilon parameter for DBSCAN
+ * \param MinPoints               MinPoints parameter for DBSCAN
+ * 
+ * \return True if the initialization was performed correctly, false otherwise
+ */
+bool libDistributedClustering::InitClustering(double Epsilon,
+                                              int    MinPoints)
+{
+  if (!Implementation->InitClustering(Epsilon,
+                                      MinPoints))
+  {
+    Error        = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+
+  if (Implementation->GetWarning())
+  {
+    Warning = true;
+    WarningMessage = Implementation->GetLastWarning();
+  }
+  
+  return true;
+}
+
+/**
+ * Performs a cluster analysis using the vector of points supplied by the user.
+ * This method is intended to be used in the filter nodes, so as to determine
+ * clusters in the noise points of the leaves
+ * 
+ * \param Points        Vector of points to be clustered
+ * \param ClusterModels Convex Hull models resulting from the cluster analysis
+ * 
+ * \return True if the cluster analysis was performed correctly, false 
+ *         otherwise
+ */
+bool libDistributedClustering::ClusterAnalysis(const vector<const Point*>& Points,
+                                               vector<ConvexHullModel>&    ClusterModels)
+{
+  if (!Implementation->ClusterAnalysis(Points,
+                                       ClusterModels))
+  {
+    Error        = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+
+  if (Implementation->GetWarning())
+  {
+    Warning = true;
+    WarningMessage = Implementation->GetLastWarning();
+  }
+  
+  return true;
+}
+
+/**
+ * Returns the noise points resulting from a cluster analysis
+ * 
+ * \param I/O vector where the noise points will be stored
+ * 
+ * \return True if the points were correctly returned, false otherwise
+ */
+bool libDistributedClustering::GetNoisePoints(vector<const Point*>& NoisePoints)
+{
+  if (!Implementation->GetNoisePoints(NoisePoints))
+  {
+    Error        = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+
+  if (Implementation->GetWarning())
+  {
+    Warning = true;
+    WarningMessage = Implementation->GetLastWarning();
+  }
+  
+  return true;
+}
+
+/**
+ * Returns all information of the bursts analyzed, in a simplistic way, so as
+ * to perform external analysis. All parameters are I/O
+ * 
+ * \param Points     Points (bursts) used in the cluster analysis using raw 
+ *                   dimensions
+ * \param TaskIDs    TaskID from the input trace associated to each burst
+ * \param ThreadIDs  ThreadID from the input trace associated to each burst
+ * \param ClusterIDs Cluster IDs obtained after the classification of the data
+ *                   (considering that the classification provides the 
+ *                   definitive partition
+ * 
+ * \return True, if the information was succesfully retrieved, false otherwise
+ */
+bool libDistributedClustering::GetFullBurstsInformation(vector<Point*>&       Points,
+                                                        vector<task_id_t>&    TaskIDs,
+                                                        vector<thread_id_t>&  ThreadIDs,
+                                                        vector<cluster_id_t>& ClusterIDs)
+{
+  if (!Implementation->GetFullBurstsInformation(Points, TaskIDs, ThreadIDs, ClusterIDs))
+  {
+    Error        = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+  
+  if (Implementation->GetWarning())
+  {
+    Warning        = true;
+    WarningMessage = Implementation->GetLastWarning();
+  }
+  
+  return true;
+}
+
+/**
+ * Generates the scripts and the data files to display the scatter plots of the
+ * data using GNUplot
+ * 
+ * \param DataFileName          Name of the file where the data will be stored
+ * \param ScriptsFileNamePrefix Base name to be used in the different GNUplot
+ *                              scripts
+ * \param LocalPartition        Boolean to indicate if the data to be printed
+ *                              is the global partition or just the local
+ *                              analysis
+ * 
+ * \return True if the plots scripts and data files were written correctly,
+ *         false otherwise
+ */
 bool libDistributedClustering::PrintPlotScripts(string DataFileName,
                                                 string ScriptsFileNamePrefix,
                                                 bool   LocalPartition)
@@ -182,7 +358,37 @@ bool libDistributedClustering::PrintPlotScripts(string DataFileName,
 }
 
 /**
+ * Prints the data files and GNUplot scripts of the Convex Hull models supplied
+ * 
+ * \param ClusterModels         Vector of Convex Hull models of the clusters 
+ *                              that will be printed
+ * \param ModelsFileName        Name of the file where the models will be 
+ *                              stored
+ * \param ScriptsFileNamePrefix Base name to be used in the different GNUplot
+ *                              scripts
+ * 
+ * \return True if the plot scripts and data files were written correctly,
+ *         false otherwise
+ */
+bool libDistributedClustering::PrintModels(vector<ConvexHullModel>& ClusterModels, 
+                                           string                   ModelsFileName,
+                                           string                   ScriptsFileNamePrefix)
+{
+  
+  if (!Implementation->PrintModels(ClusterModels,
+                                   ModelsFileName,
+                                   ScriptsFileNamePrefix))
+  {
+    Error        = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+  return true;
+}
+
+/**
  * Returns the string containing the last error message
+ * 
  * \return Last error message
  */
 string libDistributedClustering::GetErrorMessage(void)
@@ -192,6 +398,7 @@ string libDistributedClustering::GetErrorMessage(void)
 
 /**
  * Returns the string containing the last warning message
+ * 
  * \return Last warning message
  */
 string libDistributedClustering::GetWarningMessage(void)

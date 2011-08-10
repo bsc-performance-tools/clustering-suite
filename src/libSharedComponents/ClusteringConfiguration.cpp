@@ -32,6 +32,8 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
+#include <Utilities.hpp>
+
 #include "ClusteringConfiguration.hpp"
 #include "XMLParser.hpp"
 
@@ -40,7 +42,11 @@
 
 #include <iostream>
 using std::cout;
+using std::cerr;
 using std::endl;
+
+#include <sstream>
+using std::ostringstream;
 
 /******************************************************************************
  * Singleton pointer
@@ -123,8 +129,14 @@ bool ClusteringConfiguration::Initialize(string XMLFileName)
 
   if ( (XMLFile = fopen(XMLFileName.c_str(), "r")) == NULL)
   {
-    cout << "XML FILE = " << XMLFileName << endl;
-    SetErrorMessage("unable to open clustering definition file",
+    ostringstream ErrorMessage;
+    
+    cerr << "Current Path is = " << cepba_tools::GetCWD() << endl;
+
+    ErrorMessage << "unable to open clustering defition file '";
+    ErrorMessage << XMLFileName << "'";
+
+    SetErrorMessage(ErrorMessage.str().c_str(),
                     strerror(errno));
     SetError(true);
     return false;

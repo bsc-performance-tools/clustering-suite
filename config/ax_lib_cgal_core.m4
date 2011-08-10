@@ -77,13 +77,13 @@ for ac_cgal_iterate in $ac_cgal_dirs ; do
 	CPPFLAGS="$CPPFLAGS $CGAL_CPPFLAGS $BOOST_CPPFLAGS"
 	export CPPFLAGS
 
-	CGAL_LDFLAGS="-L$ac_cgal_iterate/lib -R$ac_cgal_iterate/lib -lCGAL -lCGAL_Core"
+	CGAL_LDFLAGS="-L$ac_cgal_iterate/lib -lCGAL -lCGAL_Core" 
 	LDFLAGS_SAVED="$LDFLAGS"
 	LDFLAGS="$LDFLAGS $CGAL_LDFLAGS"
 	export LDFLAGS
 
 	AC_MSG_CHECKING([whether CGAL is available in $ac_cgal_iterate])
-	AC_RUN_IFELSE($TEST_PROGRAM,[ac_cgal=yes],[ac_cgal=no])
+	AC_LINK_IFELSE($TEST_PROGRAM,[ac_cgal=yes],[ac_cgal=no])
 
 	LDFLAGS="$LDFLAGS_SAVED"
 	export LDFLAGS

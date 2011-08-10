@@ -125,7 +125,8 @@ class CPUBurst: public Point, public Error
   
     // bool   WillBeClusterized(void) { return ToBeClusterized; }; //
 
-    double GetRawDimension(size_t Index);
+    vector<double>& GetRawDimensions(void) { return RawDimensions; };
+    double          GetRawDimension(size_t Index);
 
     size_t GetExtrapolationDimensionsCount(void) const;
 

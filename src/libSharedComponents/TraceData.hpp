@@ -158,6 +158,8 @@ class TraceData: public Error
     void SetReadAllTasks(bool ReadAllTasks)   { this->ReadAllTasks = ReadAllTasks; };
     void SetTasksToRead(set<int> TasksToRead) { this->TasksToRead = TasksToRead; };
 
+    size_t         GetClusteringDimensionsCount(void)    { return ClusteringDimensions; };
+    size_t         GetExtrapolationDimensionsCount(void) { return ExtrapolationDimensions; };
     vector<string> GetClusteringParametersNames;
     vector<string> GetExtrapolationParametersNames;
 

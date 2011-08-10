@@ -35,6 +35,7 @@
 #include <types.h>
 #include <libTraceClustering.hpp>
 
+#include <Utilities.hpp>
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 #include <FileNameManipulator.hpp>
@@ -416,7 +417,7 @@ void CheckOutputFile()
 int main(int argc, char *argv[])
 {
   libTraceClustering Clustering = libTraceClustering(true);
-  
+
   ReadArgs(argc, argv);
 
   CheckOutputFile();

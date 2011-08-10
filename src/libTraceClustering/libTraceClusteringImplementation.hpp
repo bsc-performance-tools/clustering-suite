@@ -53,14 +53,14 @@ class libTraceClusteringImplementation: public Error
     Partition            LastPartition;
     ClusteringStatistics Statistics;
     
-    string         InputFileName;
-    input_file_t   InputFileType;
+    string               InputFileName;
+    input_file_t         InputFileType;
 
-    bool           ClusteringExecuted;
-    bool           ClusteringRefinementExecution;
+    bool                 ClusteringExecuted;
+    bool                 ClusteringRefinementExecution;
 
-    bool              PRVEventsParsing;
-    set<event_type_t> EventsToDealWith;
+    bool                 PRVEventsParsing;
+    set<event_type_t>    EventsToDealWith;
     
     unsigned char  UseFlags;
     

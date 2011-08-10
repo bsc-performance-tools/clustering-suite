@@ -49,7 +49,6 @@ class Point
     
   public:
 
-
 #if defined (HAVE_MUSTER) && defined (HAVE_MPI)
     static size_t PointDimensions;
 #endif

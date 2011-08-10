@@ -71,12 +71,16 @@ class libDistributedClustering
   public:
     libDistributedClustering(int verbose);
 
+    /* This methods are intended to be used in the MRNet BE nodes, to perform
+     * a local cluster analysis */
+
     bool InitClustering(string ClusteringDefinitionXML,
                         double Epsilon,
                         int    MinPoints,
                         bool   Root,
                         int    MyRank,
                         int    TotalRanks);
+                        
 
     bool ExtractData(string InputFileName, set<int>& TasksToRead);
 
@@ -88,6 +92,29 @@ class libDistributedClustering
 
     bool ReconstructInputTrace(string OutputTraceName);
 
+
+    /* This second interface is focused to implement the cluster of local noise
+     * points */
+
+    bool InitClustering(double Epsilon,
+                        int    MinPoints);
+
+    bool ClusterAnalysis(const vector<const Point*>& Points,
+                         vector<ConvexHullModel>&    ClusterModels);
+    
+    bool GetNoisePoints(vector<const Point*>& NoisePoints);
+    
+    /* A method to retrieve all information to perform the cross-process 
+     * analysis */
+     
+    bool GetFullBurstsInformation(vector<Point*>&       Points,
+                                  vector<task_id_t>&    TaskIDs,
+                                  vector<thread_id_t>&  ThreadIDs,
+                                  vector<cluster_id_t>& ClusterIDs);
+
+    
+    /* Methods to print the models and the scatter plots of data. To be used
+     * in BE nodes */
     bool PrintModels(vector<ConvexHullModel>& ClusterModels,
                      string ModelsFileName,
                      string ScriptsFileNamePrefix = "");
@@ -96,6 +123,8 @@ class libDistributedClustering
                           string ScriptsFileNamePrefix = "",
                           bool   LocalPartition = false);
 
+
+    /* Error/Warning retrieveng methods */
     string GetErrorMessage(void);
 
     string GetWarningMessage(void);

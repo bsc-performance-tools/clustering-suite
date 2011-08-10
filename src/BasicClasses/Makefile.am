@@ -19,5 +19,7 @@ libBasicClasses_la_SOURCES= \
 	FileNameManipulator.hpp \
 	SystemMessages.cpp \
 	SystemMessages.hpp \
+	Utilities.cpp \
+	Utilities.hpp \
 	Timer.hpp
 

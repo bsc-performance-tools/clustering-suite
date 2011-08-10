@@ -147,7 +147,7 @@ AC_ARG_WITH(
 
   MUSTER_CXXFLAGS="-I$muster_dir/include $BOOST_CPPFLAGS"
   MUSTER_CFLAGS="-I$muster_dir/include"
-  MUSTER_LDFLAGS="-L$muster_dir/lib"
+  MUSTER_LDFLAGS="-L$muster_dir/lib -R$muster_dir/lib"
   MUSTER_LIBS="-lmuster"
 
   AC_SUBST(MUSTER_CXXFLAGS)

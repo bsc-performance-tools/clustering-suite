@@ -56,6 +56,9 @@ class libDistributedClusteringImplementation: public Error
     Partition      LastPartition;
     Partition      ClassificationPartition;
 
+    bool                 UsingExternalData;
+    vector<const Point*> ExternalData;
+
     string         InputFileName;
     input_file_t   InputFileType;
 
@@ -74,6 +77,9 @@ class libDistributedClusteringImplementation: public Error
 
   public:
     libDistributedClusteringImplementation(int verbose);
+    
+    /* This methods are intended to be used in the MRNet BE nodes, to perform
+     * a local cluster analysis */
 
     bool InitClustering(string ClusteringDefinitionXML,
                         double Eps,
@@ -97,6 +103,29 @@ class libDistributedClusteringImplementation: public Error
     
     bool ReconstructInputTrace(string OutputTraceName);
 
+    /* This second interface is focused to implement the cluster of local noise
+     * points */
+
+    bool InitClustering(double Epsilon,
+                        int    MinPoints);
+
+    bool ClusterAnalysis(const vector<const Point*>& Points,
+                         vector<ConvexHullModel>&    ClusterModels);
+    
+    bool GetNoisePoints(vector<const Point*>& NoisePoints);
+
+    /* A method to retrieve all information to perform the cross-process 
+     * analysis */
+     
+    bool GetFullBurstsInformation(vector<Point*>&       Points,
+                                  vector<task_id_t>&    TaskIDs,
+                                  vector<thread_id_t>&  ThreadIDs,
+                                  vector<cluster_id_t>& ClusterIDs);
+
+
+    /* Methods to print the models and the scatter plots of data. To be used
+     * in BE nodes */
+
     bool PrintPlotScripts(string DataFileName,
                           string ScriptsFileNamePrefix = "",
                           bool   LocalPartition = false);
@@ -104,6 +133,8 @@ class libDistributedClusteringImplementation: public Error
     bool PrintModels(vector<ConvexHullModel>& ClusterModels,
                      string                   ModelsFileName,
                      string                   ScriptsFileNamePrefix = "");
+
+    /* Error/Warning retrieveng methods */
 
     string GetErrorMessage(void);
 
@@ -116,6 +147,8 @@ private:
   bool FlushData(string DataFileName, bool LocalPartition);
   
   bool GenerateClusterModels(vector<ConvexHullModel>& Models);
+  
+  vector<const Point*>& GetDataPoints(void);
 
 };
 
