@@ -9,6 +9,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	to myfile.ext but completely unrelated to the above
 
 	* anotherfile.ext (somefunction): more changes
+2011-08-31 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a bug when the input paraver trace has overlapped states
+	running and different from running that made the parser miss data
+	from events in the overlapping time
 
 2011-08-10 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Modification of the CGAL detection part of the building system to 

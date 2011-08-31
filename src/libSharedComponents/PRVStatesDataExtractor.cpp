@@ -278,7 +278,6 @@ bool PRVStatesDataExtractor::CheckState(State     *CurrentState,
   /* Check if this new state is a running state */
   if (CurrentState->GetStateValue() == RUNNING_STATE)
   {
-    
     if (CurrentTaskData.OngoingBurst)
     { 
       if (CurrentTaskData.EndTime == CurrentState->GetBeginTime())
@@ -293,8 +292,6 @@ bool PRVStatesDataExtractor::CheckState(State     *CurrentState,
                NextTaskData.BeginTime,
                NextTaskData.EndTime);
 #endif
-      
-        
       }
       else if (CurrentTaskData.EndTime < CurrentState->GetBeginTime())
       { /* There is an ongoing burst.  */
@@ -374,13 +371,24 @@ bool PRVStatesDataExtractor::CheckState(State     *CurrentState,
 #endif
     }
   }
+  else
+  { /* Is not a running state. Wait if there are more events on the same
+     * timestamp */
+#ifdef DEBUG_PARAVER_INPUT
+      printf("Overlapped state change for T%02d:Th%02d (%lld - %lld)\n",
+             CurrentState->GetTaskId(),
+             CurrentState->GetThreadId(),
+             CurrentState->GetBeginTime(),
+             CurrentState->GetEndTime());
+#endif
+  }
   
   return true;
 }
 
 bool
 PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
-                             TraceData *TraceDataSet)
+                                   TraceData *TraceDataSet)
 {
   map<event_type_t, event_value_t>::iterator EventsDataIterator;
   
@@ -435,14 +443,17 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
         
         CurrentTaskData = NextTaskData;
         NextTaskData.Clear();
-        
       }
       else
       {
         CurrentTaskData.Clear();
       }
     }
-    else if (CurrentEvent->GetTimestamp() == CurrentTaskData.EndTime)
+    /* BUGFIX: once we update the current task data, we have to check the
+     * validity of the current event */
+    // else if (CurrentEvent->GetTimestamp() == CurrentTaskData.EndTime) */
+    
+    if (CurrentEvent->GetTimestamp() == CurrentTaskData.EndTime)
     { /* Events at the end of the CPU burst */
       for (INT32 i = 0; i < CurrentEvent->GetTypeValueCount(); i++)
       {
