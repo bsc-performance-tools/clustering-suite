@@ -86,7 +86,8 @@ class ConvexHullModel
     ConvexHullModel(CGALPoints HullPoints, long long Density);
     /* ConvexHullModel ( Polygon_2 P, Polygon_2 Q ); */
     ConvexHullModel ( long long Density, int NumPoints, int NumDimensions, double* DimValues );
-
+	
+    int size(void);
     long long GetDensity(void);   
  
     void Serialize  ( long long& Density, int & NumPoints, int & NumDimensions, double*& DimValues );

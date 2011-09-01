@@ -9,6 +9,14 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	to myfile.ext but completely unrelated to the above
 
 	* anotherfile.ext (somefunction): more changes
+
+2011-09-01 German Llort <german.llort@bsc.es>
+	* Added a size method and a new merge implementation on the Convex
+	Hull model
+
+	* Changed the way to return the noise points in the 
+	libDistributedClustering
+
 2011-08-31 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a bug when the input paraver trace has overlapped states
 	running and different from running that made the parser miss data

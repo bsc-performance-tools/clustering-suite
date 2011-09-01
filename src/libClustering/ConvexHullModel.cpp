@@ -117,6 +117,11 @@ ConvexHullModel::ConvexHullModel( long long Density, int NumPoints, int NumDimen
   
 }
 
+int ConvexHullModel::size()
+{
+  return this->HullPoints.size();
+}
+
 long long ConvexHullModel::GetDensity()
 {
   return this->Density;
@@ -223,6 +228,73 @@ bool ConvexHullModel::IsNear(const Point* QueryPoint, double Epsilon)
   return false;
 }
 
+ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsilon, int MinPoints )
+{
+  Polygon_2            P, Q;
+  bool                 doMerge = false;
+  CGALPoints           Hull2Points, JointPoints;
+  ConvexHullModel      *JointHull;
+  int                  TotalDensity = this->GetDensity() + CHull2->GetDensity();
+
+  Hull2Points = CHull2->getHullPoints();
+
+  /* DEBUG 
+  std::cerr << "Hull1.size()=" << HullPoints.size() << " Hull1.density()=" << this->GetDensity() << " Hull2.size()=" << Hull2Points.size() << " Hull2.density()=" << CHull2->GetDensity() << std::endl; */
+
+  for (size_t i = 0; i < HullPoints.size(); i++)
+  {
+    P.push_back(HullPoints[i]);
+  }
+
+  for (size_t i = 0; i < Hull2Points.size(); i++)
+  {
+    Q.push_back(Hull2Points[i]);
+  }
+
+  /* Check polygon intersection */
+  if (CGAL::do_intersect (P, Q))
+  {
+    doMerge = true;
+  } 
+  else if (Epsilon > 0)
+  {
+    /* Check polytope distances */
+    double sqrDistance = this->DistanceTo (CHull2);
+
+    if (sqrDistance <= pow(Epsilon, 2.0))
+    {
+      /* The two hulls are close below Epsilon */
+      doMerge = true;
+    }
+  }
+
+  if (doMerge)
+  {
+    for (size_t i = 0; i < HullPoints.size(); i++)
+    {
+      JointPoints.push_back(HullPoints[i]);
+    }
+
+    for (size_t i = 0; i < Hull2Points.size(); i++)
+    {
+      JointPoints.push_back(Hull2Points[i]);
+    }
+
+    JointHull = new ConvexHullModel( JointPoints, TotalDensity );
+    /* DEBUG
+    std::cout << "The two hulls are merged." << std::endl; 
+    JointHull->Print(); */
+    return JointHull;
+  }
+  else
+  {
+    /* DEBUG
+    std::cout << "The two hulls are NOT merged." << std::endl; */
+    return NULL;
+  }
+}
+
+#if 0
 ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsilon, int MinPoints )
 {
   Polygon_2            P, Q;
@@ -371,6 +443,7 @@ ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsil
     return NULL;
   }
 }
+#endif
 
 double ConvexHullModel::DistanceTo ( ConvexHullModel * CHull2 )
 {

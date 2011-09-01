@@ -633,8 +633,13 @@ bool libDistributedClusteringImplementation::GetNoisePoints(vector<const Point*>
   
   if (IDs.size() == 0)
   {
+#if 0 // OR CLUSTERED AN EMPTY VECTOR OF NOISE POINTS!!!
     SetErrorMessage("cluster analysis not executed");
     return false;
+#else
+    NoisePoints.clear();
+    return true;
+#endif
   }
   
   vector<const Point*>& DataPoints = GetDataPoints();
@@ -643,6 +648,7 @@ bool libDistributedClusteringImplementation::GetNoisePoints(vector<const Point*>
   
   for (size_t i = 0; i < IDs.size(); i++)
   {
+//std::cout << "GetNoisePoints IDs[" << i << "] = " << IDs[i] << " (NOISE_CLUSTERID=" << NOISE_CLUSTERID << ")" << endl;
     if (IDs[i] == NOISE_CLUSTERID)
     {
       NoisePoints.push_back(DataPoints[i]);
@@ -900,24 +906,25 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
 bool libDistributedClusteringImplementation::GenerateClusterModels(vector<ConvexHullModel>& Models)
 {
   vector<cluster_id_t>& AssignmentVector = LastPartition.GetAssignmentVector();
-  vector<const Point*>& ClusteringPoints = Data->GetClusteringPoints();
+
+  vector<const Point*>& ClusteringPoints = ( UsingExternalData ? ExternalData : Data->GetClusteringPoints() ) ;
+
   vector<vector<const Point*> > PointsPerCluster (LastPartition.NumberOfClusters ());
 
-  /* DEBUG
+  /* DEBUG 
   ostringstream Messages;
   Messages << "Creating Hulls. Number of clusters = " << LastPartition.NumberOfClusters() << endl;
-  system_messages::information(Messages.str().c_str()); 
-  */
-
+  system_messages::information(Messages.str().c_str()); */
+  
   Models.clear();
 
-  /* DEBUG
+  /* DEBUG 
   Messages.str("");
   Messages << " Models vector size = " << Models.size() << endl;
-  system_messages::information(Messages.str().c_str());
-  */
+  system_messages::information(Messages.str().c_str()); */
 
-  if (AssignmentVector.size() != Data->GetClusteringBurstsSize())
+  unsigned int ClusterPointsSize = ( UsingExternalData ? ExternalData.size() : Data->GetClusteringBurstsSize() );
+  if (AssignmentVector.size() != ClusterPointsSize)
   {
     SetError(true);
     SetErrorMessage("partition elements and cluster points differ");
