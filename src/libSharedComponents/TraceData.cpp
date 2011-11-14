@@ -780,9 +780,11 @@ TraceData::ReplaceClusterIds(vector< pair<UINT64, INT32> >& ClustersIdList)
 
 bool TraceData::FlushPoints(ostream&             str,
                             vector<cluster_id_t> Cluster_IDs,
-                            bool                 AllData)
+                            bool                 PrintAllBursts)
 {
-  INT32 TotalPoints;
+  size_t TotalPoints;
+  
+  bool   Unclassified;
   
   ParametersManager *Parameters = ParametersManager::GetInstance();
 
@@ -802,17 +804,55 @@ bool TraceData::FlushPoints(ostream&             str,
   /* Check if cluster_ids is empty! */
   if (Cluster_IDs.size() == 0)
   {
-    Cluster_IDs = vector<cluster_id_t> (ClusteringBursts.size(), UNCLASSIFIED);
+    Unclassified = true;
+    // Cluster_IDs = vector<cluster_id_t> (ClusteringBursts.size(), UNCLASSIFIED);
   }
-
+  
+  /*
   if (Cluster_IDs.size() != CompleteBursts.size())
   {
     ostringstream Message;
     Message << "number of IDs (" << Cluster_IDs.size() << ") ";
-    Message << "different from number of bursts (" << CompleteBursts.size() << ")" << endl;
+    Message << "different from number of bursts (" << CompleteBursts.size() << ")";
     SetError(true);
     SetErrorMessage(Message.str());
     return false;
+  }
+  */
+  
+  if (Cluster_IDs.size() != CompleteBursts.size())
+  {
+    /* Check if is the master, and we need to flush the clustering data */
+    if (Master && Cluster_IDs.size() != ClusteringBursts.size())
+    {
+      ostringstream Message;
+      Message << "number of IDs (" << Cluster_IDs.size() << ") ";
+      Message << "different from number of bursts (unknown)";
+    }
+    else
+    {
+      BeginLimitIterator = ClusteringBursts.begin();
+      EndLimitIterator   = ClusteringBursts.end();
+      DataSize           = ClusteringBursts.size();
+      sort(ClusteringBursts.begin(), ClusteringBursts.end(), InstanceNumCompare());
+    }
+  }
+  else
+  {
+    if (PrintAllBursts)
+    {
+      BeginLimitIterator = AllBursts.begin();
+      EndLimitIterator   = AllBursts.end();
+      DataSize           = AllBursts.size();
+      sort(AllBursts.begin(), AllBursts.end(), InstanceNumCompare());
+    }
+    else
+    {
+      BeginLimitIterator = CompleteBursts.begin();
+      EndLimitIterator   = CompleteBursts.end();
+      DataSize           = CompleteBursts.size();
+      sort(CompleteBursts.begin(), CompleteBursts.end(), InstanceNumCompare());
+    }
   }
   
   if (NormalizeData && !Normalized)
@@ -851,6 +891,8 @@ bool TraceData::FlushPoints(ostream&             str,
   cout << "All Bursts = "        << AllBursts.size() << endl;
   */
 
+  /* Changed for the previous comparison, to solve the problem when printing
+   * local/global data 
   if (AllData)
   {
     BeginLimitIterator = AllBursts.begin();
@@ -860,12 +902,13 @@ bool TraceData::FlushPoints(ostream&             str,
   }
   else
   { /* Print the complete points (as a result of a clustering analysis, all
-     * complete points must have an ID */
+     * complete points must have an ID 
     BeginLimitIterator = CompleteBursts.begin();
     EndLimitIterator   = CompleteBursts.end();
     DataSize           = CompleteBursts.size();
     sort(CompleteBursts.begin(), CompleteBursts.end(), InstanceNumCompare());
   }
+  */
   
   system_messages::show_progress("Writing point to disc", 0, DataSize);
   for (BurstsIterator  = BeginLimitIterator, ClusteringBurstsCounter = 0, TotalPoints = 0;

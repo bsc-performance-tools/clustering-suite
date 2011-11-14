@@ -13,7 +13,7 @@ endif
 instdir = $(includedir)
 
 inst_HEADERS = \
-	config.h
+	clustering_suite_config.h
 
 EXTRA_DIST = $(clusteringsuitedoc_DATA) \
 	$(top_srcdir)/include

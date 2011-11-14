@@ -1,7 +1,7 @@
 #ifndef _TYPES_H_
 #define _TYPES_H_
 
-#include <config.h>
+#include <clustering_suite_config.h>
 
 #ifdef HAVE_STDINT_H
    #include <stdint.h>

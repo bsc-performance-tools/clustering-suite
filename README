@@ -13,6 +13,10 @@ http://www.cgal.org/
 
 http://www.mpfr.org/
 
+* The GNU Multiple Precision Arithmetic Library (needed by CGAL)
+
+http://www.gmplib.org
+
 * Boost headers and Boost thread libraries (needed by Muster and CGAL)
 
 http://www.boost.org/
@@ -22,6 +26,10 @@ http://www.boost.org/
 The suite has been tested using MPICH
 
 http://www.mcs.anl.gov/research/projects/mpich2/
+
+* The SeqAn library for multiple sequence analysis
+
+http://www.seqan.de/
 
 
 export LD_LIBRARY_PATH=/home/bsc41/bsc41491/apps/MUSTER/lib:/home/bsc41/bsc41127/apps/MPFR/32/lib:/home/bsc41/bsc41127/apps/CGAL/32/lib:/gpfs/apps/BOOST/1_39_0/32/lib:/opt/osshpc/mpich-mx/32/lib/shared/

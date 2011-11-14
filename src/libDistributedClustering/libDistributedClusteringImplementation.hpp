@@ -40,6 +40,7 @@ using cepba_tools::Error;
 
 #include <libClustering.hpp>
 #include <TraceData.hpp>
+#include <ClusteringStatistics.hpp>
 
 #include <trace_clustering_types.h>
 
@@ -68,6 +69,8 @@ class libDistributedClusteringImplementation: public Error
     bool              PRVEventsParsing;
     set<event_type_t> EventsToDealWith;
     
+    ClusteringStatistics     Statistics;
+    
     /*
     bool                  ClusteringExecuted;
     bool                  HWCGroupSet;
@@ -94,6 +97,8 @@ class libDistributedClusteringImplementation: public Error
 
     bool ExtractData(string            InputFileName,
                      set<event_type_t> EventsToDealWith = set<event_type_t> ());
+                     
+    size_t GetNumberOfPoints(void);
 
     bool ClusterAnalysis(vector<ConvexHullModel>& ClusterModels);
 
@@ -102,6 +107,8 @@ class libDistributedClusteringImplementation: public Error
     bool GenerateStatistics(bool UseClassificationPartition);
     
     bool ReconstructInputTrace(string OutputTraceName);
+    
+    bool FlushClustersInformation(string OutputClustersInfoFileName);
 
     /* This second interface is focused to implement the cluster of local noise
      * points */
@@ -132,7 +139,8 @@ class libDistributedClusteringImplementation: public Error
 
     bool PrintModels(vector<ConvexHullModel>& ClusterModels,
                      string                   ModelsFileName,
-                     string                   ScriptsFileNamePrefix = "");
+                     string                   ScriptsFileNamePrefix = "",
+                     string                   Title                 = "");
 
     /* Error/Warning retrieveng methods */
 

@@ -86,9 +86,13 @@ class libDistributedClustering
 
     bool ExtractData(string InputFileName);
 
+    size_t GetNumberOfPoints(void);
+
     bool ClusterAnalysis(vector<ConvexHullModel>& ClusterModels);
     
     bool ClassifyData(vector<ConvexHullModel>& ClusterModels);
+    
+    bool FlushClustersInformation(string OutputClustersInfoFileName);
 
     bool ReconstructInputTrace(string OutputTraceName);
 
@@ -117,7 +121,8 @@ class libDistributedClustering
      * in BE nodes */
     bool PrintModels(vector<ConvexHullModel>& ClusterModels,
                      string ModelsFileName,
-                     string ScriptsFileNamePrefix = "");
+                     string ScriptsFileNamePrefix = "",
+                     string PlotTitle             = "");
     
     bool PrintPlotScripts(string DataFileName,
                           string ScriptsFileNamePrefix = "",

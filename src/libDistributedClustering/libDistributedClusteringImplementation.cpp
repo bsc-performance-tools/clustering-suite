@@ -179,9 +179,9 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
     return false;
   }
 
-  system_messages::my_rank     = MyRank; 
+  system_messages::my_rank  = MyRank; 
   
-  this->Root = Root;
+  this->Root                = Root;
   
   UsingExternalData = false;
   
@@ -325,6 +325,24 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
 }
 
 /**
+ * Returns the number of points to be processed locally
+ * 
+ * 
+ * \return The total number of points to be analyzed
+ */
+size_t libDistributedClusteringImplementation::GetNumberOfPoints(void)
+{
+  if (Data == NULL)
+  {
+    return (size_t) 0;
+  }
+  else
+  {
+    return Data->GetClusteringBurstsSize();
+  }
+}
+
+/**
  * Performs the extraction of the data from the trace file whose name is 
  * received by parameter, just loading the bursts from those Tasks indicated
  * 
@@ -420,7 +438,6 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<ConvexHullModel
 bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassificationPartition)
 {
   ClusteringConfiguration* ConfigurationManager;
-  ClusteringStatistics     Statistics;
   ParametersManager*       Parameters;
  
 
@@ -434,14 +451,14 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
   /* Statistics */
 
   Parameters = ParametersManager::GetInstance();
-  Statistics.InitStatistics(LastPartition.GetIDs(),
-                            Parameters->GetClusteringParametersNames(),
-                            Parameters->GetClusteringParametersPrecision(),
-                            Parameters->GetExtrapolationParametersNames(),
-                            Parameters->GetExtrapolationParametersPrecision());
   
   if (UseClassificationPartition)
   {
+    Statistics.InitStatistics(ClassificationPartition.GetIDs(),
+                              Parameters->GetClusteringParametersNames(),
+                              Parameters->GetClusteringParametersPrecision(),
+                              Parameters->GetExtrapolationParametersNames(),
+                              Parameters->GetExtrapolationParametersPrecision());
     
     if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
                                       ClassificationPartition.GetAssignmentVector()))
@@ -453,6 +470,12 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
   }
   else
   {
+    Statistics.InitStatistics(LastPartition.GetIDs(),
+                              Parameters->GetClusteringParametersNames(),
+                              Parameters->GetClusteringParametersPrecision(),
+                              Parameters->GetExtrapolationParametersNames(),
+                              Parameters->GetExtrapolationParametersPrecision());
+  
     if (!Statistics.ComputeStatistics(Data->GetClusteringBursts(),
                                       LastPartition.GetAssignmentVector()))
     {
@@ -542,6 +565,40 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
     return false;
   }
   
+  return true;
+}
+
+/**
+ * Write clusters information to an output file
+ *
+ * \param OutputClustersInfoFileName Name of the output file where clusters information will be written
+ *
+ * \result True if output file is written correctly, false otherwise
+ */
+bool libDistributedClusteringImplementation::FlushClustersInformation(string OutputClustersInfoFileName)
+{
+  ofstream OutputStream (OutputClustersInfoFileName.c_str(), ios_base::trunc);
+
+  if (ClassificationPartition.NumberOfClusters() == 0)
+  {
+    SetError(true);
+    SetErrorMessage("classification not performed");
+  }
+
+  vector<cluster_id_t>& IDs = ClassificationPartition.GetAssignmentVector();
+
+  if (IDs.size() == 0)
+  {
+    SetErrorMessage("no cluster analysis data available to generate information file");
+    return false;
+  }
+
+  if (!Statistics.Flush(OutputStream))
+  {
+    SetErrorMessage(Statistics.GetLastError());
+    return false;
+  }
+
   return true;
 }
 
@@ -746,6 +803,8 @@ bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileNam
 
   Plots = PlottingManager::GetInstance();
   
+  Partition& UsedPartition = (LocalPartition ? LastPartition : ClassificationPartition);
+  
   if (ScriptsFileNamePrefix.compare("") == 0)
   {
     FileNameManipulator Manipulator(DataFileName, "csv");
@@ -764,7 +823,7 @@ bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileNam
   if (!Plots->PrintPlots(DataFileName,
                          Prefix,
                          ClusteringCore->GetClusteringAlgorithmName(),
-                         LastPartition.GetIDs()))
+                         UsedPartition.GetIDs()))
   {
     SetError(true);
     SetErrorMessage(Plots->GetLastError());
@@ -784,15 +843,20 @@ bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileNam
  *                              stored
  * \param ScriptsFileNamePrefix Base name to be used in the different GNUplot
  *                              scripts
+ * \param Title                 Title to be used in GNUplot script
  * 
  * \return True if the plot scripts and data files were written correctly,
  *         false otherwise
  */
 bool libDistributedClusteringImplementation::PrintModels(vector<ConvexHullModel>& ClusterModels,
                                                          string                   ModelsFileName,
-                                                         string                   ScriptsFileNamePrefix)
+                                                         string                   ScriptsFileNamePrefix,
+                                                         string                   Title)
 {
+  PlottingManager *Plots;
   string Prefix;
+
+  set<cluster_id_t> DifferentIDs;
 
   ofstream OutputStream;
   ostringstream Messages;
@@ -811,29 +875,37 @@ bool libDistributedClusteringImplementation::PrintModels(vector<ConvexHullModel>
   if (!OutputStream)
   {
     SetError(true);
-    SetErrorMessage("unable to open models file name", strerror(errno));
+    SetErrorMessage("unable to open models data file name", strerror(errno));
     return false;
   }
 
   for (size_t i = 0; i < ClusterModels.size(); i++)
   {
-/* DEBUG
+    /* DEBUG
     Messages << "**** Printing Hull " << i << " to file " << ModelsFileName << endl;
     system_messages::information(Messages.str().c_str());
-    Messages.str(""); */
+    Messages.str("");
+    */
     ClusterModels[i].Flush(OutputStream, MIN_CLUSTERID+i+PARAVER_OFFSET); // +1 because there is no noise!
+    DifferentIDs.insert(i+1);
+  }
+  OutputStream.close();
+  
+  /* Print Model GNUPlot Script */
+  if (ScriptsFileNamePrefix.compare("") == 0)
+  { /* No need to print scripts */
+    return true;
   }
 
-  OutputStream.close();
+  /* Plot definition */
+  Plots = PlottingManager::GetInstance();
 
-  /*
-  if (!Plots->PrintPlots(DataFileName, Prefix, LastPartition.NumberOfClusters(), LastPartition.HasNoise()))
+  if (!Plots->PrintPlots(ModelsFileName, ScriptsFileNamePrefix, Title, DifferentIDs, true )) // true == Printing Models
   {
     SetError(true);
     SetErrorMessage(Plots->GetLastError());
     return false;
   }
-  */
   
   return true;
 }
@@ -876,7 +948,7 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
     if (!Data->FlushPoints(OutputStream, LastPartition.GetAssignmentVector(), false)) // false = Not All Data!!
     {
       SetError(true);
-      SetErrorMessage(Data->GetLastError());
+      SetErrorMessage("error flushing local points", Data->GetLastError());
       return false;
     }
   }
@@ -885,7 +957,7 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
     if (!Data->FlushPoints(OutputStream, ClassificationPartition.GetAssignmentVector(), false)) // false = Not All Data!!
     {
       SetError(true);
-      SetErrorMessage(Data->GetLastError());
+      SetErrorMessage("error flushing global points", Data->GetLastError());
       return false;
     }
   }

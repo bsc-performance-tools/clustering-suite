@@ -764,9 +764,9 @@ AC_DEFUN([AX_CHECK_CGAL],
 [
 
 cgal_enabled=no
-AX_CHECK_MPFR()
+AX_CHECK_MPFR_GMP()
 
-if test "x$mpfr_enabled" = "xyes"; then
+if test "x$have_mpfr" = "xyes" -a "x$have_gmp" = "xyes"; then
 	
 	BOOST_REQUIRE(1.36)
 	BOOST_THREADS
@@ -777,78 +777,28 @@ if test "x$mpfr_enabled" = "xyes"; then
 	
 		AX_FLAGS_SAVE()
 
-		CXXFLAGS="$CXXFLAGS -frounding-math $MPFR_CXXFLAGS $BOOST_CPPFLAGS"
-		CFLAGS="$CFLAGS $MPFR_CFLAGS $BOOST_CPPFLAGS"
-		LDFLAGS="$LDFLAGS $MPFR_LDFLAGS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS"
-		LIBS="$LIBS $MPFR_LIBS $BOOST_THREAD_LIBS"
+		CXXFLAGS="$CXXFLAGS -frounding-math $BOOST_CPPFLAGS $gmpinc"
+		CFLAGS="$CFLAGS $BOOST_CPPFLAGS $gmpinc"
+		LDFLAGS="$LDFLAGS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS $gmplibs"
+		LIBS="$LIBS $MPFR_LIBS $BOOST_THREAD_LIBS $gmplibs"
     
 		AX_LIB_CGAL_CORE(
-			CGAL_CPPFLAGS="$CGAL_CPPFLAGS -frounding-math $MPFR_CXXFLAGS $BOOST_CPPFLAGS"
-			CGAL_LDFLAGS="$CGAL_LDFLAGS $MPFR_LDFLAGS $MPFR_LIBS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS"
+			CGAL_CPPFLAGS="$CGAL_CPPFLAGS -frounding-math $MPFR_CXXFLAGS $BOOST_CPPFLAGS $gmpinc"
+			CGAL_LDFLAGS="$CGAL_LDFLAGS $MPFR_LDFLAGS $MPFR_LIBS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS $gmplibs"
 			AC_SUBST(CGAL_CPPFLAGS)
 			AC_SUBST(CGAL_LDFLAGS)
 	      	cgal_enabled="yes",
-			cgal_enabled="no")
+			    cgal_enabled="no")
 
 		if test ! "x$cgal_enabled" = "xyes"; then
 			AC_MSG_RESULT([CGAL not found, some functionalities will be missing])
-		fi
+    fi
 
 		AX_FLAGS_RESTORE()
 	fi
 fi
 
 AM_CONDITIONAL(HAVE_CGAL, test "x$cgal_enabled" = "xyes")
-
-])
-
-AC_DEFUN([AX_CHECK_MPFR],
-[
-
-AC_MSG_CHECKING([for MPFR installation (needed by CGAL)])
-
-AC_ARG_WITH([mpfr],
-	AS_HELP_STRING([--with-mpfr=MPFR_DIR],
-	[sets the given directory as location of MPFR includes and libs (needed by CGAL)]),
-	[mpfr_paths="$withval"],
-	[mpfr_paths="$MPFR_HOME"' /usr /usr/local /opt /opt/local']
-)
-
-mpfr_enabled="no"
-
-for mpfr_iterate in $mpfr_paths; do
-
-	if test -e $mpfr_iterate/include/mpfr.h -a -e $mpfr_iterate/lib/libmpfr.so; then
-		mpfr_enabled="yes"
-	fi
-
-	AC_MSG_CHECKING([whether MPFR is available in $mpfr_iterate])
-
-	if test "$mpfr_enabled" = "yes"; then
-		mpfr_dir=$mpfr_iterate
-		AC_MSG_RESULT([yes])
-		break
-	else
-		AC_MSG_RESULT([no])
-	fi
-done
-
-if test "x$mpfr_enabled" = "xyes"; then
-    AC_DEFINE(HAVE_MPFR, 1, [Defined if MPFR library is enabled])
-   	AC_SUBST(mpfr_dir)
-
-    MPFR_CXXFLAGS="-I${mpfr_dir}/include"
-   	MPFR_CFLAGS="-I${mpfr_dir}/include"
-	MPFR_LDFLAGS="-L${mpfr_dir}/lib"
-	MPFR_LIBS="-lmpfr"
-
-	AC_SUBST(MPFR_CXXFLAGS)
-	AC_SUBST(MPFR_CFLAGS)
-	AC_SUBST(MPFR_LDFLAGS)
-	AC_SUBST(MPFR_LIBS)
-fi
-
-AM_CONDITIONAL(HAVE_MPFR, test "x$mpfr_enabled" = "xyes")
 
 ])
 
@@ -863,64 +813,8 @@ AC_DEFUN([AX_CHECK_SEQAN],
 	[seqan_paths="$SEQAN_HOME"' /usr /usr/local /opt /opt/local']
 )
 
-SEQAN_TEST_PROGRAM='AC_LANG_PROGRAM(
-[
-[@%:@include <iostream>]
-[@%:@include <seqan/align.h>]
-[@%:@include <seqan/graph_msa.h>]
-[@%:@include <seqan/score.h>]
-[using namespace seqan;]
-[using std::ostream;]
-[typedef String<int>                        TSequence;]
-[typedef Align<TSequence, ArrayGaps>        TAlign;]
-[typedef Row<TAlign>::Type                  TRow;]
-[typedef Iterator<TRow,Rooted>::Type        TIterator;]
-[typedef Position<Rows<TAlign>::Type>::Type TRowsPosition;]
-[typedef Position<TAlign>::Type             TPosition;]
-]
-,
-[
-[TAlign align;
-TSequence seq1, seq2, seq3, seq4;
-StringSet<TSequence> seq;
-Score<int> score(10, -2, -1, -1);
-
-/* Sequence 1 */
-appendValue(seq1, 2);
-appendValue(seq1, 1);
-appendValue(seq1, 1);
-appendValue(seq1, 1);
-appendValue(seq1, 4);
-
-/* Sequence 2 */
-appendValue(seq2, 1);
-appendValue(seq2, 3);
-appendValue(seq2, 5);
-appendValue(seq2, 4);
-
-/* Sequence 3 */
-appendValue(seq3, 1);
-appendValue(seq3, 3);
-appendValue(seq3, 6);
-appendValue(seq3, 1);
-appendValue(seq3, 4);
-
-/* Sequence 4 */
-appendValue(seq4, 1);
-appendValue(seq4, 3);
-appendValue(seq4, 4);
-appendValue(seq4, 1);
-
-resize(rows(align), 4);
-
-assignSource(row(align, 0), seq1);
-assignSource(row(align, 1), seq2);
-assignSource(row(align, 2), seq3);
-assignSource(row(align, 3), seq4);
-
-globalMsaAlignment(align, score);
-]
-])'
+SEQAN_TEST_PROGRAM='
+'
 
 AC_LANG_PUSH([C++])
 
@@ -933,7 +827,68 @@ for seqan_iterate in $seqan_paths; do
 	export CPPFLAGS
 
 	AC_MSG_CHECKING([whether Seqan is available in $seqan_iterate])
-	AC_RUN_IFELSE($SEQAN_TEST_PROGRAM,[seqan_enabled=yes],[seqan_enabled=no])
+	AC_RUN_IFELSE(
+    [AC_LANG_PROGRAM(
+      [
+      [@%:@include <iostream>]
+      [@%:@include <seqan/align.h>]
+      [@%:@include <seqan/graph_msa.h>]
+      [@%:@include <seqan/score.h>]
+      [using namespace seqan;]
+      [using std::ostream;]
+      [typedef String<int>                        TSequence;]
+      [typedef Align<TSequence, ArrayGaps>        TAlign;]
+      [typedef Row<TAlign>::Type                  TRow;]
+      [typedef Iterator<TRow,Rooted>::Type        TIterator;]
+      [typedef Position<Rows<TAlign>::Type>::Type TRowsPosition;]
+      [typedef Position<TAlign>::Type             TPosition;]
+      ]
+      ,
+      [
+      [TAlign align;
+      TSequence seq1, seq2, seq3, seq4;
+      StringSet<TSequence> seq;
+      Score<int> score(10, -2, -1, -1);
+
+      /* Sequence 1 */
+      appendValue(seq1, 2);
+      appendValue(seq1, 1);
+      appendValue(seq1, 1);
+      appendValue(seq1, 1);
+      appendValue(seq1, 4);
+
+      /* Sequence 2 */
+      appendValue(seq2, 1);
+      appendValue(seq2, 3);
+      appendValue(seq2, 5);
+      appendValue(seq2, 4);
+
+      /* Sequence 3 */
+      appendValue(seq3, 1);
+      appendValue(seq3, 3);
+      appendValue(seq3, 6);
+      appendValue(seq3, 1);
+      appendValue(seq3, 4);
+
+      /* Sequence 4 */
+      appendValue(seq4, 1);
+      appendValue(seq4, 3);
+      appendValue(seq4, 4);
+      appendValue(seq4, 1);
+
+      resize(rows(align), 4);
+
+      assignSource(row(align, 0), seq1);
+      assignSource(row(align, 1), seq2);
+      assignSource(row(align, 2), seq3);
+      assignSource(row(align, 3), seq4);
+
+      globalMsaAlignment(align, score);
+      ]
+      ]
+    )],
+    [seqan_enabled=yes],
+    [seqan_enabled=no])
 
 	CPPFLAGS="$CPPFLAGS_SAVED"
 	export CPPFLAGS

@@ -187,8 +187,8 @@ class TraceData: public Error
     // bool ComputeClusterStatistics(vector<cluster_id_t>& Cluster_IDs, );
 
     bool FlushPoints(ostream&             str,
-                     vector<cluster_id_t> Cluster_IDs = vector<cluster_id_t> (0),
-                     bool                 AllPoints   = true);
+                     vector<cluster_id_t> Cluster_IDs    = vector<cluster_id_t> (0),
+                     bool                 PrintAllBursts = true);
 
 
     /*

@@ -133,19 +133,21 @@ PlottingManager::GetPlotsWarning(void)
  * 
  * \param PlotsDataFileName   Name of the file where data plots data will be located
  * \param PlotsFileNamePrefix Prefix to be used in the resulting .gnuplot files 
- * \param ClusteringAlgorithmName Name of the clustering algorithm that 
- *                                corresponds to the plots
+ * \param Title          Title to be used in the plots
  * \param DifferentIDs Set with the different IDs present in the data
  * 
  * \return True if all plots have been written correctly, false otherwise
  */
 bool PlottingManager::PrintPlots(string             PlotsDataFileName,
                                  string             PlotsFileNamePrefix,
-                                 string             ClusteringAlgorithmName,
-                                 set<cluster_id_t>& DifferentIDs)
+                                 string             Title,
+                                 set<cluster_id_t>& DifferentIDs,
+                                 bool               PrintingModels)
 {
 
   // system_messages::show_progress("Writing plots to disc", 0, Plots.size());
+  
+  this->PrintingModels = PrintingModels;
   
   for (size_t i = 0; i < Plots.size(); i++)
   {
@@ -155,10 +157,16 @@ bool PlottingManager::PrintPlots(string             PlotsDataFileName,
     
     if(CorrectPlots[i])
     {
+      /* DEBUG: Temporary, raw data not available in model plots */
+      if (PrintingModels && Plots[i]->RawMetrics)
+      { 
+        continue;
+      }
+
       if (!PrintSinglePlot (PlotsFileNamePrefix,
                             PlotsDataFileName,
                             Plots[i],
-                            ClusteringAlgorithmName,
+                            Title,
                             DifferentIDs))
       {
         SetError(true);
@@ -497,18 +505,17 @@ PlottingManager::CheckParameterPosition(string             ParameterName,
  * Writes to disc a single plot of the plots vector
  *
  * \param FileNamePrefix Prefix of the output script
- * \param DataFileName Name of the file that contains the data of the current plot
- * \param Definition Container of the plot definition
- * \param ClusteringAlgorithmName Name of the clustering algorithm that 
- *                                corresponds to the plots
- * \param DifferentIDs Set with the different IDs present in the data
+ * \param DataFileName   Name of the file that contains the data of the current plot
+ * \param Definition     Container of the plot definition
+ * \param Title          Title to be used in the plots
+ * \param DifferentIDs   Set with the different IDs present in the data
  * 
  * \return True if the plot has been written correctly, false otherwise
  */
 bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
                                       string             DataFileName,
                                       PlotDefinition    *Definition,
-                                      string             ClusteringAlgorithmName,
+                                      string             Title,
                                       set<cluster_id_t>& DifferentIDs)
 {
   ofstream                    OutputStream;
@@ -587,7 +594,7 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
   }
   else
   { /* CHECK THIS!! */
-    OutputStream << "\"" << ClusteringAlgorithmName << "\"" << endl;
+    OutputStream << "\"" << Title << "\"" << endl;
   }
 
   OutputStream << "set xlabel \"" << Definition->XMetricTitle << "\"" << endl;
@@ -820,10 +827,21 @@ PlottingManager::Write2D_Definition(ostream& str,
                                     string   ClusterName,
                                     string   DataFileName)
 {
-  str << "\'" << DataFileName << "\' using ";
-  str << X << ":($" << ClusterIdPosition << " == " << ClusterId << " ? $" << Y << " : 1/0) ";
-  str << "w points ps 1.5 lt rgbcolor \"" << RGBStateColor(ClusterId) << "\" ";
-  str << "title \"" << ClusterName << "\"";
+  if (!PrintingModels)
+  {
+    str << "\'" << DataFileName << "\' using ";
+    str << X << ":($" << ClusterIdPosition << " == " << ClusterId << " ? $" << Y << " : 1/0) ";
+    str << "w points ps 1.5 lt rgbcolor \"" << RGBStateColor(ClusterId) << "\" ";
+    str << "title \"" << ClusterName << "\"";
+  }
+  else
+  { /* Temporary just use two dimensions */
+    str << "\'" << DataFileName << "\' using ";
+    str <<  "2:($3 ==  " << ClusterId << " ? $1 : 1/0) ";
+    str << "w filledcurve lt rgbcolor \"" << RGBStateColor(ClusterId) << "\" ";
+    // str << "w points ps 1.5 lt rgbcolor \"" << RGBStateColor(ClusterId) << "\" ";
+    str << "title \"" << ClusterName << "\"";
+  }
 
 }
 
@@ -841,10 +859,13 @@ PlottingManager::Write3D_Definition(ostream& str,
                                     string   ClusterName,
                                     string   DataFileName)
 {
-  str << "\'" << DataFileName << "\' using ";
-  str << X << ":" << Y << ":($" << ClusterIdPosition << " == " << ClusterId << " ? $" << Z << " : 1/0) ";
-  str << "w points ps 1.5 lt rgbcolor \"" << RGBStateColor(ClusterId) << "\" ";
-  str << "title \"" << ClusterName << "\"";
+  if (!PrintingModels)
+  {
+    str << "\'" << DataFileName << "\' using ";
+    str << X << ":" << Y << ":($" << ClusterIdPosition << " == " << ClusterId << " ? $" << Z << " : 1/0) ";
+    str << "w points ps 1.5 lt rgbcolor \"" << RGBStateColor(ClusterId) << "\" ";
+    str << "title \"" << ClusterName << "\"";
+  }
 }
 
 /**

@@ -139,6 +139,14 @@ void ConvexHullModel::Flush( )
   }
 }
 
+string ConvexHullModel::GetPlotLine(string DataFileName, cluster_id_t ID)
+{
+  ostringstream Result;
+  
+  /* WE DO NOT TAKE INTO ACCOUNT THE DIMENSION ORDERS... */
+  Result << "'DataFileName' using 2:1";
+}
+
 void ConvexHullModel::Serialize( long long& Density, int & NumPoints, int & NumDimensions, double*& DimValues )
 {
   CGALPoints::iterator it;

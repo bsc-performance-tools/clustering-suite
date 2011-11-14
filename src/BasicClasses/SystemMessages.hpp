@@ -35,7 +35,7 @@
 #ifndef _SYSTEMMESSAGES_HPP_
 #define _SYSTEMMESSAGES_HPP_
 
-#include <config.h>
+#include <clustering_suite_config.h>
 
 #include <cstdio>
 #include <string>

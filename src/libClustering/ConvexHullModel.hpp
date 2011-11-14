@@ -102,8 +102,10 @@ class ConvexHullModel
     bool IsInside(const Point_2& QueryPoint);
     bool IsNear(const Point* QueryPoint, double Epsilon);
     
-    bool Flush(ostream&             str,
-               cluster_id_t         id);
+    bool    Flush(ostream&             str,
+                  cluster_id_t         id);
+               
+    string  GetPlotLine(string DataFileName, cluster_id_t ID);
 
   private:
 

@@ -10,6 +10,19 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-11-14 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Changed the 'config.h' file to 'clustering_suite_config.h' to 
+	better integrate to external tools
+
+	* New modifications on CGAL/MPFR/GMP building system
+
+	* Clusters information file generation feature added to
+	'libDistributedClustering'
+
+	* Added compatibility to unified printing of Hull models. It is
+	a buggy feature. *It needs to specify a normalized plot definition
+	to print the hulls*
+
 2011-09-01 German Llort <german.llort@bsc.es>
 	* Added a size method and a new merge implementation on the Convex
 	Hull model

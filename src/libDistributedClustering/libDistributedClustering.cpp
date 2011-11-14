@@ -135,6 +135,17 @@ bool libDistributedClustering::ExtractData(string InputFileName)
 }
 
 /**
+ * Returns the number of points to be processed locally
+ * 
+ * 
+ * \return The total number of points to be analyzed
+ */
+size_t libDistributedClustering::GetNumberOfPoints(void)
+{
+  return Implementation->GetNumberOfPoints();
+}
+
+/**
  * Performs the extraction of the data from the trace file whose name is 
  * received by parameter, just loading the bursts from those Tasks indicated
  * 
@@ -194,6 +205,30 @@ bool libDistributedClustering::ReconstructInputTrace(string OutputTraceName)
   if (!Implementation->ReconstructInputTrace(OutputTraceName))
   {
     Error = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Write clusters information to an output file
+ *
+ * \param OutputClustersInfoFileName Name of the output file where clusters information will be written
+ *
+ * \result True if output file is written correctly, false otherwise
+ */
+bool libDistributedClustering::FlushClustersInformation(string OutputClustersInfoFileName)
+{
+  if (!Root)
+  {
+    return true;
+  }
+  
+  if (!Implementation->FlushClustersInformation(OutputClustersInfoFileName))
+  {
+    Error        = true;
     ErrorMessage = Implementation->GetLastError();
     return false;
   }
@@ -340,11 +375,6 @@ bool libDistributedClustering::PrintPlotScripts(string DataFileName,
                                                 string ScriptsFileNamePrefix,
                                                 bool   LocalPartition)
 {
-  if (!Root)
-  {
-    return true;
-  }
-  
   if (!Implementation->PrintPlotScripts (DataFileName,
                                          ScriptsFileNamePrefix,
                                          LocalPartition))
@@ -367,17 +397,21 @@ bool libDistributedClustering::PrintPlotScripts(string DataFileName,
  * \param ScriptsFileNamePrefix Base name to be used in the different GNUplot
  *                              scripts
  * 
+* \param Title                 Title to be used in GNUplot script
+ * 
  * \return True if the plot scripts and data files were written correctly,
  *         false otherwise
  */
 bool libDistributedClustering::PrintModels(vector<ConvexHullModel>& ClusterModels, 
                                            string                   ModelsFileName,
-                                           string                   ScriptsFileNamePrefix)
+                                           string                   ScriptsFileNamePrefix,
+                                           string                   Title)
 {
   
   if (!Implementation->PrintModels(ClusterModels,
                                    ModelsFileName,
-                                   ScriptsFileNamePrefix))
+                                   ScriptsFileNamePrefix,
+                                   Title))
   {
     Error        = true;
     ErrorMessage = Implementation->GetLastError();

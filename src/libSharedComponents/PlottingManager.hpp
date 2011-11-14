@@ -60,6 +60,8 @@ class PlottingManager: public Error
     
     static PlottingManager* _PlottingManager;
     
+    bool   PrintingModels;
+    
   public:
     static PlottingManager* GetInstance(bool DataExtraction);
 
@@ -70,8 +72,10 @@ class PlottingManager: public Error
     
     bool   PrintPlots(string             PlotsDataFileName,
                       string             PlotsFileNamePrefix,
-                      string             ClusteringAlgorithmName,
-                      set<cluster_id_t>& DifferentIDs);
+                      string             Title,
+                      set<cluster_id_t>& DifferentIDs,
+                      bool               PrintingModels = false);
+    
 
   private:
     PlottingManager(bool DataExtraction);
@@ -88,7 +92,7 @@ class PlottingManager: public Error
     bool  PrintSinglePlot(string             FileNamePrefix,
                           string             DataFileName,
                           PlotDefinition    *Definition,
-                          string             ClusteringAlgorithmName,
+                          string             Title,
                           set<cluster_id_t>& DifferentIDs);
 
     void  Write2D_Definition(ostream& str,

@@ -49,32 +49,15 @@ AC_ARG_WITH([cgal],
 
 dnl This test program is taken from:
 dnl http://www.cgal.org/Manual/latest/examples/Convex_hull_2/vector_convex_hull_2.cpp
-TEST_PROGRAM='AC_LANG_PROGRAM(
-[
-[@%:@include <vector>]
-[@%:@include <CGAL/Exact_predicates_inexact_constructions_kernel.h>]
-[@%:@include <CGAL/convex_hull_2.h>]
-[typedef CGAL::Exact_predicates_inexact_constructions_kernel K;]
-[typedef K::Point_2 Point_2;]
-[typedef std::vector<Point_2> Points;]
-],
-[
-[Points points, result;
-points.push_back(Point_2(0,0));
-points.push_back(Point_2(10,0));
-points.push_back(Point_2(10,10));
-points.push_back(Point_2(6,5));
-points.push_back(Point_2(4,1));
-CGAL::convex_hull_2(points.begin(),points.end(),std::back_inserter(result));
-//std::cout << result.size() << " points on the convex hull" << std::endl;]
-])'
+TEST_PROGRAM='
+'
 
 AC_LANG_PUSH([C++])
 
 for ac_cgal_iterate in $ac_cgal_dirs ; do
 	CPPFLAGS_SAVED="$CPPFLAGS"
-	CGAL_CPPFLAGS="-I$ac_cgal_iterate/include"
-	CPPFLAGS="$CPPFLAGS $CGAL_CPPFLAGS $BOOST_CPPFLAGS"
+	CGAL_CPPFLAGS="-DNDEBUG -I$ac_cgal_iterate/include"
+	CPPFLAGS="$CPPFLAGS $CGAL_CPPFLAGS"
 	export CPPFLAGS
 
 	CGAL_LDFLAGS="-L$ac_cgal_iterate/lib -lCGAL -lCGAL_Core" 
@@ -83,7 +66,31 @@ for ac_cgal_iterate in $ac_cgal_dirs ; do
 	export LDFLAGS
 
 	AC_MSG_CHECKING([whether CGAL is available in $ac_cgal_iterate])
-	AC_LINK_IFELSE($TEST_PROGRAM,[ac_cgal=yes],[ac_cgal=no])
+	AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM(
+      [
+      [@%:@include <vector>]
+      [@%:@include <CGAL/Exact_predicates_inexact_constructions_kernel.h>]
+      [@%:@include <CGAL/convex_hull_2.h>]
+      [typedef CGAL::Exact_predicates_inexact_constructions_kernel K;]
+      [typedef K::Point_2 Point_2;]
+      [typedef std::vector<Point_2> Points;]
+      ],
+      [
+      [
+      Points points, result;
+      points.push_back(Point_2(0,0));
+      points.push_back(Point_2(10,0));
+      points.push_back(Point_2(10,10));
+      points.push_back(Point_2(6,5));
+      points.push_back(Point_2(4,1));
+      CGAL::convex_hull_2(points.begin(),points.end(),std::back_inserter(result));
+      //std::cout << result.size() << " points on the convex hull" << std::endl;
+      ]
+      ]
+    )],
+    [ac_cgal=yes],
+    [ac_cgal=no])
 
 	LDFLAGS="$LDFLAGS_SAVED"
 	export LDFLAGS
