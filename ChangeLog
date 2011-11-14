@@ -11,6 +11,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 2011-11-14 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Better support for versioning
+
+2011-11-14 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Changed the 'config.h' file to 'clustering_suite_config.h' to 
 	better integrate to external tools
 
