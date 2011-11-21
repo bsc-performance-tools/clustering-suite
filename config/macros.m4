@@ -792,6 +792,9 @@ if test "x$have_mpfr" = "xyes" -a "x$have_gmp" = "xyes"; then
 
 		if test ! "x$cgal_enabled" = "xyes"; then
 			AC_MSG_RESULT([CGAL not found, some functionalities will be missing])
+    else
+      CGAL_RPATH="-R ${mpfr_libdir} -R ${gmp_libdir} -R ${cgal_libdir}"
+      AC_SUBST(CGAL_RPATH)
     fi
 
 		AX_FLAGS_RESTORE()

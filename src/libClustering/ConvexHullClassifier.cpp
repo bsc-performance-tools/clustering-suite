@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -54,17 +54,17 @@ bool ConvexHullClassifier::Classify(vector<const Point*>& Data,
 
   for (size_t i = 0; i < Data.size(); i++)
   {
-    /* DEBUG 
+    /* DEBUG
     Message.str("");
     Message << "Point[" << i << "]";
     system_messages::information(Message.str()); */
-      
+
     Classify(Data[i], CurrentClusterId);
     AssignmentVector.push_back(CurrentClusterId);
-    
+
     DifferentIDs.insert(CurrentClusterId);
 
-    /* DEBUG 
+    /* DEBUG
     Message.str("");
     Message << " ID = " << CurrentClusterId << endl;
     system_messages::information(Message.str()); */
@@ -78,7 +78,7 @@ bool ConvexHullClassifier::Classify(vector<const Point*>& Data,
   Message << "Classification Partition Size = " << DataPartition.NumberOfClusters() << endl;
   system_messages::information(Message.str().c_str());
   */
-  
+
   return true;
 }
 
@@ -86,6 +86,8 @@ bool ConvexHullClassifier::Classify(const Point* QueryPoint, cluster_id_t& ID)
 {
   ostringstream Message;
   ID = NOISE_CLUSTERID;
+
+  double MinSqDistance = MAX_DOUBLE;
 
   /* To improve the search, first we just look using the inclusion */
   for (size_t i = 0; i < HullModels.size(); i++)
@@ -100,17 +102,25 @@ bool ConvexHullClassifier::Classify(const Point* QueryPoint, cluster_id_t& ID)
   /* If point hasn't been classified, we try the proximity */
   for (size_t i = 0; i < HullModels.size(); i++)
   {
-    if (HullModels[i].IsNear(QueryPoint, Eps))
+    double CurrentSqDistance;
+    int    CurrentDensity;
+
+    HullModels[i].GetDistanceAndDensity(QueryPoint, CurrentSqDistance, CurrentDensity);
+
+    if ((CurrentSqDistance <= pow(Eps
+                                  , 2.0)) &&
+        (CurrentSqDistance < MinSqDistance) &&
+        (CurrentDensity+(QueryPoint->GetNeighbourhoodSize())+1) >= MinPoints)
     {
-      ID    = (cluster_id_t) i+1;
-      return true;
+      MinSqDistance = CurrentSqDistance;
+      ID            = (cluster_id_t) i+1;
     }
   }
-  
-  /* DEBUG 
+
+  /* DEBUG
   Message << " ID = " << ID << endl;
   system_messages::information(Message.str().c_str());
   */
-  
+
   return true;
 }

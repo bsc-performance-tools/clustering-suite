@@ -59,8 +59,6 @@ typedef UINT32 task_id_t;
 typedef UINT32 thread_id_t;
 typedef size_t line_t;
 
-typedef UINT64 instance_t;
-
 typedef double percentage_t;
 
 /* Pseudo-event type for durations */
@@ -86,4 +84,3 @@ static const INT32 CSV_HEADING_FIELDS = 7;
 static const INT32 CSV_DURATION_FIELD = 6;
 
 #endif
-

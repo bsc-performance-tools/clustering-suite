@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -60,7 +60,7 @@ class libDistributedClustering
     string ErrorMessage, WarningMessage;
 
     bool   Root;
-    
+
     /*
     bool                  ClusteringExecuted;
     bool                  HWCGroupSet;
@@ -80,7 +80,15 @@ class libDistributedClustering
                         bool   Root,
                         int    MyRank,
                         int    TotalRanks);
-                        
+
+    bool InitClustering(string ClusteringDefinitionXML,
+                        bool   Root,
+                        int    MyRank,
+                        int    TotalRanks);
+
+    double    GetEpsilon(void);
+
+    int       GetMinPoints(void);
 
     bool ExtractData(string InputFileName, set<int>& TasksToRead);
 
@@ -89,9 +97,9 @@ class libDistributedClustering
     size_t GetNumberOfPoints(void);
 
     bool ClusterAnalysis(vector<ConvexHullModel>& ClusterModels);
-    
+
     bool ClassifyData(vector<ConvexHullModel>& ClusterModels);
-    
+
     bool FlushClustersInformation(string OutputClustersInfoFileName);
 
     bool ReconstructInputTrace(string OutputTraceName);
@@ -105,25 +113,25 @@ class libDistributedClustering
 
     bool ClusterAnalysis(const vector<const Point*>& Points,
                          vector<ConvexHullModel>&    ClusterModels);
-    
+
     bool GetNoisePoints(vector<const Point*>& NoisePoints);
-    
-    /* A method to retrieve all information to perform the cross-process 
+
+    /* A method to retrieve all information to perform the cross-process
      * analysis */
-     
+
     bool GetFullBurstsInformation(vector<Point*>&       Points,
                                   vector<task_id_t>&    TaskIDs,
                                   vector<thread_id_t>&  ThreadIDs,
                                   vector<cluster_id_t>& ClusterIDs);
 
-    
+
     /* Methods to print the models and the scatter plots of data. To be used
      * in BE nodes */
     bool PrintModels(vector<ConvexHullModel>& ClusterModels,
                      string ModelsFileName,
                      string ScriptsFileNamePrefix = "",
                      string PlotTitle             = "");
-    
+
     bool PrintPlotScripts(string DataFileName,
                           string ScriptsFileNamePrefix = "",
                           bool   LocalPartition = false);

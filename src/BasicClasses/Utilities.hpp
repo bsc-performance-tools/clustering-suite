@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           *
+ *                                                                           * 
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -25,62 +25,33 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
-  $Rev::                                          $:  Revision of last commit
-  $Author::                                       $:  Author of last commit
-  $Date::                                         $:  Date of last commit
+  $Id:: SystemMessages.hpp 23 2011-05-17 09:47:12#$:  Id
+  $Rev:: 23                                       $:  Revision of last commit
+  $Author:: jgonzale                              $:  Author of last commit
+  $Date:: 2011-05-17 11:47:12 +0200 (Tue, 17 May #$:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef _CONVEX_HULL_CLASSIFIER_HPP_
-#define _CONVEX_HULL_CLASSIFIER_HPP_
+#ifndef _UTILITIES_HPP_
+#define _UTILITIES_HPP_
 
-#include <Error.hpp>
-using cepba_tools::Error;
-#include <SystemMessages.hpp>
-using cepba_tools::system_messages;
+#include <clustering_suite_config.h>
 
-#include "Classifier.hpp"
-#include "ConvexHullModel.hpp"
+#include <cstdio>
+#include <string>
+using std::string;
 
-#include <iostream>
+#include <stdio.h>  /* defines FILENAME_MAX */
+#ifdef WIN32
+    #include <direct.h>
+    #define GetCurrentDir _getcwd
+#else
+    #include <unistd.h>
+    #define GetCurrentDir getcwd
+ #endif
 
-#include <sstream>
-using std::ostringstream;
-
-/* Forward declarations */
-
-class ConvexHullClassifier: public Classifier
+namespace cepba_tools
 {
-  protected:
-
-    double                   Eps;
-    int                      MinPoints;
-    vector<ConvexHullModel>& HullModels;
-
-  public:
-
-    ConvexHullClassifier(vector<ConvexHullModel>& _HullModels,
-                         double                   _Eps,
-                         int                      _MinPoints):
-    HullModels(_HullModels),
-    Eps(_Eps),
-    MinPoints(_MinPoints)
-    {
-      ostringstream Message;
-      Message << "Classifier - Total Models = " << _HullModels.size();
-      Message << " Epsilon = " << _Eps;
-      Message << " MinPoints = " << _MinPoints << std::endl;
-      system_messages::information(Message.str());
-    };
-
-    bool Classify(vector<const Point*>& Data,
-                  Partition&            DataPartition);
-
-    bool Classify(const Point* QueryPoint, cluster_id_t& ID);
-
-  private:
-
-};
-
-#endif /* _NEARESTNEIGHBOURCLASSIFIER_HPP_ */
+  string GetCWD(void);
+}
+#endif // _UTILITIES_HPP_

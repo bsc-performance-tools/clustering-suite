@@ -30,6 +30,9 @@ for mpfr_iterate in $mpfr_paths; do
   if test "$mpfr_enabled" = "yes"; then
     mpfr_dir=$mpfr_iterate
 
+    mpfr_libdir="$gmp_dir/lib"
+    AC_SUBST(mpfr_libdir)
+
     gmplibs="-L$mpfr_dir/lib $gmplibs"
     gmpinc="-I$mpfr_dir/include $gmpinc"
 
@@ -65,6 +68,9 @@ for gmp_iterate in $gmp_paths; do
   if test "$gmp_enabled" = "yes"; then
     gmp_dir=$gmp_iterate
     
+    gmp_libdir="$gmp_dir/lib"
+    AC_SUBST(gmp_libdir)
+
     gmplibs="-L$gmp_dir/lib $gmplibs"
     gmpinc="-I$gmp_dir/include $gmpinc"
 
@@ -76,9 +82,6 @@ for gmp_iterate in $gmp_paths; do
   fi
 
 done
-  
-  
-
 
 if test x$have_mpfr != xyes -o x$have_gmp != xyes; then
     AC_MSG_WARN([GMP and MPFR libraries are needed to include CGAL.

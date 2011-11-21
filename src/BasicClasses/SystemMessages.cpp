@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -107,44 +107,48 @@ void system_messages::show_percentage_progress(const char* message,
                                                FILE*       channel)
 {
   int real_percentage;
-  
+
   if (current_percentage < 0)
     real_percentage = 0;
   else if (current_percentage > 100)
     real_percentage = 100;
   else
     real_percentage = current_percentage;
-  
+
   if (system_messages::verbose)
   {
-    if (!system_messages::distributed)
+    if (system_messages::messages_from_all_ranks ||
+        (!system_messages::messages_from_all_ranks && my_rank == 0))
     {
-      fprintf(channel, "\r%s %03d%%", message, real_percentage);
-      fflush(channel);
-    }
-    else
-    {
-      if(!system_messages::percentage_ongoing)
+      if (!system_messages::distributed)
       {
-        fprintf(channel,
-                "[%d] %s %03d%%",
-                system_messages::my_rank,
-                message,
-                real_percentage);
+        fprintf(channel, "\r%s %03d%%", message, real_percentage);
         fflush(channel);
-        system_messages::percentage_ongoing = true;
       }
       else
       {
-        if (real_percentage % 10 == 0 && real_percentage != 100 )
+        if(!system_messages::percentage_ongoing)
         {
-          fprintf(channel, "  %03d%%", real_percentage);
+          fprintf(channel,
+                  "[%d] %s %03d%%",
+                  system_messages::my_rank,
+                  message,
+                  real_percentage);
           fflush(channel);
+          system_messages::percentage_ongoing = true;
+        }
+        else
+        {
+          if (real_percentage % 10 == 0 && real_percentage != 100 )
+          {
+            fprintf(channel, "  %03d%%", real_percentage);
+            fflush(channel);
+          }
         }
       }
     }
   }
-  
+
 }
 
 void system_messages::show_percentage_end(const char* message, FILE* channel)

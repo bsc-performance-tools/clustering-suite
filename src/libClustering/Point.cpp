@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -42,12 +42,15 @@
 using std::cout;
 using std::endl;
 
+instance_t Point::InstanceNumber = 0;
+
 #if defined (HAVE_MUSTER) && defined (HAVE_MPI)
 size_t Point::PointDimensions = 0;
 #endif
 
 Point::Point(size_t Dimensions)
 {
+  this->Instance   = (Point::InstanceNumber++);
   this->Dimensions = vector<double> (Dimensions, 0.0);
 
 #if defined (HAVE_MUSTER) && defined (HAVE_MPI)
@@ -63,13 +66,15 @@ Point::Point(vector<double>& _Dimensions)
   Dimensions = _Dimensions;
   Normalized = false;
 
+  this->Instance   = (Point::InstanceNumber++);
+
 #if defined (HAVE_MUSTER) && defined (HAVE_MPI)
   if (Point::PointDimensions == 0)
   {
     Point::PointDimensions = _Dimensions.size();
   }
 #endif
-  
+
   /* DEBUG
   cout << "New point! Dimensions size = " << _Dimensions.size() << endl;
   */
@@ -81,7 +86,7 @@ Point::RangeNormalization(const vector<double>& MaxValues,
                           const vector<double>& Factors)
 {
   double BaseValue;
-  
+
   /* DEBUG
   cout << "Original Dimensions = {";
   for (size_t i = 0; i < Dimensions.size(); i++)
@@ -91,16 +96,16 @@ Point::RangeNormalization(const vector<double>& MaxValues,
   cout << "}" << endl;
   */
 
-  
+
   for (size_t i = 0; i < Dimensions.size(); i++)
   {
     BaseValue = Dimensions[i];
-  
+
     Dimensions[i] = Factors[i]*((BaseValue - MinValues[i]) / (MaxValues[i] - MinValues[i]));
   }
 
   Normalized = true;
-  
+
   /* DEBUG
   cout << "Resulting Dimensions = {";
   for (size_t i = 0; i < Dimensions.size(); i++)
@@ -122,13 +127,13 @@ double Point::EuclideanDistance(const Point& OtherPoint) const
   else
   {
     Result = 0.0;
-    
+
     for (size_t i = 0; i < Dimensions.size(); i++)
     {
-      
+
       Result += pow(Dimensions[i] - OtherPoint.Dimensions[i], 2.0);
     }
-    
+
     return sqrt(Result);
   }
 }
@@ -212,7 +217,7 @@ Point& Point::operator =  (const Point& other)
   if ((*this) != other)
   {
     Dimensions.clear();
-    
+
     for (size_t i = 0; i < other.size(); i++)
     {
       Dimensions.push_back(other[i]);

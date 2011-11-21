@@ -57,6 +57,8 @@ typedef INT32 cluster_id_t;
 
 typedef double percentage_t;
 
+typedef UINT64 instance_t;
+
 static const string UNDEFINED = "Undefined";
 static const INT32  NOT_FOUND = -1;
 

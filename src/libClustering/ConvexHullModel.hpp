@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -43,75 +43,75 @@ using std::endl;
 
 #include <Point.hpp>
 
-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/basic.h>
+#include <CGAL/Filtered_kernel.h>
 #include <CGAL/Boolean_set_operations_2.h>
 #include <CGAL/convex_hull_2.h>
-#include <CGAL/squared_distance_2.h>
 
-typedef CGAL::Exact_predicates_exact_constructions_kernel K;
-typedef K::Point_2                        Point_2;
-typedef std::vector<Point_2>              CGALPoints;
+#include "CGAL_Kernel/MyKernel.h"
+
+typedef MyKernel<float>                  K;
+//typedef CGAL::Filtered_kernel_adaptor<MK> K;
+typedef K::Point_2                        MyPoint_2;
 typedef CGAL::Polygon_2<K>                Polygon_2;
-
-#include <CGAL/Homogeneous.h>
-#include <CGAL/Polytope_distance_d.h>
-#include <CGAL/Polytope_distance_d_traits_2.h>
-
-#ifdef CGAL_USE_GMP
-#include <CGAL/Gmpzf.h>
-typedef CGAL::Gmpzf ET;
-#else
-#include <CGAL/MP_Float.h>
-typedef CGAL::MP_Float ET;
-#endif
-
-typedef CGAL::Homogeneous<ET>                              PolytopeKernel;
-typedef PolytopeKernel::Point_2                            PolytopePoint_2;
-typedef CGAL::Polytope_distance_d_traits_2<PolytopeKernel> PolytopeTraits;
-typedef CGAL::Polytope_distance_d<PolytopeTraits>          Polytope_distance;
 
 class ConvexHullModel
 {
   protected:
 
-    int        Dimensions;
-    long long  Density;
-    CGALPoints HullPoints;
+    int               Dimensions;
+    long long         Density;
+    vector<MyPoint_2> HullPoints;
 
   public:
 
     static int MIN_HULL_POINTS;
 
     ConvexHullModel ( vector< const Point* > );
-    ConvexHullModel(CGALPoints HullPoints, long long Density);
+    ConvexHullModel(vector<MyPoint_2> HullPoints, long long Density);
     /* ConvexHullModel ( Polygon_2 P, Polygon_2 Q ); */
-    ConvexHullModel ( long long Density, int NumPoints, int NumDimensions, double* DimValues );
-	
+    ConvexHullModel(long long  Density,
+                    int        NumPoints,
+                    int        NumDimensions,
+                    long long *Instances,
+                    long long *&NeighbourhoodSizes,
+                    double    *DimValues);
+
     int size(void);
-    long long GetDensity(void);   
- 
-    void Serialize  ( long long& Density, int & NumPoints, int & NumDimensions, double*& DimValues );
+    long long GetDensity(void);
+
+    void Serialize(long long  &Density,
+                   int        &NumPoints,
+                   int        &NumDimensions,
+                   long long *&Instances,
+                   long long *&NeighbourhoodSizes,
+                   double    *&DimValues );
     void Flush( );
     ConvexHullModel * Merge( ConvexHullModel * CHull2, double Epsilon = 0, int MinPoints = 1);
 
-    double DistanceTo ( ConvexHullModel * CHull2 );
-
-    CGALPoints& getHullPoints();
+    vector<MyPoint_2>& getHullPoints();
 
     bool IsInside(const Point* QueryPoint);
-    bool IsInside(const Point_2& QueryPoint);
-    bool IsNear(const Point* QueryPoint, double Epsilon);
-    
+    bool IsInside(const MyPoint_2& QueryPoint);
+    bool IsNear(const Point* QueryPoint, double Epsilon, int MinPoints);
+    bool IsNear (ConvexHullModel *Hull2, double Epsilon, int MinPoints);
+
+    void GetDistanceAndDensity(const Point* QueryPoint, double &SqDistance, int&Density);
+
     bool    Flush(ostream&             str,
                   cluster_id_t         id);
-               
+
     string  GetPlotLine(string DataFileName, cluster_id_t ID);
 
   private:
 
-    void   Assemble( long long Density, int NumPoints, int NumDimensions, double * DimValues );
+    void   Assemble(long long  Density,
+                    int        NumPoints,
+                    int        NumDimensions,
+                    long long *Instances,
+                    long long *NeighbourhoodSizes,
+                    double    *DimValues );
 
-    double GenericDistance(vector<PolytopePoint_2> P, vector<PolytopePoint_2> Q); 
 };
 
 #endif // _CONVEX_HULL_MODEL_HPP_

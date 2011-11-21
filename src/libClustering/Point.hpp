@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -42,38 +42,48 @@ using std::vector;
 
 class Point
 {
-  protected:
-    vector<double> Dimensions;
-
-    bool Normalized;
-    
   public:
+
+
+  protected:
+    instance_t     Instance;
+    vector<double> Dimensions;
+    bool           Normalized;
+    size_t         NeighbourhoodSize;
+
+  public:
+    static instance_t InstanceNumber;
 
 #if defined (HAVE_MUSTER) && defined (HAVE_MPI)
     static size_t PointDimensions;
 #endif
 
     Point() {};
-    
+
     Point(size_t Dimensions);
 
     Point(vector<double>& _Dimensions);
+
+    instance_t GetInstance(void) const { return this->Instance; }
+
+    void       SetNeighbourhoodSize(size_t NeighbourhoodSize) { this->NeighbourhoodSize = NeighbourhoodSize; }
+    size_t     GetNeighbourhoodSize(void) const               { return this->NeighbourhoodSize; }
 
     void   RangeNormalization(const vector<double>& MaxValues,
                               const vector<double>& MinValues,
                               const vector<double>& Factors);
 
     void   ScaleDimensions(const vector<double>& Factors);
-    
+
     double EuclideanDistance(const Point& OtherPoint) const;
-    
+
     double NormalizedEuclideanDistance(Point& OtherPoint) const;
 
     bool   IsNormalized(void) const { return Normalized; };
     void   SetNormalized(bool Normalized) { this->Normalized = Normalized; };
 
     void   clear(void);
-    
+
     size_t size(void) const;
 
     double&      operator [] (int i);
@@ -82,11 +92,11 @@ class Point
     Point        operator /  (const size_t scalar);
     bool         operator != (const Point& other) const;
     Point&       operator =  (const Point& other);
-    
+
     void check_const(void) { Normalized = true;};
-    
+
     void PrintPoint(void);
-    
+
   private:
 
 };
@@ -95,7 +105,7 @@ class Point
 Point* operator+ (Point* left, Point* right)
 {
   Point* result;
-  
+
   if (left == NULL && right == NULL)
   {
     return NULL;
@@ -108,7 +118,7 @@ Point* operator+ (Point* left, Point* right)
     {
       Point->[i] = right->[i];
     }
-    
+
     return result;
   }
   else if (left != NULL && right == NULL)
@@ -119,7 +129,7 @@ Point* operator+ (Point* left, Point* right)
     {
       Point->[i] = left->[i];
     }
-    
+
     return result;
   }
 
@@ -127,7 +137,7 @@ Point* operator+ (Point* left, Point* right)
   {
     return NULL;
   }
-  
+
   Point* result = new Point(left->size());
 
   for (size_t i = 0; i < left->size(); i++)

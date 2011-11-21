@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Compile" />
+	<File name="src/TreeDBSCAN/ClusteringOffline_BE.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="3184" topLine="82" />
+	</File>
+	<File name="src/TreeDBSCAN/ClusteringOffline_FE.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="2760" topLine="58" />
+	</File>
+	<File name="src/TreeDBSCAN/Clustering_Filter.cpp" open="0" top="0" tabpos="8">
+		<Cursor position="4116" topLine="113" />
+	</File>
+	<File name="src/libClustering/CGAL_Kernel/HullModelKernel.h" open="0" top="0" tabpos="0">
+		<Cursor position="961" topLine="4" />
+	</File>
+	<File name="src/libClustering/CGAL_Kernel/HullPoint.h" open="0" top="0" tabpos="6">
+		<Cursor position="1120" topLine="14" />
+	</File>
+	<File name="src/libClustering/CGAL_Kernel/MyConstruct_bbox_2.h" open="0" top="0" tabpos="0">
+		<Cursor position="115" topLine="0" />
+	</File>
+	<File name="src/libClustering/CGAL_Kernel/MyConstruct_coord_iterator.h" open="0" top="0" tabpos="0">
+		<Cursor position="101" topLine="0" />
+	</File>
+	<File name="src/libClustering/CGAL_Kernel/MyConstruct_point_2.h" open="0" top="0" tabpos="0">
+		<Cursor position="1425" topLine="19" />
+	</File>
+	<File name="src/libClustering/CGAL_Kernel/MyKernel.h" open="0" top="0" tabpos="7">
+		<Cursor position="469" topLine="6" />
+	</File>
+	<File name="src/libClustering/CGAL_Kernel/MyPointC2.h" open="0" top="0" tabpos="5">
+		<Cursor position="404" topLine="12" />
+	</File>
+	<File name="src/libClustering/CGAL_Kernel/MySegmentC2.h" open="0" top="0" tabpos="0">
+		<Cursor position="4808" topLine="54" />
+	</File>
+	<File name="src/libClustering/ConvexHullModel.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="13811" topLine="512" />
+	</File>
+	<File name="src/libClustering/ConvexHullModel.hpp" open="0" top="0" tabpos="2">
+		<Cursor position="4128" topLine="79" />
+	</File>
+	<File name="src/libClustering/Point.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="3272" topLine="54" />
+	</File>
+	<File name="src/libClustering/Point.hpp" open="0" top="0" tabpos="3">
+		<Cursor position="2919" topLine="59" />
+	</File>
+	<File name="src/libDistributedClustering/libDistributedClustering.cpp" open="1" top="0" tabpos="3">
+		<Cursor position="4377" topLine="91" />
+	</File>
+	<File name="src/libDistributedClustering/libDistributedClustering.hpp" open="1" top="0" tabpos="2">
+		<Cursor position="2867" topLine="54" />
+	</File>
+	<File name="src/libDistributedClustering/libDistributedClusteringImplementation.cpp" open="1" top="0" tabpos="5">
+		<Cursor position="8766" topLine="189" />
+	</File>
+	<File name="src/libDistributedClustering/libDistributedClusteringImplementation.hpp" open="1" top="0" tabpos="4">
+		<Cursor position="3132" topLine="43" />
+	</File>
+	<File name="src/libTraceClustering/libTraceClustering.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="3168" topLine="42" />
+	</File>
+	<File name="src/libTraceClustering/libTraceClusteringImplementation.cpp" open="1" top="1" tabpos="6">
+		<Cursor position="2395" topLine="0" />
+	</File>
+</CodeBlocks_layout_file>

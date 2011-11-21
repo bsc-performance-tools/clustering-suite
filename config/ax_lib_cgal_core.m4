@@ -98,6 +98,7 @@ for ac_cgal_iterate in $ac_cgal_dirs ; do
 	export CPPFLAGS
 
 	if test $ac_cgal = yes ; then
+    cgal_libdir="$ac_cgal_iterate/lib"
 		AC_MSG_RESULT([yes])
 		break
 	else
@@ -109,6 +110,7 @@ AC_LANG_POP([C++])
 
 if test $ac_cgal = yes ; then
 	AC_DEFINE(HAVE_CGAL,[1],[Indicates presence of CGAL library])
+  AC_SUBST(cgal_libdir)
 	AC_SUBST(CGAL_CPPFLAGS)
 	AC_SUBST(CGAL_LDFLAGS)
         # execute ACTION-IF-FOUND

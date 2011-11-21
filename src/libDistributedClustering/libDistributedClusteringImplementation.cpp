@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -61,7 +61,7 @@ using std::ios_base;
 using std::ostringstream;
 
 /****************************************************************************
- * PRIVATE METHODS
+ * PUBLIC METHODS
  ***************************************************************************/
 
 /**
@@ -70,7 +70,7 @@ using std::ostringstream;
 libDistributedClusteringImplementation::libDistributedClusteringImplementation(int verbose)
 {
   system_messages::distributed = true;
-  
+
   switch(verbose)
   {
     case SILENT:
@@ -90,18 +90,18 @@ libDistributedClusteringImplementation::libDistributedClusteringImplementation(i
 }
 
 /**
- * Full initialization of the library. To be used in the leaf nodes. It 
+ * Full initialization of the library. To be used in the leaf nodes. It
  * contains the definition of the events to be extracted as well as the
  * identification of the ranks
- * 
+ *
  * \param ClusteringDefinitionXML XML to define the data extraction
  * \param Epsilon                 Epsilon parameter for DBSCAN
  * \param MinPoints               MinPoints parameter for DBSCAN
- * \param                         Root boolean to express if current task is 
+ * \param                         Root boolean to express if current task is
  *                                the root of the analysis
  * \param MyRank                  Rank identifier
  * \param TotalRanks              Total number of analysis tasks
- * 
+ *
  * \return  True if the initialization was performed correctly, false otherwise
  */
 bool libDistributedClusteringImplementation::InitClustering(string ClusteringDefinitionXML,
@@ -112,13 +112,8 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
                                                             INT32  TotalRanks)
 {
   ClusteringConfiguration *ConfigurationManager;
-  ParametersManager       *Parameters;
-  string                   ClusteringAlgorithmName;
-  map<string, string>      ClusteringAlgorithmParameters;
-  PlottingManager         *Plots;
-  ostringstream            Converter;
-  string                   EpsilonStr, MinPointsStr;
-  
+
+
   ConfigurationManager = ClusteringConfiguration::GetInstance();
 
   if (!ConfigurationManager->Initialize(ClusteringDefinitionXML))
@@ -128,75 +123,161 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
     return false;
   }
 
-  /* Set that we work in a distributed environment */
-  ConfigurationManager->SetDistributed(true);
-  ConfigurationManager->SetMyRank(MyRank);
-  ConfigurationManager->SetTotalRanks(TotalRanks);
-
-  /* Check if parameters have been read properly */
-  Parameters = ParametersManager::GetInstance();
-  if (Parameters->GetError())
-  {
-    SetError(true);
-    SetErrorMessage(Parameters->GetLastError());
-//    printf("ERROR IN THE PARAMETERS MANAGER %s", Parameters->GetLastError());
-    return false;
-  }
-
-  if (Parameters->GetWarning())
-  {
-    SetWarning(true);
-    SetWarningMessage (Parameters->GetLastWarning());
-  }
-
-  /* Check if clustering library could be correctly initialized */
-  ClusteringCore = new libClustering();
-
-  /* Ignore the clustering algorithm defined in the XML and force it to DBSCAN */
-  ClusteringAlgorithmName = DBSCAN::NAME;
-
-  Converter << Epsilon;
-  ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::EPSILON_STRING, string(Converter.str())));
-  Converter.str("");
-  Converter << MinPoints;
-  ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::MIN_POINTS_STRING, string(Converter.str())));
-  if (!ClusteringCore->InitClustering (ClusteringAlgorithmName,
-                                       ClusteringAlgorithmParameters))
-  {
-    SetError(true);
-    SetErrorMessage(ClusteringCore->GetErrorMessage());
-    return false;
-  }
   this->Epsilon   = Epsilon;
   this->MinPoints = MinPoints;
 
-  Plots = PlottingManager::GetInstance(false);
+  return CommonInitialization(ConfigurationManager,
+                              Root,
+                              MyRank,
+                              TotalRanks);
+}
 
-  if (Plots->GetError())
+/**
+ * Full initialization of the library excluding the DBSCAN parameters. This
+ * parameters will be obtained from the XML
+ *
+ * \param ClusteringDefinitionXML XML to define the data extraction
+ * \param                         Root boolean to express if current task is
+ *                                the root of the analysis
+ * \param MyRank                  Rank identifier
+ * \param TotalRanks              Total number of analysis tasks
+ *
+ * \return  True if the initialization was performed correctly, false otherwise
+ */
+bool libDistributedClusteringImplementation::InitClustering(string ClusteringDefinitionXML,
+                                                            bool   Root,
+                                                            INT32  MyRank,
+                                                            INT32  TotalRanks)
+{
+  ClusteringConfiguration      *ConfigurationManager;
+  string                        ClusteringAlgorithmName;
+  map<string, string>           ClusteringAlgorithmParameters;
+  map<string, string>::iterator ParametersIterator;
+
+  ConfigurationManager = ClusteringConfiguration::GetInstance();
+
+  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML))
   {
     SetError(true);
-    SetErrorMessage(Plots->GetLastError());
+    SetErrorMessage(ConfigurationManager->GetLastError());
     return false;
   }
 
-  system_messages::my_rank  = MyRank; 
-  
-  this->Root                = Root;
-  
-  UsingExternalData = false;
-  
+  ClusteringAlgorithmName = ConfigurationManager->GetClusteringAlgorithmName();
+
+  if (ClusteringAlgorithmName.compare(DBSCAN::NAME) != 0)
+  {
+    ostringstream ErrorMessage;
+
+    ErrorMessage << "Algorithm '" << ClusteringAlgorithmName << "' not supported ";
+    ErrorMessage << "in distribution version, please use 'DBSCAN'";
+
+    SetError(true);
+    SetErrorMessage(ErrorMessage.str());
+    return false;
+  }
+
+  ClusteringAlgorithmParameters = ConfigurationManager->GetClusteringAlgorithmParameters();
+
+  /* Epsilon */
+  ParametersIterator = ClusteringAlgorithmParameters.find(DBSCAN::EPSILON_STRING);
+  if (ParametersIterator == ClusteringAlgorithmParameters.end())
+  {
+    string ErrorMessage;
+    ErrorMessage = "parameter '" + DBSCAN::EPSILON_STRING + "' not found in DBSCAN definition";
+
+    SetErrorMessage(ErrorMessage);
+    SetError(true);
+    return false;
+  }
+  else
+  {
+    char* err;
+    Epsilon = strtod(ParametersIterator->second.c_str(), &err);
+
+    if (*err)
+    {
+      string ErrorMessage;
+      ErrorMessage = "incorrect value for DBSCAN parameter '"+ DBSCAN::EPSILON_STRING + "'";
+
+      SetErrorMessage(ErrorMessage);
+      SetError(true);
+      return false;
+    }
+  }
+
+  /* MinPoints */
+  ParametersIterator = ClusteringAlgorithmParameters.find(DBSCAN::MIN_POINTS_STRING);
+  if (ParametersIterator == ClusteringAlgorithmParameters.end())
+  {
+    string ErrorMessage;
+    ErrorMessage = "parameter '" + DBSCAN::MIN_POINTS_STRING + "' not found in DBSCAN definition";
+
+    SetErrorMessage(ErrorMessage);
+    SetError(true);
+    return false;
+  }
+  else
+  {
+    char* err;
+    MinPoints = strtol(ParametersIterator->second.c_str(), &err, 0);
+
+    if (*err)
+    {
+      string ErrorMessage;
+      ErrorMessage = "incorrect value for DBSCAN parameter '"+ DBSCAN::MIN_POINTS_STRING + "'";
+
+      SetErrorMessage(ErrorMessage);
+      SetError(true);
+      return false;
+    }
+  }
+
+  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML))
+  {
+    SetError(true);
+    SetErrorMessage(ConfigurationManager->GetLastError());
+    return false;
+  }
+
+  return CommonInitialization(ConfigurationManager,
+                              Root,
+                              MyRank,
+                              TotalRanks);
+
   return true;
 }
 
 /**
- * Performs the extraction of the data from the trace file whose name is 
+ * Returns the Epsilon value used in the library
+ *
+ * \return Epsilon used in the library
+ */
+double libDistributedClusteringImplementation::GetEpsilon(void)
+{
+  return this->Epsilon;
+}
+
+/**
+ * Returns the MinPoints value used in the library
+ *
+ * \return MinPoints used in the library
+ */
+
+int libDistributedClusteringImplementation::GetMinPoints(void)
+{
+  return this->MinPoints;
+}
+
+/**
+ * Performs the extraction of the data from the trace file whose name is
  * received by parameter
- * 
- * \param InputFileName    Name of the trace file where the data will be 
+ *
+ * \param InputFileName    Name of the trace file where the data will be
  *                         extracted
- * \param TasksToRead      Set of TaskIDs to be read by this analysis 
+ * \param TasksToRead      Set of TaskIDs to be read by this analysis
  * \param EventsToDealWith Events to extract (UNUSED IN THIS VERSION)
- * 
+ *
  * \return True if the data extraction was performed correctly, false otherwise
  */
 bool libDistributedClusteringImplementation::ExtractData(string            InputFileName,
@@ -212,10 +293,10 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
   /* Set the subset to read */
   Data->SetMaster(Root);
   Data->SetTasksToRead (TasksToRead);
-  
+
   /* Get input file extractor */
   ExtractorFactory = DataExtractorFactory::GetInstance();
-  
+
   if (EventsToDealWith.size() > 0)
   {
     PRVEventsParsing       = true;
@@ -225,7 +306,7 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
   {
     PRVEventsParsing = false;
   }
-  
+
   if (!ExtractorFactory->GetExtractor(InputFileName,
                                       Extractor,
                                       PRVEventsParsing))
@@ -237,7 +318,7 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
 
   this->InputFileName = InputFileName;
   InputFileType       = Extractor->GetFileType();
-  
+
   if (PRVEventsParsing)
   {
     if (!Extractor->SetEventsToDealWith(EventsToDealWith))
@@ -247,24 +328,24 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
       return false;
     }
   }
-  
+
   if (!Extractor->ExtractData(Data))
   {
     SetError(true);
     SetErrorMessage(Extractor->GetLastError());
     return false;
   }
-  
+
   return true;
 }
 
 /**
- * Performs the extraction of the data from the trace file whose name is 
+ * Performs the extraction of the data from the trace file whose name is
  * received by parameter
- * 
+ *
  * \param InputFileName Name of the trace file where the data will be extracted
  * \param EventsToDealWith Events to extract (UNUSED IN THIS VERSION)
- * 
+ *
  * \return True if the data extraction was performed correctly, false otherwise
  */
 bool libDistributedClusteringImplementation::ExtractData(string            InputFileName,
@@ -278,10 +359,10 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
 
   /* Set the subset to read */
   Data->SetMaster(Root);
-  
+
   /* Get input file extractor */
   ExtractorFactory = DataExtractorFactory::GetInstance();
-  
+
   if (EventsToDealWith.size() > 0)
   {
     PRVEventsParsing       = true;
@@ -291,7 +372,7 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
   {
     PRVEventsParsing = false;
   }
-  
+
   if (!ExtractorFactory->GetExtractor(InputFileName,
                                       Extractor,
                                       PRVEventsParsing))
@@ -303,7 +384,7 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
 
   this->InputFileName = InputFileName;
   InputFileType       = Extractor->GetFileType();
-  
+
   if (PRVEventsParsing)
   {
     if (!Extractor->SetEventsToDealWith(EventsToDealWith))
@@ -313,21 +394,21 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
       return false;
     }
   }
-  
+
   if (!Extractor->ExtractData(Data))
   {
     SetError(true);
     SetErrorMessage(Extractor->GetLastError());
     return false;
   }
-  
+
   return true;
 }
 
 /**
  * Returns the number of points to be processed locally
- * 
- * 
+ *
+ *
  * \return The total number of points to be analyzed
  */
 size_t libDistributedClusteringImplementation::GetNumberOfPoints(void)
@@ -343,12 +424,12 @@ size_t libDistributedClusteringImplementation::GetNumberOfPoints(void)
 }
 
 /**
- * Performs the extraction of the data from the trace file whose name is 
+ * Performs the extraction of the data from the trace file whose name is
  * received by parameter, just loading the bursts from those Tasks indicated
- * 
+ *
  * \param InputFileName Name of the trace file where the data will be extracted
- * \param TasksToRead   Set of TaskIDs to be read by this analysis 
- * 
+ * \param TasksToRead   Set of TaskIDs to be read by this analysis
+ *
  * \return True if the data extraction was performed correctly, false otherwise
  */
 bool libDistributedClusteringImplementation::ClusterAnalysis(vector<ConvexHullModel>& ClusterModels)
@@ -372,11 +453,11 @@ bool libDistributedClusteringImplementation::ClusterAnalysis(vector<ConvexHullMo
   }
 
   ExtrapolationMetrics = ConfigurationManager->GetExtrapolationParametersNames().size();
-  
+
   vector<const Point*>& ClusteringPoints = Data->GetClusteringPoints();
 
-  
-  /* DEBUG 
+
+  /* DEBUG
   Messages << "Clustering Points size = " << Data->GetClusteringPoints().size() << endl;
   system_messages::information(Messages.str().c_str());
   Messages.str("");
@@ -395,16 +476,16 @@ bool libDistributedClusteringImplementation::ClusterAnalysis(vector<ConvexHullMo
   { /* Error message will be generated in the private method */
     return false;
   }
-  
+
   return true;
 }
 
 /**
  * Classifies the loaded data using the Convex Hull models received
- * 
+ *
  * \param ClusterModes Vector of Convex Hull models per cluster
-  * 
- * \return True if the data classification was performed correctly, false 
+  *
+ * \return True if the data classification was performed correctly, false
  *         otherwise
  */
 bool libDistributedClusteringImplementation::ClassifyData(vector<ConvexHullModel>& ClusterModels)
@@ -412,7 +493,7 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<ConvexHullModel
   ostringstream Messages;
 
   vector<const Point*>& CompletePoints = (vector<const Point*>&) Data->GetCompleteBursts();
-  ConvexHullClassifier ClassifierCore(ClusterModels, Epsilon);
+  ConvexHullClassifier ClassifierCore(ClusterModels, Epsilon, MinPoints);
 
   /* DEBUG
   Messages << "Hulls used to classify points = " << ClusterModels.size() << endl;
@@ -422,24 +503,24 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<ConvexHullModel
   ClassifierCore.Classify(CompletePoints, ClassificationPartition);
 
   GenerateStatistics(true); // true = UseClassificationPartition
-  
+
   return true;
 }
 
 /**
  * Generates the statistics obtained from the selected partition
- * 
+ *
  * \param UseClassificationPartition True if the statistics come from the
  *                                   classification partition, false if we
  *                                   want to use the local partition
- * 
+ *
  * \return True if the statistics were correctly generated, false otherwise
  */
 bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassificationPartition)
 {
   ClusteringConfiguration* ConfigurationManager;
   ParametersManager*       Parameters;
- 
+
 
   ConfigurationManager = ClusteringConfiguration::GetInstance();
   if (!ConfigurationManager->IsInitialized())
@@ -451,7 +532,7 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
   /* Statistics */
 
   Parameters = ParametersManager::GetInstance();
-  
+
   if (UseClassificationPartition)
   {
     Statistics.InitStatistics(ClassificationPartition.GetIDs(),
@@ -459,7 +540,7 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
                               Parameters->GetClusteringParametersPrecision(),
                               Parameters->GetExtrapolationParametersNames(),
                               Parameters->GetExtrapolationParametersPrecision());
-    
+
     if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
                                       ClassificationPartition.GetAssignmentVector()))
     {
@@ -475,7 +556,7 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
                               Parameters->GetClusteringParametersPrecision(),
                               Parameters->GetExtrapolationParametersNames(),
                               Parameters->GetExtrapolationParametersPrecision());
-  
+
     if (!Statistics.ComputeStatistics(Data->GetClusteringBursts(),
                                       LastPartition.GetAssignmentVector()))
     {
@@ -501,12 +582,12 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
 }
 
 /**
- * Reconstruct the input trace adding the data partition computed. Only 
+ * Reconstruct the input trace adding the data partition computed. Only
  * executes in the Root node
- * 
+ *
  * \param OutputTraceName Name of the output trace with the cluster information
- * 
- * \return True if the analysis task is not root or the trace has been 
+ *
+ * \return True if the analysis task is not root or the trace has been
  *         generated correctly, false otherwise
  */
 bool libDistributedClusteringImplementation::ReconstructInputTrace(string OutputTraceName)
@@ -536,7 +617,7 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
         TraceReconstructor->SetEventsToDealWith (EventsToDealWith);
       }
       else
-      { 
+      {
         TraceReconstructor = new ClusteredStatesPRVGenerator(InputFileName, OutputTraceName);
       }
       break;
@@ -564,7 +645,7 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
     SetErrorMessage(TraceReconstructor->GetLastError());
     return false;
   }
-  
+
   return true;
 }
 
@@ -603,13 +684,13 @@ bool libDistributedClusteringImplementation::FlushClustersInformation(string Out
 }
 
 /**
- * Initialization of the library to be used in the filter nodes. This 
+ * Initialization of the library to be used in the filter nodes. This
  * initialization is intended to be used supplying the data set, not using
  * any data extraction
- * 
+ *
  * \param Epsilon                 Epsilon parameter for DBSCAN
  * \param MinPoints               MinPoints parameter for DBSCAN
- * 
+ *
  * \return True if the initialization was performed correctly, false otherwise
  */
 bool libDistributedClusteringImplementation::InitClustering(double Epsilon,
@@ -618,7 +699,7 @@ bool libDistributedClusteringImplementation::InitClustering(double Epsilon,
   string                   ClusteringAlgorithmName;
   map<string, string>      ClusteringAlgorithmParameters;
   ostringstream            Converter;
-  
+
   /* Check if clustering library could be correctly initialized */
   ClusteringCore = new libClustering();
 
@@ -630,7 +711,7 @@ bool libDistributedClusteringImplementation::InitClustering(double Epsilon,
   Converter.str("");
   Converter << MinPoints;
   ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::MIN_POINTS_STRING, string(Converter.str())));
-  
+
   if (!ClusteringCore->InitClustering (ClusteringAlgorithmName,
                                        ClusteringAlgorithmParameters))
   {
@@ -640,9 +721,9 @@ bool libDistributedClusteringImplementation::InitClustering(double Epsilon,
   }
   this->Epsilon   = Epsilon;
   this->MinPoints = MinPoints;
-  
+
   UsingExternalData = true;
-  
+
   return true;
 }
 
@@ -650,11 +731,11 @@ bool libDistributedClusteringImplementation::InitClustering(double Epsilon,
  * Performs a cluster analysis using the vector of points supplied by the user.
  * This method is intended to be used in the filter nodes, so as to determine
  * clusters in the noise points of the leaves
- * 
+ *
  * \param Points        Vector of points to be clustered
  * \param ClusterModels Convex Hull models resulting from the cluster analysis
- * 
- * \return True if the cluster analysis was performed correctly, false 
+ *
+ * \return True if the cluster analysis was performed correctly, false
  *         otherwise
  */
 bool libDistributedClusteringImplementation::ClusterAnalysis(const vector<const Point*>& Points,
@@ -662,7 +743,7 @@ bool libDistributedClusteringImplementation::ClusterAnalysis(const vector<const 
 {
   /* 'ClusteringCore' has been initialized in 'InitTraceClustering' method */
   ExternalData = Points;
-  
+
   if (!ClusteringCore->ExecuteClustering(ExternalData, LastPartition))
   {
     SetErrorMessage(ClusteringCore->GetErrorMessage());
@@ -673,21 +754,21 @@ bool libDistributedClusteringImplementation::ClusterAnalysis(const vector<const 
   { /* Error message will be generated in the private method */
     return false;
   }
-  
+
   return true;
 }
 
 /**
  * Returns the noise points resulting from a cluster analysis
- * 
+ *
  * \param I/O vector where the noise points will be stored
- * 
+ *
  * \return True if the points were correctly returned, false otherwise
  */
 bool libDistributedClusteringImplementation::GetNoisePoints(vector<const Point*>& NoisePoints)
 {
   vector<cluster_id_t>& IDs = LastPartition.GetAssignmentVector();
-  
+
   if (IDs.size() == 0)
   {
 #if 0 // OR CLUSTERED AN EMPTY VECTOR OF NOISE POINTS!!!
@@ -698,11 +779,11 @@ bool libDistributedClusteringImplementation::GetNoisePoints(vector<const Point*>
     return true;
 #endif
   }
-  
+
   vector<const Point*>& DataPoints = GetDataPoints();
-  
+
   NoisePoints.clear();
-  
+
   for (size_t i = 0; i < IDs.size(); i++)
   {
 //std::cout << "GetNoisePoints IDs[" << i << "] = " << IDs[i] << " (NOISE_CLUSTERID=" << NOISE_CLUSTERID << ")" << endl;
@@ -711,22 +792,22 @@ bool libDistributedClusteringImplementation::GetNoisePoints(vector<const Point*>
       NoisePoints.push_back(DataPoints[i]);
     }
   }
-  
+
   return true;
 }
 
 /**
  * Returns all information of the bursts analyzed, in a simplistic way, so as
  * to perform external analysis. All parameters are I/O
- * 
- * \param Points     Points (bursts) used in the cluster analysis using raw 
+ *
+ * \param Points     Points (bursts) used in the cluster analysis using raw
  *                   dimensions
  * \param TaskIDs    TaskID from the input trace associated to each burst
  * \param ThreadIDs  ThreadID from the input trace associated to each burst
  * \param ClusterIDs Cluster IDs obtained after the classification of the data
- *                   (considering that the classification provides the 
+ *                   (considering that the classification provides the
  *                   definitive partition
- * 
+ *
  * \return True, if the information was succesfully retrieved, false otherwise
  */
 bool libDistributedClusteringImplementation::GetFullBurstsInformation(vector<Point*>&       Points,
@@ -737,60 +818,60 @@ bool libDistributedClusteringImplementation::GetFullBurstsInformation(vector<Poi
   vector<CPUBurst*>&    Bursts = Data->GetClusteringBursts();
   vector<cluster_id_t>& IDs    = ClassificationPartition.GetAssignmentVector();
   size_t Dimensions;
-  
+
   if (UsingExternalData)
   {
     SetErrorMessage("unable to retrieve information from external data source");
     return false;
   }
-  
+
   if (IDs.size() == 0)
   {
     SetErrorMessage("data needs to be classfied before being retrieved");
   }
-  
+
   if (Bursts.size() != IDs.size())
   {
     ostringstream ErrorMessage;
-    
+
     ErrorMessage << "different number of bursts (" << Bursts.size() << ") ";
     ErrorMessage << "than cluster IDs (" << IDs.size() << ")";
-    
+
     SetErrorMessage(ErrorMessage.str());
     return false;
   }
-  
+
   Points.clear();
   TaskIDs.clear();
   ThreadIDs.clear();
   ClusterIDs.clear();
-  
+
   Dimensions = Data->GetClusteringDimensionsCount();
-  
+
   for (size_t i = 0; i < Bursts.size(); i++)
   {
     Point* NewPoint = new Point(Bursts[i]->GetRawDimensions());
-    
+
     Points.push_back(NewPoint);
     TaskIDs.push_back(Bursts[i]->GetTaskId());
     ThreadIDs.push_back(Bursts[i]->GetThreadId());
     ClusterIDs.push_back(IDs[i]);
   }
-  
+
   return true;
 }
 
 /**
  * Generates the scripts and the data files to display the scatter plots of the
  * data using GNUplot
- * 
+ *
  * \param DataFileName          Name of the file where the data will be stored
  * \param ScriptsFileNamePrefix Base name to be used in the different GNUplot
  *                              scripts
  * \param LocalPartition        Boolean to indicate if the data to be printed
  *                              is the global partition or just the local
  *                              analysis
- * 
+ *
  * \return True if the plots scripts and data files were written correctly,
  *         false otherwise
  */
@@ -802,9 +883,9 @@ bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileNam
   string Prefix;
 
   Plots = PlottingManager::GetInstance();
-  
+
   Partition& UsedPartition = (LocalPartition ? LastPartition : ClassificationPartition);
-  
+
   if (ScriptsFileNamePrefix.compare("") == 0)
   {
     FileNameManipulator Manipulator(DataFileName, "csv");
@@ -829,22 +910,22 @@ bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileNam
     SetErrorMessage(Plots->GetLastError());
     return false;
   }
-  
+
   return true;
 
 }
 
 /**
  * Prints the data files and GNUplot scripts of the Convex Hull models supplied
- * 
- * \param ClusterModels         Vector of Convex Hull models of the clusters 
+ *
+ * \param ClusterModels         Vector of Convex Hull models of the clusters
  *                              that will be printed
- * \param ModelsFileName        Name of the file where the models will be 
+ * \param ModelsFileName        Name of the file where the models will be
  *                              stored
  * \param ScriptsFileNamePrefix Base name to be used in the different GNUplot
  *                              scripts
  * \param Title                 Title to be used in GNUplot script
- * 
+ *
  * \return True if the plot scripts and data files were written correctly,
  *         false otherwise
  */
@@ -860,7 +941,7 @@ bool libDistributedClusteringImplementation::PrintModels(vector<ConvexHullModel>
 
   ofstream OutputStream;
   ostringstream Messages;
-  
+
   if (ScriptsFileNamePrefix.compare("") == 0)
   {
     FileNameManipulator Manipulator(ModelsFileName, "csv");
@@ -890,7 +971,7 @@ bool libDistributedClusteringImplementation::PrintModels(vector<ConvexHullModel>
     DifferentIDs.insert(i+1);
   }
   OutputStream.close();
-  
+
   /* Print Model GNUPlot Script */
   if (ScriptsFileNamePrefix.compare("") == 0)
   { /* No need to print scripts */
@@ -906,7 +987,7 @@ bool libDistributedClusteringImplementation::PrintModels(vector<ConvexHullModel>
     SetErrorMessage(Plots->GetLastError());
     return false;
   }
-  
+
   return true;
 }
 
@@ -915,14 +996,165 @@ bool libDistributedClusteringImplementation::PrintModels(vector<ConvexHullModel>
  ***************************************************************************/
 
 /**
+ * Common part of the initialization of the library
+ *
+ * \param ConfigurationManager    Manager of the clustering parametrs
+ * \param Root                    boolean to express if current task is
+ *                                the root of the analysis
+ * \param MyRank                  Rank identifier
+ * \param TotalRanks              Total number of analysis tasks
+ *
+ * \return  True if the initialization was performed correctly, false otherwise
+ */
+bool libDistributedClusteringImplementation::CommonInitialization(
+  ClusteringConfiguration*& ConfigurationManager,
+  bool   Root,
+  INT32  MyRank,
+  INT32  TotalRanks)
+{
+  ParametersManager       *Parameters;
+  string                   ClusteringAlgorithmName;
+  map<string, string>      ClusteringAlgorithmParameters;
+  PlottingManager         *Plots;
+  ostringstream            Converter;
+  string                   EpsilonStr, MinPointsStr;
+
+  /* Set that we work in a distributed environment */
+  ConfigurationManager->SetDistributed(true);
+  ConfigurationManager->SetMyRank(MyRank);
+  ConfigurationManager->SetTotalRanks(TotalRanks);
+
+  /* Check if parameters have been read properly */
+  Parameters = ParametersManager::GetInstance();
+  if (Parameters->GetError())
+  {
+    SetError(true);
+    SetErrorMessage(Parameters->GetLastError());
+//    printf("ERROR IN THE PARAMETERS MANAGER %s", Parameters->GetLastError());
+    return false;
+  }
+
+  if (Parameters->GetWarning())
+  {
+    SetWarning(true);
+    SetWarningMessage (Parameters->GetLastWarning());
+  }
+
+  /* Check if clustering library could be correctly initialized */
+  ClusteringCore = new libClustering();
+
+  /* Ignore the clustering algorithm defined in the XML and force it to DBSCAN */
+  ClusteringAlgorithmName = DBSCAN::NAME;
+
+  Converter << this->Epsilon;
+  ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::EPSILON_STRING, string(Converter.str())));
+  Converter.str("");
+  Converter << this->MinPoints;
+  ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::MIN_POINTS_STRING, string(Converter.str())));
+  if (!ClusteringCore->InitClustering (ClusteringAlgorithmName,
+                                       ClusteringAlgorithmParameters))
+  {
+    SetError(true);
+    SetErrorMessage(ClusteringCore->GetErrorMessage());
+    return false;
+  }
+
+  Plots = PlottingManager::GetInstance(false);
+
+  if (Plots->GetError())
+  {
+    SetError(true);
+    SetErrorMessage(Plots->GetLastError());
+    return false;
+  }
+
+  system_messages::my_rank  = MyRank;
+  this->Root                = Root;
+
+  UsingExternalData = false;
+
+  return true;
+}
+
+/**
+ * Generates the Convex Hull models of the clusters determined by the Last
+ * Partition
+ *
+ * \param Models I/O vector where the clusters models are stored
+ *
+ * \return True if the models were correctly generated, false otherwise
+ */
+bool libDistributedClusteringImplementation::GenerateClusterModels(vector<ConvexHullModel>& Models)
+{
+  vector<cluster_id_t>& AssignmentVector = LastPartition.GetAssignmentVector();
+
+  vector<const Point*>& ClusteringPoints = ( UsingExternalData ? ExternalData : Data->GetClusteringPoints() ) ;
+
+  vector<vector<const Point*> > PointsPerCluster (LastPartition.NumberOfClusters ());
+
+  /* DEBUG
+  ostringstream Messages;
+  Messages << "Creating Hulls. Number of clusters = " << LastPartition.NumberOfClusters() << endl;
+  system_messages::information(Messages.str().c_str()); */
+
+  Models.clear();
+
+  /* DEBUG
+  Messages.str("");
+  Messages << " Models vector size = " << Models.size() << endl;
+  system_messages::information(Messages.str().c_str()); */
+
+  unsigned int ClusterPointsSize = ( UsingExternalData ? ExternalData.size() : Data->GetClusteringBurstsSize() );
+  if (AssignmentVector.size() != ClusterPointsSize)
+  {
+    SetError(true);
+    SetErrorMessage("partition elements and cluster points differ");
+    return false;
+  }
+
+  for (size_t i = 0; i < ClusteringPoints.size(); i++)
+  {
+    PointsPerCluster[AssignmentVector[i]].push_back(ClusteringPoints[i]);
+  }
+
+  for (size_t i = NOISE_CLUSTERID+1; i < PointsPerCluster.size(); i++)
+  {
+    /*ConvexHullModel NewHull(PointsPerCluster[i]);
+    NewHull.Print();
+    Models.push_back(NewHull);*/
+
+    Models.push_back(ConvexHullModel(PointsPerCluster[i]));
+  }
+
+  return true;
+}
+
+/**
+ * Returns a vector reference where the data is store
+ *
+ * \return A reference to the vector that contains the actual data;
+ */
+vector<const Point*>& libDistributedClusteringImplementation::GetDataPoints(void)
+{
+  if (UsingExternalData)
+  {
+    return ExternalData;
+  }
+  else
+  {
+    return Data->GetClusteringPoints();
+  }
+}
+
+/**
  * Writes on disk the data stored in memory, adding the cluster information
  * obtained from a cluster analysis
- * 
+ *
  * \param DataFileName   Name of the file where the data will be stored
  * \param LocalPartition Boolean to indicate if the partition to be printed
- *                       corresponds to the local one, or the final 
+ *                       corresponds to the local one, or the final
  *                       classification
- * 
+ *
  * \return True if the data were stored correctly, false otherwise
  */
 bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool LocalPartition)
@@ -934,7 +1166,7 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
     SetErrorMessage("data not initialized");
     return false;
   }
-  
+
   if (!OutputStream)
   {
     SetError(true);
@@ -963,75 +1195,6 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
   }
 
   OutputStream.close();
-  
-  return true;
-}
-
-/**
- * Generates the Convex Hull models of the clusters determined by the Last
- * Partition
- * 
- * \param Models I/O vector where the clusters models are stored
- * 
- * \return True if the models were correctly generated, false otherwise
- */
-bool libDistributedClusteringImplementation::GenerateClusterModels(vector<ConvexHullModel>& Models)
-{
-  vector<cluster_id_t>& AssignmentVector = LastPartition.GetAssignmentVector();
-
-  vector<const Point*>& ClusteringPoints = ( UsingExternalData ? ExternalData : Data->GetClusteringPoints() ) ;
-
-  vector<vector<const Point*> > PointsPerCluster (LastPartition.NumberOfClusters ());
-
-  /* DEBUG 
-  ostringstream Messages;
-  Messages << "Creating Hulls. Number of clusters = " << LastPartition.NumberOfClusters() << endl;
-  system_messages::information(Messages.str().c_str()); */
-  
-  Models.clear();
-
-  /* DEBUG 
-  Messages.str("");
-  Messages << " Models vector size = " << Models.size() << endl;
-  system_messages::information(Messages.str().c_str()); */
-
-  unsigned int ClusterPointsSize = ( UsingExternalData ? ExternalData.size() : Data->GetClusteringBurstsSize() );
-  if (AssignmentVector.size() != ClusterPointsSize)
-  {
-    SetError(true);
-    SetErrorMessage("partition elements and cluster points differ");
-    return false;
-  }
-
-  for (size_t i = 0; i < ClusteringPoints.size(); i++)
-  {
-    PointsPerCluster[AssignmentVector[i]].push_back(ClusteringPoints[i]);
-  }
-
-  for (size_t i = NOISE_CLUSTERID+1; i < PointsPerCluster.size(); i++)
-  {
-    /*ConvexHullModel NewHull(PointsPerCluster[i]);
-    NewHull.Print();
-    Models.push_back(NewHull);*/
-    Models.push_back(ConvexHullModel(PointsPerCluster[i]));
-  }
 
   return true;
-}
-
-/**
- * Returns a vector reference where the data is store
- * 
- * \return A reference to the vector that contains the actual data;
- */
-vector<const Point*>& libDistributedClusteringImplementation::GetDataPoints(void)
-{
-  if (UsingExternalData)
-  {
-    return ExternalData;
-  }
-  else
-  {
-    return Data->GetClusteringPoints();
-  }
 }

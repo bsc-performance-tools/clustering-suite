@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -77,7 +77,7 @@ DBSCAN::DBSCAN(map<string, string> ClusteringParameters)
   {
     string ErrorMessage;
     ErrorMessage = "parameter '" + DBSCAN::EPSILON_STRING + "' not found in DBSCAN definition";
-    
+
     SetErrorMessage(ErrorMessage);
     SetError(true);
     return;
@@ -104,7 +104,7 @@ DBSCAN::DBSCAN(map<string, string> ClusteringParameters)
   {
     string ErrorMessage;
     ErrorMessage = "parameter '" + DBSCAN::MIN_POINTS_STRING + "' not found in DBSCAN definition";
-    
+
     SetErrorMessage(ErrorMessage);
     SetError(true);
     return;
@@ -124,7 +124,7 @@ DBSCAN::DBSCAN(map<string, string> ClusteringParameters)
       return;
     }
   }
-  
+
   return;
 }
 
@@ -138,7 +138,7 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
   size_t         ResultingClusters = 0;
 
   INT64          DataSize, Index;
-  
+
   point_idx      Offset;
 
   if (Data.size() == 0)
@@ -161,7 +161,7 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
       ClusterAssignmentVector.push_back(UNCLASSIFIED);
     }
   }
-  
+
   /* Build KD-Tree */
   BuildKDTree(Data);
 
@@ -175,7 +175,7 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
   for (point_idx i = 0; i < Data.size(); i++)
   {
     system_messages::show_progress("Clustering points", i, (int) Data.size());
-    
+
     point_idx index = (i + Offset) % Data.size();
 
     if (ClusterAssignmentVector[index] == UNCLASSIFIED)
@@ -270,7 +270,7 @@ bool DBSCAN::ParametersApproximation(const vector<const Point*>& Data,
   {
     string ErrorMessage;
     ErrorMessage = "value of '" + DBSCAN::PARAMETER_K_BEGIN + "' not found when approximating DBSCAN parameters";
-    
+
     SetErrorMessage(ErrorMessage);
     SetError(true);
     return false;
@@ -322,7 +322,7 @@ bool DBSCAN::ParametersApproximation(const vector<const Point*>& Data,
     }
   }
 
-  
+
   return ComputeKNeighbourhoods(Data, k_begin, k_end, OutputFileNamePrefix);
 }
 
@@ -331,13 +331,13 @@ bool DBSCAN::ComputeNeighbourhood(const vector<const Point*>& Data,
                                   vector<double>&             Distances)
 {
   vector<vector<double> > ResultingDistances (1, vector<double> ());
-  
+
   /* Build KD tree */
   BuildKDTree(Data);
-  
+
   for (size_t i = 0; i < Data.size(); i++)
   {
-    
+
 #ifdef EXTRA_DEBUG
     cout << "Searching for K-Neigbour of point (" << i << "): ";
     cout << *InputData[i] << endl;
@@ -347,10 +347,10 @@ bool DBSCAN::ComputeNeighbourhood(const vector<const Point*>& Data,
 
     system_messages::show_progress("Computing K-Neighbour distance", i, Data.size());
   }
-  
+
   Distances = ResultingDistances[0];
   sort(Distances.rbegin(), Distances.rend());
-  
+
   return true;
 }
 
@@ -359,13 +359,13 @@ bool DBSCAN::BuildKDTree(const vector<const Point*>& Data)
   assert(Data.size() > 0);
 
   size_t Dimensions = Data[0]->size();
-  
+
 #ifdef DEBUG
 /*  cout << "Current clustering has " << Dimensions << " dimensions" << endl; */
 #endif
-  
+
   system_messages::show_progress("Building data spatial index", 0, Data.size());
-  
+
   ANNDataPoints = annAllocPts(Data.size(), Dimensions);
 
   for (size_t i = 0; i < Data.size(); i++)
@@ -379,7 +379,7 @@ bool DBSCAN::BuildKDTree(const vector<const Point*>& Data)
   SpatialIndex = new ANNkd_tree(ANNDataPoints,
                                 Data.size(),
                                 Dimensions);
-  
+
   return true;
 }
 
@@ -408,7 +408,7 @@ bool DBSCAN::ExpandCluster(const vector<const Point*>& Data,
     cout << "Clustering point " << i << " has " << Data[i]->size() << " dimensions" << endl;
   }
   */
-  
+
   ClusterAssignmentVector[CurrentPoint] = CurrentClusterId;
 
   EpsilonRangeQuery(Data[CurrentPoint], SeedList);
@@ -422,6 +422,8 @@ bool DBSCAN::ExpandCluster(const vector<const Point*>& Data,
 
   cout << "SeedList.size() = " << SeedList.size() << endl;
   */
+
+  const_cast<Point*>(Data[CurrentPoint])->SetNeighbourhoodSize(SeedList.size());
 
   /* Point is NO core object */
   if (SeedList.size() < MinPoints)
@@ -452,13 +454,16 @@ bool DBSCAN::ExpandCluster(const vector<const Point*>& Data,
     point_idx CurrentNeighbour = (*SeedListIterator);
 
     EpsilonRangeQuery(Data[CurrentNeighbour], NeighbourSeedList);
-    /* DEBUG 
+
+    const_cast<Point*>(Data[CurrentNeighbour])->SetNeighbourhoodSize(NeighbourSeedList.size());
+
+    /* DEBUG
     cout << "NeighbourSeedList.size() = " << SeedList.size() << endl; */
 
     /* CurrentNeighbour is a core object */
     if (NeighbourSeedList.size() >= MinPoints)
     {
-      for (NeighbourSeedListIterator = NeighbourSeedList.begin();
+      for (NeighbourSeedListIterator  = NeighbourSeedList.begin();
            NeighbourSeedListIterator != NeighbourSeedList.end();
            NeighbourSeedListIterator++)
       {
@@ -491,7 +496,7 @@ bool DBSCAN::ExpandCluster(const vector<const Point*>& Data,
     cout << "Clustering point " << i << " has " << Data[i]->size() << " dimensions" << endl;
   }
   */
-  
+
   return true;
 }
 
@@ -510,13 +515,13 @@ void DBSCAN::EpsilonRangeQuery(const Point* const QueryPoint,
   size_t      ResultSize;
 
   ANNQueryPoint = ToANNPoint(QueryPoint);
-  
-  ResultSize = SpatialIndex->annkFRSearch(ANNQueryPoint, pow(Eps, 2), 0);
-  
+
+  ResultSize = SpatialIndex->annkFRSearch(ANNQueryPoint, pow(Eps, 2.0), 0);
+
   Results = new ANNidx[ResultSize];
-  
+
   ResultSize = SpatialIndex->annkFRSearch(ANNQueryPoint,
-                                          pow(Eps, 2),
+                                          pow(Eps, 2.0),
                                           ResultSize,
                                           Results);
 
@@ -524,7 +529,7 @@ void DBSCAN::EpsilonRangeQuery(const Point* const QueryPoint,
   {
     SeedList.push_back(Results[i]);
   }
-  
+
   delete [] Results;
 }
 
@@ -557,12 +562,12 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
   for (size_t i = 0; i <= (k_end - k_begin); i++)
   {
     ostringstream KNeighbourDataFileName;
-    
+
     KNeighbourDataFileName << OutputFileNamePrefix;
     KNeighbourDataFileName << "." << k_begin+i << "Pts.neighbour_data";
 
     KNeighbourDataStreams.push_back(new ofstream(KNeighbourDataFileName.str().c_str(), std::ios_base::trunc));
-    
+
     if (!KNeighbourDataStreams[i])
     {
       ostringstream ErrorMessage;
@@ -579,17 +584,17 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
     }
 
     KNeighbourFileNames.push_back(KNeighbourDataFileName.str());
-    
+
     (*KNeighbourDataStreams[i]).precision(6);
     (*KNeighbourDataStreams[i]) << std::fixed;
 
-    
+
   }
 
   /* Generate the plot script file and stream */
   KNeighbourPlotFileName = OutputFileNamePrefix+".neighbour.plot";
   KNeighbourPlotStream.open(KNeighbourPlotFileName.c_str(),  std::ios_base::trunc);
-  
+
   if (!KNeighbourPlotStream)
   {
     string ErrorMessage;
@@ -602,7 +607,7 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
     SetErrorMessage(ErrorMessage);
     return false;
   }
-  
+
   /* Build KD tree */
   BuildKDTree(Data);
 
@@ -615,7 +620,7 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
 
   for (size_t i = 0; i < Data.size(); i++)
   {
-    
+
 #ifdef EXTRA_DEBUG
     cout << "Searching for K-Neigbour of point (" << i << "): ";
     cout << *InputData[i] << endl;
@@ -634,7 +639,7 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
   {
     sort(ResultingDistances[i].rbegin(), ResultingDistances[i].rend());
   }
-  
+
   /* Flush files */
 
   for (size_t i = 0; i <= (k_end - k_begin); i++)
@@ -661,21 +666,21 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
     KNeighbourPlotStream << "\"" << KNeighbourFileNames[i] << "\" title 'k = ";
     KNeighbourPlotStream << k_begin+i << "'";
   }
-  
+
   KNeighbourPlotStream << '\n';
   KNeighbourPlotStream << "pause -1 \"Hit return to continue...\"" << '\n';
-  
+
   /* Closing files */
   for (size_t i = 0; i <= (k_end - k_begin); i++)
   {
     (*KNeighbourDataStreams[i]).close();
   }
-  
+
   KNeighbourPlotStream.close();
-  
+
   if (!system_messages::verbose)
     cout << "DONE!" << endl;
-  
+
   return true;
 }
 
@@ -699,9 +704,9 @@ void DBSCAN::ComputeNeighboursDistance(const Point*             QueryPoint,
   }
   cout << "]" << endl;
 #endif
-  
+
   SpatialIndex->annkSearch(ANNQueryPoint, k_end+1, ResultPoints, Distances);
-  
+
 #ifdef EXTRA_DEBUG
   for (size_t i = 0; i < k+1; i++)
   {
@@ -714,7 +719,7 @@ void DBSCAN::ComputeNeighboursDistance(const Point*             QueryPoint,
   {
     ResultingDistances[i].push_back(ANN_ROOT(Distances[k_begin+i]));
   }
-  
+
   delete    ANNQueryPoint;
   delete [] ResultPoints;
   delete [] Distances;

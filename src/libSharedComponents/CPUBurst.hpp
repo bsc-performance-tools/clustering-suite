@@ -65,14 +65,7 @@ using std::fixed;
 
 class CPUBurst: public Point, public Error
 {
-  public:
-    
-    static instance_t InstanceNumber;
-    // static char Separator;
-
   protected:
-    instance_t   Instance;
-
     task_id_t    TaskId;
     thread_id_t  ThreadId;
 
@@ -116,7 +109,6 @@ class CPUBurst: public Point, public Error
     void       SetDuration(duration_t Duration) { this->Duration = Duration; };
     duration_t GetDuration(void)                { return Duration; };
 
-    instance_t  GetInstance(void)  { return Instance; };
     task_id_t   GetTaskId(void)    { return TaskId; };
     thread_id_t GetThreadId(void)  { return ThreadId; };
     line_t      GetLine(void)      { return Line; };

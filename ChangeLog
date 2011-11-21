@@ -10,6 +10,23 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-11-21 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added 'TreeDBSCAN' source code that implements a tree version
+	approach to parallelize DBSCAN using the MRNet infrastructure
+
+	* Added a CGAL kernel (obtained from the CGAL examples) to include
+	density information to CGAL points. The points contained in this
+	kernel are still bidimensional. To avoid a problem of CGAL when
+	determining the polygon intersection algorithnm this points
+	contain a vector of 'float' instead of 'double. That could be a
+	potential problem
+
+	* Better use of CGAL flags in the building system. Also added the
+	macros to check the presence of 'MRNetApp' library
+
+	* Added 'Code:Blocks' project files
+
+
 2011-11-14 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Better support for versioning
 

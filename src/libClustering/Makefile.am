@@ -73,13 +73,22 @@ libClustering_la_SOURCES = \
 
 if HAVE_CGAL
 inst_HEADERS += \
-	ConvexHullModel.hpp
+	ConvexHullModel.hpp 
+
 
 libClustering_la_SOURCES += \
 	ConvexHullModel.hpp \
 	ConvexHullModel.cpp \
 	ConvexHullClassifier.hpp \
-	ConvexHullClassifier.cpp
+	ConvexHullClassifier.cpp \
+	CGAL_Kernel/MyConstruct_bbox_2.h \
+	CGAL_Kernel/MyConstruct_coord_iterator.h \
+	CGAL_Kernel/MyConstruct_point_2.h \
+	CGAL_Kernel/MyKernel.h \
+	CGAL_Kernel/MyPointC2.h \
+	CGAL_Kernel/MyPointC2_iostream.h \
+	CGAL_Kernel/MySegmentC2.h
+
 
 endif
 

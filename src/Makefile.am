@@ -21,8 +21,15 @@ endif
 endif
 
 if HAVE_CGAL
+
 SUBDIRS += \
 	libDistributedClustering \
 	MRNetStub
+
+if HAVE_MRNETAPP
+SUBDIRS += \
+  TreeDBSCAN
+endif
+
 endif
 

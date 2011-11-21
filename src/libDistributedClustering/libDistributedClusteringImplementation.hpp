@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -65,12 +65,12 @@ class libDistributedClusteringImplementation: public Error
 
     double         Epsilon;
     INT32          MinPoints;
-    
+
     bool              PRVEventsParsing;
     set<event_type_t> EventsToDealWith;
-    
+
     ClusteringStatistics     Statistics;
-    
+
     /*
     bool                  ClusteringExecuted;
     bool                  HWCGroupSet;
@@ -80,7 +80,7 @@ class libDistributedClusteringImplementation: public Error
 
   public:
     libDistributedClusteringImplementation(int verbose);
-    
+
     /* This methods are intended to be used in the MRNet BE nodes, to perform
      * a local cluster analysis */
 
@@ -91,13 +91,22 @@ class libDistributedClusteringImplementation: public Error
                         INT32  MyRank,
                         INT32  TotalRanks);
 
+    bool InitClustering(string ClusteringDefinitionXML,
+                        bool   Root,
+                        INT32  MyRank,
+                        INT32  TotalRanks);
+
+    double    GetEpsilon(void);
+
+    int       GetMinPoints(void);
+
     bool ExtractData(string            InputFileName,
                      set<int>&         TasksToRead,
                      set<event_type_t> EventsToDealWith = set<event_type_t> ());
 
     bool ExtractData(string            InputFileName,
                      set<event_type_t> EventsToDealWith = set<event_type_t> ());
-                     
+
     size_t GetNumberOfPoints(void);
 
     bool ClusterAnalysis(vector<ConvexHullModel>& ClusterModels);
@@ -105,9 +114,9 @@ class libDistributedClusteringImplementation: public Error
     bool ClassifyData(vector<ConvexHullModel>& ClusterModels);
 
     bool GenerateStatistics(bool UseClassificationPartition);
-    
+
     bool ReconstructInputTrace(string OutputTraceName);
-    
+
     bool FlushClustersInformation(string OutputClustersInfoFileName);
 
     /* This second interface is focused to implement the cluster of local noise
@@ -118,12 +127,12 @@ class libDistributedClusteringImplementation: public Error
 
     bool ClusterAnalysis(const vector<const Point*>& Points,
                          vector<ConvexHullModel>&    ClusterModels);
-    
+
     bool GetNoisePoints(vector<const Point*>& NoisePoints);
 
-    /* A method to retrieve all information to perform the cross-process 
+    /* A method to retrieve all information to perform the cross-process
      * analysis */
-     
+
     bool GetFullBurstsInformation(vector<Point*>&       Points,
                                   vector<task_id_t>&    TaskIDs,
                                   vector<thread_id_t>&  ThreadIDs,
@@ -152,11 +161,16 @@ protected:
 
 private:
 
-  bool FlushData(string DataFileName, bool LocalPartition);
-  
+  bool CommonInitialization(ClusteringConfiguration *&ConfigurationManager,
+                            bool                     Root,
+                            INT32                    MyRank,
+                            INT32                    TotalRanks);
+
   bool GenerateClusterModels(vector<ConvexHullModel>& Models);
-  
+
   vector<const Point*>& GetDataPoints(void);
+
+  bool FlushData(string DataFileName, bool LocalPartition);
 
 };
 

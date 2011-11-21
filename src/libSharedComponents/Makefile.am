@@ -69,6 +69,9 @@ libSharedComponents_la_SOURCES = \
 	XMLParser.hpp 
 
 if HAVE_SEQAN
+libSharedComponents_la_CFLAGS   += @SEQAN_CPPFLAGS@
+libSharedComponents_la_CXXFLAGS += @SEQAN_CPPFLAGS@
+
 libSharedComponents_la_SOURCES += \
 	ClusterInformation.hpp \
 	ClusterInformation.cpp \

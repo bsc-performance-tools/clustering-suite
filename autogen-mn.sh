@@ -1,9 +1,9 @@
 #!/bin/sh
 MAJOR=2
 MINOR=1
-sh -c "svnversion -n . | cut -d: -f2 | cut -dS -f1 | tr -d '\n'" > ./SVN_VERSION
+#sh -c "svnversion -n . | cut -d: -f2 | cut -dS -f1 | tr -d '\n'" > ./SVN_VERSION
 SVN_VERSION=`cat ./SVN_VERSION`
-VERSION="$MAJOR.$MINOR-$SVN_VERSION"
+VERSION="$MAJOR.$MINOR-$SVN_VERSION.MN-`date "+%Y%m%d"`"
 
 if test -e ./configure.ac; then
   rm ./configure.ac
@@ -18,9 +18,12 @@ echo "" >> configure.ac
 
 sed s/@@VERSION_NUMBER@@/$VERSION/ < configure.ac.template >> configure.ac
 
+LIBTOOL_M4=/gpfs/apps/LIBTOOL/2.2.6a/share/aclocal
+XML_M4=/usr/share/aclocal
+
 set -x
 libtoolize --automake --force --copy \
-&& aclocal -I config \
+&& aclocal -I config -I ${LIBTOOL_M4} -I ${XML_M4} \
 && autoheader \
 && automake --gnu --add-missing --copy \
 && autoconf

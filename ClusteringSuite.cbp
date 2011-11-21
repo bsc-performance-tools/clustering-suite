@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="ClusteringSuite" />
+		<Option makefile_is_custom="1" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Compile">
+				<Option output="bin/Release/ClusteringSuite" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+				<MakeCommands>
+					<Build command="$make -f $makefile" />
+					<CompileFile command="$make -f $makefile $file" />
+					<Clean command="$make -f $makefile clean" />
+					<DistClean command="$make -f $makefile distclean$target" />
+					<AskRebuildNeeded command="$make -q -f $makefile" />
+					<SilentBuild command="$make -s -f $makefile" />
+				</MakeCommands>
+			</Target>
+			<Target title="Install">
+				<Option output="ClusteringSuite" prefix_auto="1" extension_auto="1" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
+				<MakeCommands>
+					<Build command="$make install -f $makefile $target" />
+					<CompileFile command="$make install -f $makefile $file" />
+					<Clean command="$make -f $makefile clean$target" />
+					<DistClean command="$make -f $makefile distclean$target" />
+					<AskRebuildNeeded command="$make install -q -f $makefile $target" />
+					<SilentBuild command="$make -installs -f $makefile $target" />
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="clustering_suite_config.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="include/types.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="main.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/BasicClasses/Error.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/BasicClasses/Error.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/BasicClasses/FileNameManipulator.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/BasicClasses/FileNameManipulator.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/BasicClasses/SystemMessages.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/BasicClasses/SystemMessages.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/BasicClasses/Timer.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/BasicClasses/Utilities.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/BasicClasses/Utilities.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/BurstClustering/BurstClustering.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/ClusteringDataExtractor/ClusteringDataExtractorMain.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/DBSCANParametersApproximation/DBSCANParametersApproximationMain.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/MRNetStub/MRNetStub.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/MusterDistributedClustering/MusterDistributedClustering.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/ClusteringOffline_BE.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/ClusteringOffline_BE.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/ClusteringOffline_FE.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/ClusteringOffline_FE.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/Clustering_Filter.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/Clustering_Filter.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/NoiseManager.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/NoiseManager.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_BE.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_FE.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_FE.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/tags.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/TreeDBSCAN/utils.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/ANN.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/ANN/ANN.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/ANN/ANNperf.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/ANN/ANNx.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/bd_fix_rad_search.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/bd_pr_search.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/bd_search.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/bd_tree.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/bd_tree.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/brute.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_dump.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_fix_rad_search.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_fix_rad_search.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_pr_search.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_pr_search.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_search.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_search.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_split.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_split.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_tree.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_tree.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_util.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/kd_util.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/perf.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/pr_queue.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libANN/pr_queue_k.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libClustering/CGAL_Kernel/HullModelKernel.h" />
+		<Unit filename="src/libClustering/CGAL_Kernel/HullPoint.h" />
+		<Unit filename="src/libClustering/CGAL_Kernel/MyConstruct_bbox_2.h" />
+		<Unit filename="src/libClustering/CGAL_Kernel/MyConstruct_coord_iterator.h" />
+		<Unit filename="src/libClustering/CGAL_Kernel/MyConstruct_point_2.h" />
+		<Unit filename="src/libClustering/CGAL_Kernel/MyKernel.cpp" />
+		<Unit filename="src/libClustering/CGAL_Kernel/MyKernel.h" />
+		<Unit filename="src/libClustering/CGAL_Kernel/MyPointC2.h" />
+		<Unit filename="src/libClustering/CGAL_Kernel/MyPointC2_iostream.h" />
+		<Unit filename="src/libClustering/CGAL_Kernel/MySegmentC2.h" />
+		<Unit filename="src/libClustering/CGAL_Kernel/cartesian_converter.cpp" />
+		<Unit filename="src/libClustering/Classifier.hpp" />
+		<Unit filename="src/libClustering/ClusteringAlgorithm.hpp" />
+		<Unit filename="src/libClustering/ClusteringAlgorithmsFactory.cpp" />
+		<Unit filename="src/libClustering/ClusteringAlgorithmsFactory.hpp" />
+		<Unit filename="src/libClustering/ConvexHullClassifier.cpp" />
+		<Unit filename="src/libClustering/ConvexHullClassifier.hpp" />
+		<Unit filename="src/libClustering/ConvexHullModel.cpp" />
+		<Unit filename="src/libClustering/ConvexHullModel.hpp" />
+		<Unit filename="src/libClustering/DBSCAN.cpp" />
+		<Unit filename="src/libClustering/DBSCAN.hpp" />
+		<Unit filename="src/libClustering/GMEANS.cpp" />
+		<Unit filename="src/libClustering/GMEANS.hpp" />
+		<Unit filename="src/libClustering/MUSTER_CAPEK.cpp" />
+		<Unit filename="src/libClustering/MUSTER_CAPEK.hpp" />
+		<Unit filename="src/libClustering/MUSTER_DBSCAN.cpp" />
+		<Unit filename="src/libClustering/MUSTER_DBSCAN.hpp" />
+		<Unit filename="src/libClustering/MUSTER_PAM.cpp" />
+		<Unit filename="src/libClustering/MUSTER_PAM.hpp" />
+		<Unit filename="src/libClustering/MUSTER_XCLARA.cpp" />
+		<Unit filename="src/libClustering/MUSTER_XCLARA.hpp" />
+		<Unit filename="src/libClustering/NearestNeighbourClassifier.cpp" />
+		<Unit filename="src/libClustering/NearestNeighbourClassifier.hpp" />
+		<Unit filename="src/libClustering/OPTICS.cpp" />
+		<Unit filename="src/libClustering/OPTICS.hpp" />
+		<Unit filename="src/libClustering/Partition.cpp" />
+		<Unit filename="src/libClustering/Partition.hpp" />
+		<Unit filename="src/libClustering/Point.cpp" />
+		<Unit filename="src/libClustering/Point.hpp" />
+		<Unit filename="src/libClustering/clustering_types.h" />
+		<Unit filename="src/libClustering/gmeans/andersondarling.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/libClustering/gmeans/andersondarling.h" />
+		<Unit filename="src/libClustering/gmeans/csv_parser.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/libClustering/gmeans/csv_parser.h" />
+		<Unit filename="src/libClustering/gmeans/dataorg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/libClustering/gmeans/dataorg.h" />
+		<Unit filename="src/libClustering/gmeans/get_ad_cv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/libClustering/gmeans/get_ad_cv.h" />
+		<Unit filename="src/libClustering/gmeans/gmeans.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/libClustering/gmeans/gmeans.h" />
+		<Unit filename="src/libClustering/gmeans/kmeans.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/libClustering/gmeans/kmeans.h" />
+		<Unit filename="src/libClustering/gmeans/kmeans_math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/libClustering/gmeans/kmeans_math.h" />
+		<Unit filename="src/libClustering/gmeans/smp_superscalar_sort.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/libClustering/gmeans/smp_superscalar_sort.h" />
+		<Unit filename="src/libClustering/gmeans/tools.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/libClustering/gmeans/tools.h" />
+		<Unit filename="src/libClustering/libClustering.cpp" />
+		<Unit filename="src/libClustering/libClustering.hpp" />
+		<Unit filename="src/libClustering/libClusteringImplementation.cpp" />
+		<Unit filename="src/libClustering/libClusteringImplementation.hpp" />
+		<Unit filename="src/libDistributedClustering/libDistributedClustering.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libDistributedClustering/libDistributedClustering.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libDistributedClustering/libDistributedClusteringImplementation.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libDistributedClustering/libDistributedClusteringImplementation.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverApplicationDescription.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverApplicationDescription.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverCommunicator.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverCommunicator.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverHeader.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverHeader.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverRecord.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverRecord.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverTraceParser.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverTraceParser.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/CPIStackModel.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/CPUBurst.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/CPUBurst.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusterInformation.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusterInformation.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteredEventsPRVGenerator.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteredEventsPRVGenerator.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteredStatesPRVGenerator.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteredStatesPRVGenerator.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteredTRFGenerator.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteredTRFGenerator.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteredTraceGenerator.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteredTraceGenerator.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringConfiguration.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringConfiguration.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringParameter.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringParameter.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringRefinement.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringRefinement.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringRefinementAggregative.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringRefinementAggregative.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringRefinementDivisive.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringRefinementDivisive.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringStatistics.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ClusteringStatistics.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/DataExtractor.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/DataExtractor.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/DataExtractorFactory.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/DataExtractorFactory.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/PRVEventsDataExtractor.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/PRVEventsDataExtractor.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/PRVStatesDataExtractor.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/PRVStatesDataExtractor.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ParametersManager.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/ParametersManager.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/PlottingManager.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/PlottingManager.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/SequenceScore.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/SequenceScore.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/State.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/State.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/TRFDataExtractor.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/TRFDataExtractor.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/TraceData.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/TraceData.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/XMLParser.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/XMLParser.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libSharedComponents/trace_clustering_types.h">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libTraceClustering/libTraceClustering.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libTraceClustering/libTraceClustering.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libTraceClustering/libTraceClusteringImplementation.cpp">
+			<Option target="Compile" />
+		</Unit>
+		<Unit filename="src/libTraceClustering/libTraceClusteringImplementation.hpp">
+			<Option target="Compile" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<lib_finder disable_auto="1" />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

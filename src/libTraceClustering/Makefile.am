@@ -40,6 +40,11 @@ libTraceClustering_la_CXXFLAGS +=  @CGAL_CPPFLAGS@
 libTraceClustering_la_LDFLAGS += @CGAL_LDFLAGS@ 
 endif
 
+if HAVE_SEQAN
+libTraceClustering_la_CXXFLAGS +=  @SEQAN_CPPFLAGS@
+endif
+
+
 instdir = $(includedir)
 
 inst_HEADERS = \
