@@ -1,0 +1,5 @@
+#!/bin/bash
+
+source @sub_PREFIX@/etc/sourceme.sh
+
+$0.bin $@

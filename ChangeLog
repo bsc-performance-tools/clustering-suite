@@ -10,6 +10,11 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-11-21 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added 'TreeDBSCAN' source tree.
+
+	* Erased 'doc' source tree. To be restored in future versions
+
 2011-11-21 German Llort <german.llort@bsc.es>
 	* Modified autogen-mn.sh
 
