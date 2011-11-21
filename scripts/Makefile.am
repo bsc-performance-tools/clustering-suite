@@ -15,7 +15,7 @@ if HAVE_MPI
 else
 	$(top_srcdir)/substitute $(SED) "@sub_MPI_CFLAGS@" "" $@
 	$(top_srcdir)/substitute $(SED) "@sub_MPI_LDFLAGS@" "" $@
-fi
+endif
 	chmod u+x $@
 
 clean-local:
