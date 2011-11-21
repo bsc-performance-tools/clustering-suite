@@ -13,6 +13,8 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 2011-11-21 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Changed the name of 'sourceme.sh' to 'Tree_DBSCAN_env.sh'
 
+	* Added 'EXTRA_DIST' to 'clustering-config' script
+
 2011-11-21 German Llort <german.llort@bsc.es>
 	* Added 'clustering-config' script
 
