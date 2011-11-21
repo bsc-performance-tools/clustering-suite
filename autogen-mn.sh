@@ -1,9 +1,11 @@
 #!/bin/sh
+export PATH=/gpfs/apps/AUTOMAKE/1.10.2/bin/:/gpfs/apps/LIBTOOL/2.2.6a/bin:/gpfs/apps/AUTOCONF/2.63/bin:${PATH}
+
 MAJOR=2
 MINOR=1
 #sh -c "svnversion -n . | cut -d: -f2 | cut -dS -f1 | tr -d '\n'" > ./SVN_VERSION
-SVN_VERSION=`cat ./SVN_VERSION`
-VERSION="$MAJOR.$MINOR-$SVN_VERSION.MN-`date "+%Y%m%d"`"
+#SVN_VERSION=`cat ./SVN_VERSION`
+VERSION="$MAJOR.$MINOR.MN-`date "+%Y%m%d"`"
 
 if test -e ./configure.ac; then
   rm ./configure.ac
