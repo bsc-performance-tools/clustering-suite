@@ -220,6 +220,7 @@ src/libTraceClustering/Makefile
 src/ClusteringDataExtractor/Makefile
 src/DBSCANParametersApproximation/Makefile
 src/BurstClustering/Makefile
+scripts/Makefile
 ])
 
 if test "${MPI_INSTALLED}" = "yes" -a "x$muster_enabled" = "xyes"; then

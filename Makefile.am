@@ -5,7 +5,7 @@ INCLUDES = \
     -I$(top_srcdir)/include\
     -I@common_filesdir@
 
-SUBDIRS = include src 
+SUBDIRS = include src scripts
 
 instdir = $(includedir)
 

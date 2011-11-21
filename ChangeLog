@@ -11,6 +11,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 2011-11-21 German Llort <german.llort@bsc.es>
+	* Added 'clustering-config' script
+
+2011-11-21 German Llort <german.llort@bsc.es>
 	* Added 'substitute' and 'substitute-all' scripts
 
 2011-11-21 Juan Gonzalez <juan.gonzalez@bsc.es>

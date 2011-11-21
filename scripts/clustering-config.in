@@ -1,0 +1,55 @@
+#!/bin/bash
+
+usage()
+{
+	cat <<EOF
+Usage: clustering-config [OPTION]
+
+Known values for OPTION are:
+
+  --prefix      print ClusteringSuite installation directory
+  --cflags      print pre-processor and compiler flags 
+  --libs        print library linking information 
+  --help        display this help and exit
+  --version     output version information
+
+EOF
+
+	exit $1
+}
+
+if test $# -eq 0; then
+	usage 1
+fi
+
+while test $# -gt 0; do
+	case "$1" in
+	--prefix)
+		echo @sub_PREFIX@
+		;;
+
+	--version)
+		echo @sub_VERSION@
+		exit 0
+		;;
+
+	--help)
+		usage 0
+		;;
+
+	--cflags)
+		echo "@sub_CGAL_CPPFLAGS@"
+		;;
+
+	--libs)
+		echo "@sub_CGAL_LDFLAGS@"
+		;;
+
+	*)
+		usage
+		exit 1
+		;;
+	esac
+	shift
+done
+
