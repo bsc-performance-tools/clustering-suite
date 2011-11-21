@@ -1,5 +1,5 @@
 
-SOURCEME_SH = sourceme.sh 
+SOURCEME_SH = Tree_DBSCAN_env.sh
 FE_WRAPPER  = Tree_DBSCAN_FE 
 BE_WRAPPER  = Tree_DBSCAN_BE
 

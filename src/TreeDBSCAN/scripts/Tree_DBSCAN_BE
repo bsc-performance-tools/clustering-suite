@@ -1,5 +1,5 @@
 #!/bin/bash
 
-source @sub_PREFIX@/etc/sourceme.sh
+source @sub_PREFIX@/etc/Tree_DBSCAN_env.sh
 
 $0.bin $@
