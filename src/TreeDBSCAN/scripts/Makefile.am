@@ -14,7 +14,6 @@ install-data-hook:
 	$(top_srcdir)/substitute-all $(SED) "@sub_PREFIX@" ${prefix} $(prefix)/etc
 	$(top_srcdir)/substitute-all $(SED) "@sub_MRNETAPP_HOME@" @MRNETAPP_HOME@ $(prefix)/etc
 	$(top_srcdir)/substitute-all $(SED) "@sub_MRNETAPP_LIBSDIR@" @MRNETAPP_LIBSDIR@ $(prefix)/etc
-	$(top_srcdir)/substitute-all $(SED) "@sub_CLUSTERING_LIBSDIR@" @CLUSTERING_DYNAMIC_PATH@ $(prefix)/etc
 	$(top_srcdir)/substitute-all $(SED) "@sub_CGAL_LIBSDIR@" @CGAL_DYNAMIC_PATH@ $(prefix)/etc
 	$(top_srcdir)/substitute-all $(SED) "@sub_BOOST_LDPATH@" ${BOOST_LDPATH} $(prefix)/etc
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(FE_WRAPPER)

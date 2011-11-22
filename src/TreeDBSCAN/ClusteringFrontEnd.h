@@ -2,7 +2,6 @@
 #define __CLUSTERING_FRONTEND_H__
 
 #include <vector>
-#include <libDistributedClustering.hpp>
 #include <FrontProtocol.h>
 #include "ClusteringCore.h"
 

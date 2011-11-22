@@ -31,7 +31,7 @@ libfilterTreeDBSCAN_la_SOURCES  = \
   ClusteringTags.h \
   Utils.h
 libfilterTreeDBSCAN_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags` @CGAL_CPPFLAGS@
-libfilterTreeDBSCAN_la_LDFLAGS  = $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@ 
+libfilterTreeDBSCAN_la_LDFLAGS  = $(CLUSTERING_LIBS) @CGAL_LDFLAGS@ 
 
 PROTOCOL_COMMON_SRCS = \
   ClusteringCore.cpp \
@@ -48,7 +48,7 @@ libfrontendTreeDBSCAN_la_SOURCES  = \
   ClusteringFrontEnd.cpp \
   ClusteringFrontEnd.h
 libfrontendTreeDBSCAN_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --fe-cflags` @CGAL_CPPFLAGS@
-libfrontendTreeDBSCAN_la_LDFLAGS  = $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@
+libfrontendTreeDBSCAN_la_LDFLAGS  = $(CLUSTERING_LIBS) @CGAL_LDFLAGS@
 
 libbackendTreeDBSCANOffline_la_SOURCES  = \
   $(PROTOCOL_COMMON_SRCS) \
@@ -57,7 +57,7 @@ libbackendTreeDBSCANOffline_la_SOURCES  = \
   ClusteringBackEndOffline.cpp \
   ClusteringBackEndOffline.h
 libbackendTreeDBSCANOffline_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
-libbackendTreeDBSCANOffline_la_LDFLAGS  = $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@
+libbackendTreeDBSCANOffline_la_LDFLAGS  = $(CLUSTERING_LIBS) @CGAL_LDFLAGS@
 
 libbackendTreeDBSCANOnline_la_SOURCES   = \
   $(PROTOCOL_COMMON_SRCS) \
@@ -66,7 +66,7 @@ libbackendTreeDBSCANOnline_la_SOURCES   = \
   ClusteringBackEndOnline.cpp \
   ClusteringBackEndOnline.h
 libbackendTreeDBSCANOnline_la_CXXFLAGS  = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
-libbackendTreeDBSCANOnline_la_LDFLAGS   = $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@
+libbackendTreeDBSCANOnline_la_LDFLAGS   = $(CLUSTERING_LIBS) @CGAL_LDFLAGS@
 
 #########################################################
 #                       Headers                         #
@@ -84,12 +84,10 @@ Tree_DBSCAN_FE_bin_SOURCES  = \
   Tree_DBSCAN_FE.cpp \
   Tree_DBSCAN_FE.h
 Tree_DBSCAN_FE_bin_CXXFLAGS = `@MRNETAPP_CONFIG@ --fe-cflags` @CGAL_CPPFLAGS@
-Tree_DBSCAN_FE_bin_LDFLAGS  = `@MRNETAPP_CONFIG@ --fe-libs` $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@
-Tree_DBSCAN_FE_bin_LDADD    = libfrontendTreeDBSCAN.la
+Tree_DBSCAN_FE_bin_LDFLAGS  = `@MRNETAPP_CONFIG@ --fe-libs` -static libfrontendTreeDBSCAN.la
 
 Tree_DBSCAN_BE_bin_SOURCES  = \
   Tree_DBSCAN_BE.cpp
 Tree_DBSCAN_BE_bin_CXXFLAGS = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
-Tree_DBSCAN_BE_bin_LDFLAGS  = `@MRNETAPP_CONFIG@ --be-libs` $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@
-Tree_DBSCAN_BE_bin_LDADD    = libbackendTreeDBSCANOffline.la
+Tree_DBSCAN_BE_bin_LDFLAGS  = `@MRNETAPP_CONFIG@ --be-libs` -static libbackendTreeDBSCANOffline.la
 
