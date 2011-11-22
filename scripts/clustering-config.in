@@ -38,11 +38,11 @@ while test $# -gt 0; do
 		;;
 
 	--cflags)
-		echo "@sub_CGAL_CPPFLAGS@"
+		echo "-I@sub_PREFIX@/include @sub_CGAL_CPPFLAGS@"
 		;;
 
 	--libs)
-		echo "@sub_CGAL_LDFLAGS@"
+		echo "-L@sub_PREFIX@/lib @sub_CGAL_LDFLAGS@"
 		;;
 
 	*)

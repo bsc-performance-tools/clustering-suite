@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "Tree_DBSCAN_FE.h"
-#include "ClusteringOffline_FE.h"
+#include "ClusteringFrontEnd.h"
 
 /* Configuration variables */
 double Epsilon   = 0.015;
@@ -14,6 +14,14 @@ bool   Verbose          = true;
 bool   ReconstructTrace = false;
 string TREE_DBSCAN_HOME;
 
+
+/** 
+ * The front-end application parses the configuration parameters, 
+ * loads the TreeDBSCAN protocol and starts the analysis right away.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments.
+ * @return 0 on success; -1 otherwise.
+ */
 int main(int argc, char *argv[])
 {
    /* Parse input argumens */
@@ -22,14 +30,14 @@ int main(int argc, char *argv[])
    /* Create an MRNet front-end */
    FrontEnd *FE = new FrontEnd();
    const char **BE_argv = (const char **)(&(argv[1]));
-   if (FE->Init(string(TREE_DBSCAN_HOME+"/bin/Tree_DBSCAN_BE").c_str(), BE_argv) == -1)
+   if (FE->Init(string(TREE_DBSCAN_HOME+"/bin/Tree_DBSCAN_BE").c_str(), BE_argv) == -1) 
    {
       cerr << "MRNet front-end could not be initialized due to previous errors." << endl;
       exit(EXIT_FAILURE);
    }
 
    /* Load the clustering protocol */
-   FrontProtocol *protClustering = new Clustering(Epsilon, MinPoints, ClusteringDefinitionXML, InputTraceName, OutputFileName, Verbose, ReconstructTrace);
+   FrontProtocol *protClustering = new ClusteringFrontEnd(Epsilon, MinPoints, ClusteringDefinitionXML, InputTraceName, OutputFileName, Verbose, ReconstructTrace);
    FE->LoadProtocol( protClustering );
 
    /* Tell the back-ends to run the clustering protocol */
@@ -41,9 +49,15 @@ int main(int argc, char *argv[])
    return 0;
 }
 
+
+/**
+ * Parse the input parameters.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments.
+ */
 void ReadArgs(int argc, char *argv[])
 {
-   char *env_TREE_DBSCAN_HOME     = NULL;
+   char *env_TREE_DBSCAN_HOME     = NULL; 
    bool  ClusteringDefinitionRead = false;
    bool  InputTraceNameRead       = false;
    bool  OutputFileNameRead       = false;
@@ -181,6 +195,9 @@ void ReadArgs(int argc, char *argv[])
 }
 
 
+/**
+ * Print a help message.
+ */
 void PrintUsage(char* ApplicationName)
 {
    cout << "Usage: " << ApplicationName;

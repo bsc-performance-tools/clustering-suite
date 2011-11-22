@@ -1,8 +1,8 @@
 #ifndef __NOISE_MANAGER_H__
 #define __NOISE_MANAGER_H__
 
-#include "MRNet_wrappers.h"
 #include "libDistributedClustering.hpp"
+#include "MRNet_wrappers.h"
 
 #define PROCESS_NOISE
 
@@ -10,21 +10,24 @@ using MRN::Stream;
 using MRN::Packet;
 using MRN::PacketPtr;
 
+/** 
+ * This class manages the serialization and clustering of the noise data through the MRNet.
+ */ 
 class NoiseManager
 {
    public:
-      /* Front-end & Filter interface */
 #if defined(FRONTEND) || defined(FILTER)
+      /* Front-end/Filter interface */
       NoiseManager();
       NoiseManager(double Epsilon, int MinPoints);
 
       bool ClusterNoise(vector<const Point*>& Points, vector<ConvexHullModel>& NoiseModel);
       void Serialize(int StreamID, std::vector< PacketPtr >& OutputPackets);
       int  Unpack(PACKET_PTR in_packet, vector<const Point *> &NoisePoints);
-#endif /* FRONTEND || FILTER */
+#endif /* FRONTEND or FILTER */
 
-      /* Back-end interface */
 #if defined(BACKEND)
+      /* Back-end interface */
       NoiseManager(libDistributedClustering *libClustering);
 
       void Serialize(Stream *OutputStream);

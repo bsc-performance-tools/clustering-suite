@@ -3,10 +3,11 @@
 #include <mrnet/Packet.h>
 #include <mrnet/NetworkTopology.h>
 #include <ConvexHullModel.hpp>
-#include "Clustering_Filter.h"
+#include "ClusteringFilter.h"
 #include "NoiseManager.h"
-#include "tags.h"
-#include "utils.h"
+#include "HullManager.h"
+#include "ClusteringTags.h"
+#include "Utils.h"
 
 using namespace MRN;
 using namespace std;
@@ -116,24 +117,15 @@ void filterClustering( std::vector< PacketPtr >& packets_in,
          break;
       }
 #endif
-      case TAG_HULLS:
+      case TAG_HULL:
       {
          /* Receive hull from one child */
-         long long Density;
-         int NumPoints, NumDimensions, DimValuesSize;
-         long long *Instances, *NeighbourhoodSizes;
-         double * DimValues;
+         ConvexHullModel *Hull = NULL;
+         HullManager HM = HullManager();
 
-         packets_in[0]->unpack("%ld %d %d %ald %ald %alf", &Density, &NumPoints, &NumDimensions, &Instances, &NumPoints, &NeighbourhoodSizes, &NumPoints, &DimValues, &DimValuesSize);
-
-
-         /* Reconstruct the hull and store it in ClustersHulls vector */
-         ConvexHullModel Hull(Density, NumPoints, NumDimensions, Instances, NeighbourhoodSizes, DimValues);
-         ClustersHulls.push_back( Hull );
-
-         xfree ( Instances );
-         xfree ( NeighbourhoodSizes );
-         xfree ( DimValues);
+         Hull = HM.Unpack(packets_in[0]);
+         ClustersHulls.push_back( *Hull );
+         delete Hull;
          break;
       }
       case TAG_ALL_HULLS_SENT:
@@ -149,39 +141,8 @@ void filterClustering( std::vector< PacketPtr >& packets_in,
             MergeAlltoAll ( ClustersHulls, MergedModel, Epsilon, MinPoints );
 
             /* Send the joint hulls */
-            for (size_t i = 0; i < MergedModel.size(); i++)
-            {
-               ConvexHullModel &Hull  = MergedModel[i];
-               long long totalDensity = 0;
-               int       totalPoints  = 0, dimsCount = 0;
-               long long *Instances, *NeighbourhoodSizes;
-               double    *dimsValues   = NULL;
-
-               /* if (Hull->GetDensity() >= WeightedMinPoints) // Now using fixed MinPoints at all levels */
-               {
-                  Hull.Serialize (totalDensity, totalPoints, dimsCount, Instances, NeighbourhoodSizes, dimsValues);
-
-                  /* DEBUG -- Dump this hull
-                  cerr << "*** HULL " << i << " *** << endl;
-                  Hull->Print(); */
-
-                  PacketPtr new_packet( new Packet( packets_in[0]->get_StreamId(), TAG_HULLS, "%ld %d %d %ald %ald %alf",
-                                                    totalDensity,
-                                                    totalPoints,
-                                                    dimsCount,
-                                                    Instances, totalPoints,
-                                                    NeighbourhoodSizes, totalPoints,
-                                                    dimsValues, totalPoints*dimsCount) );
-
-                  new_packet->set_DestroyData(true);
-
-                  packets_out.push_back( new_packet );
-               }
-            }
-
-            /* Notify all hulls were sent */
-            PacketPtr new_packet( new Packet( packets_in[0]->get_StreamId(), TAG_ALL_HULLS_SENT, "") );
-            packets_out.push_back( new_packet );
+            HullManager HM = HullManager();
+            HM.Serialize(packets_in[0]->get_StreamId(), packets_out, MergedModel);
 
             /* Reset the filter next time it triggers */
             NeedsReset = true;
@@ -207,66 +168,42 @@ void filterClustering( std::vector< PacketPtr >& packets_in,
  * @param MinPoints This parameter is not really used at the moment, but it used to limit the
  *                  minimum density of the merged hull.
  */
-void MergeAlltoAll(vector<ConvexHullModel> &ClustersHulls,
-                   vector<ConvexHullModel> &MergedModel,
-                   double Epsilon, int MinPoints)
+void MergeAlltoAll(vector<ConvexHullModel> &ClustersHulls, 
+                   vector<ConvexHullModel> &MergedModel, 
+                   double Epsilon, 
+                   int MinPoints)
 {
    vector<ConvexHullModel>::iterator it;
    int idx = 0, idx2 = 0;
    vector<bool> TakeThis (ClustersHulls.size(), true);
 
-   /* DEBUG -- Show the total number of hulls (from children + noise) we're going to merge
-   cerr << "[DEBUG] MergeAlltoAll: ClustersHulls.size()=" << ClustersHulls.size() << endl;
-
-   for (it = ClustersHulls.begin(); it != ClustersHulls.end(); ++ it)
-   {
-      TakeThis.push_back(true);
-   }
-   */
+   /* DEBUG -- Show the total number of hulls (from children + noise) we're going to merge 
+   cerr << "[DEBUG] MergeAlltoAll: ClustersHulls.size()=" << ClustersHulls.size() << endl; */
 
    for (idx = 0; idx < ClustersHulls.size(); ++ idx)
    {
-
-
       if (!TakeThis[idx]) continue;
 
       for (idx2 = idx+1; idx2 < ClustersHulls.size(); ++ idx2)
       {
          ConvexHullModel *newHull;
 
-         /* DEBUG
-         cerr << "Checking Hull #" << idx << " vs. #" << idx2 << endl; */
+         if (!TakeThis[idx2]) continue;
 
-
-         if (!TakeThis[idx2])
+         if ((newHull = ClustersHulls[idx].Merge(&ClustersHulls[idx2], Epsilon, MinPoints)) != NULL)
          {
-           /* DEBUG
-           cerr << "#" << idx2 << " already USED!" << endl; */
-           continue;
-         }
-
-         if ((newHull = ClustersHulls[idx].Merge(&ClustersHulls[idx2],
-                                                  Epsilon,
-                                                  MinPoints)) != NULL)
-         {
-            /* Hulls idx and idx2 intersect */
-
+            /* Hulls idx and idx2 intersect 
+            cerr << "[DEBUG FILTER] MergeAlltoAll: Hulls " << idx << " and " << idx2 << " intersect" << endl; */
             TakeThis[idx]  = false;
             TakeThis[idx2] = false;
-
             ClustersHulls.push_back(*newHull);
             TakeThis.push_back(true);
-
-            /* DEBUG
-            cerr << "[DEBUG FILTER] MergeAlltoAll: Hulls " << idx << " and " << idx2 << " intersect. New Hull #" << TakeThis.size() << " inserted" << endl; */
-
             delete newHull;
             break;
          }
          else
          {
-            /* These don't intersect */
-            /* DEBUG
+            /* These don't intersect 
             cerr << "[DEBUG FILTER] MergeAlltoAll: Hulls " << idx << " and " << idx2 << " DO NOT intersect" << endl; */
          }
       }
@@ -276,7 +213,7 @@ void MergeAlltoAll(vector<ConvexHullModel> &ClustersHulls,
    {
       if (TakeThis[idx])
       {
-        MergedModel.push_back( ClustersHulls[idx] );
+         MergedModel.push_back( ClustersHulls[idx] );
       }
    }
    ClustersHulls.clear(); /* It is also cleared in Init, but just to make

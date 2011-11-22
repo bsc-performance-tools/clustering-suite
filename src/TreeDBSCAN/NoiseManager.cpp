@@ -2,8 +2,8 @@
 #include <vector>
 #include <stdlib.h>
 #include "NoiseManager.h"
-#include "tags.h"
-#include "utils.h"
+#include "ClusteringTags.h"
+#include "Utils.h"
 
 using std::vector;
 using std::cerr;

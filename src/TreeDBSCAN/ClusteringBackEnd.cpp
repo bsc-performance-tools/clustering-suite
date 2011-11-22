@@ -1,49 +1,40 @@
 #include <Timer.hpp>
 #include "FileNameManipulator.hpp"
-#include "ClusteringOffline_BE.h"
+#include "ClusteringBackEnd.h"
 #include "NoiseManager.h"
-#include "tags.h"
-#include "utils.h"
+#include "HullManager.h"
+#include "ClusteringTags.h"
+#include "Utils.h"
 
 using namespace cepba_tools;
 
-Clustering::Clustering()
+
+/**
+ * TreeDBSCAN back-end protocol constructor.
+ */
+ClusteringBackEnd::ClusteringBackEnd()
 {
    libClustering = NULL;
 }
 
-void Clustering::Setup()
+
+/**
+ * Register the streams used in this protocol.
+ */
+void ClusteringBackEnd::Setup()
 {
    Register_Stream(stClustering);
 }
 
-void Clustering::Read_Configuration(void)
-{
-   char *XML, *Input, *Output;
-   int tag, Verb, Reconstruct;
-   PACKET_new(p);
 
-   /* Receive clustering configuration from the front-end */
-   STREAM_recv(stClustering, &tag, p, TAG_CLUSTERING_CONFIG);
-   PACKET_unpack(p, "%lf %d %s %s %s %d %d", &Epsilon, &MinPoints, &XML, &Input, &Output, &Verb, &Reconstruct);
-   PACKET_delete(p);
-
-   ClusteringDefinitionXML = string(XML);
-   InputTraceName          = string(Input);
-   OutputFileName          = string(Output);
-   Verbose                 = (Verb == 1);
-   ReconstructTrace        = (Reconstruct == 1);
-   xfree(XML); xfree(Input); xfree(Output);
-
-   /* Prepare all outputs file names */
-   CheckOutputFile();
-}
-
-int Clustering::Run()
+/**
+ * Implements the back-end side of the TreeDBSCAN clustering algorithm.
+ * @return 0 on success; -1 otherwise.
+ */
+int ClusteringBackEnd::Run()
 {
    int tag;
    PACKET_new(p);
-   vector<ConvexHullModel> LocalModel;
    vector<ConvexHullModel>::iterator it;
    Timer t;
 
@@ -52,19 +43,19 @@ int Clustering::Run()
    libClustering = new libDistributedClustering(Verbose);
 
    /* Receive clustering configuration from the front-end */
-   Read_Configuration();
-
-   /* Initialize the clustering library */
-   if (!libClustering->InitClustering(ClusteringDefinitionXML, Epsilon, MinPoints, (WhoAmI() == 0), WhoAmI(), NumBackEnds())) // true == Root Task
+   Recv_Configuration();
+   /* Prepare all outputs file names */
+   CheckOutputFile();
+   
+   if (!InitLibrary())
    {
-      cerr << "[BE " << WhoAmI() << "] Error setting up clustering library: " << libClustering->GetErrorMessage() << endl;
+      cerr << "[BE " << WhoAmI() << "] Error initializing clustering. Exiting..." << endl;
       exit (EXIT_FAILURE);
    }
 
-   /* Read points from a Paraver trace */
-   if (!libClustering->ExtractData(InputTraceName))
+   if (!ExtractData())
    {
-      cerr << "[BE " << WhoAmI() << "] Error extracting data: " << libClustering->GetErrorMessage() << endl;
+      cerr << "[BE " << WhoAmI() << "] Error extracting clustering data. Exiting..." << endl;
       exit (EXIT_FAILURE);
    }
    cout << "[BE " << WhoAmI() << "] Bursts to analyze: " << libClustering->GetNumberOfPoints() << endl;
@@ -72,72 +63,39 @@ int Clustering::Run()
    /* Start the clustering analysis */
    t.begin();
 
-   if (!libClustering->ClusterAnalysis(LocalModel))
+   if (!AnalyzeData())
    {
-      cerr << "[BE " << WhoAmI() << "] Error clustering data: " << libClustering->GetErrorMessage() << endl;
+      cerr << "[BE " << WhoAmI() << "] Error analyzing data. Exiting..." << endl;
       exit (EXIT_FAILURE);
    }
 
 #if defined(PROCESS_NOISE)
-   /* DEBUG -- count remaining noise points
+   /* DEBUG -- count remaining noise points 
    vector<const Point *> NoisePoints;
    libClustering->GetNoisePoints(NoisePoints);
    if (Verbose) cerr << "[BE " << WhoAmI() << "] Number of noise points = " << NoisePoints.size() << endl; */
-
+  
    NoiseManager Noise = NoiseManager(libClustering);
    Noise.Serialize(stClustering);
 #endif
 
    /* Send the local hulls */
    if (Verbose) cout << "[BE " << WhoAmI() << "] Sending " << LocalModel.size() << " local hulls" << endl;
-
-   for (it=LocalModel.begin(); it!=LocalModel.end(); ++it)
-   {
-      ConvexHullModel Hull = *it;
-
-      long long  Density;
-      int        NumPoints, NumDimensions;
-      long long *Instances, *NeighbourhoodSizes;
-      double    *DimValues;
-
-      Hull.Serialize (Density, NumPoints, NumDimensions, Instances, NeighbourhoodSizes, DimValues);
-
-      STREAM_send(stClustering, TAG_HULLS, "%ld %d %d %ald %ald %alf", Density, NumPoints, NumDimensions, Instances, NumPoints, NeighbourhoodSizes, NumPoints, DimValues, NumPoints*NumDimensions);
-
-      xfree(DimValues);
-   }
-
-   /* Notify all hulls were sent */
-   STREAM_send(stClustering, TAG_ALL_HULLS_SENT, "");
-   if (Verbose) cout << "[BE " << WhoAmI() << "] All " << LocalModel.size() << " hulls sent." << endl;
+   HullManager HM = HullManager();
+   HM.Serialize(stClustering, LocalModel);
 
    /* Receive the resulting global hulls */
    do
    {
-      STREAM_recv(stClustering, &tag, p, TAG_HULLS);
-      if (tag == TAG_HULLS)
+      STREAM_recv(stClustering, &tag, p, TAG_HULL);
+      if (tag == TAG_HULL)
       {
-         long long Density;
-         int NumPoints, NumDimensions, DimValuesSize;
-         long long *Instances, *NeighbourhoodSizes;
-         double * DimValues;
+         ConvexHullModel *Hull = NULL;
+         HullManager HM = HullManager();
 
-         p->unpack("%ld %d %d %ald %ald %alf", &Density, &NumPoints, &NumDimensions, &Instances, &NumPoints, &NeighbourhoodSizes, &NumPoints, &DimValues, &DimValuesSize);
-         ConvexHullModel Hull(Density, NumPoints, NumDimensions, Instances, NeighbourhoodSizes, DimValues);
-         GlobalModel.push_back( Hull );
-
-         xfree(Instances);
-         xfree(NeighbourhoodSizes);
-         xfree(DimValues);
-
-
-         /* DEBUG -- dump current hull
-         if (WhoAmI() == 0)
-         {
-            std::cout << "********** [BE " << WhoAmI() << "] PRINT HULL " << GlobalModel.size() << "\n";
-            hull.Print();
-            std::cout << "********** [BE " << WhoAmI() << "] END PRINT HULL " << GlobalModel.size() << "\n";
-         } */
+         Hull = HM.Unpack(p);
+         GlobalModel.push_back( *Hull );
+         delete Hull;
       }
    } while (tag != TAG_ALL_HULLS_SENT);
 
@@ -149,7 +107,7 @@ int Clustering::Run()
    ostringstream ModelTitle;
 
    cout << "[BE " << WhoAmI() << "] Printing local model" << endl;
-
+   
    ModelTitle << "Local Hull Models BE " << WhoAmI() << " MinPoints = " << MinPoints << " Eps = " << Epsilon << "\\n";
    ModelTitle << "Trace \'" << InputTraceName << "\'";
 
@@ -210,7 +168,7 @@ int Clustering::Run()
           exit (EXIT_FAILURE);
         }
       }
-
+      
       if (!libClustering->FlushClustersInformation(ClustersInformationFileName))
       {
          cerr << "Error writing clusters information file: " << libClustering->GetErrorMessage() << endl;
@@ -230,7 +188,11 @@ int Clustering::Run()
    return 0;
 }
 
-void Clustering::CheckOutputFile()
+
+/**
+ * Prepares the outputs files names.
+ */
+void ClusteringBackEnd::CheckOutputFile()
 {
    string OutputFileExtension;
    OutputFileExtension = FileNameManipulator::GetExtension(OutputFileName);

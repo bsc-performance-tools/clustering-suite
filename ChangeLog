@@ -10,6 +10,17 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-11-22 German Llort <german.llort@bsc.es>
+	* TreeDBSCAN MRNet protocol separated into 3 independent libraries
+	for external use (lib*TreeDBSCAN)
+
+	* Serialization and transmission of convex hulls over the MRNet
+	centralized in HullManager.cpp
+
+	* Added on-line back-end that extracts data from a tracing library
+
+	* Modified 'clustering-config' script
+
 2011-11-21 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Changed the name of 'sourceme.sh' to 'Tree_DBSCAN_env.sh'
 

@@ -1,54 +1,95 @@
+
 SUBDIRS = scripts
 
-bin_PROGRAMS = Tree_DBSCAN_FE.bin Tree_DBSCAN_BE.bin
-
 INCLUDES = \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/../common-files \
-	-I$(top_srcdir)/src/BasicClasses \
-	-I$(top_srcdir)/src/libClustering \
-	-I$(top_srcdir)/src/libDistributedClustering \
-	-I$(top_srcdir)/src/libSharedComponents
+    -I$(top_srcdir)/include \
+    -I$(top_srcdir)/../common-files \
+    -I$(top_srcdir)/src/BasicClasses \
+    -I$(top_srcdir)/src/libClustering \
+    -I$(top_srcdir)/src/libDistributedClustering \
+    -I$(top_srcdir)/src/libSharedComponents
 
 CLUSTERING_LIBS = \
   $(top_srcdir)/src/BasicClasses/libBasicClasses.la \
-  $(top_srcdir)/src/libDistributedClustering/libDistributedClustering.la 
+  $(top_srcdir)/src/libDistributedClustering/libDistributedClustering.la
+
+#########################################################
+#             Clustering MRNetApp protocol              # 
+#########################################################
+
+lib_LTLIBRARIES = \
+  libfilterTreeDBSCAN.la \
+  libfrontendTreeDBSCAN.la \
+  libbackendTreeDBSCANOffline.la \
+  libbackendTreeDBSCANOnline.la
+
+libfilterTreeDBSCAN_la_SOURCES  = \
+  ClusteringFilter.cpp \
+  ClusteringFilter.h \
+  NoiseManager.cpp \
+  NoiseManager.h \
+  ClusteringTags.h \
+  Utils.h
+libfilterTreeDBSCAN_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags` @CGAL_CPPFLAGS@
+libfilterTreeDBSCAN_la_LDFLAGS  = $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@ 
+
+PROTOCOL_COMMON_SRCS = \
+  ClusteringCore.cpp \
+  ClusteringCore.h \
+  NoiseManager.cpp \
+  NoiseManager.h \
+  HullManager.cpp \
+  HullManager.h \
+  ClusteringTags.h \
+  Utils.h
+
+libfrontendTreeDBSCAN_la_SOURCES  = \
+  $(PROTOCOL_COMMON_SRCS) \
+  ClusteringFrontEnd.cpp \
+  ClusteringFrontEnd.h
+libfrontendTreeDBSCAN_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --fe-cflags` @CGAL_CPPFLAGS@
+libfrontendTreeDBSCAN_la_LDFLAGS  = $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@
+
+libbackendTreeDBSCANOffline_la_SOURCES  = \
+  $(PROTOCOL_COMMON_SRCS) \
+  ClusteringBackEnd.cpp \
+  ClusteringBackEnd.h \
+  ClusteringBackEndOffline.cpp \
+  ClusteringBackEndOffline.h
+libbackendTreeDBSCANOffline_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
+libbackendTreeDBSCANOffline_la_LDFLAGS  = $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@
+
+libbackendTreeDBSCANOnline_la_SOURCES   = \
+  $(PROTOCOL_COMMON_SRCS) \
+  ClusteringBackEnd.cpp \
+  ClusteringBackEnd.h \
+  ClusteringBackEndOnline.cpp \
+  ClusteringBackEndOnline.h
+libbackendTreeDBSCANOnline_la_CXXFLAGS  = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
+libbackendTreeDBSCANOnline_la_LDFLAGS   = $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@
+
+#########################################################
+#                       Headers                         #
+#########################################################
+
+include_HEADERS = ClusteringCore.h ClusteringFrontEnd.h ClusteringBackEnd.h ClusteringBackEndOnline.h ClusteringBackEndOffline.h ClusteringTags.h
+
+#########################################################
+#         Interactive front-end and back-ends           #
+#########################################################
+
+bin_PROGRAMS = Tree_DBSCAN_FE.bin Tree_DBSCAN_BE.bin
 
 Tree_DBSCAN_FE_bin_SOURCES  = \
   Tree_DBSCAN_FE.cpp \
-  Tree_DBSCAN_FE.h \
-  NoiseManager.cpp \
-  NoiseManager.h \
-  ClusteringOffline_FE.cpp \
-  ClusteringOffline_FE.h \
-  tags.h \
-  utils.h
-
+  Tree_DBSCAN_FE.h
 Tree_DBSCAN_FE_bin_CXXFLAGS = `@MRNETAPP_CONFIG@ --fe-cflags` @CGAL_CPPFLAGS@
-Tree_DBSCAN_FE_bin_LDFLAGS  = `@MRNETAPP_CONFIG@ --fe-libs` -static $(CLUSTERING_LIBS)
-# Tree_DBSCAN_FE_bin_LDADD    = 
+Tree_DBSCAN_FE_bin_LDFLAGS  = `@MRNETAPP_CONFIG@ --fe-libs` $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@
+Tree_DBSCAN_FE_bin_LDADD    = libfrontendTreeDBSCAN.la
 
 Tree_DBSCAN_BE_bin_SOURCES  = \
-  Tree_DBSCAN_BE.cpp \
-  NoiseManager.cpp NoiseManager.h \
-  ClusteringOffline_BE.cpp \
-  ClusteringOffline_BE.h \
-  tags.h \
-  utils.h
-
+  Tree_DBSCAN_BE.cpp
 Tree_DBSCAN_BE_bin_CXXFLAGS = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
-Tree_DBSCAN_BE_bin_LDFLAGS  = `@MRNETAPP_CONFIG@ --be-libs` -static $(CLUSTERING_LIBS)
-#Tree_DBSCAN_BE_bin_LDADD    = 
+Tree_DBSCAN_BE_bin_LDFLAGS  = `@MRNETAPP_CONFIG@ --be-libs` $(CLUSTERING_LIBS) @CLUSTERING_RPATH@ @CGAL_LDFLAGS@
+Tree_DBSCAN_BE_bin_LDADD    = libbackendTreeDBSCANOffline.la
 
-lib_LTLIBRARIES = libfilterClustering.la
-libfilterClustering_la_SOURCES  = \
-  Clustering_Filter.cpp \
-  Clustering_Filter.h \
-  NoiseManager.cpp \
-  NoiseManager.h \
-  tags.h \
-  utils.h
-
-libfilterClustering_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags` @CGAL_CPPFLAGS@
-libfilterClustering_la_LDFLAGS  = @CGAL_LDFLAGS@ $(CLUSTERING_LIBS) @CLUSTERING_RPATH@
-#libfilterClustering_la_LIBADD   = @CGAL_LDFLAGS@ -static 
