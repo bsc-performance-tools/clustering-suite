@@ -11,6 +11,11 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 2011-11-22 German Llort <german.llort@bsc.es>
+	* Modified script 'Tree_DBSCAN_env.sh' to set the proper environment
+
+	* Fixed bug in gmp_mpfr.m4 (mpfr_libsdir path was wrong) and configure.ac.template to set the proper libsdir paths
+
+2011-11-22 German Llort <german.llort@bsc.es>
 	* Makefiles in TreeDBSCAN changed to generated static binaries
 
 	* Tree_DBSCAN_env.sh now sets the ClusteringSuite libraries directory in the LD_LIBRARY_PATH

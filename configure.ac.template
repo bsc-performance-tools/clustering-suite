@@ -165,7 +165,7 @@ AC_ARG_WITH(
 )
 AM_CONDITIONAL(HAVE_MUSTER, test "x$muster_enabled" = "xyes")
 
-CLUSTERING_DYNAMIC_PATH=":"
+CLUSTERING_DYNAMIC_PATH="${prefix}/lib"
 
 if test "x$muster_enabled" = "xyes"; then
   CLUSTERING_DYNAMIC_PATH="${CLUSTERING_DYNAMIC_PATH}:${MUSTER_LIBDIR}"

@@ -30,7 +30,7 @@ for mpfr_iterate in $mpfr_paths; do
   if test "$mpfr_enabled" = "yes"; then
     mpfr_dir=$mpfr_iterate
 
-    mpfr_libdir="$gmp_dir/lib"
+    mpfr_libdir="$mpfr_dir/lib"
     AC_SUBST(mpfr_libdir)
 
     gmplibs="-L$mpfr_dir/lib $gmplibs"
