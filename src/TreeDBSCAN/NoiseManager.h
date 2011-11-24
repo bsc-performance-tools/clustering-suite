@@ -10,9 +10,9 @@ using MRN::Stream;
 using MRN::Packet;
 using MRN::PacketPtr;
 
-/** 
+/**
  * This class manages the serialization and clustering of the noise data through the MRNet.
- */ 
+ */
 class NoiseManager
 {
    public:
@@ -21,9 +21,12 @@ class NoiseManager
       NoiseManager();
       NoiseManager(double Epsilon, int MinPoints);
 
-      bool ClusterNoise(vector<const Point*>& Points, vector<ConvexHullModel>& NoiseModel);
+      bool ClusterNoise(vector<const Point*>& Points, vector<HullModel*>& NoiseModel);
+
       void Serialize(int StreamID, std::vector< PacketPtr >& OutputPackets);
+
       int  Unpack(PACKET_PTR in_packet, vector<const Point *> &NoisePoints);
+
 #endif /* FRONTEND or FILTER */
 
 #if defined(BACKEND)

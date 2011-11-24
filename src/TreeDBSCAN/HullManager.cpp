@@ -10,7 +10,7 @@ HullManager::HullManager(void) { }
 /**
  * Front-end, filter and back-end call to receive a hull from a MRNet packet.
  */
-ConvexHullModel * HullManager::Unpack(PACKET_PTR InputPacket)
+HullModel* HullManager::Unpack(PACKET_PTR InputPacket)
 {
   long long  Density=0;
   int        NumberOfPoints=0, NumberOfDimensions=0, DimensionsValuesSize=0;
@@ -25,9 +25,14 @@ ConvexHullModel * HullManager::Unpack(PACKET_PTR InputPacket)
     &NeighbourhoodSizes, &NumberOfPoints,
     &DimensionsValues, &DimensionsValuesSize);
 
-  ConvexHullModel *Hull = new ConvexHullModel(Density, NumberOfPoints, NumberOfDimensions, Instances, NeighbourhoodSizes, DimensionsValues);
+  HullModel *Hull = new HullModel(Density,
+                                  NumberOfPoints,
+                                  NumberOfDimensions,
+                                  Instances,
+                                  NeighbourhoodSizes,
+                                  DimensionsValues);
 
-  /* DEBUG -- dump current hull 
+  /* DEBUG -- dump current hull
   std::cout << "[DUMP HULL] << std::endl;
   Hull->Print();
   */
@@ -48,16 +53,24 @@ ConvexHullModel * HullManager::Unpack(PACKET_PTR InputPacket)
  * @param OutputStream The MRNet stream.
  * @param HullsList A vector of hulls to send.
  */
-void HullManager::Serialize(STREAM *OutputStream, vector<ConvexHullModel> &HullsList)
+void HullManager::Serialize(STREAM *OutputStream, vector<HullModel*> &HullsList)
 {
-  vector<ConvexHullModel>::iterator it;
+  // vector<HullModel*>::iterator it;
 
+  for (size_t i = 0; i < HullsList.size(); i++)
+  {
+    SerializeOne(OutputStream, HullsList[i]);
+  }
+
+  /*
   for (it = HullsList.begin(); it != HullsList.end(); ++it)
   {
-    ConvexHullModel &Hull = *it;
+    HullModel *Hull = *it;
 
     SerializeOne(OutputStream, Hull);
   }
+  */
+
   SerializeDone(OutputStream);
 }
 
@@ -66,7 +79,7 @@ void HullManager::Serialize(STREAM *OutputStream, vector<ConvexHullModel> &Hulls
  * @param OutputStream The MRNet stream.
  * @param Hull The hull to send.
  */
-void HullManager::SerializeOne(STREAM *OutputStream, ConvexHullModel &Hull)
+void HullManager::SerializeOne(STREAM *OutputStream, HullModel *Hull)
 {
   long long  Density=0;
   int        NumberOfPoints=0, NumberOfDimensions=0;
@@ -74,15 +87,23 @@ void HullManager::SerializeOne(STREAM *OutputStream, ConvexHullModel &Hull)
   double    *DimensionsValues=NULL;
 
   /* Serialize the hull object into basic data types that can be sent through the MRNet */
-  Hull.Serialize(Density, NumberOfPoints, NumberOfDimensions, Instances, NeighbourhoodSizes, DimensionsValues);
+  Hull->Serialize(Density,
+                  NumberOfPoints,
+                  NumberOfDimensions,
+                  Instances,
+                  NeighbourhoodSizes,
+                  DimensionsValues);
 
-  STREAM_send(OutputStream, TAG_HULL, HullFormatString, 
+  STREAM_send(OutputStream, TAG_HULL, HullFormatString,
     Density,
     NumberOfPoints,
     NumberOfDimensions,
-    Instances, NumberOfPoints,
-    NeighbourhoodSizes, NumberOfPoints,
-    DimensionsValues, NumberOfPoints * NumberOfDimensions);
+    Instances,
+    NumberOfPoints,
+    NeighbourhoodSizes,
+    NumberOfPoints,
+    DimensionsValues,
+    NumberOfPoints * NumberOfDimensions);
 
   xfree(Instances);
   xfree(NeighbourhoodSizes);
@@ -108,13 +129,13 @@ void HullManager::SerializeDone(STREAM *OutputStream)
  * @param OutputPackets Queue of output packets that has to be filled (by reference).
  * @param HullsList A vector of hulls to send.
  */
-void HullManager::Serialize(int StreamID, vector<PacketPtr> &OutputPackets, vector<ConvexHullModel> &HullsList)
+void HullManager::Serialize(int StreamID, vector<PacketPtr> &OutputPackets, vector<HullModel*> &HullsList)
 {
-  vector<ConvexHullModel>::iterator it;
+  vector<HullModel*>::iterator it;
 
   for (it = HullsList.begin(); it != HullsList.end(); ++it)
   {
-    ConvexHullModel &Hull = *it;
+    HullModel *Hull = *it;
 
     SerializeOne(StreamID, OutputPackets, Hull);
   }
@@ -127,7 +148,7 @@ void HullManager::Serialize(int StreamID, vector<PacketPtr> &OutputPackets, vect
  * @param OutputPackets Queue of output packets that has to be filled (by reference).
  * @param Hull The hull to send.
  */
-void HullManager::SerializeOne(int StreamID, vector<PacketPtr> &OutputPackets, ConvexHullModel &Hull)
+void HullManager::SerializeOne(int StreamID, vector<PacketPtr> &OutputPackets, HullModel *Hull)
 {
   long long  Density=0;
   int        NumberOfPoints=0, NumberOfDimensions=0;
@@ -135,15 +156,24 @@ void HullManager::SerializeOne(int StreamID, vector<PacketPtr> &OutputPackets, C
   double    *DimensionsValues=NULL;
 
   /* Serialize the hull object into basic data types that can be sent through the MRNet */
-  Hull.Serialize(Density, NumberOfPoints, NumberOfDimensions, Instances, NeighbourhoodSizes, DimensionsValues);
+  Hull->Serialize(Density,
+                  NumberOfPoints,
+                  NumberOfDimensions,
+                  Instances,
+                  NeighbourhoodSizes,
+                  DimensionsValues);
 
   PacketPtr new_packet( new Packet( StreamID, TAG_HULL, HullFormatString,
                                     Density,
                                     NumberOfPoints,
                                     NumberOfDimensions,
-                                    Instances, NumberOfPoints,
-                                    NeighbourhoodSizes, NumberOfPoints,
-                                    DimensionsValues, NumberOfPoints * NumberOfDimensions ) );
+                                    Instances,
+                                    NumberOfPoints,
+                                    NeighbourhoodSizes,
+                                    NumberOfPoints,
+                                    DimensionsValues,
+                                    NumberOfPoints * NumberOfDimensions ) );
+
   new_packet->set_DestroyData(true);
   OutputPackets.push_back( new_packet );
 }

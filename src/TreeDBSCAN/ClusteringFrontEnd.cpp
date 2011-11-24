@@ -10,12 +10,12 @@
  * Constructor sets the clustering configuration parameters.
  */
 ClusteringFrontEnd::ClusteringFrontEnd(
-   double Eps, 
-   int    MinPts, 
-   string ClusteringDefinitionXML, 
-   string InputTraceName, 
-   string OutputFileName, 
-   bool   Verbose, 
+   double Eps,
+   int    MinPts,
+   string ClusteringDefinitionXML,
+   string InputTraceName,
+   string OutputFileName,
+   bool   Verbose,
    bool   ReconstructTrace)
 {
    this->Epsilon                 = Eps;
@@ -33,7 +33,7 @@ ClusteringFrontEnd::ClusteringFrontEnd(
  */
 void ClusteringFrontEnd::Setup()
 {
-   stClustering = Register_Stream("Clustering", SFILTER_DONTWAIT);
+   stClustering = Register_Stream("TreeDBSCAN", SFILTER_DONTWAIT);
    stClustering->set_FilterParameters(FILTER_UPSTREAM_TRANS, "%lf %d", Epsilon, MinPoints);
 }
 
@@ -67,13 +67,14 @@ int ClusteringFrontEnd::Run()
    {
       /* Receive the resulting global hulls */
       stClustering->recv(&tag, p);
+
       if (tag == TAG_HULL)
       {
-         ConvexHullModel *GlobalHull = NULL;
-         HullManager HM = HullManager();
+         HullModel *GlobalHull = NULL;
+         HullManager HM        = HullManager();
 
          GlobalHull = HM.Unpack(p);
-         GlobalModel.push_back( *GlobalHull );
+         GlobalModel.push_back( GlobalHull );
 
          /* Broadcast back the global hull */
          stClustering->send(p);
@@ -81,10 +82,8 @@ int ClusteringFrontEnd::Run()
 
          /* DEBUG
          std::cout << "********** [FE] BROADCASTING HULL " << countGlobalHulls << std::endl;
-         GlobalHull->Print();
-         std::cout << "********** [FE] END BROADCASTING HULL " << countGlobalHulls << std::endl;
-         */
-         delete GlobalHull;
+         GlobalHull->Flush();
+         std::cout << "********** [FE] END BROADCASTING HULL " << countGlobalHulls << std::endl; */
       }
 #if defined(PROCESS_NOISE)
       /* Count the remaining noise points */
@@ -97,11 +96,10 @@ int ClusteringFrontEnd::Run()
       }
 #endif
    } while (tag != TAG_ALL_HULLS_SENT);
+
    stClustering->send(TAG_ALL_HULLS_SENT, "");
    cout << "[FE] Broadcasted " << countGlobalHulls << " global hulls!" << endl;
 
    return countGlobalHulls;
-
-   return 0;
 }
 

@@ -44,4 +44,6 @@ libDistributedClustering_la_SOURCES = \
 	libDistributedClustering.hpp \
 	libDistributedClustering.cpp \
 	libDistributedClusteringImplementation.hpp \
-	libDistributedClusteringImplementation.cpp 
+	libDistributedClusteringImplementation.cpp \
+	HullModel.hpp \
+	HullModel.cpp

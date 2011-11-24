@@ -163,7 +163,7 @@ int libDistributedClustering::GetMinPoints(void)
  * \return True if the data extraction was performed correctly, false otherwise
  */
 bool libDistributedClustering::ExtractData(string    InputFileName,
-                                           set<int>& TasksToRead)
+                                           set<int> &TasksToRead)
 {
   if (!Implementation->ExtractData(InputFileName, TasksToRead))
   {
@@ -215,7 +215,7 @@ size_t libDistributedClustering::GetNumberOfPoints(void)
  *
  * \return True if the data extraction was performed correctly, false otherwise
  */
-bool libDistributedClustering::ClusterAnalysis(vector<ConvexHullModel>& ClusterModels)
+bool libDistributedClustering::ClusterAnalysis(vector<HullModel*> &ClusterModels)
 {
   if (!Implementation->ClusterAnalysis(ClusterModels))
   {
@@ -235,7 +235,7 @@ bool libDistributedClustering::ClusterAnalysis(vector<ConvexHullModel>& ClusterM
  * \return True if the data classification was performed correctly, false
  *         otherwise
  */
-bool libDistributedClustering::ClassifyData(vector<ConvexHullModel>& ClusterModels)
+bool libDistributedClustering::ClassifyData(vector<HullModel*> &ClusterModels)
 {
   if (!Implementation->ClassifyData(ClusterModels))
   {
@@ -338,8 +338,8 @@ bool libDistributedClustering::InitClustering(double Epsilon,
  * \return True if the cluster analysis was performed correctly, false
  *         otherwise
  */
-bool libDistributedClustering::ClusterAnalysis(const vector<const Point*>& Points,
-                                               vector<ConvexHullModel>&    ClusterModels)
+bool libDistributedClustering::ClusterAnalysis(const vector<const Point*> &Points,
+                                               vector<HullModel*>         &ClusterModels)
 {
   if (!Implementation->ClusterAnalysis(Points,
                                        ClusterModels))
@@ -397,10 +397,10 @@ bool libDistributedClustering::GetNoisePoints(vector<const Point*>& NoisePoints)
  *
  * \return True, if the information was succesfully retrieved, false otherwise
  */
-bool libDistributedClustering::GetFullBurstsInformation(vector<Point*>&       Points,
-                                                        vector<task_id_t>&    TaskIDs,
-                                                        vector<thread_id_t>&  ThreadIDs,
-                                                        vector<cluster_id_t>& ClusterIDs)
+bool libDistributedClustering::GetFullBurstsInformation(vector<Point*>       &Points,
+                                                        vector<task_id_t>    &TaskIDs,
+                                                        vector<thread_id_t>  &ThreadIDs,
+                                                        vector<cluster_id_t> &ClusterIDs)
 {
   if (!Implementation->GetFullBurstsInformation(Points, TaskIDs, ThreadIDs, ClusterIDs))
   {
@@ -463,10 +463,10 @@ bool libDistributedClustering::PrintPlotScripts(string DataFileName,
  * \return True if the plot scripts and data files were written correctly,
  *         false otherwise
  */
-bool libDistributedClustering::PrintModels(vector<ConvexHullModel>& ClusterModels,
-                                           string                   ModelsFileName,
-                                           string                   ScriptsFileNamePrefix,
-                                           string                   Title)
+bool libDistributedClustering::PrintModels(vector<HullModel*> &ClusterModels,
+                                           string              ModelsFileName,
+                                           string              ScriptsFileNamePrefix,
+                                           string              Title)
 {
 
   if (!Implementation->PrintModels(ClusterModels,

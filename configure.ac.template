@@ -230,7 +230,6 @@ fi
 if test "${cgal_enabled}" = "yes"; then
 AC_CONFIG_FILES([
 src/libDistributedClustering/Makefile
-src/MRNetStub/Makefile
 ])
 
 if test "${MRNETAPP_INSTALLED}" = "yes"; then

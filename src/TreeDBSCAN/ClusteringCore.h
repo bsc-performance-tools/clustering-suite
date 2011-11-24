@@ -6,7 +6,7 @@
 
 /**
  * This is the base class both for the front-end and the back-ends.
- * It stores common configuration attributes and data structures 
+ * It stores common configuration attributes and data structures
  * that have to be present in both sides of the MRNet.
  */
 class ClusteringCore
@@ -15,8 +15,8 @@ class ClusteringCore
       ClusteringCore();
 
    protected:
-      STREAM *stClustering;
-      std::vector<ConvexHullModel> GlobalModel;
+      STREAM                 *stClustering;
+      std::vector<HullModel*> GlobalModel;
 
       double Epsilon;
       int    MinPoints;

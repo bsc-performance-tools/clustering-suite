@@ -1,5 +1,9 @@
 #include "ClusteringBackEndOffline.h"
 
+#include <iostream>
+using std::cout;
+using std::cerr;
+using std::endl;
 
 /**
  * Initializes the clustering library for interactive use.
@@ -8,7 +12,7 @@
 bool ClusteringBackEndOffline::InitLibrary(void)
 {
    /* Initialize the clustering library */
-   if (!libClustering->InitClustering(ClusteringDefinitionXML, Epsilon, MinPoints, (Protocol::WhoAmI() == 0), Protocol::WhoAmI(), Protocol::NumBackEnds())) // true == Root Task 
+   if (!libClustering->InitClustering(ClusteringDefinitionXML, Epsilon, MinPoints, (Protocol::WhoAmI() == 0), Protocol::WhoAmI(), Protocol::NumBackEnds())) // true == Root Task
    {
       cerr << "[BE " << Protocol::WhoAmI() << "] Error setting up clustering library: " << libClustering->GetErrorMessage() << endl;
       return false;

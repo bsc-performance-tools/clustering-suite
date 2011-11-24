@@ -21,10 +21,10 @@ class ClusteringBackEnd : public ClusteringCore, public BackProtocol
       virtual bool InitLibrary(void) = 0;
       virtual bool ExtractData(void) = 0;
       virtual bool AnalyzeData(void) = 0;
- 
+
    protected:
       libDistributedClustering *libClustering;
-      vector<ConvexHullModel> LocalModel;
+      vector<HullModel*> LocalModel;
 
    private:
       /* Names of the output scripts and plots */

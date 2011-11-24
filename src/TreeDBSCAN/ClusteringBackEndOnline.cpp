@@ -1,7 +1,11 @@
 #include "ClusteringBackEndOnline.h"
 
+#include <iostream>
+using std::cout;
+using std::cerr;
+using std::endl;
 
-/** 
+/**
  * Constructor sets-up a callback to extract the clustering data from.
  */
 ClusteringBackEndOnline::ClusteringBackEndOnline(CallbackType DataExtractCallback)
@@ -45,7 +49,7 @@ bool ClusteringBackEndOnline::ExtractData(void)
 /**
  * Analyzes the data from a tracing faciliy.
  * @return true on success; false otherwise.
- */ 
+ */
 bool ClusteringBackEndOnline::AnalyzeData(void)
 {
    cout << "[DEBUG] [BE " << WhoAmI() << "] ExternalPoints.size()=" << ExternalPoints.size() << endl;

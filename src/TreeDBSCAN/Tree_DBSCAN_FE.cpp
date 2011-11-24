@@ -4,6 +4,15 @@
 #include "Tree_DBSCAN_FE.h"
 #include "ClusteringFrontEnd.h"
 
+#include <iostream>
+using std::cout;
+using std::cerr;
+using std::endl;
+
+#include <cstring>
+
+#include <fstream>
+
 /* Configuration variables */
 double Epsilon   = 0.015;
 int    MinPoints = 10;
@@ -15,8 +24,8 @@ bool   ReconstructTrace = false;
 string TREE_DBSCAN_HOME;
 
 
-/** 
- * The front-end application parses the configuration parameters, 
+/**
+ * The front-end application parses the configuration parameters,
  * loads the TreeDBSCAN protocol and starts the analysis right away.
  * @param argc Number of arguments.
  * @param argv Array of arguments.
@@ -30,7 +39,8 @@ int main(int argc, char *argv[])
    /* Create an MRNet front-end */
    FrontEnd *FE = new FrontEnd();
    const char **BE_argv = (const char **)(&(argv[1]));
-   if (FE->Init(string(TREE_DBSCAN_HOME+"/bin/Tree_DBSCAN_BE").c_str(), BE_argv) == -1) 
+
+   if (FE->Init(string(TREE_DBSCAN_HOME+"/bin/Tree_DBSCAN_BE").c_str(), BE_argv) == -1)
    {
       cerr << "MRNet front-end could not be initialized due to previous errors." << endl;
       exit(EXIT_FAILURE);
@@ -57,7 +67,7 @@ int main(int argc, char *argv[])
  */
 void ReadArgs(int argc, char *argv[])
 {
-   char *env_TREE_DBSCAN_HOME     = NULL; 
+   char *env_TREE_DBSCAN_HOME     = NULL;
    bool  ClusteringDefinitionRead = false;
    bool  InputTraceNameRead       = false;
    bool  OutputFileNameRead       = false;

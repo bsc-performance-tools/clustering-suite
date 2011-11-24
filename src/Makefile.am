@@ -23,8 +23,7 @@ endif
 if HAVE_CGAL
 
 SUBDIRS += \
-	libDistributedClustering \
-	MRNetStub
+	libDistributedClustering
 
 if HAVE_MRNETAPP
 SUBDIRS += \

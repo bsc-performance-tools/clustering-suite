@@ -44,6 +44,13 @@ using std::ostringstream;
 
 int ConvexHullModel::MIN_HULL_POINTS = 3;
 
+ConvexHullModel::ConvexHullModel(void)
+{
+  Dimensions = 0;
+  Density    = 0;
+  HullPoints.clear();
+}
+
 ConvexHullModel::ConvexHullModel( vector<const Point*> cluster_points )
 {
   vector<MyPoint_2> InternalPoints;
@@ -115,8 +122,8 @@ ConvexHullModel::ConvexHullModel(long long  Density,
                                  int        NumPoints,
                                  int        NumDimensions,
                                  long long *Instances,
-                                 long long *&NeighbourhoodSizes,
-                                 double     *DimValues)
+                                 long long *NeighbourhoodSizes,
+                                 double    *DimValues)
 {
   Assemble(Density,
            NumPoints,

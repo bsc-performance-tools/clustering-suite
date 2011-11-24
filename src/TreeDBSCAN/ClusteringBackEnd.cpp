@@ -8,6 +8,14 @@
 
 using namespace cepba_tools;
 
+#include <iostream>
+using std::cout;
+using std::cerr;
+using std::endl;
+
+#include <sstream>
+using std::ostringstream;
+
 
 /**
  * TreeDBSCAN back-end protocol constructor.
@@ -35,7 +43,7 @@ int ClusteringBackEnd::Run()
 {
    int tag;
    PACKET_new(p);
-   vector<ConvexHullModel>::iterator it;
+   vector<HullModel*>::iterator it;
    Timer t;
 
    /* Delete any previous clustering */
@@ -46,7 +54,7 @@ int ClusteringBackEnd::Run()
    Recv_Configuration();
    /* Prepare all outputs file names */
    CheckOutputFile();
-   
+
    if (!InitLibrary())
    {
       cerr << "[BE " << WhoAmI() << "] Error initializing clustering. Exiting..." << endl;
@@ -70,17 +78,18 @@ int ClusteringBackEnd::Run()
    }
 
 #if defined(PROCESS_NOISE)
-   /* DEBUG -- count remaining noise points 
+   /* DEBUG -- count remaining noise points
    vector<const Point *> NoisePoints;
    libClustering->GetNoisePoints(NoisePoints);
    if (Verbose) cerr << "[BE " << WhoAmI() << "] Number of noise points = " << NoisePoints.size() << endl; */
-  
+
    NoiseManager Noise = NoiseManager(libClustering);
    Noise.Serialize(stClustering);
 #endif
 
    /* Send the local hulls */
    if (Verbose) cout << "[BE " << WhoAmI() << "] Sending " << LocalModel.size() << " local hulls" << endl;
+
    HullManager HM = HullManager();
    HM.Serialize(stClustering, LocalModel);
 
@@ -90,12 +99,11 @@ int ClusteringBackEnd::Run()
       STREAM_recv(stClustering, &tag, p, TAG_HULL);
       if (tag == TAG_HULL)
       {
-         ConvexHullModel *Hull = NULL;
-         HullManager HM = HullManager();
+         HullModel *Hull = NULL;
+         HullManager HM  = HullManager();
+         Hull            = HM.Unpack(p);
 
-         Hull = HM.Unpack(p);
-         GlobalModel.push_back( *Hull );
-         delete Hull;
+         GlobalModel.push_back(Hull);
       }
    } while (tag != TAG_ALL_HULLS_SENT);
 
@@ -107,7 +115,7 @@ int ClusteringBackEnd::Run()
    ostringstream ModelTitle;
 
    cout << "[BE " << WhoAmI() << "] Printing local model" << endl;
-   
+
    ModelTitle << "Local Hull Models BE " << WhoAmI() << " MinPoints = " << MinPoints << " Eps = " << Epsilon << "\\n";
    ModelTitle << "Trace \'" << InputTraceName << "\'";
 
@@ -168,11 +176,11 @@ int ClusteringBackEnd::Run()
           exit (EXIT_FAILURE);
         }
       }
-      
+
       if (!libClustering->FlushClustersInformation(ClustersInformationFileName))
       {
-         cerr << "Error writing clusters information file: " << libClustering->GetErrorMessage() << endl;
-	 exit (EXIT_FAILURE);
+        cerr << "Error writing clusters information file: " << libClustering->GetErrorMessage() << endl;
+        exit (EXIT_FAILURE);
       }
    }
 

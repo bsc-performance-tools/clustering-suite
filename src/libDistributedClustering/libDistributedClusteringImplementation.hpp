@@ -44,8 +44,6 @@ using cepba_tools::Error;
 
 #include <trace_clustering_types.h>
 
-#include "ConvexHullModel.hpp"
-
 class libDistributedClusteringImplementation;
 
 class libDistributedClusteringImplementation: public Error
@@ -109,9 +107,9 @@ class libDistributedClusteringImplementation: public Error
 
     size_t GetNumberOfPoints(void);
 
-    bool ClusterAnalysis(vector<ConvexHullModel>& ClusterModels);
+    bool ClusterAnalysis(vector<HullModel*> &ClustersModels);
 
-    bool ClassifyData(vector<ConvexHullModel>& ClusterModels);
+    bool ClassifyData(vector<HullModel*>    &ClustersModels);
 
     bool GenerateStatistics(bool UseClassificationPartition);
 
@@ -125,8 +123,8 @@ class libDistributedClusteringImplementation: public Error
     bool InitClustering(double Epsilon,
                         int    MinPoints);
 
-    bool ClusterAnalysis(const vector<const Point*>& Points,
-                         vector<ConvexHullModel>&    ClusterModels);
+    bool ClusterAnalysis(const vector<const Point*> &Points,
+                         vector<HullModel*>         &ClusterModels);
 
     bool GetNoisePoints(vector<const Point*>& NoisePoints);
 
@@ -146,10 +144,10 @@ class libDistributedClusteringImplementation: public Error
                           string ScriptsFileNamePrefix = "",
                           bool   LocalPartition = false);
 
-    bool PrintModels(vector<ConvexHullModel>& ClusterModels,
-                     string                   ModelsFileName,
-                     string                   ScriptsFileNamePrefix = "",
-                     string                   Title                 = "");
+    bool PrintModels(vector<HullModel*>& ClusterModels,
+                     string              ModelsFileName,
+                     string              ScriptsFileNamePrefix = "",
+                     string              Title                 = "");
 
     /* Error/Warning retrieveng methods */
 
@@ -166,7 +164,7 @@ private:
                             INT32                    MyRank,
                             INT32                    TotalRanks);
 
-  bool GenerateClusterModels(vector<ConvexHullModel>& Models);
+  bool GenerateClusterModels(vector<HullModel*> &Models);
 
   vector<const Point*>& GetDataPoints(void);
 

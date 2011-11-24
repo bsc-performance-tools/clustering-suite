@@ -45,6 +45,7 @@
 #include "ClusteredTRFGenerator.hpp"
 #include "PlottingManager.hpp"
 
+#include "ConvexHullModel.hpp"
 #include "ConvexHullClassifier.hpp"
 #include "DBSCAN.hpp"
 
@@ -432,7 +433,7 @@ size_t libDistributedClusteringImplementation::GetNumberOfPoints(void)
  *
  * \return True if the data extraction was performed correctly, false otherwise
  */
-bool libDistributedClusteringImplementation::ClusterAnalysis(vector<ConvexHullModel>& ClusterModels)
+bool libDistributedClusteringImplementation::ClusterAnalysis(vector<HullModel*>& ClusterModels)
 {
   ClusteringConfiguration* ConfigurationManager;
   ClusteringStatistics     Statistics;
@@ -488,12 +489,20 @@ bool libDistributedClusteringImplementation::ClusterAnalysis(vector<ConvexHullMo
  * \return True if the data classification was performed correctly, false
  *         otherwise
  */
-bool libDistributedClusteringImplementation::ClassifyData(vector<ConvexHullModel>& ClusterModels)
+bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& ClusterModels)
 {
   ostringstream Messages;
 
   vector<const Point*>& CompletePoints = (vector<const Point*>&) Data->GetCompleteBursts();
-  ConvexHullClassifier ClassifierCore(ClusterModels, Epsilon, MinPoints);
+  vector<ConvexHullModel> InternalHulls;
+
+  for (size_t i = 0; i < ClusterModels.size(); i++)
+  {
+    ConvexHullModel* CurrentConvexHull = ClusterModels[i]->Model();
+    InternalHulls.push_back(*CurrentConvexHull);
+  }
+
+  ConvexHullClassifier ClassifierCore(InternalHulls, Epsilon, MinPoints);
 
   /* DEBUG
   Messages << "Hulls used to classify points = " << ClusterModels.size() << endl;
@@ -738,8 +747,8 @@ bool libDistributedClusteringImplementation::InitClustering(double Epsilon,
  * \return True if the cluster analysis was performed correctly, false
  *         otherwise
  */
-bool libDistributedClusteringImplementation::ClusterAnalysis(const vector<const Point*>& Points,
-                                                             vector<ConvexHullModel>&    ClusterModels)
+bool libDistributedClusteringImplementation::ClusterAnalysis(const vector<const Point*> &Points,
+                                                             vector<HullModel*>         &ClusterModels)
 {
   /* 'ClusteringCore' has been initialized in 'InitTraceClustering' method */
   ExternalData = Points;
@@ -929,10 +938,10 @@ bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileNam
  * \return True if the plot scripts and data files were written correctly,
  *         false otherwise
  */
-bool libDistributedClusteringImplementation::PrintModels(vector<ConvexHullModel>& ClusterModels,
-                                                         string                   ModelsFileName,
-                                                         string                   ScriptsFileNamePrefix,
-                                                         string                   Title)
+bool libDistributedClusteringImplementation::PrintModels(vector<HullModel*> &ClustersModels,
+                                                         string              ModelsFileName,
+                                                         string              ScriptsFileNamePrefix,
+                                                         string              Title)
 {
   PlottingManager *Plots;
   string Prefix;
@@ -960,14 +969,15 @@ bool libDistributedClusteringImplementation::PrintModels(vector<ConvexHullModel>
     return false;
   }
 
-  for (size_t i = 0; i < ClusterModels.size(); i++)
+  for (size_t i = 0; i < ClustersModels.size(); i++)
   {
+    ConvexHullModel* Hull = ClustersModels[i]->Model();
     /* DEBUG
     Messages << "**** Printing Hull " << i << " to file " << ModelsFileName << endl;
     system_messages::information(Messages.str().c_str());
     Messages.str("");
     */
-    ClusterModels[i].Flush(OutputStream, MIN_CLUSTERID+i+PARAVER_OFFSET); // +1 because there is no noise!
+    Hull->Flush(OutputStream, MIN_CLUSTERID+i+PARAVER_OFFSET); // +1 because there is no noise!
     DifferentIDs.insert(i+1);
   }
   OutputStream.close();
@@ -1084,7 +1094,7 @@ bool libDistributedClusteringImplementation::CommonInitialization(
  *
  * \return True if the models were correctly generated, false otherwise
  */
-bool libDistributedClusteringImplementation::GenerateClusterModels(vector<ConvexHullModel>& Models)
+bool libDistributedClusteringImplementation::GenerateClusterModels(vector<HullModel*>& Models)
 {
   vector<cluster_id_t>& AssignmentVector = LastPartition.GetAssignmentVector();
 
@@ -1123,7 +1133,7 @@ bool libDistributedClusteringImplementation::GenerateClusterModels(vector<Convex
     NewHull.Print();
     Models.push_back(NewHull);*/
 
-    Models.push_back(ConvexHullModel(PointsPerCluster[i]));
+    Models.push_back(new HullModel(new ConvexHullModel(PointsPerCluster[i])));
   }
 
   return true;

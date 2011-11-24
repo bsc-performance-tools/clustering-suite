@@ -8,6 +8,7 @@
 using std::vector;
 using std::cerr;
 using std::cout;
+using std::endl;
 
 
 #if defined(FRONTEND) || defined(FILTER)
@@ -17,7 +18,7 @@ using std::cout;
 
 
 /**
- * Front-end constructor. This instance of the manager is only meant 
+ * Front-end constructor. This instance of the manager is only meant
  * to receive the remaining noise points through the Unpack() call.
  */
 NoiseManager::NoiseManager()
@@ -27,17 +28,17 @@ NoiseManager::NoiseManager()
 
 
 /**
- * Filter constructor. Initializes a new instance of libDistributedClustering 
+ * Filter constructor. Initializes a new instance of libDistributedClustering
  * to cluster noise points in the tree.
- * @param Epsilon 
+ * @param Epsilon
  * @param MinPoints
  */
-NoiseManager::NoiseManager(double Epsilon, int MinPoints) 
+NoiseManager::NoiseManager(double Epsilon, int MinPoints)
 {
    libClustering = new libDistributedClustering(false); /* true = Verbose */
 
    if (!libClustering->InitClustering(Epsilon, MinPoints))
-   {	
+   {
       cerr << "ERROR: NoiseManager::NoiseManager: Error initializing clustering: " << libClustering->GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
    }
@@ -75,7 +76,7 @@ void NoiseManager::Serialize(int StreamID, std::vector< PacketPtr >& OutputPacke
  * @param NoiseModel The resulting models for the clustered points.
  * @return true on success; false otherwise.
  */
-bool NoiseManager::ClusterNoise(vector<const Point*>& Points, vector<ConvexHullModel>& NoiseModel)
+bool NoiseManager::ClusterNoise(vector<const Point*>& Points, vector<HullModel*>& NoiseModel)
 {
    return libClustering->ClusterAnalysis(Points, NoiseModel);
 }
@@ -128,7 +129,7 @@ int NoiseManager::Unpack(PACKET_PTR in_packet, vector<const Point *> &NoisePoint
  * Back-end constructor.
  * @param libClustering An instance of libDistributedClustering that performed a clustering analysis.
  */
-NoiseManager::NoiseManager(libDistributedClustering *libClustering) 
+NoiseManager::NoiseManager(libDistributedClustering *libClustering)
 {
    this->libClustering = libClustering;
    if (libClustering == NULL)
@@ -168,7 +169,7 @@ void NoiseManager::Serialize(Stream *OutputStream)
  * Retrieves the remaining noise points out of the libClustering instance and stores the information into
  * an array that can be sent through the MRNet.
  * @param DimensionsCount Number of clustering dimensions.
- * @param SerialPoints Array of points dimensions, in sequence. 
+ * @param SerialPoints Array of points dimensions, in sequence.
  * @param SerialPointsCount Size of the points dimensions array.
  * @return the above 3 parameters by reference.
  */
@@ -182,35 +183,35 @@ void NoiseManager::Serialize(int &DimensionsCount, double *&SerialPoints, unsign
 
    /* Retrieve the remaining noise points */
    if (!libClustering->GetNoisePoints(NoisePoints))
-   {  
+   {
       cerr << "ERROR: NoiseManager::Serialize: Error retrieving noise points: " << libClustering->GetErrorMessage() << endl;
       NoisePoints.clear();
    }
-	
-   /* DEBUG -- Fill with fake points 
+
+   /* DEBUG -- Fill with fake points
    vector<double> dim1, dim2;
-   dim1.push_back(0.12);   
+   dim1.push_back(0.12);
    dim1.push_back(3.45);
    dim2.push_back(6.78);
    dim2.push_back(9.10);
-   const Point* pt1 = new Point( dim1 ); 
+   const Point* pt1 = new Point( dim1 );
    const Point* pt2 = new Point( dim2 );
    NoisePoints.push_back( pt1 );
    NoisePoints.push_back( pt2 ); */
-	
+
    unsigned int NoisePointsCount = NoisePoints.size();
    if (NoisePointsCount > 0)
    {
       DimensionsCount   = NoisePoints[0]->size();
       SerialPointsCount = DimensionsCount * NoisePointsCount;
       SerialPoints      = (double *)malloc(SerialPointsCount * sizeof(double));
-	
+
       if (SerialPoints == NULL)
       {
          cerr << "ERROR: NoiseManager::Serialize: Not enough memory to serialize " << NoisePointsCount << " noise points" << endl;
          exit(EXIT_FAILURE);
       }
-	
+
       /* Store the points dimensions in a linear array */
       for (unsigned int i=0; i<NoisePointsCount; i++)
       {

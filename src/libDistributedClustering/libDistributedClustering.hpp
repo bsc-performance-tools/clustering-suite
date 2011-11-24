@@ -36,7 +36,8 @@
 #define _LIB_DISTRIBUTED_CLUSTERING_HPP_
 
 #include <trace_clustering_types.h>
-#include "ConvexHullModel.hpp"
+#include <Point.hpp>
+#include "HullModel.hpp"
 
 #define SILENT   0
 #define VERBOSE  1
@@ -96,9 +97,9 @@ class libDistributedClustering
 
     size_t GetNumberOfPoints(void);
 
-    bool ClusterAnalysis(vector<ConvexHullModel>& ClusterModels);
+    bool ClusterAnalysis(vector<HullModel*>& ClusterModels);
 
-    bool ClassifyData(vector<ConvexHullModel>& ClusterModels);
+    bool ClassifyData(vector<HullModel*>& ClusterModels);
 
     bool FlushClustersInformation(string OutputClustersInfoFileName);
 
@@ -111,26 +112,26 @@ class libDistributedClustering
     bool InitClustering(double Epsilon,
                         int    MinPoints);
 
-    bool ClusterAnalysis(const vector<const Point*>& Points,
-                         vector<ConvexHullModel>&    ClusterModels);
+    bool ClusterAnalysis(const vector<const Point*> &Points,
+                         vector<HullModel*>         &ClusterModels);
 
     bool GetNoisePoints(vector<const Point*>& NoisePoints);
 
     /* A method to retrieve all information to perform the cross-process
      * analysis */
 
-    bool GetFullBurstsInformation(vector<Point*>&       Points,
-                                  vector<task_id_t>&    TaskIDs,
-                                  vector<thread_id_t>&  ThreadIDs,
-                                  vector<cluster_id_t>& ClusterIDs);
+    bool GetFullBurstsInformation(vector<Point*>       &Points,
+                                  vector<task_id_t>    &TaskIDs,
+                                  vector<thread_id_t>  &ThreadIDs,
+                                  vector<cluster_id_t> &ClusterIDs);
 
 
     /* Methods to print the models and the scatter plots of data. To be used
      * in BE nodes */
-    bool PrintModels(vector<ConvexHullModel>& ClusterModels,
-                     string ModelsFileName,
-                     string ScriptsFileNamePrefix = "",
-                     string PlotTitle             = "");
+    bool PrintModels(vector<HullModel*> &ClusterModels,
+                     string              ModelsFileName,
+                     string              ScriptsFileNamePrefix = "",
+                     string              PlotTitle             = "");
 
     bool PrintPlotScripts(string DataFileName,
                           string ScriptsFileNamePrefix = "",

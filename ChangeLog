@@ -10,6 +10,16 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-11-24 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added a facade object 'HullModel' to make transparent the 'ConvexHullModel'
+	object. *Some memory leaks regarding the 'HullModel' container destruction
+	could have been added*
+
+	* Improvement on building system to correctly propagate the library 
+	modifications to the 'TreeDBSCAN' source files
+
+	* Solved a bug when compiling without SeqAn support
+
 2011-11-22 German Llort <german.llort@bsc.es>
 	* Modified script 'Tree_DBSCAN_env.sh' to set the proper environment
 
@@ -18,7 +28,8 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 2011-11-22 German Llort <german.llort@bsc.es>
 	* Makefiles in TreeDBSCAN changed to generated static binaries
 
-	* Tree_DBSCAN_env.sh now sets the ClusteringSuite libraries directory in the LD_LIBRARY_PATH
+	* Tree_DBSCAN_env.sh now sets the ClusteringSuite libraries directory in
+	the LD_LIBRARY_PATH
 
 2011-11-22 German Llort <german.llort@bsc.es>
 	* TreeDBSCAN MRNet protocol separated into 3 independent libraries

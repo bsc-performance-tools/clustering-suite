@@ -67,14 +67,17 @@ class ConvexHullModel
 
     static int MIN_HULL_POINTS;
 
+    ConvexHullModel(void);
+
     ConvexHullModel ( vector< const Point* > );
+
     ConvexHullModel(vector<MyPoint_2> HullPoints, long long Density);
     /* ConvexHullModel ( Polygon_2 P, Polygon_2 Q ); */
     ConvexHullModel(long long  Density,
                     int        NumPoints,
                     int        NumDimensions,
                     long long *Instances,
-                    long long *&NeighbourhoodSizes,
+                    long long *NeighbourhoodSizes,
                     double    *DimValues);
 
     int size(void);

@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -115,7 +115,7 @@ bool libTraceClusteringImplementation::InitTraceClustering(string ClusteringDefi
 
 #if HAVE_MPI
   /* Set the current rank and total ranks using MPI */
-  
+
 #endif
 
   /* Check if parameters have been read properly */
@@ -138,19 +138,19 @@ bool libTraceClusteringImplementation::InitTraceClustering(string ClusteringDefi
   {
     ClusteringRefinementExecution = true;
   }
-  
+
   if (USE_CLUSTERING(UseFlags) || USE_PARAMETER_APPROXIMATION(UseFlags))
-  { 
+  {
     string              ClusteringAlgorithmName;
     map<string, string> ClusteringAlgorithmParameters;
-    
+
     /* Check if clustering defined in the XML is correct */
     if (ConfigurationManager->GetClusteringAlgorithmError())
     {
       SetErrorMessage(ConfigurationManager->GetClusteringAlgorithmErrorMessage());
       return false;
     }
-    
+
     /* Check if clustering library could be correctly initialized */
     ClusteringCore = new libClustering();
 
@@ -182,7 +182,7 @@ bool libTraceClusteringImplementation::InitTraceClustering(string ClusteringDefi
   if (USE_PLOTS(UseFlags))
   { /* Check if GNUplots defined in the XML are correct */
     bool DataExtraction;
-    
+
     if (!USE_CLUSTERING(UseFlags) && !USE_CLUSTERING_REFINEMENT(UseFlags))
     { /* Data Extraction mode */
       DataExtraction = true;
@@ -208,7 +208,7 @@ bool libTraceClusteringImplementation::InitTraceClustering(string ClusteringDefi
   }
 
   this->UseFlags = UseFlags;
-  
+
   return true;
 }
 
@@ -229,7 +229,7 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
 {
   DataExtractorFactory*    ExtractorFactory;
   DataExtractor*           Extractor;
-  
+
   /* Get the container */
   Data = TraceData::GetInstance();
 
@@ -245,7 +245,7 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
   {
     PRVEventsParsing = false;
   }
-  
+
   if (!ExtractorFactory->GetExtractor(InputFileName,
                                       Extractor,
                                       PRVEventsParsing,
@@ -268,14 +268,14 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
       return false;
     }
   }
-  
+
   if (!Extractor->ExtractData(Data))
   {
     SetError(true);
     SetErrorMessage(Extractor->GetLastError());
     return false;
   }
-  
+
   /*
   DataExtractionManager* ExtractionManager;
 
@@ -301,7 +301,7 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
     return false;
   }
   */
-  
+
   return true;
 }
 
@@ -324,7 +324,7 @@ libTraceClusteringImplementation::FlushData(string OutputFileName)
     SetErrorMessage("data not initialized");
     return false;
   }
-  
+
   if (!OutputStream)
   {
     SetError(true);
@@ -349,7 +349,7 @@ libTraceClusteringImplementation::FlushData(string OutputFileName)
   }
 
   OutputStream.close();
-  
+
   return true;
 }
 
@@ -377,7 +377,7 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
   }
 
   ConfigurationManager = ClusteringConfiguration::GetInstance();
-  
+
   if (!ConfigurationManager->IsInitialized())
   { /* Should never happen! */
     SetErrorMessage("configuration not initialized");
@@ -398,7 +398,7 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
   }
 
   ClusteringExecuted = true;
-  
+
   if (USE_MPI(UseFlags))
   {
     if (!GatherMPIPartition())
@@ -407,25 +407,25 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
       return false;
     }
   }
-  
+
   /* Statistics */
   Parameters = ParametersManager::GetInstance();
-  
+
   Statistics.InitStatistics(LastPartition.GetIDs(),
                             Parameters->GetClusteringParametersNames(),
                             Parameters->GetClusteringParametersPrecision(),
                             Parameters->GetExtrapolationParametersNames(),
                             Parameters->GetExtrapolationParametersPrecision());
-  
+
   if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
                                     LastPartition.GetAssignmentVector()))
   {
     SetErrorMessage(Statistics.GetLastError());
     return false;
   }
-  
+
   Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
-  
+
   return true;
 }
 
@@ -442,62 +442,64 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
 bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive,
                                                                  string OutputFileNamePrefix)
 {
+#ifdef HAVE_SEQAN
+
   map<string, string> ClusteringAlgorithmParameters;
   ostringstream       Converter;
   ostringstream       Messages;
-  
+
   vector<double>      Distances;
   vector<double>      Epsilons;
-  
+
   size_t StopPosition;
-  
+
   size_t TraceObjects;
   int    MinPoints;
-  
+
   if (Data == NULL)
   {
     SetErrorMessage("data not initialized");
     return false;
   }
-  
+
   if ((TraceObjects = Data->GetTraceObjects()) == 0)
   {
     SetErrorMessage("number of objects not available. Automatic refinement not available on TRF traces");
     return false;
   }
-  
+
   MinPoints = TraceObjects/4;
-  
+
   if (MinPoints <= 1)
   {
     MinPoints = 2;
   }
-  
+
   Messages.str("");
   Messages << "|-> Selected MinPoints = " << MinPoints << endl;
   system_messages::information(Messages.str());
-  
+
   /* Compute the k-neighbours distance */
-  
+
   Messages.str("");
   Messages << "|-> Computing K-Neighbour Data" << endl;
   system_messages::information(Messages.str());
-  
-  
+
+
   Converter << 0.0;
   ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::EPSILON_STRING, string(Converter.str())));
   Converter.str("");
   Converter << MinPoints;
   ClusteringAlgorithmParameters.insert(std::make_pair(DBSCAN::MIN_POINTS_STRING, string(Converter.str())));
-  
+
   DBSCAN DBSCANCore = DBSCAN(ClusteringAlgorithmParameters);
-  
+
   bool verbose_state = system_messages::verbose;
   system_messages::verbose = false;
   DBSCANCore.ComputeNeighbourhood(Data->GetClusteringPoints(), MinPoints, Distances);
   system_messages::verbose = verbose_state;
-  
-  /* 10 different epsilons 1% to 10% "NOISE" 
+
+  /* 10 different epsilons 1% to 10% "NOISE"
   for (size_t i = 0; i < Distances.size(); i++)
   {
     if (Distances[i] < 0.001)
@@ -507,79 +509,79 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
     }
   }
   */
-  
+
   /*
   cout << "POSITIONS = ";
   for (size_t i = 0; i < 10; i++)
   {
     int Position = (StopPosition*(i+1))/100;
-    /* DEBUG 
+    /* DEBUG
     cout << Position << " ";
     Epsilons.push_back(Distances[Position]);
   }
   cout << endl;
-  
+
   srand(time(NULL));
-  
+
   size_t MinPos = (Distances.size()*1)/100;
   size_t MaxPos = (Distances.size()*10)/100;
-  
+
   /*
   cout << "POSITIONS = ";
   for (size_t i = 0; i < 10; i++)
   {
     int Position = (rand()%(MaxPos-MinPos+1))+MinPos;
-    /* DEBUG 
+    /* DEBUG
     cout << Position << " ";
     Epsilons.push_back(Distances[Position]);
   }
   cout << endl; */
-  
+
   /* New way to find Epsilons */
   size_t Elements   = Distances.size();
   // size_t MinX = (Elements*5)/1000;
   // size_t MaxX = (Elements*995)/1000;
   size_t MinX = 0;
   size_t MaxX = Elements - 1;
-  
+
   double SumEps = 0;
   for (size_t i = 0; i < Distances.size(); i++)
   {
     SumEps += Distances[i];
   }
-  
+
   double AvgEps     = SumEps/Distances.size();
   double MaxEpsilon = Distances[MinX];   // < 0.5%  data discarded
   double MinEpsilon = Distances[MaxX]; // > 99.5% data discarded
 
-  /*  
+  /*
   cout << "MaxEpsilon = " << MaxEpsilon << " ";
   cout << "MinEpsilon = " << MinEpsilon << " ";
   cout << "Avg.Epsilon = " << AvgEps << endl;
   */
-  
+
   double Intercept = MaxEpsilon;
   double Slope     = -1.0*(MaxEpsilon/(MaxX/2));
-  
+
   size_t MaxIndex = 0;
   double MaxDelta = 0;
-  
+
   for (size_t i = MinX; i <= (MaxX/2); i++)
   {
     double Delta = ((Slope * i) + Intercept) - Distances[i];
-    
+
     if (Delta > MaxDelta)
     {
       MaxIndex = i;
       MaxDelta = Delta;
     }
   }
-  
+
   // cout << "Candidate MinEpsilon = " << Distances[MaxIndex] << endl;
-  
+
   MinEpsilon        = Distances[MaxIndex];
   size_t IndexRange = MaxIndex - MinX;
-  
+
   if (IndexRange < 10)
   {
     for (size_t i = 0; i <= IndexRange; i++)
@@ -602,7 +604,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
     }
     // cout << "]" << endl;
   }
-    
+
   if (Divisive)
   {
     sort(Epsilons.rbegin(), Epsilons.rend());
@@ -611,7 +613,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   { /* When using aggregative version, Epsilons should be sorted increasing */
     sort(Epsilons.begin(), Epsilons.end());
   }
-  
+
   Messages.str("");
   Messages << "|-> Epsilon Values = [ ";
 
@@ -619,12 +621,18 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   for (size_t i = 0; i < Epsilons.size(); i++)
   {
     Messages << Epsilons[i] << " ";
-    
+
   }
   Messages << "]" << endl;
   system_messages::information(Messages.str());
-  
+
   return GenericRefinement(Divisive, MinPoints, Epsilons, OutputFileNamePrefix);
+
+#else /* !HAVE_SEQAN */
+  SetErrorMessage("Refinement analysis is not available due to the unavailability of SeqAn library");
+  SetError(true);
+  return false;
+#endif
 }
 
 /**
@@ -651,7 +659,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
 #ifdef HAVE_SEQAN
   vector<double>     EpsilonPerLevel;
   double             StepSize    = (MaxEps - MinEps)/(Steps-1);
-    
+
   if (Data == NULL)
   {
     SetErrorMessage("data not initialized");
@@ -674,28 +682,28 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
       EpsilonPerLevel.push_back(EpsilonPerLevel[i-1] + StepSize);
     }
   }
-  
+
   return GenericRefinement(Divisive, MinPoints, EpsilonPerLevel, OutputFileNamePrefix);
-  
+
 #else
 
   SetErrorMessage("Refinement analysis is not available due to the unavailability of SeqAn library");
   SetError(true);
   return false;
-  
+
 #endif
 
 }
 
 /**
  * Effectively executes the refinement analysis
- * 
+ *
  * \param Divisive             True if the refinement will be top down, false if
  *                             it would be bottom up
  * \param MinPoints Fixed MinPoints value used in all runs of DBSCAN
  * \param EpsilonPerLevel      Vector with all values of epsilon to be used
  * \param OutputFileNamePrefix Prefix of the output files for each step data and plots
- * 
+ *
  * \return True if the analysis finished correctly, false otherwise
  */
 bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive,
@@ -703,9 +711,11 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
                                                          vector<double> EpsilonPerLevel,
                                                          string         OutputFileNamePrefix)
 {
+#ifdef HAVE_SEQAN
+
   ParametersManager *Parameters;
   vector<Partition>  PartitionsHierarchy;
-  
+
   if (Divisive)
   {
     ClusteringRefinementDivisive RefinementAnalyzer(MinPoints,
@@ -737,7 +747,7 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
     }
   }
 
-  /* DEBUG 
+  /* DEBUG
   for (size_t i = 0; i < PartitionsHierarchy.size(); i++)
   {
     cout << "**** Step " << i+1 << " ****" << endl;
@@ -746,7 +756,7 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
     vector<cluster_id_t>& IDs = PartitionsHierarchy[i].GetAssignmentVector();
 
     cout << "IDs = ";
-    
+
     for (size_t j = 0; j < IDs.size(); j++)
     {
       cout << IDs[j] << " ";
@@ -757,20 +767,20 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
 
   /* Statistics */
   Parameters = ParametersManager::GetInstance();
-  
+
   Statistics.InitStatistics(LastPartition.GetIDs(),
                             Parameters->GetClusteringParametersNames(),
                             Parameters->GetClusteringParametersPrecision(),
                             Parameters->GetExtrapolationParametersNames(),
                             Parameters->GetExtrapolationParametersPrecision());
-  
+
   if (!Statistics.ComputeStatistics(Data->GetClusteringBursts(),
                                     LastPartition.GetAssignmentVector()))
   {
     SetErrorMessage(Statistics.GetLastError());
     return false;
   }
-  
+
   // Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
 
   /* Generate score and all intermediate (event) traces */
@@ -781,7 +791,7 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
     {
       return false;
     }
-    
+
     for (size_t i = 0; i < PartitionsHierarchy.size(); i++)
     {
       ClusteredTraceGenerator* TraceGenerator;
@@ -800,14 +810,14 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
                            Parameters->GetClusteringParametersPrecision(),
                            Parameters->GetExtrapolationParametersNames(),
                            Parameters->GetExtrapolationParametersPrecision());
-  
+
       if (!Stats.ComputeStatistics(Data->GetCompleteBursts(),
                                    PartitionsHierarchy[i].GetAssignmentVector()))
       {
         SetErrorMessage(Stats.GetLastError());
         return false;
       }
-      
+
       // Stats.TranslatedIDs(PartitionsHierarchy[i].GetAssignmentVector());
 
 
@@ -845,8 +855,16 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
   }
 
   ClusteringExecuted = true;
-  
+
   return true;
+
+#else
+
+  SetErrorMessage("Refinement analysis is not available due to the unavailability of SeqAn library");
+  SetError(true);
+  return false;
+
+#endif
 }
 
 /**
@@ -877,7 +895,7 @@ bool libTraceClusteringImplementation::FlushClustersInformation(string OutputClu
     SetErrorMessage(Statistics.GetLastError());
     return false;
   }
-  
+
   return true;
 }
 
@@ -897,8 +915,8 @@ bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePre
   SequenceScore                   Scoring;
   vector<SequenceScoreValue>      ScoresPerCluster;
   double                          GlobalScore;
-  
-  
+
+
   if (Data == NULL)
   {
     SetErrorMessage("data not initialized");
@@ -906,7 +924,7 @@ bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePre
   }
 
   PercentageDurations = Statistics.GetPercentageDurations();
-  
+
   if(!Scoring.ComputeScore(Data->GetClusteringBursts(),
                            LastPartition.GetAssignmentVector(),
                            PercentageDurations,
@@ -919,26 +937,26 @@ bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePre
     SetErrorMessage("unable to compute sequences score");
     return false;
   }
-  
+
   return true;
-  
+
 #else
-  
+
   SetError(true);
   SetErrorMessage("SeqAn not available, sequence score could not be computed");
   return false;
-  
+
 #endif
 
 }
 
 /**
  * Reconstruct the input trace using the information of the clustering analysis
- * 
+ *
  * \param OutputTraceName Name of the output trace file
  *
  * \result True if the scripts where printed correctly, false otherwise
- */ 
+ */
 bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceName)
 {
   /* to lowercase a string
@@ -964,7 +982,7 @@ bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceN
         TraceReconstructor->SetEventsToDealWith (EventsToDealWith);
       }
       else
-      { 
+      {
         TraceReconstructor = new ClusteredStatesPRVGenerator(InputFileName, OutputTraceName);
       }
       break;
@@ -990,13 +1008,13 @@ bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceN
     SetErrorMessage(TraceReconstructor->GetLastError());
     return false;
   }
-  
+
   return true;
 }
 
 /**
  * Print the plot scripts for GNUPlot defined in the XML
- * 
+ *
  * \param DataFileName Name of the file containg the data to plot
  * \param ScriptsFileNamePrefix Prefix of the output scripts
  *
@@ -1010,7 +1028,7 @@ bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
   string PlotTitle;
 
   Plots = PlottingManager::GetInstance();
-  
+
   if (ScriptsFileNamePrefix.compare("") == 0)
   {
     FileNameManipulator Manipulator(DataFileName, "csv");
@@ -1033,7 +1051,7 @@ bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
   {
     PlotTitle = "Data of trace \'"+InputFileName+"\'";
   }
-  
+
   if (!Plots->PrintPlots(DataFileName,
                          Prefix,
                          PlotTitle,
@@ -1043,7 +1061,7 @@ bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
     SetErrorMessage(Plots->GetLastError());
     return false;
   }
-  
+
   return true;
 }
 
@@ -1065,7 +1083,7 @@ bool libTraceClusteringImplementation::ParametersApproximation(string           
   }
 
   vector<const Point*>& ClusteringPoints = Data->GetClusteringPoints();
-  
+
   /* 'ClusteringCore' has been initialized in 'InitTraceClustering' method */
   if (!ClusteringCore->ParametersApproximation(ClusteringPoints,
                                                Parameters,
@@ -1074,7 +1092,7 @@ bool libTraceClusteringImplementation::ParametersApproximation(string           
     SetErrorMessage(ClusteringCore->GetErrorMessage());
     return false;
   }
-  
+
   return true;
 }
 
@@ -1122,12 +1140,12 @@ bool libTraceClusteringImplementation::GatherMPIPartition(void)
 bool libTraceClusteringImplementation::GatherMaster(void)
 {
 #ifdef HAVE_MPI
-  /* Define storage structures: a vector with the number of clusters containing 
+  /* Define storage structures: a vector with the number of clusters containing
      a vector of the CPU burst lines */
   vector<vector<long> > LocalLinesPerCluster (LastPartition.NumberOfClusters ());
   vector<CPUBurst*>&    Bursts = Data->GetClusteringBursts();
   vector<cluster_id_t>& IDs    = LastPartition.GetAssignmentVector();
-  
+
   vector<vector<vector<long> > > GlobalLinesPerCluster (LastPartition.NumberOfClusters());
   int TotalTasks;
 
@@ -1138,7 +1156,7 @@ bool libTraceClusteringImplementation::GatherMaster(void)
   {
     LocalLinesPerCluster[IDs[i]].push_back(Bursts[i]->GetLine());
   }
-  
+
   for (size_t Cluster = 0; Cluster < LastPartition.NumberOfClusters(); Cluster++)
   {
     GlobalLinesPerCluster[Cluster].push_back(LocalLinesPerCluster[Cluster]);
@@ -1162,7 +1180,7 @@ bool libTraceClusteringImplementation::GatherMaster(void)
       Messages.str("");
       Messages << "Cluster " << Cluster << " Task " << Task << " CurrentClusterSize = " << CurrentClusterSize << endl;
       system_messages::information(Messages.str().c_str());
-      
+
       MPI_Recv(CurrentClusterLines, CurrentClusterSize, MPI_LONG, Task, CLUSTER_LINES_EXCHG_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
       /* Create the vector of current cluster lines */
@@ -1183,7 +1201,7 @@ bool libTraceClusteringImplementation::GatherMaster(void)
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
-  
+
   return ReconstructMasterPartition(GlobalLinesPerCluster);
 #else
   return false;
@@ -1200,7 +1218,7 @@ bool libTraceClusteringImplementation::GatherSlave(void)
 #ifdef HAVE_MPI
   /* Prepare vector of lines of each cluster */
   vector<vector<line_t> > LocalLinesPerCluster (LastPartition.NumberOfClusters ());
-  
+
   vector<CPUBurst*>&    Bursts = Data->GetCompleteBursts();
   vector<cluster_id_t>& IDs    = LastPartition.GetAssignmentVector();
 
@@ -1232,7 +1250,7 @@ bool libTraceClusteringImplementation::GatherSlave(void)
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
-  
+
   return true;
 #else
   return false;
@@ -1241,7 +1259,7 @@ bool libTraceClusteringImplementation::GatherSlave(void)
 
 /**
  * Reconstruct the LastPartition in the Master task using the structure created
- * in the 
+ * in the
  *
  * \result True if the operation finished correctly, false otherwise
  */
@@ -1263,7 +1281,7 @@ bool libTraceClusteringImplementation::ReconstructMasterPartition(vector<vector<
       Messages << "Cluster " << Cluster << " Task " << Task << " Size = " << GlobalLinesPerCluster[Cluster][Task].size() << endl;
       system_messages::information(Messages.str().c_str());
       */
-      
+
       for (size_t Line = 0; Line < GlobalLinesPerCluster[Cluster][Task].size(); Line++)
       {
         LineToID[(line_t) GlobalLinesPerCluster[Cluster][Task][Line]] = (cluster_id_t) Cluster;
@@ -1274,7 +1292,7 @@ bool libTraceClusteringImplementation::ReconstructMasterPartition(vector<vector<
     }
   }
 
-  /* DEBUG 
+  /* DEBUG
   Messages.str("");
   Messages << "CompleteBursts size = " << CompleteBursts.size() << " ";
   Messages << "LineToID size = " << LineToID.size() << endl;
@@ -1286,7 +1304,7 @@ bool libTraceClusteringImplementation::ReconstructMasterPartition(vector<vector<
     SetErrorMessage("Data gathered from slave tasks doesn't match the number of bursts");
     return false;
   }
-  
+
   for (size_t i = 0; i < CompleteBursts.size(); i++)
   {
     /*
@@ -1294,13 +1312,13 @@ bool libTraceClusteringImplementation::ReconstructMasterPartition(vector<vector<
     Messages << "Burst #" << AllBursts[i]->GetInstance() << " Type = " << AllBursts[i]->GetBurstType() << endl;
     system_messages::information(Messages.str().c_str());
     */
-    
+
     UnifiedIDs.push_back(LineToID[CompleteBursts[i]->GetLine()]);
   }
 
   /* Set the new assignment vector! */
   LastPartition.SetAssignmentVector (UnifiedIDs);
-  
+
   /*
   Messages.str("");
   Messages << "UnifiedIDs size = " << UnifiedIDs.size();
