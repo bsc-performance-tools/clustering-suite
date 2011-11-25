@@ -41,7 +41,8 @@ bool ClusteringBackEndOffline::ExtractData(void)
 
    /* In the offline version there's no need to reduce the dimensions, because all back-ends get them from 
     * the trace they're parsing. We have to send something though, because the front-end is waiting this 
-    * message, as it makes no distinction between online/offline back-ends.
+    * message, as it makes no distinction between online/offline back-ends. I like this way more, just in
+    * case the back-ends parse different data files in the future and may need to use this.
     */
    MRN_STREAM_SEND(stXchangeDims, TAG_XCHANGE_DIMENSIONS, "%alf %alf", NULL, 0, NULL, 0);
    MRN_STREAM_RECV(stXchangeDims, &tag, p, TAG_XCHANGE_DIMENSIONS);

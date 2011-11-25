@@ -187,7 +187,7 @@ dnl AX_CHECK_CGAL: set if hull models and mrnet version can be compiled
 dnl =========================================================================
 AX_CHECK_CGAL()
 if test "x$cgal_enabled" = "xyes"; then
-  CGAL_DYNAMIC_PATH="${gmp_libdir}:${mpfr_libdir}:${cgal_libdir}"
+  CGAL_DYNAMIC_PATH="${gmp_libdir}:${mpfr_libdir}:${cgal_libdir}:${BOOST_LDPATH}"
   CLUSTERING_RPATH="${CLUSTERING_RPATH} ${CGAL_RPATH}"
 fi
 

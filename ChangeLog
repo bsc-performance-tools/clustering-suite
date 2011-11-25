@@ -10,6 +10,11 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-11-25 German Llort <german.llort@bsc.es>
+	* Modified Makefile to include HullManager in TreeDBSCAN filter.
+
+	* Modified configure.ac.template to include BOOST_LDPATH in CGAL_DYNAMIC_PATH.
+
 2011-11-24 German Llort <german.llort@bsc.es>
 	* Added a new filter to exchange the global clustering dimensions in TreeDBSCAN
 
