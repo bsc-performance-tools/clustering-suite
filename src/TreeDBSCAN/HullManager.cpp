@@ -55,21 +55,10 @@ HullModel* HullManager::Unpack(PACKET_PTR InputPacket)
  */
 void HullManager::Serialize(STREAM *OutputStream, vector<HullModel*> &HullsList)
 {
-  // vector<HullModel*>::iterator it;
-
   for (size_t i = 0; i < HullsList.size(); i++)
   {
     SerializeOne(OutputStream, HullsList[i]);
   }
-
-  /*
-  for (it = HullsList.begin(); it != HullsList.end(); ++it)
-  {
-    HullModel *Hull = *it;
-
-    SerializeOne(OutputStream, Hull);
-  }
-  */
 
   SerializeDone(OutputStream);
 }
@@ -98,12 +87,9 @@ void HullManager::SerializeOne(STREAM *OutputStream, HullModel *Hull)
     Density,
     NumberOfPoints,
     NumberOfDimensions,
-    Instances,
-    NumberOfPoints,
-    NeighbourhoodSizes,
-    NumberOfPoints,
-    DimensionsValues,
-    NumberOfPoints * NumberOfDimensions);
+    Instances, NumberOfPoints,
+    NeighbourhoodSizes, NumberOfPoints,
+    DimensionsValues, NumberOfPoints * NumberOfDimensions);
 
   xfree(Instances);
   xfree(NeighbourhoodSizes);
@@ -167,12 +153,9 @@ void HullManager::SerializeOne(int StreamID, vector<PacketPtr> &OutputPackets, H
                                     Density,
                                     NumberOfPoints,
                                     NumberOfDimensions,
-                                    Instances,
-                                    NumberOfPoints,
-                                    NeighbourhoodSizes,
-                                    NumberOfPoints,
-                                    DimensionsValues,
-                                    NumberOfPoints * NumberOfDimensions ) );
+                                    Instances, NumberOfPoints,
+                                    NeighbourhoodSizes, NumberOfPoints,
+                                    DimensionsValues, NumberOfPoints * NumberOfDimensions ) );
 
   new_packet->set_DestroyData(true);
   OutputPackets.push_back( new_packet );

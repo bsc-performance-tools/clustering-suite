@@ -420,7 +420,14 @@ size_t libDistributedClusteringImplementation::GetNumberOfPoints(void)
   }
   else
   {
-    return Data->GetClusteringBurstsSize();
+    if (UsingExternalData)
+    {
+      return ExternalData.size();
+    }
+    else
+    {
+      return Data->GetClusteringBurstsSize();
+    }
   }
 }
 
@@ -493,7 +500,7 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& Cl
 {
   ostringstream Messages;
 
-  vector<const Point*>& CompletePoints = (vector<const Point*>&) Data->GetCompleteBursts();
+  vector<const Point*>& CompletePoints = ( UsingExternalData ? ExternalData : (vector<const Point*>&) Data->GetCompleteBursts() );
   vector<ConvexHullModel> InternalHulls;
 
   for (size_t i = 0; i < ClusterModels.size(); i++)

@@ -16,6 +16,7 @@ class ClusteringCore
 
    protected:
       STREAM                 *stClustering;
+      STREAM                 *stXchangeDims;
       std::vector<HullModel*> GlobalModel;
 
       double Epsilon;

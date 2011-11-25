@@ -32,6 +32,7 @@ ClusteringBackEnd::ClusteringBackEnd()
 void ClusteringBackEnd::Setup()
 {
    Register_Stream(stClustering);
+   Register_Stream(stXchangeDims);
 }
 
 
@@ -66,7 +67,6 @@ int ClusteringBackEnd::Run()
       cerr << "[BE " << WhoAmI() << "] Error extracting clustering data. Exiting..." << endl;
       exit (EXIT_FAILURE);
    }
-   cout << "[BE " << WhoAmI() << "] Bursts to analyze: " << libClustering->GetNumberOfPoints() << endl;
 
    /* Start the clustering analysis */
    t.begin();

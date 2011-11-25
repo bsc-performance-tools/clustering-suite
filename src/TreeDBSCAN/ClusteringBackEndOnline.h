@@ -10,7 +10,9 @@
 class ClusteringBackEndOnline: public ClusteringBackEnd
 {
    public:
-      typedef int (*CallbackType)(vector<const Point*> &ClusteringInput);
+      typedef int (*CallbackType)(vector<Point*> &ClusteringInput,
+                                  vector<double> &MinDimensions,
+                                  vector<double> &MaxDimensions);
 
       ClusteringBackEndOnline(CallbackType DataExtractCallback);
 
@@ -20,7 +22,9 @@ class ClusteringBackEndOnline: public ClusteringBackEnd
 
    private:
       CallbackType DataExtractCallback;
-      vector<const Point*> ExternalPoints;
+      vector<Point*> ExternalPoints;
+
+      void Normalize(double *MinGlobalDimensions, double *MaxGlobalDimensions);
 };
 
 #endif /* __CLUSTERING_BACKEND_ONLINE_H__ */

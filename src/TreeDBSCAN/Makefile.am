@@ -19,6 +19,7 @@ CLUSTERING_LIBS = \
 
 lib_LTLIBRARIES = \
   libfilterTreeDBSCAN.la \
+  libfilterXchangeDimensions.la \
   libfrontendTreeDBSCAN.la \
   libbackendTreeDBSCANOffline.la \
   libbackendTreeDBSCANOnline.la
@@ -33,6 +34,12 @@ libfilterTreeDBSCAN_la_SOURCES  = \
 libfilterTreeDBSCAN_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags` @CGAL_CPPFLAGS@
 libfilterTreeDBSCAN_la_LDFLAGS  =  @CGAL_LDFLAGS@ @CLUSTERING_RPATH@
 libfilterTreeDBSCAN_la_LIBADD   = $(CLUSTERING_LIBS) 
+
+libfilterXchangeDimensions_la_SOURCES = \
+  XchangeDimensionsFilter.cpp \
+  ClusteringTags.h \
+  Utils.h
+libfilterXchangeDimensions_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags`
 
 PROTOCOL_COMMON_SRCS = \
   ClusteringCore.cpp \

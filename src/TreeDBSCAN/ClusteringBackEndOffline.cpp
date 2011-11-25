@@ -1,4 +1,5 @@
 #include "ClusteringBackEndOffline.h"
+#include "ClusteringTags.h"
 
 #include <iostream>
 using std::cout;
@@ -28,11 +29,24 @@ bool ClusteringBackEndOffline::InitLibrary(void)
  */
 bool ClusteringBackEndOffline::ExtractData(void)
 {
+   int tag;
+   PACKET_new(p);
+
    if (!libClustering->ExtractData(InputTraceName))
    {
       cerr << "[BE " << Protocol::WhoAmI() << "] Error extracting data: " << libClustering->GetErrorMessage() << endl;
       return false;
    }
+   cout << "[BE " << WhoAmI() << "] Bursts to analyze: " << libClustering->GetNumberOfPoints() << endl;
+
+   /* In the offline version there's no need to reduce the dimensions, because all back-ends get them from 
+    * the trace they're parsing. We have to send something though, because the front-end is waiting this 
+    * message, as it makes no distinction between online/offline back-ends.
+    */
+   MRN_STREAM_SEND(stXchangeDims, TAG_XCHANGE_DIMENSIONS, "%alf %alf", NULL, 0, NULL, 0);
+   MRN_STREAM_RECV(stXchangeDims, &tag, p, TAG_XCHANGE_DIMENSIONS);
+
+   PACKET_delete(p);
    return true;
 }
 

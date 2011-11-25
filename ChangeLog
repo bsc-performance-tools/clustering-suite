@@ -10,6 +10,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-11-24 German Llort <german.llort@bsc.es>
+	* Added a new filter to exchange the global clustering dimensions in TreeDBSCAN
+
 2011-11-24 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Added a facade object 'HullModel' to make transparent the 'ConvexHullModel'
 	object. *Some memory leaks regarding the 'HullModel' container destruction

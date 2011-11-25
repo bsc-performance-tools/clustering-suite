@@ -35,6 +35,7 @@ void ClusteringFrontEnd::Setup()
 {
    stClustering = Register_Stream("TreeDBSCAN", SFILTER_DONTWAIT);
    stClustering->set_FilterParameters(FILTER_UPSTREAM_TRANS, "%lf %d", Epsilon, MinPoints);
+   stXchangeDims = Register_Stream("XchangeDimensions", SFILTER_WAITFORALL);
 }
 
 
@@ -63,11 +64,16 @@ int ClusteringFrontEnd::Run()
    /* Send the clustering configuration to the back-ends */
    Send_Configuration();
 
+   cout << "[FE] Computing global dimensions..." << endl;
+   /* Receive and broadcast back the global dimensions */
+   MRN_STREAM_RECV(stXchangeDims, &tag, p, TAG_XCHANGE_DIMENSIONS);
+   stXchangeDims->send(p);
+
+   cout << "[FE] Computing global hulls..." << endl;
+   /* Receive the resulting global hulls */
    do
    {
-      /* Receive the resulting global hulls */
-      stClustering->recv(&tag, p);
-
+      MRN_STREAM_RECV(stClustering, &tag, p, TAG_ANY);
       if (tag == TAG_HULL)
       {
          HullModel *GlobalHull = NULL;

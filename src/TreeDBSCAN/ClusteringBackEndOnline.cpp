@@ -1,4 +1,6 @@
 #include "ClusteringBackEndOnline.h"
+#include "ClusteringTags.h"
+#include "Utils.h"
 
 #include <iostream>
 using std::cout;
@@ -37,12 +39,61 @@ bool ClusteringBackEndOnline::InitLibrary(void)
  */
 bool ClusteringBackEndOnline::ExtractData(void)
 {
-   int InputSize = 0;
+   int tag, NumberOfDimensions=0, InputSize=0;
+   vector<double> MinLocalDimensions, MaxLocalDimensions;
+   double *MinGlobalDimensions=NULL, *MaxGlobalDimensions=NULL;
+   PACKET_new(p);
 
-   InputSize = DataExtractCallback(ExternalPoints);
-   cout << "[BE " << WhoAmI() << "] Input size=" << InputSize << endl;
+   InputSize = DataExtractCallback(ExternalPoints, MinLocalDimensions, MaxLocalDimensions);
+   cout << "[BE " << WhoAmI() << "] Bursts to analyze: " << ExternalPoints.size() << endl;
+
+   STREAM_send(stXchangeDims, TAG_XCHANGE_DIMENSIONS, "%alf %alf", 
+      &MinLocalDimensions[0], MinLocalDimensions.size(),
+      &MaxLocalDimensions[0], MaxLocalDimensions.size());
+   STREAM_recv(stXchangeDims, &tag, p, TAG_XCHANGE_DIMENSIONS);
+   PACKET_unpack(p, "%alf %alf", &MinGlobalDimensions, &NumberOfDimensions, &MaxGlobalDimensions, &NumberOfDimensions);
+
+   /* DEBUG -- print the min/max global dimensions */
+   if (WhoAmI() == 0)
+   {
+      cout << "[BE " << WhoAmI() << "] MinGlobalDimensions = { ";
+      for (unsigned int i=0; i<NumberOfDimensions; i++)
+      {
+         cout << MinGlobalDimensions[i];
+         if (i < NumberOfDimensions-1) cout << ", ";
+      }
+      cout << " }" << endl;
+      cout << "[BE " << WhoAmI() << "] MaxGlobalDimensions = { ";
+      for (unsigned int i=0; i<NumberOfDimensions; i++)
+      {
+         cout << MaxGlobalDimensions[i]; 
+         if (i < NumberOfDimensions-1) cout << ", ";
+      }
+      cout << " }" << endl;
+   }
+
+   /* Normalize the input data with the global dimensions */
+   Normalize(MinGlobalDimensions, MaxGlobalDimensions);
+
+   xfree(MinGlobalDimensions);
+   xfree(MaxGlobalDimensions);
+   PACKET_delete(p);
 
    return true;
+}
+
+void ClusteringBackEndOnline::Normalize(double *MinGlobalDimensions, double *MaxGlobalDimensions)
+{
+   /* Iterate points */
+   for (unsigned int i=0; i<ExternalPoints.size(); i++)
+   {
+      Point *p = ExternalPoints[i];
+      /* Iterate dimensions */
+      for (unsigned int j=0; j<p->size(); j++)
+      {
+         (*p)[j] = (((*p)[j] - MinGlobalDimensions[j]) / (MaxGlobalDimensions[j] - MinGlobalDimensions[j]));
+      }
+   }
 }
 
 
@@ -52,8 +103,7 @@ bool ClusteringBackEndOnline::ExtractData(void)
  */
 bool ClusteringBackEndOnline::AnalyzeData(void)
 {
-   cout << "[DEBUG] [BE " << WhoAmI() << "] ExternalPoints.size()=" << ExternalPoints.size() << endl;
-   if (!libClustering->ClusterAnalysis(ExternalPoints, LocalModel))
+   if (!libClustering->ClusterAnalysis((vector<const Point*>&) ExternalPoints, LocalModel))
    {
       cerr << "[BE " << WhoAmI() << "] Error clustering data: " << libClustering->GetErrorMessage() << endl;
       return false;

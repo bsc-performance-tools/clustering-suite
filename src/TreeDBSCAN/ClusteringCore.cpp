@@ -16,6 +16,7 @@ ClusteringCore::ClusteringCore()
    Verbose                 = false;
    ReconstructTrace        = false;
    stClustering            = NULL;
+   stXchangeDims           = NULL;
    GlobalModel.clear();
 }
 
