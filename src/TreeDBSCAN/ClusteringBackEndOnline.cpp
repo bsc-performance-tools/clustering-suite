@@ -1,8 +1,43 @@
+/*****************************************************************************\
+ *                        ANALYSIS PERFORMANCE TOOLS                         *
+ *                             ClusteringSuite                               *
+ *   Infrastructure and tools to apply clustering analysis to Paraver and    *
+ *                              Dimemas traces                               *
+ *                                                                           *
+ *****************************************************************************
+ *     ___     This library is free software; you can redistribute it and/or *
+ *    /  __         modify it under the terms of the GNU LGPL as published   *
+ *   /  /  _____    by the Free Software Foundation; either version 2.1      *
+ *  /  /  /     \   of the License, or (at your option) any later version.   *
+ * (  (  ( B S C )                                                           *
+ *  \  \  \_____/   This library is distributed in hope that it will be      *
+ *   \  \__         useful but WITHOUT ANY WARRANTY; without even the        *
+ *    \___          implied warranty of MERCHANTABILITY or FITNESS FOR A     *
+ *                  PARTICULAR PURPOSE. See the GNU LGPL for more details.   *
+ *                                                                           *
+ * You should have received a copy of the GNU Lesser General Public License  *
+ * along with this library; if not, write to the Free Software Foundation,   *
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA          *
+ * The GNU LEsser General Public License is contained in the file COPYING.   *
+ *                                 ---------                                 *
+ *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
+\*****************************************************************************/
+
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+
+  $Id:: libDistributedClustering.cpp 51 2011-11-2#$:  Id
+  $Rev:: 51                                       $:  Revision of last commit
+  $Author:: jgonzale                              $:  Author of last commit
+  $Date:: 2011-11-24 15:47:29 +0100 (Thu, 24 Nov #$:  Date of last commit
+
+\* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
+
 #include "ClusteringBackEndOnline.h"
 #include "ClusteringTags.h"
 #include "Utils.h"
-
 #include <iostream>
+#include <fstream>
+using std::ofstream;
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -111,4 +146,48 @@ bool ClusteringBackEndOnline::AnalyzeData(void)
    return true;
 }
 
+
+/**
+ * Prints the output plots.
+ * @return true on success; false otherwise.
+ */
+bool ClusteringBackEndOnline::ProcessResults(void)
+{
+  ofstream LocalDataFile, GlobalDataFile;
+  LocalDataFile.open (LocalModelDataFileName.c_str());
+  /* Print the local model */
+  for (unsigned int i=0; i<LocalModel.size(); i++)
+  {
+    if (!LocalModel[i]->Flush(LocalDataFile, MIN_CLUSTERID+i+PARAVER_OFFSET))
+    {
+      cerr << "[BE " << WhoAmI() << "] Error writing local hull #" << i;
+      cerr << " data (density=" << GlobalModel[i]->Density() << "): ";
+      cerr << libClustering->GetErrorMessage() << endl;
+      return false;
+    }
+  }
+  LocalDataFile.close();
+
+  /* Print the global model */
+  if (WhoAmI() == 0)
+  {
+    GlobalDataFile.open (GlobalModelDataFileName.c_str());
+    
+    for (unsigned int i=0; i<GlobalModel.size(); i++)
+    {
+      if (!GlobalModel[i]->Flush(GlobalDataFile, MIN_CLUSTERID+i+PARAVER_OFFSET))
+      {
+        GlobalDataFile.close();
+        cerr << "[BE " << WhoAmI() << "] Error writing global hull #" << i;
+        cerr << " data (density=" << GlobalModel[i]->Density() << "): ";
+        cerr << libClustering->GetErrorMessage() << endl;
+        return false;
+      }
+    }
+    
+    GlobalDataFile.close();
+  }
+
+  return true;
+}
 

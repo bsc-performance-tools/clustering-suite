@@ -113,6 +113,14 @@ ConvexHullModel* const HullModel::Model(void)
   return _Model;
 }
 
+int  HullModel::Size(void)
+{
+  if (_Model == NULL)
+    return -1;
+  else
+    return _Model->size();
+}
+
 int  HullModel::Density(void)
 {
   if (_Model == NULL)
@@ -129,3 +137,17 @@ void HullModel::Flush(void)
     _Model->Flush();
   }
 }
+
+bool HullModel::Flush(ostream&             str,
+                      cluster_id_t         id)
+{
+  if (_Model == NULL)
+  {
+    return false;
+  }
+  else
+  {
+    return _Model->Flush(str, id);
+  }
+}
+

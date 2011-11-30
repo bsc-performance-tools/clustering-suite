@@ -38,7 +38,8 @@ endif
 instdir = $(includedir)
 
 inst_HEADERS = \
-	libDistributedClustering.hpp
+	libDistributedClustering.hpp \
+	HullModel.hpp
 
 libDistributedClustering_la_SOURCES = \
 	libDistributedClustering.hpp \

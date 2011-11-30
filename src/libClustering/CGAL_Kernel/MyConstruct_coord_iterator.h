@@ -3,14 +3,14 @@
 
 class MyConstruct_coord_iterator {
 public:
-  const float* operator()(const MyPointC2& p)
+  const double* operator()(const MyPointC2& p)
   {
     return &p.x();
   }
 
-  const float* operator()(const MyPointC2& p, int)
+  const double* operator()(const MyPointC2& p, int)
   {
-    const float* pyptr = &p.y();
+    const double* pyptr = &p.y();
     pyptr++;
     return pyptr;
   }

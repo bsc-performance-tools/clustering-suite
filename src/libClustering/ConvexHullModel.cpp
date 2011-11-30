@@ -203,6 +203,11 @@ bool ConvexHullModel::Flush(ostream& str, cluster_id_t id)
 {
   vector<MyPoint_2>::iterator HullPointsIterator;
 
+  if (HullPoints.size() == 0)
+  {
+    return false;
+  }
+
   for (HullPointsIterator  = HullPoints.begin();
        HullPointsIterator != HullPoints.end();
        HullPointsIterator++)
@@ -323,6 +328,21 @@ ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsil
   {
     Q.push_back(Hull2Points[i]);
   }
+
+  /* DEBUG 
+  std::cout << "Polygon P characteristics: ";
+  std::cout << "Is " <<
+  (P.is_simple() ? "" : "not ") << "simple. ";
+  std::cout << "Is " <<
+  (P.is_convex() ? "" : "not ") << "convex." << std::endl;
+  */
+
+  /* DEBUG 
+  std::cout << "Polygon Q characteristics: ";
+  std::cout << "Is " <<
+  (Q.is_simple() ? "" : "not ") << "simple. ";
+  std::cout << "Is " <<
+  (Q.is_convex() ? "" : "not ") << "convex." << std::endl; */
 
   /* Check polygon intersection */
   if (CGAL::do_intersect (P, Q))

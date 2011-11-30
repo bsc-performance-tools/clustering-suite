@@ -125,6 +125,8 @@ class libDistributedClustering
                                   vector<thread_id_t>  &ThreadIDs,
                                   vector<cluster_id_t> &ClusterIDs);
 
+    bool GetClusterIDs(vector<cluster_id_t> &ClusterIDs);
+
 
     /* Methods to print the models and the scatter plots of data. To be used
      * in BE nodes */

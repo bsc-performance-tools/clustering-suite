@@ -419,6 +419,32 @@ bool libDistributedClustering::GetFullBurstsInformation(vector<Point*>       &Po
 }
 
 /**
+ * Returns the Cluster IDs obtained in the last cluster analys
+ * 
+ * \param ClusterIDs I/O vector containing the resulting cluster IDs
+ *
+ * \result True if the operation finished succesfuly, false otherwise
+ */
+bool libDistributedClustering::GetClusterIDs(vector<cluster_id_t> &ClusterIDs)
+{
+  if (!Implementation->GetClusterIDs(ClusterIDs))
+  {
+    Error        = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+
+  if (Implementation->GetWarning())
+  {
+    Warning        = true;
+    WarningMessage = Implementation->GetLastWarning();
+  }
+
+  return true;
+}
+
+
+/**
  * Generates the scripts and the data files to display the scatter plots of the
  * data using GNUplot
  *

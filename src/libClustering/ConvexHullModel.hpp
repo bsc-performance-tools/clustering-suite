@@ -50,7 +50,7 @@ using std::endl;
 
 #include "CGAL_Kernel/MyKernel.h"
 
-typedef MyKernel<float>                  K;
+typedef MyKernel<double>                   K;
 //typedef CGAL::Filtered_kernel_adaptor<MK> K;
 typedef K::Point_2                        MyPoint_2;
 typedef CGAL::Polygon_2<K>                Polygon_2;

@@ -9,7 +9,7 @@
 class MyPointC2 {
 
 private:
-  float    vec[2];
+  double     vec[2];
   long long _Instance;
   long long _NeighbourhoodSize;
 
@@ -24,20 +24,20 @@ public:
   }
 
 
-  MyPointC2(const float x, const float y, const long long int Instance = 0, const long long int NeighbourhoodSize = 0)
+  MyPointC2(const double x, const double y, const long long int Instance = 0, const long long int NeighbourhoodSize = 0)
     : _Instance(Instance), _NeighbourhoodSize(NeighbourhoodSize)
   {
     *vec = x;
     *(vec+1) = y;
   }
 
-  const float& x() const  { return *vec; }
+  const double& x() const  { return *vec; }
 
-  const float& y() const { return *(vec+1); }
+  const double& y() const { return *(vec+1); }
 
-  float & x() { return *vec; }
+  double& x() { return *vec; }
 
-  float& y() { return *(vec+1); }
+  double& y() { return *(vec+1); }
 
   long long Instance() const { return _Instance; }
 

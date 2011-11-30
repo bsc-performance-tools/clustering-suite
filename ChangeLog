@@ -10,6 +10,24 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-11-30 German Llort <german.llort@bsc.es>
+	* -frounding-math is used everywhere when using CGAL
+	
+	* Added GetClusterIDs() method in libDistributedClustering API
+
+	* Added Size() And Flush() methods to HullModel
+
+	* Changed ours CGAL's kernel precision from float to double
+
+	* Moved the generation of output files from the generic ClusteringBackend to its
+	derived classes (new virtual method ProcessResults())
+
+	* Tree_DBSCAN_env.sh now updates the PATH variable
+
+	* Added script 'draw_hulls'
+
+	* Added some missing BSC headers and debug messages
+
 2011-11-25 German Llort <german.llort@bsc.es>
 	* Modified Makefile to include HullManager in TreeDBSCAN filter.
 

@@ -878,6 +878,44 @@ bool libDistributedClusteringImplementation::GetFullBurstsInformation(vector<Poi
 }
 
 /**
+ * Returns the Cluster IDs obtained in the last cluster analys
+ * 
+ * \param ClusterIDs I/O vector containing the resulting cluster IDs
+ *
+ * \result True if the operation finished succesfuly, false otherwise
+ */
+bool libDistributedClusteringImplementation::GetClusterIDs(vector<cluster_id_t> &ClusterIDs)
+{
+  vector<const Point*>& ClusteringPoints = ( UsingExternalData ? ExternalData : Data->GetClusteringPoints() );
+  vector<cluster_id_t>& IDs    = ClassificationPartition.GetAssignmentVector();
+
+  if (IDs.size() == 0)
+  {
+    SetErrorMessage("data needs to be classfied before being retrieved");
+  }
+
+  if (ClusteringPoints.size() != IDs.size())
+  {
+    ostringstream ErrorMessage;
+
+    ErrorMessage << "different number of points (" << ClusteringPoints.size() << ") ";
+    ErrorMessage << "than cluster IDs (" << IDs.size() << ")";
+
+    SetErrorMessage(ErrorMessage.str());
+    return false;
+  }
+
+  ClusterIDs.clear();
+
+  for (size_t i = 0; i < ClusteringPoints.size(); i++)
+  {
+    ClusterIDs.push_back(IDs[i]);
+  }
+
+  return true;
+}
+
+/**
  * Generates the scripts and the data files to display the scatter plots of the
  * data using GNUplot
  *

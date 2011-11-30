@@ -1,3 +1,37 @@
+/*****************************************************************************\
+ *                        ANALYSIS PERFORMANCE TOOLS                         *
+ *                             ClusteringSuite                               *
+ *   Infrastructure and tools to apply clustering analysis to Paraver and    *
+ *                              Dimemas traces                               *
+ *                                                                           *
+ *****************************************************************************
+ *     ___     This library is free software; you can redistribute it and/or *
+ *    /  __         modify it under the terms of the GNU LGPL as published   *
+ *   /  /  _____    by the Free Software Foundation; either version 2.1      *
+ *  /  /  /     \   of the License, or (at your option) any later version.   *
+ * (  (  ( B S C )                                                           *
+ *  \  \  \_____/   This library is distributed in hope that it will be      *
+ *   \  \__         useful but WITHOUT ANY WARRANTY; without even the        *
+ *    \___          implied warranty of MERCHANTABILITY or FITNESS FOR A     *
+ *                  PARTICULAR PURPOSE. See the GNU LGPL for more details.   *
+ *                                                                           *
+ * You should have received a copy of the GNU Lesser General Public License  *
+ * along with this library; if not, write to the Free Software Foundation,   *
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA          *
+ * The GNU LEsser General Public License is contained in the file COPYING.   *
+ *                                 ---------                                 *
+ *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
+\*****************************************************************************/
+
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
+
+  $Id:: libDistributedClustering.cpp 51 2011-11-2#$:  Id
+  $Rev:: 51                                       $:  Revision of last commit
+  $Author:: jgonzale                              $:  Author of last commit
+  $Date:: 2011-11-24 15:47:29 +0100 (Thu, 24 Nov #$:  Date of last commit
+
+\* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
+
 #include <Timer.hpp>
 #include "FileNameManipulator.hpp"
 #include "ClusteringBackEnd.h"
@@ -103,31 +137,16 @@ int ClusteringBackEnd::Run()
          HullManager HM  = HullManager();
          Hull            = HM.Unpack(p);
 
+         /* DEBUG 
+         std::cout << "[BE " << WhoAmI() << "] Received global Hull (size = " << Hull->Size() << " density = " << Hull->Density() << ")" << std::endl;
+         Hull->Flush(); */
+
          GlobalModel.push_back(Hull);
       }
    } while (tag != TAG_ALL_HULLS_SENT);
 
    if (Verbose) cout << "[BE " << WhoAmI() << "] Received " << GlobalModel.size() << " global hulls." << endl;
    cout << "[BE " << WhoAmI() << "] >> Clustering time: " << t.end() << "[" << NumBackEnds() << " BEs]" << endl;
-
-
-   /* Print the local model */
-   ostringstream ModelTitle;
-
-   cout << "[BE " << WhoAmI() << "] Printing local model" << endl;
-
-   ModelTitle << "Local Hull Models BE " << WhoAmI() << " MinPoints = " << MinPoints << " Eps = " << Epsilon << "\\n";
-   ModelTitle << "Trace \'" << InputTraceName << "\'";
-
-   if (!libClustering->PrintModels(LocalModel,
-                                   LocalModelDataFileName,
-                                   LocalModelPlotFileName,
-                                   ModelTitle.str()))
-   {
-      cerr << "[BE " << WhoAmI() << "] Error printing local model scripts: " << libClustering->GetErrorMessage() << endl;
-      exit (EXIT_FAILURE);
-   }
-
 
    /* All back-ends classify their local data */
    cout << "[BE " << WhoAmI() << "] START CLASSIFYING WITH " << GlobalModel.size() << " GLOBAL HULLS." << endl;
@@ -139,56 +158,10 @@ int ClusteringBackEnd::Run()
    }
    cout << "[BE " << WhoAmI() << "] >> Classification time: " << t.end() << endl;
 
-
-   if (WhoAmI() == 0)
+   /* Process the results and generate the output files */
+   if (!ProcessResults())
    {
-      /* Print the global model */
-      cout << "[BE " << WhoAmI() << "] Printing global model script" << endl;
-
-      ModelTitle.str("");
-      ModelTitle << "Global Model MinPoints = " << MinPoints << " Eps = " << Epsilon << "\\n";
-      ModelTitle << "Trace \'" << InputTraceName << "\'";
-
-      if (!libClustering->PrintModels(GlobalModel,
-                                      GlobalModelDataFileName,
-                                      GlobalModelPlotFileName,
-                                      ModelTitle.str()))
-      {
-        cerr << "[BE " << WhoAmI() << "] Error printing global model script: " << libClustering->GetErrorMessage() << endl;
-        exit (EXIT_FAILURE);
-      }
-
-      /* Print the data plots */
-      cout << "[BE " << WhoAmI() << "] Printing global data plot script" << endl;
-      if (!libClustering->PrintPlotScripts(OutputDataFileName, "", false)) // false = Global Classification
-      {
-        cerr << "[BE " << WhoAmI() << "] Error printing global data plot scripts: " << libClustering->GetErrorMessage() << endl;
-        exit (EXIT_FAILURE);
-      }
-
-      /* Reconstruct the trace */
-      if (ReconstructTrace)
-      {
-        cout << "[BE " << WhoAmI() << "] Reconstructing trace..." << endl;
-        if (!libClustering->ReconstructInputTrace(OutputFileName))
-        {
-          cerr << "Error writing output trace: " << libClustering->GetErrorMessage() << endl;
-          exit (EXIT_FAILURE);
-        }
-      }
-
-      if (!libClustering->FlushClustersInformation(ClustersInformationFileName))
-      {
-        cerr << "Error writing clusters information file: " << libClustering->GetErrorMessage() << endl;
-        exit (EXIT_FAILURE);
-      }
-   }
-
-   /* Print local clustering plots */
-   cout << "[BE " << WhoAmI() << "] Printing local data plot script" << endl;
-   if (!libClustering->PrintPlotScripts(OutputLocalClusteringFileName, "", true)) // true = Local partition
-   {
-      cerr << "[BE " << WhoAmI() << "] Error printing local data plot scripts: " << libClustering->GetErrorMessage() << endl;
+      cerr << "[BE " << WhoAmI() << "] Error processing clustering results. Exiting..." << endl;
       exit (EXIT_FAILURE);
    }
 

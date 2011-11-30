@@ -35,6 +35,10 @@
 #ifndef _HULLMODEL_HPP_
 #define _HULLMODEL_HPP_
 
+#include "clustering_types.h"
+#include <iostream>
+using std::ostream;
+
 class ConvexHullModel;
 
 class HullModel
@@ -71,7 +75,12 @@ class HullModel
 
     int  Density(void);
 
+    int  Size(void);
+
     void Flush(void);
+
+    bool Flush(ostream&     str,
+               cluster_id_t id);
 };
 
 #endif
