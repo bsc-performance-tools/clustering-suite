@@ -1,0 +1,34 @@
+#!/bin/bash
+
+trim() { echo $1; }
+
+if [ $# -ne 1 ]; then
+	echo "Syntax: `basename $0 <hulls_points.csv>`"
+fi
+
+INFILE=$1
+LAST_ID=$(trim `tail -n 1 $INFILE | cut -d, -f 3`)
+FIRST_ID=6
+PLOT="$(mktemp)"
+
+echo "set datafile separator \",\"" >> $PLOT
+echo "set key right outside" >> $PLOT
+echo -n "plot " >> $PLOT
+for i in `seq $FIRST_ID $LAST_ID`;
+do
+	echo -n "'$INFILE' using 2:(\$3 == $i ? \$1 : 1/0) w filledcurves title \"Hull `expr $i - $FIRST_ID + 1`\"" >> $PLOT
+	if [ $i -eq $LAST_ID ]; then
+		echo "" >> $PLOT
+	else
+		echo ",\\" >> $PLOT
+	fi
+done  
+echo "pause -1 \"Press return to continue...\"" >> $PLOT
+
+
+cat $PLOT
+
+gnuplot $PLOT
+
+unlink $PLOT
+
