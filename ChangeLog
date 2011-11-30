@@ -10,6 +10,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-11-30 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a minor bug to correctly distribute 'draw_hulls' script
+
 2011-11-30 German Llort <german.llort@bsc.es>
 	* -frounding-math is used everywhere when using CGAL
 	

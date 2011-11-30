@@ -45,13 +45,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="clustering_suite_config.h">
-			<Option target="Compile" />
-		</Unit>
 		<Unit filename="include/types.h">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="main.cpp">
 			<Option target="Compile" />
 		</Unit>
 		<Unit filename="src/BasicClasses/Error.cpp">
@@ -90,51 +84,30 @@
 		<Unit filename="src/DBSCANParametersApproximation/DBSCANParametersApproximationMain.cpp">
 			<Option target="Compile" />
 		</Unit>
-		<Unit filename="src/MRNetStub/MRNetStub.cpp">
-			<Option target="Compile" />
-		</Unit>
 		<Unit filename="src/MusterDistributedClustering/MusterDistributedClustering.cpp">
 			<Option target="Compile" />
 		</Unit>
-		<Unit filename="src/TreeDBSCAN/ClusteringOffline_BE.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/ClusteringOffline_BE.h">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/ClusteringOffline_FE.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/ClusteringOffline_FE.h">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/Clustering_Filter.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/Clustering_Filter.h">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/NoiseManager.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/NoiseManager.h">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_BE.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_FE.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_FE.h">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/tags.h">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/TreeDBSCAN/utils.h">
-			<Option target="Compile" />
-		</Unit>
+		<Unit filename="src/TreeDBSCAN/ClusteringBackEnd.cpp" />
+		<Unit filename="src/TreeDBSCAN/ClusteringBackEnd.h" />
+		<Unit filename="src/TreeDBSCAN/ClusteringBackEndOffline.cpp" />
+		<Unit filename="src/TreeDBSCAN/ClusteringBackEndOffline.h" />
+		<Unit filename="src/TreeDBSCAN/ClusteringBackEndOnline.cpp" />
+		<Unit filename="src/TreeDBSCAN/ClusteringBackEndOnline.h" />
+		<Unit filename="src/TreeDBSCAN/ClusteringCore.cpp" />
+		<Unit filename="src/TreeDBSCAN/ClusteringCore.h" />
+		<Unit filename="src/TreeDBSCAN/ClusteringFilter.cpp" />
+		<Unit filename="src/TreeDBSCAN/ClusteringFilter.h" />
+		<Unit filename="src/TreeDBSCAN/ClusteringFrontEnd.cpp" />
+		<Unit filename="src/TreeDBSCAN/ClusteringFrontEnd.h" />
+		<Unit filename="src/TreeDBSCAN/ClusteringTags.h" />
+		<Unit filename="src/TreeDBSCAN/HullManager.cpp" />
+		<Unit filename="src/TreeDBSCAN/HullManager.h" />
+		<Unit filename="src/TreeDBSCAN/NoiseManager.cpp" />
+		<Unit filename="src/TreeDBSCAN/NoiseManager.h" />
+		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_BE.cpp" />
+		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_FE.cpp" />
+		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_FE.h" />
+		<Unit filename="src/TreeDBSCAN/Utils.h" />
 		<Unit filename="src/libANN/ANN.cpp">
 			<Option target="Compile" />
 		</Unit>
@@ -213,17 +186,13 @@
 		<Unit filename="src/libANN/pr_queue_k.h">
 			<Option target="Compile" />
 		</Unit>
-		<Unit filename="src/libClustering/CGAL_Kernel/HullModelKernel.h" />
-		<Unit filename="src/libClustering/CGAL_Kernel/HullPoint.h" />
 		<Unit filename="src/libClustering/CGAL_Kernel/MyConstruct_bbox_2.h" />
 		<Unit filename="src/libClustering/CGAL_Kernel/MyConstruct_coord_iterator.h" />
 		<Unit filename="src/libClustering/CGAL_Kernel/MyConstruct_point_2.h" />
-		<Unit filename="src/libClustering/CGAL_Kernel/MyKernel.cpp" />
 		<Unit filename="src/libClustering/CGAL_Kernel/MyKernel.h" />
 		<Unit filename="src/libClustering/CGAL_Kernel/MyPointC2.h" />
 		<Unit filename="src/libClustering/CGAL_Kernel/MyPointC2_iostream.h" />
 		<Unit filename="src/libClustering/CGAL_Kernel/MySegmentC2.h" />
-		<Unit filename="src/libClustering/CGAL_Kernel/cartesian_converter.cpp" />
 		<Unit filename="src/libClustering/Classifier.hpp" />
 		<Unit filename="src/libClustering/ClusteringAlgorithm.hpp" />
 		<Unit filename="src/libClustering/ClusteringAlgorithmsFactory.cpp" />
@@ -293,6 +262,8 @@
 		<Unit filename="src/libClustering/libClustering.hpp" />
 		<Unit filename="src/libClustering/libClusteringImplementation.cpp" />
 		<Unit filename="src/libClustering/libClusteringImplementation.hpp" />
+		<Unit filename="src/libDistributedClustering/HullModel.cpp" />
+		<Unit filename="src/libDistributedClustering/HullModel.hpp" />
 		<Unit filename="src/libDistributedClustering/libDistributedClustering.cpp">
 			<Option target="Compile" />
 		</Unit>
