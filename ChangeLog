@@ -11,6 +11,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 2011-12-13 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Modifications to print same timing information in TreeDBSCAN and
+	BurstClustering
+
+2011-12-13 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Added sampling support to trace data extraction (parameter '-m' to burst
 	clustering binary). That includes a modification on ClusteringAlgorithm
 	class which imposes the extension of Classifier class

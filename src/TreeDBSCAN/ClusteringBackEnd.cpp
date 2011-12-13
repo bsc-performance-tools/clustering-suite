@@ -96,15 +96,18 @@ int ClusteringBackEnd::Run()
       exit (EXIT_FAILURE);
    }
 
+   if (Verbose) cout << "[BE " << WhoAmI() << "] EXTRACTING DATA" << endl;
+
+   t.begin();
    if (!ExtractData())
    {
       cerr << "[BE " << WhoAmI() << "] Error extracting clustering data. Exiting..." << endl;
       exit (EXIT_FAILURE);
    }
+   cout << "[BE " << WhoAmI() << "] Data extraction time: " << t.end() << endl;
 
    /* Start the clustering analysis */
    t.begin();
-
    if (!AnalyzeData())
    {
       cerr << "[BE " << WhoAmI() << "] Error analyzing data. Exiting..." << endl;
@@ -137,7 +140,7 @@ int ClusteringBackEnd::Run()
          HullManager HM  = HullManager();
          Hull            = HM.Unpack(p);
 
-         /* DEBUG 
+         /* DEBUG
          std::cout << "[BE " << WhoAmI() << "] Received global Hull (size = " << Hull->Size() << " density = " << Hull->Density() << ")" << std::endl;
          Hull->Flush(); */
 
@@ -146,17 +149,17 @@ int ClusteringBackEnd::Run()
    } while (tag != TAG_ALL_HULLS_SENT);
 
    if (Verbose) cout << "[BE " << WhoAmI() << "] Received " << GlobalModel.size() << " global hulls." << endl;
-   cout << "[BE " << WhoAmI() << "] >> Clustering time: " << t.end() << "[" << NumBackEnds() << " BEs]" << endl;
+   // cout << "[BE " << WhoAmI() << "] >> Clustering time: " << t.end() << "[" << NumBackEnds() << " BEs]" << endl;
 
    /* All back-ends classify their local data */
    cout << "[BE " << WhoAmI() << "] START CLASSIFYING WITH " << GlobalModel.size() << " GLOBAL HULLS." << endl;
-   t.begin();
+   // t.begin();
    if (!libClustering->ClassifyData(GlobalModel))
    {
       cerr << "[BE " << WhoAmI() << "] Error classifying data: " << libClustering->GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
    }
-   cout << "[BE " << WhoAmI() << "] >> Classification time: " << t.end() << endl;
+   cout << "[BE " << WhoAmI() << "] Clustering time: " << t.end() << endl;
 
    /* Process the results and generate the output files */
    if (!ProcessResults())

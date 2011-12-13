@@ -32,7 +32,9 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#include <sstream>
+#include <Timer.hpp>
+using cepba_tools::Timer;
+
 #include "ClusteringBackEndOffline.h"
 #include "ClusteringTags.h"
 
@@ -40,6 +42,7 @@
 using std::cout;
 using std::cerr;
 using std::endl;
+#include <sstream>
 using std::ostringstream;
 
 /**
@@ -75,8 +78,8 @@ bool ClusteringBackEndOffline::ExtractData(void)
    }
    cout << "[BE " << WhoAmI() << "] Bursts to analyze: " << libClustering->GetNumberOfPoints() << endl;
 
-   /* In the offline version there's no need to reduce the dimensions, because all back-ends get them from 
-    * the trace they're parsing. We have to send something though, because the front-end is waiting this 
+   /* In the offline version there's no need to reduce the dimensions, because all back-ends get them from
+    * the trace they're parsing. We have to send something though, because the front-end is waiting this
     * message, as it makes no distinction between online/offline back-ends. I like this way more, just in
     * case the back-ends parse different data files in the future and may need to use this.
     */
@@ -103,7 +106,7 @@ bool ClusteringBackEndOffline::AnalyzeData(void)
 }
 
 
-/** 
+/**
  * Prints the output plots and reconstructs the trace if necessary.
  * @return true on success; false otherwise.
  */
@@ -111,6 +114,7 @@ bool ClusteringBackEndOffline::ProcessResults(void)
 {
    /* Print the local model */
    ostringstream ModelTitle;
+   Timer t;
 
    cout << "[BE " << WhoAmI() << "] Printing local model" << endl;
 
@@ -156,12 +160,15 @@ bool ClusteringBackEndOffline::ProcessResults(void)
       /* Reconstruct the trace */
       if (ReconstructTrace)
       {
-        cout << "[BE " << WhoAmI() << "] Reconstructing trace..." << endl;
+        if (Verbose) cout << "[BE " << WhoAmI() << "] RECONSTRUCTING TRACE" << endl;
+
+        t.begin();
         if (!libClustering->ReconstructInputTrace(OutputFileName))
         {
           cerr << "Error writing output trace: " << libClustering->GetErrorMessage() << endl;
           return false;
         }
+        cout << "[BE " << WhoAmI() << "] Trace reconstruction time: " << t.end() << endl;
       }
 
       if (!libClustering->FlushClustersInformation(ClustersInformationFileName))
