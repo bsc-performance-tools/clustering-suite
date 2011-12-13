@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -51,22 +51,24 @@ class libClustering
 {
   private:
     libClusteringImplementation* Implementation;
-    
+
     bool   Error,        Warning;
     string ErrorMessage, WarningMessage;
 
   public:
-    
+
     libClustering(void);
 
     bool InitClustering(string AlgorithmName, map<string, string> Parameters);
 
     bool ExecuteClustering(const vector<const Point*>& Data, Partition& DataPartition);
 
+    bool ClassifyData(const vector<const Point*>& Data, Partition& DataPartition);
+
     bool ParametersApproximation(const vector<const Point*>& Data,
                                  map<string, string>         Parameters,
                                  string                      OutputFileNamePrefix);
-    
+
     bool UsingADistributedAlgorithm(void);
 
     bool HasNoise(void);
@@ -76,7 +78,7 @@ class libClustering
     string GetErrorMessage(void);
 
     string GetWarningMessage(void);
-    
+
   protected:
 
 };

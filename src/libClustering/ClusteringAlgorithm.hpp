@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -41,7 +41,8 @@ using cepba_tools::Error;
 #include "clustering_types.h"
 
 /* Forward declarations */
-class Classifier;
+#include "Classifier.hpp"
+
 class Point;
 class Partition;
 
@@ -70,8 +71,8 @@ using std::endl;
 class ClusteringAlgorithm: public Error
 {
   protected:
-    bool   ClusteringReady;
 
+    bool   ClusteringReady;
     bool   Distributed;
 
   public:
@@ -83,9 +84,9 @@ class ClusteringAlgorithm: public Error
     virtual bool Run(const vector<const Point*>& Data,
                      Partition&                  DataPartition,
                      bool                        SimpleRun = false) = 0;
-  
+
     // virtual Classifier* GetClassifier(void) {}; //
-  
+
     virtual string GetClusteringAlgorithmName(void) const = 0;
 
     virtual string GetClusteringAlgorithmNameFile(void) const = 0;
@@ -98,9 +99,24 @@ class ClusteringAlgorithm: public Error
                                          map<string, string>&  Parameters,
                                          string                OutputFileNamePrefix)
     {
-      SetErrorMessage("this algorithm does no have a parameter approximation defined");
+      SetErrorMessage("this algorithm does not have a parameter approximation defined");
       return false;
     };
+
+    virtual bool Classify(const vector<const Point*> &Data,
+                          Partition                  &DataPartition)
+    {
+      SetErrorMessage("this algorithm does not have support to generate data classifier");
+      SetError(true);
+      return false;
+    }
+
+    virtual bool Classify(const Point* Point, cluster_id_t& ID)
+    {
+      SetErrorMessage("this algorithm does not have support to generate data classifier");
+      SetError(true);
+      return false;
+    }
 
 };
 

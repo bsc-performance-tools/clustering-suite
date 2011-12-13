@@ -6,6 +6,8 @@ endif
 
 instdir = $(includedir)
 
+
+
 inst_HEADERS = \
 	Error.hpp \
 	FileNameManipulator.hpp \
@@ -21,5 +23,6 @@ libBasicClasses_la_SOURCES= \
 	SystemMessages.hpp \
 	Utilities.cpp \
 	Utilities.hpp \
-	Timer.hpp
+	Timer.hpp \
+	Timer.cpp
 

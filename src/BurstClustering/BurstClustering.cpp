@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -40,6 +40,8 @@
 using cepba_tools::system_messages;
 #include <FileNameManipulator.hpp>
 using cepba_tools::FileNameManipulator;
+#include <Timer.hpp>
+using cepba_tools::Timer;
 
 #include <iostream>
 using std::cout;
@@ -72,7 +74,10 @@ bool   InputTraceNameRead = false;
 string OutputFileName;             /* Data extracted from input trace */
 bool   OutputFileNameRead = false;
 
-string OutputDataFileName;         /* File where the burst data is stored */
+string OutputDataFileNamePrefix;   /* File where the burst data is stored */
+
+bool   SampleData;
+size_t MaxSamples  = 20000;
 
 string ClusterSequencesFileName;
 bool   GenerateClusterSequences = false;
@@ -97,6 +102,8 @@ set<unsigned int> EventsToParse;
 
 bool   ApplyCPIStack = false;
 
+bool   PrintTimming = false;
+
 #define HELP \
 "\n"\
 "Usage:\n"\
@@ -115,6 +122,9 @@ bool   ApplyCPIStack = false;
 "  -d <clustering_def_xml>     XML containing the clustering process\n"\
 "                              definition\n"\
 "\n"\
+"  -m <max_number_bursts>      Sample the data set up to the maximum number of\n"\
+"                              bursts (default: 20000) \n"\
+"\n"\
 "  -a[f]                       Generate a file containing the cluster sequences\n"\
 "                              (using 'f' generates a FASTA aminoacid sequences)\n"\
 "\n"\
@@ -126,6 +136,9 @@ bool   ApplyCPIStack = false;
 "                              Ignores the cluster algorithm used in the XML\n"\
 "                              If 'p' option is included, plots traces and trees\n"\
 "                              of each step are printed\n"\
+"\n"\
+"  -t                          Print accurate timming of the analysis steps\n"\
+"\n"\
 "\n"\
 "  -i <input_file>             Input CSV / Dimemas trace / Paraver trace\n"\
 "\n"\
@@ -146,8 +159,8 @@ void GetEventParsingParameters(char*);
 void PrintUsage(char* ApplicationName)
 {
   cout << "Usage: " << ApplicationName << " [-s] -d <clustering_def.xml> ";
-  cout << "-a[f] -r<d|a>[p] <min_points>,<max_eps>,<min_eps>,<steps> ";
-  cout << "-i <input_file> -o <output_file>" << endl;
+  cout << "-m [max_number_bursts] -a[f] -r<d|a>[p] [<min_points>,<max_eps>,<min_eps>,<steps> ";
+  cout << "-t -i <input_file> -o <output_file>" << endl;
 }
 
 void
@@ -193,6 +206,29 @@ ReadArgs(int argc, char *argv[])
           OutputFileName     = argv[j];
           OutputFileNameRead = true;
           break;
+        case 'm':
+          SampleData = true;
+
+          j++;
+          if (argv[j][0] != '-')
+          {
+            char* err;
+
+            MaxSamples = strtol(&argv[j][0], &err, 0);
+
+            if (*err)
+            {
+              cerr << "Error on maximun number of samples ";
+              cerr << "(" << argv[j][0] << ")" << endl;
+              exit (EXIT_FAILURE);
+            }
+          }
+          else
+          {
+            j--;
+          }
+
+          break;
         case 'a':
           GenerateClusterSequences = true;
           if (argv[j][2] == 'f')
@@ -216,13 +252,13 @@ ReadArgs(int argc, char *argv[])
             cerr << "It should be 'd' for divise or 'a' for aggregative" << endl;
             exit(EXIT_FAILURE);
           }
-            
+
           if (argv[j][3] == 'p')
           {
             PrintRefinementSteps = true;
           }
           j++;
-          
+
           if (argv[j][0] != '-')
           {
             GetRefinementParameters(argv[j]);
@@ -232,8 +268,9 @@ ReadArgs(int argc, char *argv[])
             AutomaticRefinement = true;
             j--;
           }
-          
+
           break;
+
         case 'e':
 
           UseParaverEventParsing = true;
@@ -242,6 +279,9 @@ ReadArgs(int argc, char *argv[])
           break;
         case 's':
           Verbose = false;
+          break;
+        case 't':
+          PrintTimming = true;
           break;
         case 'c':
           ApplyCPIStack = true;
@@ -271,7 +311,7 @@ ReadArgs(int argc, char *argv[])
     cerr << "Output data file file missing ( \'-o\' parameter)" << endl;
     exit (EXIT_FAILURE);
   }
-  
+
   return;
 }
 
@@ -303,7 +343,7 @@ void GetRefinementParameters(char* RefinementArgs)
     cerr << "(" << Args[0] << ")" << endl;
     exit (EXIT_FAILURE);
   }
-  
+
   MaxEps = strtod(Args[1].c_str(), &err);
   if (*err)
   {
@@ -339,7 +379,7 @@ void GetRefinementParameters(char* RefinementArgs)
 void GetEventParsingParameters(char* EventParsingArgs)
 {
   char* err;
-  
+
   string       ArgsString (EventParsingArgs);
   stringstream ArgsStream (ArgsString);
   string       Buffer;
@@ -349,7 +389,7 @@ void GetEventParsingParameters(char* EventParsingArgs)
   while(std::getline(ArgsStream, Buffer, ','))
   {
     unsigned int CurrentType;
-    
+
     CurrentType = strtoul(Buffer.c_str(), &err, 0);
     if (*err)
     {
@@ -390,10 +430,12 @@ void CheckOutputFile()
       OutputFileExtension.compare("trf") == 0)
   {
     FileNameManipulator NameManipulator(OutputFileName, OutputFileExtension);
-    OutputDataFileName                 = NameManipulator.AppendStringAndExtension("DATA", "csv");
+
+    OutputDataFileNamePrefix           = NameManipulator.GetChoppedFileName();
     OutputClustersInformationFileName  = NameManipulator.AppendStringAndExtension("clusters_info", "csv");
     // ClusterSequencesFileName           = NameManipulator.AppendString("seq");
     ClusterSequencesFileName           = NameManipulator.GetChoppedFileName();
+
     if (PrintRefinementSteps)
     {
       RefinementPrefixFileName           = NameManipulator.GetChoppedFileName();
@@ -402,8 +444,8 @@ void CheckOutputFile()
   }
   else if (OutputFileExtension.compare("csv") == 0)
   {
-    ReconstructTrace = false;
-    OutputDataFileName = OutputFileName;
+    ReconstructTrace         = false;
+    OutputDataFileNamePrefix = OutputFileName;
   }
   else
   {
@@ -416,9 +458,13 @@ void CheckOutputFile()
 
 int main(int argc, char *argv[])
 {
-  libTraceClustering Clustering = libTraceClustering(true);
+  Timer T;
 
   ReadArgs(argc, argv);
+
+  libTraceClustering Clustering = libTraceClustering(Verbose);
+
+  system_messages::print_timers = PrintTimming;
 
   CheckOutputFile();
 
@@ -444,10 +490,18 @@ int main(int argc, char *argv[])
     cerr << "WARNING: " << Clustering.GetWarningMessage() << endl;
   }
 
+  /****************************************************************************
+   * DATA EXTRACTION
+   ***************************************************************************/
   system_messages::information("** DATA EXTRACTION **\n");
+
+  T.begin();
   if (UseParaverEventParsing)
   {
-    if (!Clustering.ExtractData(InputTraceName, EventsToParse))
+    if (!Clustering.ExtractData(InputTraceName,
+                                SampleData,
+                                MaxSamples,
+                                EventsToParse))
     {
       cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
@@ -455,16 +509,25 @@ int main(int argc, char *argv[])
   }
   else
   {
-    if (!Clustering.ExtractData(InputTraceName))
+    if (!Clustering.ExtractData(InputTraceName,
+                                SampleData,
+                                MaxSamples))
     {
       cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
     }
   }
+  system_messages::show_timer("Data extraction time:", T.end());
+
 
   if (ClusteringRefinement)
   {
+    /**************************************************************************
+     * REFINEMENT ANALYSIS
+     *************************************************************************/
     system_messages::information("** CLUSTER REFINEMENT ANALYSIS **\n");
+
+    T.begin();
     if (AutomaticRefinement)
     {
       if (!Clustering.ClusterRefinementAnalysis(DivisiveRefinement,
@@ -487,35 +550,51 @@ int main(int argc, char *argv[])
         exit (EXIT_FAILURE);
       }
     }
+    system_messages::show_timer("Refinement analysis time:", T.end());
   }
   else
   {
+    /**************************************************************************
+    * REGULAR CLUSTER ANALYSIS
+    **************************************************************************/
     system_messages::information("** CLUSTER ANALYSIS **\n");
+
+    T.begin();
     if (!Clustering.ClusterAnalysis())
     {
       cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
     }
+    system_messages::show_timer("Cluster analysis time:", T.end());
   }
 
+  /****************************************************************************
+   * SEQUENCE GENERATION
+   ***************************************************************************/
   if (GenerateClusterSequences)
   {
     system_messages::information("** GENERATING CLUSTER SEQUENCES **\n");
-    if (!Clustering.ComputeSequenceScore(ClusterSequencesFileName, 
+    if (!Clustering.ComputeSequenceScore(ClusterSequencesFileName,
                                          FASTASequences))
     {
       cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
     }
   }
-  
+
+  /****************************************************************************
+   * ANALYSIS DATA FLUSH
+   ***************************************************************************/
   system_messages::information("** FLUSHING DATA **\n");
-  if (!Clustering.FlushData(OutputDataFileName))
+  if (!Clustering.FlushData(OutputDataFileNamePrefix))
   {
     cerr << "Error writing data points: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
 
+  /****************************************************************************
+   * CLUSTERS INFORMATION FLUSH
+   ***************************************************************************/
   system_messages::information("** GENERATING CLUSTERS INFORMATION FILE **\n");
   if (!Clustering.FlushClustersInformation(OutputClustersInformationFileName))
   {
@@ -523,22 +602,31 @@ int main(int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
+  /****************************************************************************
+   * GNUPlot SCRIPTs GENERATION
+   ***************************************************************************/
   system_messages::information("** GENERATING GNUPlot SCRIPTS **\n");
-  if (!Clustering.PrintPlotScripts(OutputDataFileName))
+  if (!Clustering.PrintPlotScripts(OutputDataFileNamePrefix))
   {
     cerr << "Error printing plot scripts: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
 
+  /****************************************************************************
+   * TRACE RECONSTRUCTION
+   ***************************************************************************/
   if (ReconstructTrace)
   {
     system_messages::information("** RECONSTRUCTING INPUT TRACE **\n");
+
+    T.begin();
     if (!Clustering.ReconstructInputTrace(OutputFileName))
     {
       cerr << "Error writing output trace: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
     }
+    system_messages::show_timer("Trace reconstruction time:", T.end());
   }
-  
+
   return 0;
 }

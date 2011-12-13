@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -56,12 +56,16 @@ using std::set;
 
 using std::pair;
 
+
+enum DataPrintSet { PrintClusteringBursts, PrintCompleteBursts, PrintAllBursts};
+
+
 class TraceData: public Error
 {
   protected:
 
     static TraceData* Instance;
-    
+
     TraceData(void);
 
     /* Number of total objects present in the trace = Tasks x (Threads x Task) */
@@ -78,13 +82,13 @@ class TraceData: public Error
     duration_t         DurationFilter;
     ParametersManager *Parameters;
 
-    /* Sampling containers */
+    /* Sampling attributes */
     size_t            NumberOfTasks;
-    vector<size_t>    PointsPerTask;
+    bool              SampleData;
 
     size_t ClusteringDimensions;
     size_t ExtrapolationDimensions;
-    
+
     bool NormalizeData;
     bool Normalized;
 
@@ -103,7 +107,7 @@ class TraceData: public Error
     vector<double>      MinValues; /* dimension used on the clustering    */
 
     vector<double>      SumValues; /* Sumatory of each clustering dimension */
-      
+
     vector<instance_t>  MaxInstances; /* Instances containing the max and min */
     vector<instance_t>  MinInstances; /* values */
 
@@ -112,10 +116,10 @@ class TraceData: public Error
     typedef vector<CPUBurst*>::iterator iterator;
 
     static TraceData* GetInstance(void);
-    
+
     void   SetTraceObjects(size_t TraceObjects) { this->TraceObjects = TraceObjects; };
     size_t GetTraceObjects(void) { return TraceObjects; };
-    
+
     bool NewBurst(task_id_t                         TaskId,
                   thread_id_t                       ThreadId,
                   line_t                            Line,
@@ -125,20 +129,25 @@ class TraceData: public Error
                   map<event_type_t, event_value_t>& EventsData,
                   bool                              toCluster = true);
 
-    vector<const Point*>& GetClusteringPoints(void) 
-    { 
+    bool Sampling(size_t MaxSamples);
+
+    vector<const Point*>& GetClusteringPoints(void)
+    {
       if (NormalizeData && Normalized == false)
       {
         Normalize();
       }
+
       return (vector<const Point*>&) ClusteringBursts;
     };
 
-    vector<CPUBurst*>& GetAllBursts(void)         { return AllBursts;     };
-    vector<CPUBurst*>& GetCompleteBursts(void)    { return CompleteBursts; };
-    vector<CPUBurst*>& GetClusteringBursts(void)  { return ClusteringBursts; };
-    vector<CPUBurst*>& GetFilteredBursts(void)    { return FilteredBursts; };
-    vector<CPUBurst*>& GetMissingDataBursts(void) { return MissingDataBursts; };
+    vector<const Point*>& GetCompletePoints(void) { return (vector<const Point*>&) CompleteBursts; }
+
+    vector<CPUBurst*>& GetAllBursts(void)         { return AllBursts;         }
+    vector<CPUBurst*>& GetCompleteBursts(void)    { return CompleteBursts;    }
+    vector<CPUBurst*>& GetClusteringBursts(void)  { return ClusteringBursts;  }
+    vector<CPUBurst*>& GetFilteredBursts(void)    { return FilteredBursts;    }
+    vector<CPUBurst*>& GetMissingDataBursts(void) { return MissingDataBursts; }
 
     /* Clustering points modifiers */
     void  Normalize(void);
@@ -165,43 +174,26 @@ class TraceData: public Error
 
     vector<bool>   GetClusteringParametersPrecision;
     vector<bool>   GetExtrapolationParametersPrecision;
-    
-    /*
-    Point* operator[](const size_t Index)
-    {
-      if (Index >= 0 && Index < ClusteringBursts.size())
-      {
-        return (Point*) ClusteringBursts[Index];
-      }
-      else
-      {
-        return NULL;
-      }
-    }
-    */
-    
-  
+
     vector<double>& GetMinValues(void) { return MinValues; };
     vector<double>& GetMaxValues(void) { return MaxValues; };
 
     // bool ComputeClusterStatistics(vector<cluster_id_t>& Cluster_IDs, );
 
     bool FlushPoints(ostream&             str,
-                     vector<cluster_id_t> Cluster_IDs    = vector<cluster_id_t> (0),
-                     bool                 PrintAllBursts = true);
+                     vector<cluster_id_t> Cluster_IDs = vector<cluster_id_t> (0),
+                     DataPrintSet         WhatToPrint = PrintAllBursts);
 
-
-    /*
-    bool FlushClusterSequences(ostream&  str,
-                               bool      FlushNoisePoints = true); */
-
-      
     /* DEBUG */
     void PrintPoints(void);
     void PrintTraceDataInformation(void);
-    
+
   private:
+
+    bool SampleSingleTask(vector<CPUBurst*>& TaskBursts, size_t NumSamples);
+
     void SetTasksToRead();
+
     bool ReadThisTask(task_id_t Task);
 };
 

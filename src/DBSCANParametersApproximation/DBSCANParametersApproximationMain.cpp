@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -118,15 +118,15 @@ ReadKValues(char* argument)
 {
   char* InternalCopy, *SubString;
   string k_begin, k_end;
-  
+
   InternalCopy = (char*) malloc(strlen(argument)+1);
   strcpy(InternalCopy, argument);
-  
+
   SubString = strtok(InternalCopy, ",");
   k_begin  = string(SubString);
-  
+
   SubString = strtok(NULL,",\n");
-  
+
   if (SubString == NULL)
   {
     k_end = k_begin;
@@ -138,8 +138,8 @@ ReadKValues(char* argument)
 
   Parameters["k_begin"] = k_begin;
   Parameters["k_end"]   = k_end;
-  
-  /* DEBUG 
+
+  /* DEBUG
   if (KNeighbour.size() == 1)
   {
     cout << "TEST -> " << KNeighbour[0] << endl;
@@ -156,7 +156,7 @@ ReadKValues(char* argument)
 */
 
   KNeighbourValuesRead = true;
-  
+
   return;
 }
 
@@ -246,14 +246,14 @@ ReadArgs(int argc, char *argv[])
     cerr << "K-Neighbour values missing ( \'-p\' parameter)" << endl;
     exit (EXIT_FAILURE);
   }
-  
+
   return;
 }
 
 void GetEventParsingParameters(char* EventParsingArgs)
 {
   char* err;
-  
+
   string       ArgsString (EventParsingArgs);
   stringstream ArgsStream (ArgsString);
   string       Buffer;
@@ -263,7 +263,7 @@ void GetEventParsingParameters(char* EventParsingArgs)
   while(std::getline(ArgsStream, Buffer, ','))
   {
     unsigned int CurrentType;
-    
+
     CurrentType = strtoul(Buffer.c_str(), &err, 0);
     if (*err)
     {
@@ -291,7 +291,7 @@ void GetEventParsingParameters(char* EventParsingArgs)
 int main(int argc, char *argv[])
 {
   libTraceClustering Clustering = libTraceClustering(true);
-  
+
   ReadArgs(argc, argv);
 
   if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, PARAMETER_APPROXIMATION))
@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
 
   if (UseParaverEventParsing)
   {
-    if (!Clustering.ExtractData(InputTraceName, EventsToParse))
+    if (!Clustering.ExtractData(InputTraceName, false, 0, EventsToParse)) // False -> No Sampling, 0 -> MaxSamples
     {
       cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
@@ -322,6 +322,6 @@ int main(int argc, char *argv[])
     cerr << "Error printing plot scripts: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
-  
+
   exit (EXIT_SUCCESS);
 }

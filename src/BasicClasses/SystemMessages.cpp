@@ -45,6 +45,7 @@ bool system_messages::distributed             = false;
 int  system_messages::my_rank                 = -1;
 bool system_messages::messages_from_all_ranks = false;
 
+bool system_messages::print_timers            = false;
 
 bool system_messages::percentage_ongoing      = false;
 int  system_messages::last_percentage_written = 0;
@@ -117,15 +118,15 @@ void system_messages::show_percentage_progress(const char* message,
 
   if (system_messages::verbose)
   {
-    if (system_messages::messages_from_all_ranks ||
-        (!system_messages::messages_from_all_ranks && my_rank == 0))
+    if (!system_messages::distributed)
     {
-      if (!system_messages::distributed)
-      {
-        fprintf(channel, "\r%s %03d%%", message, real_percentage);
-        fflush(channel);
-      }
-      else
+      fprintf(channel, "\r%s %03d%%", message, real_percentage);
+      fflush(channel);
+    }
+    else if (system_messages::messages_from_all_ranks ||
+            (!system_messages::messages_from_all_ranks && my_rank == 0))
+    {
+
       {
         if(!system_messages::percentage_ongoing)
         {
@@ -163,6 +164,27 @@ void system_messages::show_percentage_end(const char* message, FILE* channel)
     {
       fprintf(channel, " 100%%\n");
       system_messages::percentage_ongoing = false;
+    }
+  }
+}
+
+void system_messages::show_timer(string message, Timer::diff_type Time, FILE* channel)
+{
+  show_timer(message.c_str(), Time, channel);
+}
+
+void system_messages::show_timer(const char* message, Timer::diff_type Time, FILE* channel)
+{
+  if (system_messages::print_timers)
+  {
+    if (!system_messages::distributed)
+    {
+      fprintf(channel, "%s %u us\n", message, Time);
+    }
+    else if (system_messages::messages_from_all_ranks ||
+            (!system_messages::messages_from_all_ranks && my_rank == 0))
+    {
+      fprintf(channel, "%s %u us\n", message, Time);
     }
   }
 }

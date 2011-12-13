@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -72,7 +72,7 @@ bool libClustering::InitClustering(string              AlgorithmName,
  * Actual execution of the clustering algorithm
  *
  * \param Data Input vector containing the geometrical points to cluster. See class Point
- * \param Partition Output vector containing the assigned cluster ids for each point in the input vector
+ * \param Partition Output class containing the assigned cluster ids for each point in the input vector
  *
  * \return True if the clustering algorithm was correctly applied, false otherwise
  */
@@ -84,7 +84,28 @@ bool libClustering::ExecuteClustering(const vector<const Point*>& Data,
     ErrorMessage = Implementation->GetLastError();
     return false;
   }
-  
+
+  return true;
+}
+
+/**
+ * Performs the classification of the data using the (possible) internal
+ * classification structures of the clustering algorithm
+ *
+ * \param Data      Input vector containing the geometrical points to cluster. See class Point
+ * \param Partition Output class containing the assigned cluster ids for each point in the input vector
+ *
+ * \return True if the classification was correctly applied, false otherwise
+ */
+bool libClustering::ClassifyData(const vector<const Point*> &Data,
+                                 Partition                  &DataPartition)
+{
+  if (!Implementation->ClassifyData(Data, DataPartition))
+  {
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+
   return true;
 }
 
@@ -113,7 +134,7 @@ bool libClustering::ParametersApproximation(const vector<const Point*>& Data,
 
 /**
  * Return true if the clustering algorithm to be used is based on MPI
- * 
+ *
  * \return True if the clustering algorithm is based on MPI
  */
 bool libClustering::UsingADistributedAlgorithm(void)
@@ -123,7 +144,7 @@ bool libClustering::UsingADistributedAlgorithm(void)
 
 /**
  * Check if the algorithm uses a noise cluster
- * 
+ *
  * \return True if the clustering algorithm returns noise clusters
  */
 bool libClustering::HasNoise(void)
@@ -133,9 +154,9 @@ bool libClustering::HasNoise(void)
 
 /**
  * Returns the name of the clustering algorithm to be used
- * 
+ *
  * \return String with the name and parameters of the clustering algorithm  used
- */ 
+ */
 string libClustering::GetClusteringAlgorithmName(void)
 {
   return Implementation->GetClusteringAlgorithmName();

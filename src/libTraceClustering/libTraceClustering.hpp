@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -67,47 +67,51 @@ class libTraceClustering
 {
   private:
     libTraceClusteringImplementation* Implementation;
-    
+
     bool   Error,        Warning;
     string ErrorMessage, WarningMessage;
 
   public:
-    
-    
+
+
     libTraceClustering(bool verbose);
-    
+
     bool InitTraceClustering(string        ClusteringDefinitionXML,
                              unsigned char Flags);
 
     bool ExtractData(string            InputFileName,
+                     bool              SampleData    = false,
+                     unsigned int      MaxSamples    = 0,
                      set<unsigned int> EventsToParse = set<unsigned int> ());
-    
+
     bool ExtractData(string            InputFileName,
                      string            OutputCSVFileName,
+                     bool              SampleData    = false,
+                     unsigned int      MaxSamples    = 0,
                      set<unsigned int> EventsToParse = set<unsigned int> ());
 
     bool ClusterAnalysis (void);
 
     bool ClusterRefinementAnalysis(bool   Divisive,
                                    string OutputFileNamePrefix = "");
-    
+
     bool ClusterRefinementAnalysis(bool   Divisive,
                                    int    MinPoints,
                                    double MaxEps,
                                    double MinEps,
                                    int    Steps,
                                    string OutputFileNamePrefix = "");
-    
+
     bool FlushClustersInformation(string OutputClustersInfoFileName);
-    
-    bool FlushData(string OutputCSVFileName);
+
+    bool FlushData(string OutputCSVFileNamePrefix);
 
     bool ComputeSequenceScore(string OutputFilePrefix,
                               bool   FASTASequenceFile);
 
     bool ReconstructInputTrace(string OutputTraceName);
 
-    bool PrintPlotScripts(string DataFileName,
+    bool PrintPlotScripts(string DataFileNamePrefix,
                           string ScriptsFileNamePrefix = "");
 
     bool ParametersApproximation(string              OutputFileNamePrefix,
@@ -115,10 +119,10 @@ class libTraceClustering
 
     bool   GetError(void) { return Error; };
     string GetErrorMessage(void);
-    
+
     bool   GetWarning(void) { return Warning; };
     string GetWarningMessage(void);
-    
+
   protected:
 
 };

@@ -193,6 +193,11 @@ bool DBSCAN::Run(const vector<const Point*>& Data,
     DifferentIDs.insert(NOISE_CLUSTERID);
   }
 
+  /* We need a local copy of the assignment vector to later generate a possible
+   * classifier */
+  IDs     = ClusterAssignmentVector;
+  IDsUsed = DifferentIDs;
+
   system_messages::show_progress_end("Clustering points", (int) Data.size());
 
   return true;
@@ -214,39 +219,8 @@ string DBSCAN::GetClusteringAlgorithmNameFile(void) const
   return Result.str();
 }
 
-/*
-bool
-DBSCAN::GetClustersInformation(vector<ClusterInformation_t>& ClusterInfoVector)
-{
-  list<ClusterInformation_t>::iterator ClusterInformationIteraror;
 
-  if (!ClusteringReady)
-  {
-    SetError(true);
-    SetErrorMessage("clustering not ready");
-    return false;
-  }
 
-  // ClusterInfoVector.push_back(NoiseClusterInformation);
-
-  for (ClusterInformationIteraror  = ClustersInformation.begin();
-       ClusterInformationIteraror != ClustersInformation.end();
-       ClusterInformationIteraror++)
-  {
-    ClusterInfoVector.push_back(*ClusterInformationIteraror);
-  }
-
-  return true;
-}
-*/
-
-/*
-DataSet*
-DBSCAN::NewDataSet(void)
-{
-  return new DBSCANDataSet();
-}
-*/
 const string DBSCAN::PARAMETER_K_BEGIN = "k_begin";
 const string DBSCAN::PARAMETER_K_END   = "k_end";
 
@@ -354,6 +328,60 @@ bool DBSCAN::ComputeNeighbourhood(const vector<const Point*>& Data,
   return true;
 }
 
+/****************************************************************************
+ * Classifier Methods
+ ****************************************************************************/
+bool DBSCAN::Classify(const vector<const Point*> &Data,
+                      Partition                  &DataPartition)
+{
+  vector<cluster_id_t> &ClusterAssignmentVector = DataPartition.GetAssignmentVector();
+  set<cluster_id_t>    &DifferentIDs            = DataPartition.GetIDs();
+
+  DifferentIDs = IDsUsed;
+  ClusterAssignmentVector.clear();
+
+  system_messages::show_progress("Classifying points", 0, (int) Data.size());
+  for (size_t i = 0; i < Data.size(); i++)
+  {
+    system_messages::show_progress("Classifying points", i, (int) Data.size());
+    cluster_id_t CurrentID;
+
+    Classify(Data[i], CurrentID);
+    ClusterAssignmentVector.push_back(CurrentID);
+  }
+  system_messages::show_progress_end("Classifying points", (int) Data.size());
+
+  return true;
+}
+
+bool DBSCAN::Classify(const Point  *Point,
+                      cluster_id_t &ID)
+{
+  ANNpoint     QueryPoint;
+  ANNidxArray  ResultPoint    = new ANNidx[1];
+  ANNdistArray ResultDistance = new ANNdist[1];
+
+  QueryPoint = ToANNPoint(Point);
+
+  /* Query for the nearest point to the current */
+  SpatialIndex->annkSearch(QueryPoint, 1, ResultPoint, ResultDistance);
+
+  if (ResultDistance[0] < pow(Eps, 2.0))
+  {
+    ID = IDs[ResultPoint[0]];
+  }
+  else
+  {
+    ID = NOISE_CLUSTERID;
+  }
+
+  return true;
+}
+
+
+/****************************************************************************
+ * Private Methods
+ ****************************************************************************/
 bool DBSCAN::BuildKDTree(const vector<const Point*>& Data)
 {
   assert(Data.size() > 0);
@@ -383,13 +411,6 @@ bool DBSCAN::BuildKDTree(const vector<const Point*>& Data)
   return true;
 }
 
-/*
-bool
-DBSCAN::ExpandCluster(DBSCANDataSet      *InputData,
-                      DBSCANDataPoint    *Point,
-                      INT32               CurrentClusterId,
-                      ClusterInformation *CurrentClusterInformation)
-*/
 bool DBSCAN::ExpandCluster(const vector<const Point*>& Data,
                            point_idx                   CurrentPoint,
                            vector<cluster_id_t>&       ClusterAssignmentVector,
@@ -501,12 +522,6 @@ bool DBSCAN::ExpandCluster(const vector<const Point*>& Data,
 }
 
 /* Computes the eps-neighbourhood from the given point */
-
-/*
-void
-DBSCAN::EpsilonRangeQuery(DBSCANDataSet_t          InputData,
-                          DBSCANDataPoint_t        Point,
-                          list<DBSCANDataPoint_t>& SeedList) */
 void DBSCAN::EpsilonRangeQuery(const Point* const QueryPoint,
                                list<size_t>&      SeedList)
 {

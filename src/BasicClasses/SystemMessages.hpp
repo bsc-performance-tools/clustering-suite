@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -37,6 +37,8 @@
 
 #include <clustering_suite_config.h>
 
+#include <Timer.hpp>
+
 #include <cstdio>
 #include <string>
 using std::string;
@@ -56,13 +58,15 @@ namespace cepba_tools
       static bool messages_from_all_ranks;
 
       static bool percentage_ongoing;
-      
+
+      static bool print_timers;
+
       static int  last_percentage_written;
 
       static void information(string message, FILE* channel = stdout);
-      
+
       static void information(const char* message, FILE* channel = stdout);
-      
+
       static void die(const char* message, FILE* channel = stderr);
 
       static void show_progress(const char* message, int current, int total, FILE* channel = stdout);
@@ -72,6 +76,10 @@ namespace cepba_tools
       static void show_percentage_progress(const char* message, int current_percentage, FILE* channel = stdout);
 
       static void show_percentage_end(const char* message, FILE* channel = stdout);
+
+      static void show_timer(string message, Timer::diff_type Time, FILE* channel = stdout);
+
+      static void show_timer(const char* message, Timer::diff_type Time, FILE* channel = stdout);
   };
 }
 #endif // _SYSTEMMESSAGES_HPP_

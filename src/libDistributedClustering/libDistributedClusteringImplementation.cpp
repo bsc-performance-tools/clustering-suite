@@ -879,7 +879,7 @@ bool libDistributedClusteringImplementation::GetFullBurstsInformation(vector<Poi
 
 /**
  * Returns the Cluster IDs obtained in the last cluster analys
- * 
+ *
  * \param ClusterIDs I/O vector containing the resulting cluster IDs
  *
  * \result True if the operation finished succesfuly, false otherwise
@@ -1232,7 +1232,9 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
   if (LocalPartition)
   {
     /* This won't work!!!!!!! */
-    if (!Data->FlushPoints(OutputStream, LastPartition.GetAssignmentVector(), false)) // false = Not All Data!!
+    if (!Data->FlushPoints(OutputStream,
+                           LastPartition.GetAssignmentVector(),
+                           PrintClusteringBursts)) // false = Not All Data!!
     {
       SetError(true);
       SetErrorMessage("error flushing local points", Data->GetLastError());
@@ -1241,7 +1243,9 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
   }
   else
   {
-    if (!Data->FlushPoints(OutputStream, ClassificationPartition.GetAssignmentVector(), false)) // false = Not All Data!!
+    if (!Data->FlushPoints(OutputStream,
+                           ClassificationPartition.GetAssignmentVector(),
+                           PrintClusteringBursts)) // false = Not All Data!!
     {
       SetError(true);
       SetErrorMessage("error flushing global points", Data->GetLastError());

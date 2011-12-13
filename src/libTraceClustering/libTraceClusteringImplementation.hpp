@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -35,6 +35,9 @@
 #ifndef _LIBTRACECLUSTERINGIMPLEMENTATION_HPP_
 #define _LIBTRACECLUSTERINGIMPLEMENTATION_HPP_
 
+#include <string>
+using std::string;
+
 #include <Error.hpp>
 using cepba_tools::Error;
 
@@ -46,40 +49,48 @@ using cepba_tools::Error;
 
 class libTraceClusteringImplementation: public Error
 {
+
+    static const string  DataFilePostFix;
+    static const string  SampledDataFilePostFix;
+
   private:
-    
+
     TraceData           *Data;
     libClustering       *ClusteringCore;
-    Partition            LastPartition;
+    Partition            LastPartition, ClassificationPartition;
     ClusteringStatistics Statistics;
-    
+
     string               InputFileName;
     input_file_t         InputFileType;
+
+    bool                 SampleData;
 
     bool                 ClusteringExecuted;
     bool                 ClusteringRefinementExecution;
 
     bool                 PRVEventsParsing;
     set<event_type_t>    EventsToDealWith;
-    
+
     unsigned char  UseFlags;
-    
+
   public:
     libTraceClusteringImplementation(bool verbose);
-    
+
     bool InitTraceClustering(string        ClusteringDefinitionXML,
                              unsigned char UseFlags);
 
-    bool ExtractData(string InputFileName,
+    bool ExtractData(string            InputFileName,
+                     bool              SampleData = false,
+                     unsigned int      MaxSamples = 0,
                      set<event_type_t> EventsToDealWith = set<event_type_t> ());
 
-    bool FlushData(string OutputFileName);
-    
+    bool FlushData(string OutputCSVFileNamePrefix);
+
     bool ClusterAnalysis(void);
 
     bool ClusterRefinementAnalysis(bool   Divisive,
                                    string OutputFileNamePrefix);
-    
+
     bool ClusterRefinementAnalysis(bool   Divisive,
                                    int    MinPoints,
                                    double MaxEps,
@@ -94,20 +105,20 @@ class libTraceClusteringImplementation: public Error
 
     bool ReconstructInputTrace(string OutputTraceName);
 
-    bool PrintPlotScripts(string DataFileName,
+    bool PrintPlotScripts(string DataFileNamePrefix,
                           string ScriptsFileNamePrefix);
 
     bool ParametersApproximation(string              OutputFileNamePrefix,
                                  map<string, string> Parameters);
-    
+
   private:
     bool GenericRefinement(bool           Divisive,
                            int            MinPoints,
                            vector<double> EpsilonPerLevel,
                            string         OutputFileNamePrefix);
-  
+
     void GetTaskSet(size_t TotalTasksInTrace);
-    
+
     bool GatherMPIPartition(void);
 
     bool GatherMaster(void);
@@ -115,7 +126,7 @@ class libTraceClusteringImplementation: public Error
     bool GatherSlave(void);
 
     bool ReconstructMasterPartition(vector<vector<vector<long> > >& GlobalLinesPerCluster);
-    
+
 private:
 
 };

@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -40,7 +40,7 @@
 //#include "KDTreeClassifier.hpp"
 
 /* Forward declarations */
-class Classifier;
+#include "Classifier.hpp"
 class Partition;
 
 #include <ANN/ANN.h>
@@ -60,9 +60,8 @@ using std::pair;
 
 class DBSCAN: public ClusteringAlgorithm
 {
-
   typedef size_t point_idx;
-  
+
   private:
     double              Eps;
     INT32               MinPoints;
@@ -72,24 +71,20 @@ class DBSCAN: public ClusteringAlgorithm
     ClusterInformation* NoiseClusterInfo;
     ClusterInformation* ThresholdFilteredClusterInfo; */
 
-    ANNpointArray       ANNDataPoints;
-    ANNkd_tree*         SpatialIndex;
-    
-    size_t              NoisePoints;
+    ANNpointArray        ANNDataPoints;
+    ANNkd_tree*          SpatialIndex;
+
+    size_t               NoisePoints;
+
+    vector<cluster_id_t> IDs;
+    set<cluster_id_t>    IDsUsed;
 
   public:
     static const string NAME;
-    
+
     static const string EPSILON_STRING;
     static const string MIN_POINTS_STRING;
 
-    /*
-    DBSCAN(double _Eps, INT32 _MinPoints, double FilterThreshold = 0.0)
-    :ClusteringAlgorithm(FilterThreshold),
-     Eps(_Eps),
-     MinPoints(_MinPoints)
-    {};
-    */
     DBSCAN(map<string, string> ClusteringParameters);
 
     ~DBSCAN(void) {};
@@ -99,40 +94,37 @@ class DBSCAN: public ClusteringAlgorithm
 
     INT32  GetMinPoints(void) const      { return MinPoints; };
     void   SetMinPoints(INT32 MinPoints) { this->MinPoints = MinPoints; };
-    
+
     bool Run(const vector<const Point*>& Data,
              Partition&                  DataPartition,
              bool                        SimpleRun);
 
-    /*
-    Classifier*
-    GetClassifier(void) { return new KDTreeClassifier(SpatialIndex, Eps); }; */
-  
     string GetClusteringAlgorithmName(void) const;
     string GetClusteringAlgorithmNameFile(void) const;
-
-    /*
-    bool
-    GetClustersInformation(vector<ClusterInformation*>& ClusterInfoVector);
-    */
-
-    /* bool GetDataPoints(vector<DataPoint*>& DataPoints); */
 
     bool HasNoise(void) { return true; };
 
     static const string PARAMETER_K_BEGIN;
     static const string PARAMETER_K_END;
-      
+
     bool ParametersApproximation(const vector<const Point*>& Data,
                                  map<string, string>&        Parameters,
                                  string                      OutputFileNamePrefix);
-                                 
+
     bool ComputeNeighbourhood(const vector<const Point*>& Data,
                               size_t                      K,
                               vector<double>&             Distances);
 
+    /* Classifier Methods */
+    bool GetClassifier(Classifier& NewClassifier);
+
+    bool Classify(const vector<const Point*> &Data,
+                  Partition                  &DataPartition);
+
+    bool Classify(const Point* Point, cluster_id_t& ID);
+
   private:
-    
+
     bool BuildKDTree(const vector<const Point*>& Data);
 
     bool ExpandCluster(const vector<const Point*>& Data,
@@ -158,7 +150,7 @@ class DBSCAN: public ClusteringAlgorithm
                                INT32                       k,
                                vector<double>&             Distances);
     */
-    
+
     void ComputeNeighboursDistance(const  Point*            QueryPoint,
                                    size_t                   k_begin,
                                    size_t                   k_end,

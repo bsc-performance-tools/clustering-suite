@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -56,12 +56,14 @@ using std::numeric_limits;
 
 using std::make_pair;
 
+#include <cmath>
+
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
 
 /******************************************************************************
-/* Singleton management 
+/* Singleton management
  *****************************************************************************/
 TraceData* TraceData::Instance = NULL;
 
@@ -74,76 +76,6 @@ TraceData* TraceData::GetInstance(void)
   return TraceData::Instance;
 }
 
-/* A  B  C  D  E  F  G  H  I  K  L  M  N  P  Q  R  S  T  V  W  X  Y  Z  * */
-
-/*
-INT32 TraceData::AminoacidTranslationSize = 23;
-char TraceData::AminoacidTranslation[23] = {
-  'Z',  // NOISE
-  'A',  // 1
-  'B',  // 2
-  'C',  // 3
-  'D',  // 4
-  'E',  // 5
-  'F',  // 6
-  'G',  // 7
-  'H',  // 8
-  'I',  // 9
-  'K',  // 10
-  'L',  // 11
-  'M',  // 12
-  'N',  // 13
-  'P',  // 14
-  'Q',  // 15
-  'R',  // 16
-  'S',  // 17
-  'T',  // 18
-  'V',  // 19
-  'W',  // 20
-  'X',  // 21
-  'Y'}; // 22
-*/
-
-/*
-INT32 TraceData::AminoacidTranslationSize = 27;
-
-char TraceData::AminoacidTranslation[27] = { 
-  'Z',
-  'A',
-  'B',
-  'C',
-  'D',
-  'E',
-  'F',
-  'G',
-  'H',
-  'I',
-  'J',
-  'K',
-  'L',
-  'M',
-  'N',
-  'O',
-  'P',
-  'Q',
-  'R',
-  'S',
-  'T',
-  'U',
-  'V',
-  'W',
-  'X',
-  'Y'};
-*/
-
-/*
-
-INT32 TraceData::AminoacidTranslationSize = 50;
-
-char TraceData::AminoacidTranslation[50] = { 'Z', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
-  'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 
-  'W', 'Y', 'a', 'b', 'c', 'd', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v' , 'w', 'x', 'y', 'z' }; */
 
 /****************************************************************************
  * Constructor                                                              *
@@ -152,7 +84,7 @@ char TraceData::AminoacidTranslation[50] = { 'Z', 'A', 'B', 'C', 'D', 'E', 'F', 
 TraceData::TraceData(void)
 {
   ClusteringConfiguration *Configuration;
-  
+
   /* Get Configuration Manager */
   Configuration = ClusteringConfiguration::GetInstance();
   if (!Configuration->IsInitialized())
@@ -161,7 +93,7 @@ TraceData::TraceData(void)
     SetErrorMessage("configuration not initialized");
     return;
   }
-  
+
   /* Get Parameters Manager */
   Parameters = ParametersManager::GetInstance();
   if (Parameters->GetError())
@@ -177,17 +109,17 @@ TraceData::TraceData(void)
     MyRank     = Configuration->GetMyRank();
     TotalRanks = Configuration->GetTotalRanks();
   }
-  
+
   /* Set normalization attributes */
   NormalizeData = Configuration->GetNormalizeData();
   Normalized    = false;
-  
+
   /* Get the duration filter */
   DurationFilter = Configuration->GetDurationFilter();
 
   /* Initialization of Max and Min values */
   ClusteringDimensions = Parameters->GetClusteringParametersSize();
-  
+
   MinValues    = vector<double>(ClusteringDimensions, numeric_limits<double>::max());
   MaxValues    = vector<double>(ClusteringDimensions, -1.0 * numeric_limits<double>::max()); // Tricky!!
   MinInstances = vector<instance_t>(ClusteringDimensions, 0);
@@ -198,6 +130,10 @@ TraceData::TraceData(void)
   /* NO distribution defaults */
   ReadAllTasks = true;
   Master       = false;
+
+  /* NO sampling by default */
+  SampleData    = false;
+  NumberOfTasks = 0;
 }
 
 /*
@@ -255,13 +191,13 @@ TraceData::NewBurst(task_id_t                         TaskId,
                     bool                              toCluster)
 {
   CPUBurst* Burst;
-  
+
   vector<double>      ClusteringRawData;
   vector<double>      ClusteringProcessedData;
   map<size_t, double> ExtrapolationData;
   bool                DurationFiltered, RangeFiltered, Incomplete;
   burst_type_t        BurstType;
-  
+
   /* JGG: Check InstDisp potential overflows! */
   event_value_t CyclesCheck   = 0;
   event_value_t TotInstCheck  = 0;
@@ -269,15 +205,15 @@ TraceData::NewBurst(task_id_t                         TaskId,
 
   /* DEBUG */
 #ifdef DEBUG_PARAVER_INPUT
-  printf("New BURST for T%02d:Th%02d Accepted (DurationFilter = %lld BurstDuration = %lld)!\n", 
+  printf("New BURST for T%02d:Th%02d Accepted (DurationFilter = %lld BurstDuration = %lld)!\n",
          TaskId,
          ThreadId,
          DurationFilter,
          BurstDuration);
 #endif
-  
+
   /* Add duration to events data */
-  EventsData.insert(make_pair(DURATION_EVENT_TYPE, 
+  EventsData.insert(make_pair(DURATION_EVENT_TYPE,
                               (event_value_t) BurstDuration));
 
   /* Add data to parameters manager */
@@ -311,7 +247,7 @@ TraceData::NewBurst(task_id_t                         TaskId,
                         ExtrapolationData,
                         BurstType);
 
-  /* DEBUG 
+  /* DEBUG
   ostringstream Messages;
   Messages << "Burst number " << Burst->GetInstance() << " Type = " << BurstType << endl;
   system_messages::information(Messages.str().c_str());
@@ -326,9 +262,14 @@ TraceData::NewBurst(task_id_t                         TaskId,
   {
     if (Master || ReadThisTask(TaskId))
     {
+      if (TaskId > NumberOfTasks)
+      { /* Keep track of the total number of tasks */
+        NumberOfTasks = TaskId;
+      }
+
       CompleteBursts.push_back(Burst);
-    }    
-    
+    }
+
     for (size_t i = 0; i < ClusteringDimensions; i++)
     {
       if (ClusteringProcessedData[i] > MaxValues[i])
@@ -356,122 +297,79 @@ TraceData::NewBurst(task_id_t                         TaskId,
   {
     delete Burst;
   }
-  
-  /*
-  if (BurstType == MissingDataBurst)
-  {
-    MissingDataBursts.push_back(Burst);
-  }
-  else if (BurstType == RangeFilteredBurst || BurstType == DurationFilteredBurst)
-  {
-    FilteredBursts.push_back(Burst);
-  }
-  else
-  {
-    ClusteringBursts.push_back(Burst);
-
-    for (size_t i = 0; i < ClusteringDimensions; i++)
-    {
-      if (ClusteringProcessedData[i] > MaxValues[i])
-      {
-        MaxValues[i]    = ClusteringProcessedData[i];
-        MaxInstances[i] = Burst->GetInstance();
-      }
-
-      if (ClusteringProcessedData[i] < MinValues[i])
-      {
-        MinValues[i]    = ClusteringProcessedData[i];
-        MinInstances[i] = Burst->GetInstance();
-      }
-
-      SumValues[i] += ClusteringProcessedData[i];
-    }
-  }
-  */
 
   return true;
 }
 
-/*
-bool
-TraceData::NewBurst(INT32               TaskId,
-                    INT32               ThreadId,
-                    UINT64              Line,
-                    UINT64              BeginTime,
-                    UINT64              EndTime,
-                    UINT64              BurstDuration,
-                    vector<double>&     ClusteringRawData,
-                    vector<double>&     ClusteringProcessedData,
-                    map<INT32, double>& ExtrapolationData,
-                    burst_type_t        BurstType)
+/****************************************************************************
+ * NewBurst
+ ***************************************************************************/
+bool TraceData::Sampling(size_t MaxSamples)
 {
-  CPUBurst* Burst;
+  vector< vector<CPUBurst*> > BurstsPerTask (NumberOfTasks, vector<CPUBurst*>());
 
-  if (this->ClusteringDimensions != ClusteringRawData.size())
+  if (CompleteBursts.size() <= MaxSamples)
   {
-    SetErrorMessage("incorrect number of clustering dimensions");
-    SetError(true);
-    return false;
-  }
-
-  /* A point do not have to have all extrapolation dimensions 
-  if (this->ExtrapolationDimensions != ExtrapolationDimensions.size())
-  {
-    SetErrorMessage("incorrect number of extrapolation dimensions");
-    SetError(true);
-    return false;
-  }
-
-  
-  Burst = new CPUBurst (TaskId,
-                        ThreadId,
-                        Line,
-                        BeginTime,
-                        EndTime,
-                        BurstDuration,
-                        ClusteringRawData,
-                        ClusteringProcessedData,
-                        ExtrapolationData,
-                        BurstType);
-
-  if (BurstType == DurationFilteredBurst ||
-      BurstType == RangeFilteredBurst    ||
-      BurstType == MissingDataBurst)
-  {
-    FilteredBursts.push_back(Burst);
+    /* No Sampling Needed! */
+    this->SampleData = false;
+    return true;
   }
   else
   {
-    ClusteringBursts.push_back(Burst);
+    this->SampleData = true;
+    /* Previously selected bursts are not used */
+    ClusteringBursts.clear();
+  }
 
-    for (INT32 i = 0; i < this->ClusteringDimensions; i++)
+  /* Compute the total number of bursts per task */
+  for (size_t i = 0; i < CompleteBursts.size(); i++)
+  {
+    BurstsPerTask[CompleteBursts[i]->GetTaskId()].push_back(CompleteBursts[i]);
+  }
+
+  /* DEBUG
+  cout << "Bursts per Task: ";
+  for (size_t i = 0; i < BurstsPerTask.size(); i++)
+  {
+    cout << "[" << i+1 << ":" << BurstsPerTask[i].size() << "] ";
+  }
+  cout << endl; */
+
+  /* DEBUG
+  cout << "Sampling Sizes = "; */
+  for (size_t i = 0; i < BurstsPerTask.size(); i++)
+  {
+    size_t CurrentTaskSampleSize;
+
+    CurrentTaskSampleSize = (size_t) std::floor((BurstsPerTask[i].size()*MaxSamples)/CompleteBursts.size());
+
+    /* DEBUG
+    cout << i << ":" << CurrentTaskSampleSize << " "; */
+
+    if (!SampleSingleTask(BurstsPerTask[i], CurrentTaskSampleSize))
     {
-      if (ClusteringProcessedData[i] > MaxValues[i])
-      {
-        MaxValues[i] = ClusteringProcessedData[i];
-        MaxInstances[i] = Burst->GetInstance();
-      }
-
-      if (ClusteringProcessedData[i] < MinValues[i])
-      {
-        MinValues[i] = ClusteringProcessedData[i];
-        MinInstances[i] = Burst->GetInstance();
-      }
-
-      SumValues[i] += ClusteringProcessedData[i];
+      return false;
     }
   }
-}
-*/
 
-void 
-TraceData::Normalize(void)
+  /* Sort sampled vector */
+  sort(ClusteringBursts.begin(), ClusteringBursts.end(), InstanceNumCompare());
+  // cout << endl;
+
+  /* DEBUG
+  cout << "ClusteringBursts.size() =" << ClusteringBursts.size() << endl;
+  exit(EXIT_SUCCESS); */
+
+  return true;
+}
+
+void TraceData::Normalize(void)
 {
   TraceData::iterator DataIterator;
 
   if (NormalizeData && !Normalized)
   {
-    /* DEBUG 
+    /* DEBUG
     cout << "MaxValues = { ";
     for (INT32 i = 0; i < MaxValues.size(); i++)
     {
@@ -485,7 +383,7 @@ TraceData::Normalize(void)
       cout << MaxInstances[i] << " ";
     }
     cout << "}" << endl;
-    
+
     cout << "MinValues = { ";
     for (INT32 i = 0; i < MinValues.size(); i++)
     {
@@ -504,7 +402,7 @@ TraceData::Normalize(void)
 #ifdef HAVE_MPI
     /* No longer needed
     if (MPI)
-    { /* Range of dimensions should be distributed 
+    { /* Range of dimensions should be distributed
       double LocalMaxValues[MaxValues.size()];
       double GlobalMaxValues[MaxValues.size()];
       double LocalMinValues[MinValues.size()];
@@ -516,7 +414,7 @@ TraceData::Normalize(void)
         LocalMinValues[i] = MinValues[i];
       }
 
-      /* Reduction of Max Values 
+      /* Reduction of Max Values
       MPI_Allreduce((void*) LocalMaxValues,
                     (void*) GlobalMaxValues,
                     (int)   MaxValues.size(),
@@ -529,7 +427,7 @@ TraceData::Normalize(void)
         MaxValues[i] = GlobalMaxValues[i];
       }
 
-      /* Reduction of Min Values 
+      /* Reduction of Min Values
       MPI_Allreduce((void*) LocalMinValues,
                     (void*) GlobalMinValues,
                     (int)   MaxValues.size(),
@@ -541,9 +439,9 @@ TraceData::Normalize(void)
       {
         MinValues[i] = GlobalMinValues[i];
       }
-      
-      DEBUG 
-      
+
+      DEBUG
+
       cout << "After Reduce MaxValues = { ";
       for (INT32 i = 0; i < MaxValues.size(); i++)
       {
@@ -557,12 +455,12 @@ TraceData::Normalize(void)
         cout << MinValues[i] << " ";
       }
       cout << "}" << endl;
-      
+
     } */
 #endif
 
     vector<double> Factors = Parameters->GetClusteringParametersFactors();
-  
+
     for (DataIterator  = CompleteBursts.begin();
          DataIterator != CompleteBursts.end();
          DataIterator++)
@@ -593,18 +491,18 @@ void
 TraceData::ScalePoints(void)
 {
   TraceData::iterator DataIterator;
-  
+
   vector<double> Mean          (ClusteringDimensions);
   vector<double> SumDiffSquare (ClusteringDimensions);
   vector<double> RMS           (ClusteringDimensions);
-  
+
   for (INT32 i = 0; i < Mean.size(); i++)
   {
     Mean[i]          = SumValues[i]/ClusteringBursts.size();
     SumDiffSquare[i] = 0.0;
     RMS[i]           = 0.0;
   }
-  
+
   /* Compute the Root-Mean-Square */
   for (DataIterator  = ClusteringBursts.begin();
        DataIterator != ClusteringBursts.end();
@@ -612,16 +510,16 @@ TraceData::ScalePoints(void)
   {
     for (INT32 i = 0; i < ClusteringDimensions; i++)
     {
-      SumDiffSquare[i] += 
+      SumDiffSquare[i] +=
         pow((*(*DataIterator))[i] - Mean[i],2.0);
     }
   }
-  
+
   for (INT32 i = 0; i < ClusteringDimensions; i++)
   {
     RMS[i] = sqrt(SumDiffSquare[i]/(ClusteringBursts.size()-1));
   }
-  
+
   /* Scale the points */
   for (DataIterator  = ClusteringBursts.begin();
        DataIterator != ClusteringBursts.end();
@@ -636,12 +534,12 @@ TraceData::MeanAdjust(void)
 {
   TraceData::iterator DataIterator;
   vector<double> DimensionsAverage (ClusteringDimensions);
-  
+
   for (INT32 i = 0; i < ClusteringDimensions; i++)
   {
     DimensionsAverage[i] = 0.0;
   }
-  
+
   for (DataIterator  = ClusteringBursts.begin();
        DataIterator != ClusteringBursts.end();
        DataIterator++)
@@ -651,12 +549,12 @@ TraceData::MeanAdjust(void)
       DimensionsAverage[i] += (*(*DataIterator))[i];
     }
   }
-  
+
   for (INT32 i = 0; i < ClusteringDimensions; i++)
   {
     DimensionsAverage[i] = DimensionsAverage[i]/ClusteringBursts.size();
   }
-  
+
   for (DataIterator  = ClusteringBursts.begin();
        DataIterator != ClusteringBursts.end();
        DataIterator++)
@@ -669,10 +567,10 @@ void
 TraceData::BaseChange(vector< vector<double> >& BaseChangeMatrix)
 {
   TraceData::iterator DataIterator;
-  
+
   /* TEST */
   cout << "Changing base of data set" << endl;
-  
+
   for (DataIterator  = ClusteringBursts.begin();
        DataIterator != ClusteringBursts.end();
        DataIterator++)
@@ -713,10 +611,10 @@ void TraceData::SetNumberOfTasks(size_t NumberOfTasks)
 /*
 void TraceData::ResetClusteringPoints(void)
 { Moves all complete bursts in 'AllBursts' vector to 'ClusteringBursts'
-  vector 
+  vector
 
   ClusteringBursts.clear();
-  
+
   for (size_t i = 0; i < AllBursts.size(); i++)
   {
     if (AllBursts[i]->GetBurstType() == CompleteBurst)
@@ -736,18 +634,18 @@ TraceData::ReplaceClusterIds(vector< pair<UINT64, INT32> >& ClustersIdList)
   INT32 i;
   bool MorePoints = true;
   bool Found;
-  
+
   TraceData::iterator PointsIterator;
 
-  /* DEBUG 
+  /* DEBUG
   cout << "Real Points = " << ClusteringPoints.size() << endl;
-  
+
   PointsIterator = ClusteringPoints.begin();
-  
+
   for (i = 0; i < ClustersIdList.size() && MorePoints; i++)
   {
     Found = false;
-    
+
     while (!Found && MorePoints)
     {
       if ((*PointsIterator)->GetInstance() == ClustersIdList[i].first)
@@ -755,7 +653,7 @@ TraceData::ReplaceClusterIds(vector< pair<UINT64, INT32> >& ClustersIdList)
         (*PointsIterator)->SetClusterId(ClustersIdList[i].second);
         Found = true;
       }
-      
+
       PointsIterator++;
       if (PointsIterator == ClusteringPoints.end())
       {
@@ -768,7 +666,7 @@ TraceData::ReplaceClusterIds(vector< pair<UINT64, INT32> >& ClustersIdList)
   {
     /* Some Points where not assigned
     cout << "i = " << i << " ClustersIdList.size() = " << ClustersIdList.size() << endl;
-    
+
     SetError(true);
     SetErrorMessage("some instances have not found the corresponding point");
     return false;
@@ -780,12 +678,12 @@ TraceData::ReplaceClusterIds(vector< pair<UINT64, INT32> >& ClustersIdList)
 
 bool TraceData::FlushPoints(ostream&             str,
                             vector<cluster_id_t> Cluster_IDs,
-                            bool                 PrintAllBursts)
+                            DataPrintSet         WhatToPrint)
 {
   size_t TotalPoints;
-  
+
   bool   Unclassified;
-  
+
   ParametersManager *Parameters = ParametersManager::GetInstance();
 
   vector<string> ClusteringParametersNames;
@@ -793,7 +691,7 @@ bool TraceData::FlushPoints(ostream&             str,
 
   vector<bool>   ClusteringParametersPrecision;
   vector<bool>   ExtrapolationParametersPrecision;
-  
+
   TraceData::iterator ClusteringBurstsIterator;
   TraceData::iterator FilteredBurstsIterator;
 
@@ -807,59 +705,86 @@ bool TraceData::FlushPoints(ostream&             str,
     Unclassified = true;
     // Cluster_IDs = vector<cluster_id_t> (ClusteringBursts.size(), UNCLASSIFIED);
   }
-  
-  /*
-  if (Cluster_IDs.size() != CompleteBursts.size())
+
+  switch (WhatToPrint)
   {
-    ostringstream Message;
-    Message << "number of IDs (" << Cluster_IDs.size() << ") ";
-    Message << "different from number of bursts (" << CompleteBursts.size() << ")";
-    SetError(true);
-    SetErrorMessage(Message.str());
-    return false;
-  }
-  */
-  
-  if (Cluster_IDs.size() != CompleteBursts.size())
-  {
-    /* Check if is the master, and we need to flush the clustering data */
-    if (Master && Cluster_IDs.size() != ClusteringBursts.size())
+    case PrintClusteringBursts:
     {
-      ostringstream Message;
-      Message << "number of IDs (" << Cluster_IDs.size() << ") ";
-      Message << "different from number of bursts (unknown)";
-    }
-    else
-    {
+      if (Cluster_IDs.size() != ClusteringBursts.size())
+      {
+        ostringstream Message;
+        Message << "number of IDs (" << Cluster_IDs.size() << ") ";
+        Message << "different from number of clustering bursts (";
+        Message << ClusteringBursts.size() << ")";
+
+        SetErrorMessage(Message.str());
+        SetError(true);
+        return false;
+      }
+
       BeginLimitIterator = ClusteringBursts.begin();
       EndLimitIterator   = ClusteringBursts.end();
       DataSize           = ClusteringBursts.size();
-      sort(ClusteringBursts.begin(), ClusteringBursts.end(), InstanceNumCompare());
+
+      sort(ClusteringBursts.begin(),
+           ClusteringBursts.end(),
+           InstanceNumCompare());
+
+      break;
     }
-  }
-  else
-  {
-    if (PrintAllBursts)
+    case PrintCompleteBursts:
     {
-      BeginLimitIterator = AllBursts.begin();
-      EndLimitIterator   = AllBursts.end();
-      DataSize           = AllBursts.size();
-      sort(AllBursts.begin(), AllBursts.end(), InstanceNumCompare());
-    }
-    else
-    {
+      if (Cluster_IDs.size() != CompleteBursts.size())
+      {
+        ostringstream Message;
+        Message << "number of IDs (" << Cluster_IDs.size() << ") ";
+        Message << "different from number of complete bursts (";
+        Message << ClusteringBursts.size() << ")";
+
+        SetErrorMessage(Message.str());
+        SetError(true);
+        return false;
+      }
+
       BeginLimitIterator = CompleteBursts.begin();
       EndLimitIterator   = CompleteBursts.end();
       DataSize           = CompleteBursts.size();
+
       sort(CompleteBursts.begin(), CompleteBursts.end(), InstanceNumCompare());
+
+      break;
+    }
+    case PrintAllBursts:
+    {
+      /* When printing all bursts, or the data have not been classified
+         or  all the complete bursts must have an ID  */
+      if (!Unclassified && (Cluster_IDs.size() != CompleteBursts.size()))
+      {
+        ostringstream Message;
+        Message << "number of IDs (" << Cluster_IDs.size() << ") ";
+        Message << "different from number of bursts (";
+        Message << CompleteBursts.size() << ")";
+
+        SetErrorMessage(Message.str());
+        SetError(true);
+        return false;
+      }
+
+      BeginLimitIterator = AllBursts.begin();
+      EndLimitIterator   = AllBursts.end();
+      DataSize           = AllBursts.size();
+
+      sort(AllBursts.begin(), AllBursts.end(), InstanceNumCompare());
+
+      break;
     }
   }
-  
+
   if (NormalizeData && !Normalized)
   {
     Normalize();
   }
-  
+
   ClusteringParametersNames    = Parameters->GetClusteringParametersNames();
   ExtrapolationParametersNames = Parameters->GetExtrapolationParametersNames();
 
@@ -886,30 +811,6 @@ bool TraceData::FlushPoints(ostream&             str,
 
   str << ",ClusterID" << endl;
 
-  /* DEBUG
-  cout << "Clustering Bursts = " << ClusteringBursts.size() << endl;
-  cout << "All Bursts = "        << AllBursts.size() << endl;
-  */
-
-  /* Changed for the previous comparison, to solve the problem when printing
-   * local/global data 
-  if (AllData)
-  {
-    BeginLimitIterator = AllBursts.begin();
-    EndLimitIterator   = AllBursts.end();
-    DataSize           = AllBursts.size();
-    sort(AllBursts.begin(), AllBursts.end(), InstanceNumCompare());
-  }
-  else
-  { /* Print the complete points (as a result of a clustering analysis, all
-     * complete points must have an ID 
-    BeginLimitIterator = CompleteBursts.begin();
-    EndLimitIterator   = CompleteBursts.end();
-    DataSize           = CompleteBursts.size();
-    sort(CompleteBursts.begin(), CompleteBursts.end(), InstanceNumCompare());
-  }
-  */
-  
   system_messages::show_progress("Writing point to disc", 0, DataSize);
   for (BurstsIterator  = BeginLimitIterator, ClusteringBurstsCounter = 0, TotalPoints = 0;
        BurstsIterator != EndLimitIterator;
@@ -923,7 +824,7 @@ bool TraceData::FlushPoints(ostream&             str,
     cout << " Burst Type = " << (*BurstsIterator)->GetBurstType();
     */
     ++TotalPoints;
-    
+
     switch((*BurstsIterator)->GetBurstType())
     {
       case CompleteBurst:
@@ -944,7 +845,7 @@ bool TraceData::FlushPoints(ostream&             str,
         // cout << " Unknown!" << endl;
         continue;
     }
-    
+
     (*BurstsIterator)->Print(str,
                              ClusteringParametersPrecision,
                              ExtrapolationParametersPrecision,
@@ -953,95 +854,20 @@ bool TraceData::FlushPoints(ostream&             str,
     system_messages::show_progress("Writing point to disc", TotalPoints, DataSize);
   }
   system_messages::show_progress_end("Writing point to disc", DataSize);
-  
+
   return true;
 }
 
-/*
-bool
-TraceData::FlushClusterSequences(ostream&  str,
-                               bool      FlushNoisePoints)
-{
-  TraceData::iterator PointsIterator;
-  INT32 CurrentTaskId = -1;
-  bool  WarningShown = false;
-  
-  if (DimemasTrace)
-  {
-    sort(ClusteringBursts.begin(),
-         ClusteringBursts.end(),
-         DimemasDataPointTaskOrder());
-  }
-  else
-  {
-    sort(ClusteringBursts.begin(),
-         ClusteringBursts.end(),
-         ParaverDataPointTaskOrder());
-  }
-  
-  for (PointsIterator  = ClusteringBursts.begin();
-       PointsIterator != ClusteringBursts.end();
-       PointsIterator++)
-  {
-    INT32 CurrentClusterId;
-    char  CurrentClusterIdChar;
-    
-    if (CurrentTaskId != (*PointsIterator)->GetTaskId())
-    {
-      if (CurrentTaskId != -1)
-      {
-        str << endl;
-      }
-      CurrentTaskId = (*PointsIterator)->GetTaskId();
-      str << ">TASK" << CurrentTaskId << endl;
-    }
-    
-    if(!FlushNoisePoints &&  
-       (*PointsIterator)->GetClusterId() == Constants::NOISE_CLUSTERID) // Noise point not required
-    {
-      continue;
-    }
-    
-    CurrentClusterId = (*PointsIterator)->GetClusterId()-Constants::CLUSTERID_OFFSET;
-    // CurrentClusterId = (*PointsIterator)->GetClusterId();
-    
-    if ( CurrentClusterId >  (TraceData::AminoacidTranslationSize - 1) )
-    {
-      /* Show a warning to indicate that some aminoacid number will be repeated 
-      if (!WarningShown)
-      {
-        cerr << "Warning! More clusters than sequence id's. Some id's will be repeated" << endl;
-        WarningShown = true;
-      }
-      
-      CurrentClusterIdChar = '*';
-      
-      // CurrentClusterId = TraceData::AminoacidTranslationSize - 1;
-      
-      // SetError(true);
-      // SetErrorMessage("Too much clusters to produce alignment sequence");
-      // return false;
-    }
-    else
-    {
-      CurrentClusterIdChar = AminoacidTranslation[CurrentClusterId];
-    }
-      
-    str << CurrentClusterIdChar;
-  }
-}
-
-*/
 
 /*****************************************************************************
- * DEBUG
+ * Debug/Informative Methods
  ****************************************************************************/
 
 void
 TraceData::PrintPoints(void)
 {
   TraceData::iterator BurstsIterator;
-  
+
   for (BurstsIterator  = ClusteringBursts.begin();
        BurstsIterator != ClusteringBursts.end();
        BurstsIterator++)
@@ -1054,10 +880,44 @@ void
 TraceData::PrintTraceDataInformation(void)
 {
   cerr << "*** DATA SET INFORMATION ***" << endl;
-  cerr << "Complete Points Size = " << CompleteBursts.size() << endl;
+  cerr << "Complete Points Size   = " << CompleteBursts.size() << endl;
   cerr << "Clustering Points Size = " << ClusteringBursts.size() << endl;
-  cerr << "Filtered Points Size = " << FilteredBursts.size() << endl;
+  cerr << "Filtered Points Size   = " << FilteredBursts.size() << endl;
 
+}
+
+/*****************************************************************************
+ * Private Methods
+ ****************************************************************************/
+
+bool TraceData::SampleSingleTask(vector<CPUBurst*>& TaskBursts,
+                                 size_t             NumSamples)
+{
+  size_t SamplingFrequency = (size_t) std::floor(TaskBursts.size()/NumSamples);
+
+  if (NumSamples > TaskBursts.size())
+  {
+    ostringstream ErrorMessage;
+    ErrorMessage << "more samples samples required (" << NumSamples;
+    ErrorMessage << ") than number os bursts (" << TaskBursts.size() << ")";
+
+    SetError(true);
+    SetErrorMessage(ErrorMessage.str());
+
+    return false;
+  }
+
+  for (size_t i = 0; i < NumSamples; i++)
+  {
+    size_t CurrentSample;
+
+    CurrentSample  = (size_t) (SamplingFrequency*std::rand()/(RAND_MAX+1));
+    CurrentSample += (i*SamplingFrequency);
+
+    ClusteringBursts.push_back(TaskBursts[CurrentSample]);
+  }
+
+  return true;
 }
 
 void TraceData::SetTasksToRead()
@@ -1070,7 +930,7 @@ void TraceData::SetTasksToRead()
     // TasksToRead set has been previously set
     return;
   }
-  
+
   if (!Master && MyRank == 0)
   {
     Master = true;
@@ -1088,7 +948,7 @@ void TraceData::SetTasksToRead()
     TasksToRead.insert(i);
   }
 
-  
+
   if (Remainder != 0)
   {
     if (MyRank+1 <= Remainder)
@@ -1100,9 +960,9 @@ void TraceData::SetTasksToRead()
   /*
   cout << "My Rank is = " << Me << endl;
   cout << "[" << Me << "]: Tasks assigned = [";
-  
+
   set<INT32>::iterator it;
-  
+
   for (it = TasksToRead.begin(); it != TasksToRead.end(); ++it)
   {
     cout << " " << (*it)+1;
@@ -1114,7 +974,7 @@ void TraceData::SetTasksToRead()
 bool TraceData::ReadThisTask(task_id_t Task)
 {
   set<int>::iterator SetIterator;
-  
+
   if (TasksToRead.size() == 0)
   {
     return true;

@@ -205,6 +205,8 @@
 		<Unit filename="src/libClustering/DBSCAN.hpp" />
 		<Unit filename="src/libClustering/GMEANS.cpp" />
 		<Unit filename="src/libClustering/GMEANS.hpp" />
+		<Unit filename="src/libClustering/KDTreeClassifier.cpp" />
+		<Unit filename="src/libClustering/KDTreeClassifier.hpp" />
 		<Unit filename="src/libClustering/MUSTER_CAPEK.cpp" />
 		<Unit filename="src/libClustering/MUSTER_CAPEK.hpp" />
 		<Unit filename="src/libClustering/MUSTER_DBSCAN.cpp" />

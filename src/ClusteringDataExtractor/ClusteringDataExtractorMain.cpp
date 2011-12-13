@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -214,14 +214,14 @@ ReadArgs(int argc, char *argv[])
     cerr << "Output data file file missing ( \'-o\' parameter)" << endl;
     exit (EXIT_FAILURE);
   }
-  
+
   return;
 }
 
 void GetEventParsingParameters(char* EventParsingArgs)
 {
   char* err;
-  
+
   string       ArgsString (EventParsingArgs);
   stringstream ArgsStream (ArgsString);
   string       Buffer;
@@ -231,7 +231,7 @@ void GetEventParsingParameters(char* EventParsingArgs)
   while(std::getline(ArgsStream, Buffer, ','))
   {
     unsigned int CurrentType;
-    
+
     CurrentType = strtoul(Buffer.c_str(), &err, 0);
     if (*err)
     {
@@ -259,7 +259,7 @@ void GetEventParsingParameters(char* EventParsingArgs)
 int main(int argc, char *argv[])
 {
   libTraceClustering Clustering = libTraceClustering(true);
-  
+
   ReadArgs(argc, argv);
 
   if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, PLOTS))
@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
 
   if (UseParaverEventParsing)
   {
-    if (!Clustering.ExtractData(InputTraceName, EventsToParse))
+    if (!Clustering.ExtractData(InputTraceName, false, 0, EventsToParse)) // false -> No Samplig , 0 -> Max Samples
     {
       cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
@@ -296,6 +296,6 @@ int main(int argc, char *argv[])
     cerr << "Error printing plot scripts: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
-  
+
   exit (EXIT_SUCCESS);
 }

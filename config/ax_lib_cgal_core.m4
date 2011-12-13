@@ -44,7 +44,6 @@ AC_ARG_WITH([cgal],
 	AS_HELP_STRING([--with-cgal@<:@=DIR@:>@],
 			[location of cgal installation, default $CGAL_HOME]),
 	[ac_cgal_dirs="$withval"],
-	[ac_cgal_dirs="$CGAL_HOME"' /usr /usr/local /opt /opt/local']
 	)
 
 dnl This test program is taken from:
@@ -108,7 +107,7 @@ done
 
 AC_LANG_POP([C++])
 
-if test $ac_cgal = yes ; then
+if test "x$ac_cgal" = "xyes" ; then
 	AC_DEFINE(HAVE_CGAL,[1],[Indicates presence of CGAL library])
   AC_SUBST(cgal_libdir)
 	AC_SUBST(CGAL_CPPFLAGS)

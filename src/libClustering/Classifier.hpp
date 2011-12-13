@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -42,15 +42,15 @@ using cepba_tools::Error;
 #include <Point.hpp>
 #include <Partition.hpp>
 
-class Classifier: public Error
+class Classifier: virtual public Error
 {
   public:
-    
+
     Classifier(void) {};
-    
+
     virtual bool Classify(vector<const Point*>& Data,
                           Partition&            DataPartition) = 0;
-  
+
     virtual bool Classify(const Point* Point, cluster_id_t& ID) = 0;
 };
 

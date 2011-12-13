@@ -76,6 +76,9 @@ using std::ostringstream;
 
 #endif
 
+const string libTraceClusteringImplementation::DataFilePostFix        = ("DATA");
+const string libTraceClusteringImplementation::SampledDataFilePostFix = ("SAMPLE_DATA");
+
 /**
  * Empty constructor
  */
@@ -218,6 +221,8 @@ bool libTraceClusteringImplementation::InitTraceClustering(string ClusteringDefi
  * and should be used to later run an analysis.
  *
  * \param InputFileName The name of the input file where data is located
+ * \param SampleData    True if data read from trace must be sampled
+ * \param MaxSamples    Maximum number of burst to be samples
  * \param EventsToDealWith Set of parameters in case we want to do an event parsing
  *                         of a Paraver trace
  *
@@ -225,6 +230,8 @@ bool libTraceClusteringImplementation::InitTraceClustering(string ClusteringDefi
  */
 bool
 libTraceClusteringImplementation::ExtractData(string            InputFileName,
+                                              bool              SampleData,
+                                              unsigned int      MaxSamples,
                                               set<event_type_t> EventsToDealWith)
 {
   DataExtractorFactory*    ExtractorFactory;
@@ -276,6 +283,12 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
     return false;
   }
 
+  if (SampleData)
+  {
+    this->SampleData = true;
+    Data->Sampling(MaxSamples);
+  }
+
   /*
   DataExtractionManager* ExtractionManager;
 
@@ -314,10 +327,15 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
  * \result True if data got written correctly, false otherwise
  */
 bool
-libTraceClusteringImplementation::FlushData(string OutputFileName)
+libTraceClusteringImplementation::FlushData(string OutputCSVFileNamePrefix)
 {
-  bool     AllData;
-  ofstream OutputStream (OutputFileName.c_str(), ios_base::trunc);
+  string OutputFileName = OutputCSVFileNamePrefix + "." +
+                          libTraceClusteringImplementation::DataFilePostFix +
+                          ".csv";
+
+  ofstream     OutputStream (OutputFileName.c_str(), ios_base::trunc);
+  Partition   &PartitionUsed = (SampleData ? ClassificationPartition : LastPartition);
+  DataPrintSet WhatToPrint;
 
   if (Data == NULL)
   {
@@ -334,14 +352,17 @@ libTraceClusteringImplementation::FlushData(string OutputFileName)
 
   if (USE_CLUSTERING(UseFlags) || USE_CLUSTERING_REFINEMENT(UseFlags))
   {
-    AllData = false;
+    WhatToPrint = PrintCompleteBursts;
+
   }
   else
   {
-    AllData = true;
+    WhatToPrint = PrintAllBursts;
   }
 
-  if (!Data->FlushPoints(OutputStream, LastPartition.GetAssignmentVector(), AllData))
+  if (!Data->FlushPoints(OutputStream,
+                         PartitionUsed.GetAssignmentVector(),
+                         WhatToPrint))
   {
     SetError(true);
     SetErrorMessage(Data->GetLastError());
@@ -349,6 +370,34 @@ libTraceClusteringImplementation::FlushData(string OutputFileName)
   }
 
   OutputStream.close();
+
+  /* When sampling data, also the sample subset is printed */
+  if (SampleData)
+  {
+
+    string SampledOutputFileName = OutputCSVFileNamePrefix + "."
+                      + libTraceClusteringImplementation::SampledDataFilePostFix
+                      + ".csv";
+
+    ofstream SmapledOutputStream (SampledOutputFileName.c_str(), ios_base::trunc);
+    if (!SmapledOutputStream)
+    {
+      SetError(true);
+      SetErrorMessage("unable to open smapling output file", strerror(errno));
+      return false;
+    }
+
+    if (!Data->FlushPoints(SmapledOutputStream,
+                           LastPartition.GetAssignmentVector(),
+                           PrintClusteringBursts))
+    {
+      SetError(true);
+      SetErrorMessage(Data->GetLastError());
+      return false;
+    }
+
+    SmapledOutputStream.close();
+  }
 
   return true;
 }
@@ -384,6 +433,9 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
     return false;
   }
 
+  /* Statistics */
+  Parameters = ParametersManager::GetInstance();
+
   vector<const Point*>& ClusteringPoints = Data->GetClusteringPoints();
 
   /* DEBUG
@@ -397,6 +449,39 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
     return false;
   }
 
+  if (SampleData)
+  {
+    ClusteringStatistics SamplingStatistics;
+
+    SamplingStatistics.InitStatistics(LastPartition.GetIDs(),
+                                      Parameters->GetClusteringParametersNames(),
+                                      Parameters->GetClusteringParametersPrecision(),
+                                      Parameters->GetExtrapolationParametersNames(),
+                                      Parameters->GetExtrapolationParametersPrecision());
+
+    if (!SamplingStatistics.ComputeStatistics(Data->GetClusteringBursts(),
+                                              LastPartition.GetAssignmentVector()))
+    {
+      SetErrorMessage(SamplingStatistics.GetLastError());
+      return false;
+    }
+
+    SamplingStatistics.TranslatedIDs(LastPartition.GetAssignmentVector());
+  }
+
+  /* If cluster analysis was executed using sampling data, we must apply
+     a classification */
+  if (SampleData)
+  {
+    vector<const Point*> &CompletePoints = Data->GetCompletePoints();
+
+    if (!ClusteringCore->ClassifyData(CompletePoints, ClassificationPartition))
+    {
+      SetErrorMessage(ClusteringCore->GetErrorMessage());
+      return false;
+    }
+  }
+
   ClusteringExecuted = true;
 
   if (USE_MPI(UseFlags))
@@ -408,23 +493,24 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
     }
   }
 
-  /* Statistics */
-  Parameters = ParametersManager::GetInstance();
 
-  Statistics.InitStatistics(LastPartition.GetIDs(),
+
+  Partition& PartitionUsed = (SampleData ? ClassificationPartition : LastPartition);
+
+  Statistics.InitStatistics(PartitionUsed.GetIDs(),
                             Parameters->GetClusteringParametersNames(),
                             Parameters->GetClusteringParametersPrecision(),
                             Parameters->GetExtrapolationParametersNames(),
                             Parameters->GetExtrapolationParametersPrecision());
 
   if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
-                                    LastPartition.GetAssignmentVector()))
+                                    PartitionUsed.GetAssignmentVector()))
   {
     SetErrorMessage(Statistics.GetLastError());
     return false;
   }
 
-  Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
+  Statistics.TranslatedIDs(PartitionUsed.GetAssignmentVector());
 
   return true;
 }
@@ -713,6 +799,13 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
 {
 #ifdef HAVE_SEQAN
 
+  if (SampleData)
+  {
+    SetErrorMessage("Refinement analysis plus sampling not implemented yet");
+    SetError(true);
+    return false;
+  }
+
   ParametersManager *Parameters;
   vector<Partition>  PartitionsHierarchy;
 
@@ -965,7 +1058,9 @@ bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceN
 
   ClusteredTraceGenerator* TraceReconstructor;
 
-  vector<cluster_id_t>& IDs = LastPartition.GetAssignmentVector();
+  Partition& PartitionUsed = (SampleData ? ClassificationPartition : LastPartition);
+
+  vector<cluster_id_t>& IDs = PartitionUsed.GetAssignmentVector();
 
   if (IDs.size() == 0)
   {
@@ -1002,8 +1097,8 @@ bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceN
   }
 
   if (!TraceReconstructor->Run(Data->GetAllBursts(),
-                               LastPartition.GetAssignmentVector(),
-                               LastPartition.GetIDs()))
+                               PartitionUsed.GetAssignmentVector(),
+                               PartitionUsed.GetIDs()))
   {
     SetErrorMessage(TraceReconstructor->GetLastError());
     return false;
@@ -1015,24 +1110,25 @@ bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceN
 /**
  * Print the plot scripts for GNUPlot defined in the XML
  *
- * \param DataFileName Name of the file containg the data to plot
+ * \param DataFileNamePrefix Prefix of the file containg the data to plot
  * \param ScriptsFileNamePrefix Prefix of the output scripts
  *
  * \result True if the scripts where printed correctly, false otherwise
  */
-bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
+bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileNamePrefix,
                                                         string ScriptsFileNamePrefix)
 {
   PlottingManager *Plots;
   string Prefix;
   string PlotTitle;
 
+  Partition &PartitionUsed = (SampleData ? ClassificationPartition : LastPartition);
+
   Plots = PlottingManager::GetInstance();
 
   if (ScriptsFileNamePrefix.compare("") == 0)
   {
-    FileNameManipulator Manipulator(DataFileName, "csv");
-    Prefix = Manipulator.GetChoppedFileName();
+    Prefix = DataFileNamePrefix;
   }
   else
   {
@@ -1052,14 +1148,27 @@ bool libTraceClusteringImplementation::PrintPlotScripts(string DataFileName,
     PlotTitle = "Data of trace \'"+InputFileName+"\'";
   }
 
-  if (!Plots->PrintPlots(DataFileName,
+  if (!Plots->PrintPlots(DataFileNamePrefix + "." + libTraceClusteringImplementation::DataFilePostFix + ".csv",
                          Prefix,
                          PlotTitle,
-                         LastPartition.GetIDs()))
+                         PartitionUsed.GetIDs()))
   {
     SetError(true);
     SetErrorMessage(Plots->GetLastError());
     return false;
+  }
+
+  if(SampleData)
+  {
+    if (!Plots->PrintPlots(DataFileNamePrefix + "." + libTraceClusteringImplementation::SampledDataFilePostFix +".csv",
+                           Prefix + "." + libTraceClusteringImplementation::SampledDataFilePostFix,
+                           PlotTitle + " (Sampled Data)",
+                           PartitionUsed.GetIDs()))
+    {
+      SetError(true);
+      SetErrorMessage(Plots->GetLastError());
+      return false;
+    }
   }
 
   return true;

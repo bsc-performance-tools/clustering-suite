@@ -31,5 +31,7 @@ http://www.mcs.anl.gov/research/projects/mpich2/
 
 http://www.seqan.de/
 
+* libMRNetApp
 
-export LD_LIBRARY_PATH=/home/bsc41/bsc41491/apps/MUSTER/lib:/home/bsc41/bsc41127/apps/MPFR/32/lib:/home/bsc41/bsc41127/apps/CGAL/32/lib:/gpfs/apps/BOOST/1_39_0/32/lib:/opt/osshpc/mpich-mx/32/lib/shared/
+Also available in the BSC Tools group
+

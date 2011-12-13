@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -36,7 +36,7 @@
   Simple timer class
   ==================
   History:
- 
+
   Created - Sarah "Voodoo Doll" White (2006/01/26)
   ==================
   Description:
@@ -57,30 +57,53 @@
   functions, nor is it guaranteed to support
   timing resolution less than a second.
 */
+
+#ifndef _TIMER_HPP_
+#define _TIMER_HPP_
+
 #include <ctime>
+#include <sys/time.h>
 
-class Timer {
-
-  public:
-    typedef double diff_type;
-
-    // Same as Timer t; t.begin();
-    Timer(): start(std::clock()), elapsed(0) {}
-    // Last result before a call to begin()
-    diff_type last() const { return elapsed; }
-    // Reset the timer
-    void begin() { start = std::clock(); elapsed = 0; }
-    // Save the result
-    diff_type end();
-
-  private:
-    std::clock_t start;
-    diff_type    elapsed;
-};
-
-Timer::diff_type Timer::end()
+namespace cepba_tools
 {
-  elapsed = (diff_type) std::clock() - start;
-  elapsed /= CLOCKS_PER_SEC;
-  return elapsed;
+  /* class Timer {
+
+    public:
+      typedef double diff_type;
+
+      // Same as Timer t; t.begin();
+      Timer(): start(std::clock()), elapsed(0) {}
+      // Last result before a call to begin()
+      diff_type last() const { return elapsed; }
+      // Reset the timer
+      void begin() { start = std::clock(); elapsed = 0; }
+      // Save the result
+      diff_type end();
+
+    private:
+      std::clock_t start;
+      diff_type    elapsed;
+  };
+  */
+
+  class Timer {
+
+    public:
+      typedef unsigned long int diff_type;
+
+      // Same as Timer t; t.begin();
+      Timer(void);
+      // Last result before a call to begin()
+      diff_type last(void) const { return elapsed; }
+      // Reset the timer
+      void begin(void);
+      // Save the result
+      diff_type end(void);
+
+    private:
+      struct timeval time_start;
+
+      diff_type elapsed;
+  };
 }
+#endif

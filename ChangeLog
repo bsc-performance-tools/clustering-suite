@@ -10,6 +10,15 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-12-13 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added sampling support to trace data extraction (parameter '-m' to burst
+	clustering binary). That includes a modification on ClusteringAlgorithm
+	class which imposes the extension of Classifier class
+
+	* Modification in CGAL building system to avoid search of default paths
+
+	* Added microsecond resolution to Timer class
+
 2011-11-30 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a minor bug to correctly distribute 'draw_hulls' script
 
@@ -22,8 +31,8 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* Changed ours CGAL's kernel precision from float to double
 
-	* Moved the generation of output files from the generic ClusteringBackend to its
-	derived classes (new virtual method ProcessResults())
+	* Moved the generation of output files from the generic ClusteringBackend
+	to its derived classes (new virtual method ProcessResults())
 
 	* Tree_DBSCAN_env.sh now updates the PATH variable
 
@@ -34,15 +43,17 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 2011-11-25 German Llort <german.llort@bsc.es>
 	* Modified Makefile to include HullManager in TreeDBSCAN filter.
 
-	* Modified configure.ac.template to include BOOST_LDPATH in CGAL_DYNAMIC_PATH.
+	* Modified configure.ac.template to include BOOST_LDPATH in
+	CGAL_DYNAMIC_PATH.
 
 2011-11-24 German Llort <german.llort@bsc.es>
-	* Added a new filter to exchange the global clustering dimensions in TreeDBSCAN
+	* Added a new filter to exchange the global clustering dimensions in 
+	TreeDBSCAN
 
 2011-11-24 Juan Gonzalez <juan.gonzalez@bsc.es>
-	* Added a facade object 'HullModel' to make transparent the 'ConvexHullModel'
-	object. *Some memory leaks regarding the 'HullModel' container destruction
-	could have been added*
+	* Added a facade object 'HullModel' to make transparent the 
+	'ConvexHullModel' object. *Some memory leaks regarding the 'HullModel'
+	container destruction could have been added*
 
 	* Improvement on building system to correctly propagate the library 
 	modifications to the 'TreeDBSCAN' source files
@@ -52,7 +63,8 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 2011-11-22 German Llort <german.llort@bsc.es>
 	* Modified script 'Tree_DBSCAN_env.sh' to set the proper environment
 
-	* Fixed bug in gmp_mpfr.m4 (mpfr_libsdir path was wrong) and configure.ac.template to set the proper libsdir paths
+	* Fixed bug in gmp_mpfr.m4 (mpfr_libsdir path was wrong) and 
+	configure.ac.template to set the proper libsdir paths
 
 2011-11-22 German Llort <german.llort@bsc.es>
 	* Makefiles in TreeDBSCAN changed to generated static binaries
