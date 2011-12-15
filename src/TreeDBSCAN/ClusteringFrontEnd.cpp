@@ -86,6 +86,7 @@ int ClusteringFrontEnd::Run()
    cout << "[FE] + Epsilon     = " << Epsilon                             << endl;
    cout << "[FE] + Min Points  = " << MinPoints                           << endl;
    cout << "[FE] + XML         = " << ClusteringDefinitionXML             << endl;
+   
    if (InputTraceName != "")
    {
       cout << "[FE] + Input       = " << InputTraceName                      << endl;

@@ -76,7 +76,7 @@ bool ClusteringBackEndOffline::ExtractData(void)
       cerr << "[BE " << Protocol::WhoAmI() << "] Error extracting data: " << libClustering->GetErrorMessage() << endl;
       return false;
    }
-   cout << "[BE " << WhoAmI() << "] Bursts to analyze: " << libClustering->GetNumberOfPoints() << endl;
+   if (Verbose) cout << "[BE " << WhoAmI() << "] Bursts to analyze: " << libClustering->GetNumberOfPoints() << endl;
 
    /* In the offline version there's no need to reduce the dimensions, because all back-ends get them from
     * the trace they're parsing. We have to send something though, because the front-end is waiting this
@@ -116,7 +116,7 @@ bool ClusteringBackEndOffline::ProcessResults(void)
    ostringstream ModelTitle;
    Timer t;
 
-   cout << "[BE " << WhoAmI() << "] Printing local model" << endl;
+   if (Verbose) cout << "[BE " << WhoAmI() << "] Printing local model" << endl;
 
    ModelTitle << "Local Hull Models BE " << WhoAmI() << " MinPoints = " << MinPoints << " Eps = " << Epsilon << "\\n";
    ModelTitle << "Trace \'" << InputTraceName << "\'";
@@ -134,7 +134,7 @@ bool ClusteringBackEndOffline::ProcessResults(void)
    if (WhoAmI() == 0)
    {
       /* Print the global model */
-      cout << "[BE " << WhoAmI() << "] Printing global model script" << endl;
+      if (Verbose) cout << "[BE " << WhoAmI() << "] Printing global model script" << endl;
 
       ModelTitle.str("");
       ModelTitle << "Global Model MinPoints = " << MinPoints << " Eps = " << Epsilon << "\\n";
@@ -179,7 +179,7 @@ bool ClusteringBackEndOffline::ProcessResults(void)
    }
 
    /* Print local clustering plots */
-   cout << "[BE " << WhoAmI() << "] Printing local data plot script" << endl;
+   if (Verbose) cout << "[BE " << WhoAmI() << "] Printing local data plot script" << endl;
    if (!libClustering->PrintPlotScripts(OutputLocalClusteringFileName, "", true)) // true = Local partition
    {
       cerr << "[BE " << WhoAmI() << "] Error printing local data plot scripts: " << libClustering->GetErrorMessage() << endl;

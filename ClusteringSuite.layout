@@ -1,8 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Compile" />
-	<File name="src/BurstClustering/BurstClustering.cpp" open="1" top="0" tabpos="4">
-		<Cursor position="16727" topLine="545" />
+	<File name="src/BasicClasses/SystemMessages.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="6379" topLine="116" />
+	</File>
+	<File name="src/BasicClasses/SystemMessages.hpp" open="0" top="0" tabpos="0">
+		<Cursor position="2788" topLine="17" />
+	</File>
+	<File name="src/BasicClasses/Timer.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="2537" topLine="10" />
+	</File>
+	<File name="src/BasicClasses/Timer.hpp" open="0" top="0" tabpos="0">
+		<Cursor position="3618" topLine="0" />
+	</File>
+	<File name="src/BurstClustering/BurstClustering.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="19260" topLine="588" />
 	</File>
 	<File name="src/ClusteringDataExtractor/ClusteringDataExtractorMain.cpp" open="0" top="0" tabpos="6">
 		<Cursor position="8097" topLine="252" />
@@ -10,17 +22,20 @@
 	<File name="src/DBSCANParametersApproximation/DBSCANParametersApproximationMain.cpp" open="0" top="0" tabpos="7">
 		<Cursor position="8473" topLine="284" />
 	</File>
-	<File name="src/TreeDBSCAN/ClusteringBackEnd.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="2543" topLine="83" />
+	<File name="src/TreeDBSCAN/ClusteringBackEnd.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="5196" topLine="122" />
 	</File>
 	<File name="src/TreeDBSCAN/ClusteringBackEnd.h" open="0" top="0" tabpos="0">
-		<Cursor position="676" topLine="2" />
+		<Cursor position="2896" topLine="33" />
 	</File>
-	<File name="src/TreeDBSCAN/ClusteringBackEndOffline.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="109" topLine="0" />
+	<File name="src/TreeDBSCAN/ClusteringBackEndOffline.cpp" open="0" top="0" tabpos="5">
+		<Cursor position="4889" topLine="146" />
+	</File>
+	<File name="src/TreeDBSCAN/ClusteringBackEndOffline.h" open="0" top="0" tabpos="0">
+		<Cursor position="2691" topLine="11" />
 	</File>
 	<File name="src/TreeDBSCAN/ClusteringBackEndOnline.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="108" topLine="0" />
+		<Cursor position="5603" topLine="117" />
 	</File>
 	<File name="src/TreeDBSCAN/ClusteringCore.h" open="0" top="0" tabpos="0">
 		<Cursor position="428" topLine="0" />
@@ -68,13 +83,13 @@
 		<Cursor position="4808" topLine="54" />
 	</File>
 	<File name="src/libClustering/Classifier.hpp" open="0" top="0" tabpos="0">
-		<Cursor position="2605" topLine="21" />
+		<Cursor position="2605" topLine="13" />
 	</File>
 	<File name="src/libClustering/ClusteringAlgorithm.hpp" open="0" top="0" tabpos="0">
-		<Cursor position="4068" topLine="87" />
+		<Cursor position="4068" topLine="31" />
 	</File>
 	<File name="src/libClustering/ClusteringAlgorithmsFactory.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="3301" topLine="51" />
+		<Cursor position="3301" topLine="33" />
 	</File>
 	<File name="src/libClustering/ConvexHullClassifier.hpp" open="0" top="0" tabpos="0">
 		<Cursor position="2734" topLine="37" />
@@ -85,14 +100,14 @@
 	<File name="src/libClustering/ConvexHullModel.hpp" open="0" top="0" tabpos="4">
 		<Cursor position="4412" topLine="80" />
 	</File>
-	<File name="src/libClustering/DBSCAN.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="9321" topLine="319" />
+	<File name="src/libClustering/DBSCAN.cpp" open="0" top="0" tabpos="3">
+		<Cursor position="9321" topLine="27" />
 	</File>
 	<File name="src/libClustering/DBSCAN.hpp" open="0" top="0" tabpos="0">
 		<Cursor position="4693" topLine="102" />
 	</File>
 	<File name="src/libClustering/GMEANS.cpp" open="0" top="0" tabpos="7">
-		<Cursor position="6500" topLine="179" />
+		<Cursor position="6500" topLine="177" />
 	</File>
 	<File name="src/libClustering/GMEANS.hpp" open="0" top="0" tabpos="0">
 		<Cursor position="2754" topLine="45" />
@@ -109,17 +124,20 @@
 	<File name="src/libClustering/Point.hpp" open="0" top="0" tabpos="3">
 		<Cursor position="2347" topLine="3" />
 	</File>
+	<File name="src/libClustering/gmeans/andersondarling.c" open="0" top="0" tabpos="0">
+		<Cursor position="321" topLine="0" />
+	</File>
 	<File name="src/libClustering/libClustering.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="3887" topLine="78" />
+		<Cursor position="3887" topLine="9" />
 	</File>
 	<File name="src/libClustering/libClustering.hpp" open="0" top="0" tabpos="0">
-		<Cursor position="3034" topLine="45" />
+		<Cursor position="3034" topLine="27" />
 	</File>
 	<File name="src/libClustering/libClusteringImplementation.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="5192" topLine="120" />
+		<Cursor position="5192" topLine="15" />
 	</File>
 	<File name="src/libClustering/libClusteringImplementation.hpp" open="0" top="0" tabpos="0">
-		<Cursor position="2942" topLine="33" />
+		<Cursor position="2942" topLine="30" />
 	</File>
 	<File name="src/libDistributedClustering/HullModel.cpp" open="0" top="0" tabpos="4">
 		<Cursor position="3044" topLine="31" />
@@ -133,11 +151,14 @@
 	<File name="src/libDistributedClustering/libDistributedClustering.hpp" open="0" top="0" tabpos="2">
 		<Cursor position="2512" topLine="24" />
 	</File>
-	<File name="src/libDistributedClustering/libDistributedClusteringImplementation.cpp" open="0" top="0" tabpos="1">
-		<Cursor position="15973" topLine="463" />
+	<File name="src/libDistributedClustering/libDistributedClusteringImplementation.cpp" open="1" top="1" tabpos="1">
+		<Cursor position="29667" topLine="915" />
 	</File>
 	<File name="src/libDistributedClustering/libDistributedClusteringImplementation.hpp" open="0" top="0" tabpos="4">
 		<Cursor position="4609" topLine="90" />
+	</File>
+	<File name="src/libParaverTraceParser/ParaverTraceParser.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="10805" topLine="401" />
 	</File>
 	<File name="src/libSharedComponents/CPUBurst.hpp" open="0" top="0" tabpos="0">
 		<Cursor position="4250" topLine="80" />
@@ -145,22 +166,22 @@
 	<File name="src/libSharedComponents/PlottingManager.cpp" open="0" top="0" tabpos="0">
 		<Cursor position="5455" topLine="133" />
 	</File>
-	<File name="src/libSharedComponents/TraceData.cpp" open="0" top="0" tabpos="9">
-		<Cursor position="24963" topLine="889" />
+	<File name="src/libSharedComponents/TraceData.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="18087" topLine="91" />
 	</File>
-	<File name="src/libSharedComponents/TraceData.hpp" open="0" top="0" tabpos="8">
+	<File name="src/libSharedComponents/TraceData.hpp" open="1" top="0" tabpos="3">
 		<Cursor position="5318" topLine="121" />
 	</File>
 	<File name="src/libTraceClustering/libTraceClustering.cpp" open="0" top="0" tabpos="4">
-		<Cursor position="5529" topLine="109" />
+		<Cursor position="5529" topLine="28" />
 	</File>
 	<File name="src/libTraceClustering/libTraceClustering.hpp" open="0" top="0" tabpos="2">
-		<Cursor position="3705" topLine="66" />
+		<Cursor position="3705" topLine="42" />
 	</File>
-	<File name="src/libTraceClustering/libTraceClusteringImplementation.cpp" open="1" top="1" tabpos="1">
-		<Cursor position="15516" topLine="491" />
+	<File name="src/libTraceClustering/libTraceClusteringImplementation.cpp" open="0" top="0" tabpos="1">
+		<Cursor position="15516" topLine="57" />
 	</File>
-	<File name="src/libTraceClustering/libTraceClusteringImplementation.hpp" open="1" top="0" tabpos="2">
-		<Cursor position="3031" topLine="46" />
+	<File name="src/libTraceClustering/libTraceClusteringImplementation.hpp" open="0" top="0" tabpos="2">
+		<Cursor position="3031" topLine="55" />
 	</File>
 </CodeBlocks_layout_file>

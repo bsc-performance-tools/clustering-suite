@@ -104,7 +104,7 @@ int ClusteringBackEnd::Run()
       cerr << "[BE " << WhoAmI() << "] Error extracting clustering data. Exiting..." << endl;
       exit (EXIT_FAILURE);
    }
-   cout << "[BE " << WhoAmI() << "] Data extraction time: " << t.end() << endl;
+   if (WhoAmI() == 0) cout << "[BE " << WhoAmI() << "] Data extraction time: " << t.end() << endl;
 
    /* Start the clustering analysis */
    t.begin();
@@ -152,14 +152,15 @@ int ClusteringBackEnd::Run()
    // cout << "[BE " << WhoAmI() << "] >> Clustering time: " << t.end() << "[" << NumBackEnds() << " BEs]" << endl;
 
    /* All back-ends classify their local data */
-   cout << "[BE " << WhoAmI() << "] START CLASSIFYING WITH " << GlobalModel.size() << " GLOBAL HULLS." << endl;
+   if (Verbose) cout << "[BE " << WhoAmI() << "] START CLASSIFYING WITH " << GlobalModel.size() << " GLOBAL HULLS." << endl;
+   
    // t.begin();
    if (!libClustering->ClassifyData(GlobalModel))
    {
       cerr << "[BE " << WhoAmI() << "] Error classifying data: " << libClustering->GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
    }
-   cout << "[BE " << WhoAmI() << "] Clustering time: " << t.end() << endl;
+   if (WhoAmI() == 0) cout << "[BE " << WhoAmI() << "] Clustering time: " << t.end() << endl;
 
    /* Process the results and generate the output files */
    if (!ProcessResults())

@@ -1234,7 +1234,7 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
     /* This won't work!!!!!!! */
     if (!Data->FlushPoints(OutputStream,
                            LastPartition.GetAssignmentVector(),
-                           PrintClusteringBursts)) // false = Not All Data!!
+                           PrintClusteringBursts))
     {
       SetError(true);
       SetErrorMessage("error flushing local points", Data->GetLastError());
@@ -1243,9 +1243,20 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
   }
   else
   {
+    DataPrintSet WhatToPrint;
+
+    if (Root)
+    {
+      WhatToPrint = PrintCompleteBursts;
+    }
+    else
+    {
+      WhatToPrint = PrintClusteringBursts;
+    }
+
     if (!Data->FlushPoints(OutputStream,
                            ClassificationPartition.GetAssignmentVector(),
-                           PrintClusteringBursts)) // false = Not All Data!!
+                           WhatToPrint))
     {
       SetError(true);
       SetErrorMessage("error flushing global points", Data->GetLastError());

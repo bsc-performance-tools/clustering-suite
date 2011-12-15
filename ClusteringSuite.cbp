@@ -66,6 +66,7 @@
 		<Unit filename="src/BasicClasses/SystemMessages.hpp">
 			<Option target="Compile" />
 		</Unit>
+		<Unit filename="src/BasicClasses/Timer.cpp" />
 		<Unit filename="src/BasicClasses/Timer.hpp">
 			<Option target="Compile" />
 		</Unit>
