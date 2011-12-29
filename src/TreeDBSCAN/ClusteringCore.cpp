@@ -85,6 +85,7 @@ void ClusteringCore::Recv_Configuration(void)
    PACKET_unpack(p, "%lf %d %s %s %s %d %d", &Epsilon, &MinPoints, &XML, &Input, &Output, &Verb, &Reconstruct);
    PACKET_delete(p);
 
+   MinPoints               = 3;
    ClusteringDefinitionXML = string(XML);
    InputTraceName          = string(Input);
    OutputFileName          = string(Output);

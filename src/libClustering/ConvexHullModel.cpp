@@ -265,7 +265,7 @@ bool ConvexHullModel::IsNear(const Point* QueryPoint, double Epsilon, int MinPoi
   {
     MyPoint_2 CurrentHullPoint = *HullPointsIt;
 
-    double sqrDistance = squared_distance(CurrentHullPoint, InternalQueryPoint);
+    double sqrDistance = CGAL::to_double(squared_distance(CurrentHullPoint, InternalQueryPoint));
 
     if ((sqrDistance <= pow(Epsilon, 2.0)) &&
         ((CurrentHullPoint.NeighbourhoodSize()+(InternalQueryPoint.NeighbourhoodSize()/2)+1) >= MinPoints))
@@ -292,7 +292,7 @@ void ConvexHullModel::GetDistanceAndDensity(const Point* QueryPoint,
   {
     MyPoint_2 CurrentHullPoint = *HullPointsIt;
 
-    double CurrentDistance = squared_distance(CurrentHullPoint, InternalQueryPoint);
+    double CurrentDistance = CGAL::to_double(squared_distance(CurrentHullPoint, InternalQueryPoint));
 
     if (CurrentDistance < SqDistance)
     {
@@ -400,7 +400,7 @@ bool ConvexHullModel::IsNear (ConvexHullModel *Hull2, double Epsilon, int MinPoi
 
       Cand2 = *it2;
 
-      sqrDistance = squared_distance(Cand1, Cand2);
+      sqrDistance = CGAL::to_double(squared_distance(Cand1, Cand2));
 
       if ( sqrDistance <= pow(Epsilon, 2.0) &&
           ((Cand1.NeighbourhoodSize() + (Cand2.NeighbourhoodSize())/2)+1) >= MinPoints)

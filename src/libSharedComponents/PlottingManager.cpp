@@ -62,6 +62,8 @@ using std::sort;
 #include <cerrno>
 #include <cstring>
 
+#include <libgen.h>
+
 
 /******************************************************************************
  * Singleton pointer
@@ -149,6 +151,9 @@ bool PlottingManager::PrintPlots(string             PlotsDataFileName,
   
   this->PrintingModels = PrintingModels;
   
+  /* Check the paths */
+  string DataFileName(basename((char*) PlotsDataFileName.c_str()));
+  
   for (size_t i = 0; i < Plots.size(); i++)
   {
     ostringstream PlotMessage;
@@ -164,7 +169,7 @@ bool PlottingManager::PrintPlots(string             PlotsDataFileName,
       }
 
       if (!PrintSinglePlot (PlotsFileNamePrefix,
-                            PlotsDataFileName,
+                            DataFileName,
                             Plots[i],
                             Title,
                             DifferentIDs))

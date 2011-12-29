@@ -115,6 +115,12 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
 
    /* Get filter parameters */
    params->unpack("%lf %d", &Epsilon, &MinPoints);
+   unsigned int NumSiblings = top_info.get_NumSiblings() + 1;
+   int WeightedMinPoints = MinPoints / NumSiblings;
+   if (WeightedMinPoints < 3) WeightedMinPoints = 3;
+
+   /* DEBUG
+   cerr << "[FILTER " << FILTER_ID(top_info) << "] NumSiblings=" << NumSiblings << " WeightedMinPoints=" << WeightedMinPoints << endl; */
 
    /* Process the packet crossing the filter */
    switch(tag)
@@ -133,7 +139,7 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
          /* Check whether all children sent their noise points */
          if (WaitForNoise <= 0)
          {
-            NoiseManager Noise = NoiseManager(Epsilon, MinPoints);
+            NoiseManager Noise = NoiseManager(Epsilon, WeightedMinPoints);
             /* DEBUG -- Number of noise points
             cerr << "[DEBUG FILTER " << FILTER_ID(top_info) << "] NoisePoints.size()=" << NoisePoints.size() << endl; */
 
@@ -173,7 +179,7 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
             vector<HullModel*> MergedModel;
 
             /* Merge all children and noise hulls */
-            MergeAlltoAll ( ClustersHulls, MergedModel, Epsilon, MinPoints );
+            MergeAlltoAll ( ClustersHulls, MergedModel, Epsilon, WeightedMinPoints );
 
             /* Send the joint hulls */
             HullManager HM = HullManager();
@@ -229,8 +235,8 @@ void MergeAlltoAll(vector<HullModel*> &ClustersHulls,
          cout << "*** HULL IDX " << idx << " (density=" << ClustersHulls[idx]->Density() << ")" << endl;
          ClustersHulls[idx]->Flush();
          cout << "*** HULL IDX " << idx2 << " (density=" << ClustersHulls[idx2]->Density() << ")" << endl;
-         ClustersHulls[idx2]->Flush();
-         cout << "[DEBUG FILTER] Trying to merge hulls " << idx << " (size=" << ClustersHulls[idx]->Size() << ") and " << idx2 << " (size=" << ClustersHulls[idx2]->Size() << "). Intersect? "; */
+         ClustersHulls[idx2]->Flush(); 
+         cout << "[DEBUG FILTER ] Trying to merge hulls " << idx << " (size=" << ClustersHulls[idx]->Size() << ") and " << idx2 << " (size=" << ClustersHulls[idx2]->Size() << "). Intersect? "; */
 
          if ((newHull = ClustersHulls[idx]->Merge(ClustersHulls[idx2], Epsilon, MinPoints)) != NULL)
          {

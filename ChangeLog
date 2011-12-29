@@ -10,6 +10,19 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2011-12-28 Juan Gonzalez <juan.gonzalez@bsc.>
+	* Modification in the 'PlottingManager' to only add the 'basename' of the
+	DataFileName to the GNUPlot scripts
+
+	* Changes in the internal CGAL kernel to ensure the precision of the
+	Hull operations (now, it uses a multiple precission data type offered by
+	CGAL, plus an 'lazy' kernel). It is supposed to be more expensive than
+	the previous implementations using 'doubles'
+
+	* Adaptative 'MinPoints' values in the TreeDBSCAN across the different
+	tree levels. The BackEnds set this value to 3, but this has to be changed
+	
+
 2011-12-15 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Added 'Timer.cpp' forgotten in last commits
 

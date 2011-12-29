@@ -50,7 +50,16 @@ using std::endl;
 
 #include "CGAL_Kernel/MyKernel.h"
 
-typedef MyKernel<double>                   K;
+/*
+#include <CGAL/MP_Float.h>
+#include <CGAL/Quotient.h>
+typedef  CGAL::Quotient<CGAL::MP_Float> ET; */
+
+/* Try using this data type in case it fails */
+#include <CGAL/Gmpq.h>
+typedef CGAL::Lazy_exact_nt<CGAL::Gmpq> ET;
+
+typedef MyKernel<ET>                      K;
 //typedef CGAL::Filtered_kernel_adaptor<MK> K;
 typedef K::Point_2                        MyPoint_2;
 typedef CGAL::Polygon_2<K>                Polygon_2;

@@ -5,11 +5,20 @@
 #include <CGAL/Origin.h>
 #include <CGAL/Bbox_2.h>
 
+/*
+#include <CGAL/MP_Float.h>
+#include <CGAL/Quotient.h>
+typedef  CGAL::Quotient<CGAL::MP_Float> ET; */
+
+/* Try using this data type in case it fails */
+#include <CGAL/Gmpq.h>
+typedef CGAL::Lazy_exact_nt<CGAL::Gmpq> ET;
+
 
 class MyPointC2 {
 
 private:
-  double     vec[2];
+  ET     vec[2];
   long long _Instance;
   long long _NeighbourhoodSize;
 
@@ -24,20 +33,20 @@ public:
   }
 
 
-  MyPointC2(const double x, const double y, const long long int Instance = 0, const long long int NeighbourhoodSize = 0)
+  MyPointC2(const ET x, const ET y, const long long int Instance = 0, const long long int NeighbourhoodSize = 0)
     : _Instance(Instance), _NeighbourhoodSize(NeighbourhoodSize)
   {
     *vec = x;
     *(vec+1) = y;
   }
 
-  const double& x() const  { return *vec; }
+  const ET& x() const  { return *vec; }
 
-  const double& y() const { return *(vec+1); }
+  const ET& y() const { return *(vec+1); }
 
-  double& x() { return *vec; }
+  ET& x() { return *vec; }
 
-  double& y() { return *(vec+1); }
+  ET& y() { return *(vec+1); }
 
   long long Instance() const { return _Instance; }
 
