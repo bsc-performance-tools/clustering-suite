@@ -918,6 +918,8 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
       {
         TraceGenerator = new ClusteredEventsPRVGenerator (InputFileName,
                                                           OutputTraceName.str());
+
+        TraceGenerator->SetEventsToDealWith(EventsToDealWith);
       }
       else
       {

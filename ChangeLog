@@ -10,6 +10,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-01-17 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a bug in 'libTraceClusteringImplementation' related to PRV trace 
+	reconstruction, when using events instead of states
+
 2011-12-28 Juan Gonzalez <juan.gonzalez@bsc.>
 	* Modification in the 'PlottingManager' to only add the 'basename' of the
 	DataFileName to the GNUPlot scripts
