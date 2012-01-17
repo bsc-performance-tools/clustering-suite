@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -68,19 +68,19 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
 :ClusteredTraceGenerator(InputTraceName, OutputTraceName)
 {
   string::size_type SubstrPos;
-  
+
   if (GetError())
     return;
 
   TraceParser = new ParaverTraceParser(InputTraceName, InputTraceFile);
-  
+
   /* Search for a possible PCF and ROW files */
   PCFPresent = false;
   ROWPresent = false;
-  
+
   /* Check the PCF/ROW file name */
   SubstrPos = InputTraceName.rfind(".prv");
-  
+
   if (SubstrPos == string::npos)
   {
     InputPCFName = InputTraceName+".pcf";
@@ -89,19 +89,19 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
   else
   {
     string InputBaseName;
-    
+
     InputBaseName = InputTraceName.substr(0, SubstrPos);
     InputPCFName  = InputBaseName+".pcf";
     InputROWName  = InputBaseName+".row";
   }
-  
+
   if ((InputPCFFile = fopen(InputPCFName.c_str(), "r" )) != NULL)
   {
     PCFPresent = true;
     /* Create output PCF file */
-    
+
     SubstrPos = OutputTraceName.rfind(".prv");
-  
+
     if (SubstrPos == string::npos)
     {
       OutputPCFName = InputTraceName+".pcf";
@@ -109,11 +109,11 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
     else
     {
       string OutputBaseName;
-      
+
       OutputBaseName = OutputTraceName.substr(0, SubstrPos);
       OutputPCFName  = OutputBaseName+".pcf";
     }
-    
+
     if ((OutputPCFFile = fopen(OutputPCFName.c_str(), "w")) == NULL)
     {
       /* We are unable to open the output PCF file. The PCF managment is
@@ -129,7 +129,7 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
     ROWPresent = true;
 
     SubstrPos = OutputTraceName.rfind(".prv");
-  
+
     if (SubstrPos == string::npos)
     {
       OutputROWName = InputTraceName+".row";
@@ -137,11 +137,11 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
     else
     {
       string OutputBaseName;
-      
+
       OutputBaseName = OutputTraceName.substr(0, SubstrPos);
       OutputROWName  = OutputBaseName+".row";
     }
-    
+
     if ((OutputROWFile = fopen(OutputROWName.c_str(), "w")) == NULL)
     {
       /* We are unable to open the output PCF file. The PCF managment is
@@ -149,8 +149,8 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
       ROWPresent = false;
     }
   }
-  
-  /* DEBUG */
+
+  /* DEBUG
   if (PCFPresent)
   {
     printf("PCF FOUND!!!!\n");
@@ -160,6 +160,7 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
   {
     printf("ROW FOUND!!!!\n");
   }
+  */
 
   printf("Input PCF = %s\nOutput PCF = %s\n",
            InputPCFName.c_str(),
@@ -168,7 +169,7 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
   printf("Input ROW = %s\nOutput ROW = %s\n",
            InputROWName.c_str(),
            OutputROWName.c_str());
-  
+
   return;
 }
 
@@ -180,7 +181,7 @@ bool ClusteredEventsPRVGenerator::SetEventsToDealWith (set<event_type_t>& Events
   {
     SetErrorMessage("no events definend in a PRV event parsing generator");
     SetError(true);
-    
+
     return false;
   }
 
@@ -197,7 +198,7 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   vector<ApplicationDescription*> AppsDescription;
   timestamp_t                     BeginTimeIndex;
   vector<cluster_id_t>            CompleteIDs;
-                    
+
   ParaverRecord                *CurrentRecord;
   Event                        *CurrentEvent;
   percentage_t                  CurrentPercentage = 0;
@@ -212,11 +213,11 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
     SetError(true);
     return false;
   }
-  
+
   /* Sort all burst in terms of instance number, to guarantee the positional
      assignment in the IDs vector */
   sort(Bursts.begin(), Bursts.end(), InstanceNumCompare());
-  
+
   /* Create the single cluster IDs vector */
   size_t CurrentClusteringBurst = 0;
   for (size_t i = 0; i < Bursts.size(); i++)
@@ -243,7 +244,7 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
           return false;
     }
   }
-  
+
   /* Sort all bursts in terms of trace appearance, using the line comparison */
   sort(Bursts.begin(), Bursts.end(), LineCompare());
 
@@ -257,7 +258,7 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
     cout << "ID = " << CompleteIDs[Bursts[i]->GetInstance()] << endl;
   }
   */
-  
+
   if (!TraceParser->InitTraceParsing())
   {
     SetError(true);
@@ -265,10 +266,10 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
                     TraceParser->GetLastError());
     return false;
   }
-  
+
   /* Get the header and flush it to output trace */
   Header = TraceParser->GetHeader();
-  
+
   if (Header != NULL)
   {
     if (!Header->Flush(OutputTraceFile))
@@ -279,16 +280,16 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
       return false;
     }
   }
-  
+
   /* Print all communicators */
   AppsDescription = TraceParser->GetApplicationsDescription();
-  
+
   for (size_t i = 0; i < AppsDescription.size(); i++)
   {
     vector<Communicator*> Communicators;
-    
+
     Communicators = AppsDescription[i]->GetCommunicators();
-    
+
     for (size_t j = 0; j < Communicators.size(); j++)
     {
       if (!Communicators[j]->Flush(OutputTraceFile))
@@ -299,7 +300,7 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
         return false;
       }
     }
-    
+
     /* This is buggy, because we need to capture a multi-application trace */
     vector<TaskDescription_t> TasksInfo = AppsDescription[i]->GetTaskInfo();
 
@@ -308,29 +309,29 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
       BurstsEnd.push_back(vector<timestamp_t> (TasksInfo[j]->GetThreadCount()));
     }
   }
-  
+
   /* Add clusters information to trace */
   /* BeginTimeIndex = EndTimeIndex = FilterBurstsEndIndex = 0; */
   BeginTimeIndex = 0;
-  
+
   TraceParser->Reload();
-  
+
   if (TraceParser->GetTimeUnits() == MICROSECONDS)
     TimeFactor = 1e3;
   else
     TimeFactor = 1;
-  
+
   CurrentPercentage = TraceParser->GetFilePercentage();
   system_messages::show_percentage_progress("Generation Paraver Output Trace",
                                             CurrentPercentage);
-  
+
   CurrentRecord = TraceParser->GetNextRecord();
 
   while (CurrentRecord != NULL)
   {
     percentage_t PercentageRead;
     bool  CurrentRecordFlushed = false;
-    
+
     /* We are only interested on event and state records */
     if (CurrentRecord->GetRecordType() == PARAVER_EVENT)
     {
@@ -372,14 +373,14 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
               CurrentEvent->GetThreadId()  == CurrentBurst->GetThreadId())
           {
             Event* NewEvent;
-            
+
             NewEvent = new Event(0, /* Line not needed */
                                  CurrentEvent->GetTimestamp(),
                                  CurrentEvent->GetCPU()+1,
                                  CurrentEvent->GetAppId()+1,
                                  CurrentEvent->GetTaskId()+1,
                                  CurrentEvent->GetThreadId()+1);
-            
+
             NewEvent->AddTypeValue(90000001,
                                    (INT64) CompleteIDs[CurrentBurst->GetInstance()]);
 
@@ -390,9 +391,9 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
                               NewEvent->GetLastError());
               return false;
             }
-            
+
             BeginTimeIndex++;
-            
+
             /* Set the end time */
             BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] =
               CurrentBurst->GetEndTime();
@@ -405,16 +406,16 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
         &&  BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] != 0) // In timestamp 0 it is impossible to close a burst
         {
           Event* NewEvent;
-          
+
           NewEvent = new Event(0, /* Line not needed */
                                CurrentEvent->GetTimestamp(),
                                CurrentEvent->GetCPU()+1,
                                CurrentEvent->GetAppId()+1,
                                CurrentEvent->GetTaskId()+1,
                                CurrentEvent->GetThreadId()+1);
-          
+
           NewEvent->AddTypeValue(90000001,0);
-          
+
           if (!NewEvent->Flush(OutputTraceFile))
           {
             SetError(true);
@@ -427,9 +428,9 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
           BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] = 0;
         }
       }
-      
-      
-      
+
+
+
       /* Show progress */
       PercentageRead = TraceParser->GetFilePercentage();
       if (PercentageRead > CurrentPercentage)
@@ -455,25 +456,25 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
     delete CurrentRecord;
     CurrentRecord = TraceParser->GetNextRecord();
   }
-  
-  /* DEBUG 
+
+  /* DEBUG
   cout << "Points used = " << BeginTimeIndex << endl;
   */
-  
+
   if (TraceParser->GetError())
   {
     SetError(true);
     SetErrorMessage("Error creating output trace ", TraceParser->GetLastError());
     return false;
   }
-  
+
   if (ferror(InputTraceFile) != 0)
   {
     SetError(true);
     SetErrorMessage("Error creating output trace", strerror(errno));
     return false;
   }
-  
+
   system_messages::show_percentage_end("Generating Paraver Output Trace");
 
   /* DEBUG
@@ -486,7 +487,7 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
          EndTimePoints.size(),
          FilterBurstsEnd.size());
   */
-  
+
   if (PCFPresent)
   {
     GenerateOutputPCF(DifferentIDs);
@@ -496,7 +497,7 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   {
     CopyROWFile();
   }
-  
+
   return true;
 }
 
@@ -509,7 +510,7 @@ bool ClusteredEventsPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& Different
   bool   FlushBuffer = false;
 
   vector<cluster_id_t> ClusterIDs;
-  
+
   cluster_id_t MaxIDUsed;
   PrepareClusterIDsVector(ClusterIDs, DifferentIDs, MaxIDUsed);
 
@@ -521,20 +522,20 @@ bool ClusteredEventsPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& Different
     }
 
     FlushBuffer = false;
-    
+
     if (!ColorsSectionRead)
     {
       if (strncmp(Buffer, "STATES_COLOR", 12) == 0)
       { /* State color section found. Flush common-cluster colors */
         ColorsSectionRead = true;
-        
+
         if (fprintf(OutputPCFFile, "%s", Buffer) < 0)
         {
           /* No error state, because PCF generation is optional */
           unlink(OutputPCFName.c_str());
           return false;
         }
-        
+
         /* Print all state colors up to maximum cluster ID */
         for (size_t i = 0; i < MaxIDUsed+PARAVER_OFFSET; i++)
         {
@@ -575,7 +576,7 @@ bool ClusteredEventsPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& Different
     {
       FlushBuffer = true;
     }
-    
+
     if (FlushBuffer)
     {
       if (fprintf(OutputPCFFile, "%s", Buffer) < 0)
@@ -586,29 +587,29 @@ bool ClusteredEventsPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& Different
       }
     }
   }
-  
-  
+
+
   if (ferror(OutputPCFFile))
   {
     unlink(OutputPCFName.c_str());
     return false;
   }
-  
+
   /* Print clusters information */
-  
+
   if (fprintf(OutputPCFFile, CLUSTERS_EVENTS_TXT) < 0)
   {
     unlink(OutputPCFName.c_str());
     return false;
   }
-  
+
   if (fprintf(OutputPCFFile,
               "") < 0)
   {
     unlink(OutputPCFName.c_str());
     return false;
   }
-  
+
   for (size_t i = 0; i < ClusterIDs.size(); i++)
   {
     fprintf(OutputPCFFile,
@@ -616,7 +617,7 @@ bool ClusteredEventsPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& Different
             ClusterIDs[i]+PARAVER_OFFSET, /* It needs the offset, because it uses internal numbering */
             GetClusterName(ClusterIDs[i]).c_str());
   }
-  
+
   return true;
 }
 
@@ -649,7 +650,7 @@ bool ClusteredEventsPRVGenerator::BurstClosingEvent(Event* CurrentEvent)
       return true;
     }
   }
-  
+
   return true;
 }
 
@@ -665,7 +666,7 @@ bool ClusteredEventsPRVGenerator::CopyROWFile(void)
     SetWarningMessage(WarningMessage.str());
     return false;
   }
-  
+
   ofstream OutputROW(OutputROWName.c_str(), std::ios::binary);
   if (!OutputROW)
   {
@@ -675,9 +676,9 @@ bool ClusteredEventsPRVGenerator::CopyROWFile(void)
     SetWarningMessage(WarningMessage.str());
     return false;
   }
-  
+
   OutputROW << InputROW.rdbuf();
-  
+
   return true;
 }
 
@@ -686,29 +687,29 @@ void ClusteredEventsPRVGenerator::PrepareClusterIDsVector(vector<cluster_id_t>& 
                                                           cluster_id_t&         MaxIDUsed)
 {
   set<cluster_id_t>::iterator DifferentIDsIterator;
-  
+
   MaxIDUsed = NOISE_CLUSTERID;
-  
+
   if (DifferentIDs.count(DURATION_FILTERED_CLUSTERID) == 0)
   {
     ClusterIDs.push_back(DURATION_FILTERED_CLUSTERID);
   }
-  
+
   if (DifferentIDs.count(RANGE_FILTERED_CLUSTERID) == 0)
   {
     ClusterIDs.push_back(RANGE_FILTERED_CLUSTERID);
   }
-  
+
   if (DifferentIDs.count(THRESHOLD_FILTERED_CLUSTERID) == 0)
   {
     ClusterIDs.push_back(THRESHOLD_FILTERED_CLUSTERID);
   }
-  
+
   if (DifferentIDs.count(NOISE_CLUSTERID) == 0)
   {
     ClusterIDs.push_back(NOISE_CLUSTERID);
   }
-  
+
   for (DifferentIDsIterator  = DifferentIDs.begin();
        DifferentIDsIterator != DifferentIDs.end();
        ++DifferentIDsIterator)
@@ -720,21 +721,21 @@ void ClusteredEventsPRVGenerator::PrepareClusterIDsVector(vector<cluster_id_t>& 
     }
   }
   sort(ClusterIDs.begin(), ClusterIDs.end());
-  
+
   return;
 }
 
 /**
  * Returns the cluster name using the ID
- * 
+ *
  * \param ID ID value to generate the cluster name
- * 
+ *
  * \return The name of the cluster, taking into account the special cluster ids
  */
 string ClusteredEventsPRVGenerator::GetClusterName(cluster_id_t ID)
 {
   ostringstream ClusterName;
-  
+
   switch (ID)
   {
     case UNCLASSIFIED:
