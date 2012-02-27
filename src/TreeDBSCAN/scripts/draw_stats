@@ -1,0 +1,82 @@
+#!/usr/bin/perl
+
+# Parse arguments
+my $ARGC = @ARGV;
+
+my $EXE = `basename $0`;
+chomp $EXE;
+my $TOPO_FILE = $ARGV[0];
+my $STAT_FILE = $ARGV[1];
+my $DOT_FILE  = $ARGV[2];
+
+my $IN  = 0;
+my $OUT = 1;
+
+if ($ARGC != 3)
+{
+  print "Invalid arguments. Usage:\n";
+  print "$EXE <topology_file> <stats_file> <output_dot>\n";
+  exit;
+}
+
+open (STAT, $STAT_FILE) || die "Could not open '$STAT_FILE': $!\n";
+
+my %Statistics = ();
+
+while (my $Line = <STAT>)
+{   
+  chomp $Line;
+   
+  my @Stats = split(/,/, $Line);
+  my $NodeID      = $Stats[0];
+  my $InputStats  = $Stats[1];
+  my $OutputStats = $Stats[2];
+  
+  $Statistics{$NodeID}{$IN}  = $InputStats;
+  $Statistics{$NodeID}{$OUT} = $OutputStats;
+}
+
+close STAT;
+
+open (TOPO, $TOPO_FILE)  || die "Could not open '$TOPO_FILE': $!\n";
+open (DOT, ">$DOT_FILE") || die "Could not open '$DOT_FILE': $!\n";
+
+while (my $Line = <TOPO>)
+{
+  chomp $Line;
+ 
+  my @Match = $Line =~ m/\".*:([0-9]+)\" -> \".*:([0-9]+)\";/;
+  if (@Match == 2)
+  {
+    $OldNodeID = $Match[0];
+    $NewNodeID = $OldNodeID."\\n".$Statistics{$OldNodeID}{$IN};
+    $Line =~ s/:$OldNodeID\"/:$NewNodeID\"/;
+
+    $OldNodeID = $Match[1];
+    $NewNodeID = $OldNodeID."\\n".$Statistics{$OldNodeID}{$IN};
+    $Line =~ s/:$OldNodeID\"/:$NewNodeID\"/;
+
+    chop $Line;
+    print DOT $Line." [label=\"".$Statistics{$OldNodeID}{$OUT}."\"];\n";
+  }
+  else
+  { 
+    @Match = $Line =~ m/\".*:([0-9]+)\";/;
+    if (@Match == 1)
+    {
+      $OldNodeID = $Match[0];
+      $NewNodeID = $OldNodeID."\\n".$Statistics{$OldNodeID}{$IN};
+      $Line =~ s/:$OldNodeID\"/:$NewNodeID\"/;
+
+      print DOT $Line."\n";
+    }
+    else
+    {
+      print DOT $Line."\n";
+    }
+  }
+}
+
+close TOPO;
+close DOT;
+
