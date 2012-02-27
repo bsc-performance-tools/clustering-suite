@@ -52,10 +52,14 @@ extern "C" {
 
 void Init(const TopologyLocalInfo &top_info);
 
+/*
 void MergeAlltoAll(vector<HullModel*> &ClustersHulls,
                    vector<HullModel*> &MergedModel,
                    double              Epsilon,
                    int                 MinPoints);
+*/
+
+void NewMerge(HullModel *ChildHull, double Epsilon, int MinPoints);
 
 }
 

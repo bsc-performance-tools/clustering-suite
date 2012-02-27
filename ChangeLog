@@ -10,6 +10,14 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-02-27 German Llort <german.llort@bsc.es>
+	* Changed the transmission protocol for hulls in Tree-DBSCAN algorithm so
+    that all hulls are transmitted at once in a single package, rather than 
+    one by one.
+
+    * Added statistics to display the work done in each node of the MRNet tree.
+    
+
 2012-01-17 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a bug in 'libTraceClusteringImplementation' related to PRV trace 
 	reconstruction, when using events instead of states

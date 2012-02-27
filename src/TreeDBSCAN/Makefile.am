@@ -31,6 +31,8 @@ libfilterTreeDBSCAN_la_SOURCES  = \
   NoiseManager.h \
   HullManager.cpp \
   HullManager.h \
+  Statistics.cpp \
+  Statistics.h \
   ClusteringTags.h \
   Utils.h
 libfilterTreeDBSCAN_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags` @CGAL_CPPFLAGS@
@@ -50,6 +52,8 @@ PROTOCOL_COMMON_SRCS = \
   NoiseManager.h \
   HullManager.cpp \
   HullManager.h \
+  Statistics.cpp \
+  Statistics.h \
   ClusteringTags.h \
   Utils.h
 

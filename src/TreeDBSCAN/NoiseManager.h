@@ -55,7 +55,7 @@ class NoiseManager
       NoiseManager();
       NoiseManager(double Epsilon, int MinPoints);
 
-      bool ClusterNoise(vector<const Point*>& Points, vector<HullModel*>& NoiseModel);
+      bool ClusterNoise(vector<const Point*>& Points, vector<HullModel*>& NoiseModel, int &CountRemainingNoise);
 
       void Serialize(int StreamID, std::vector< PacketPtr >& OutputPackets);
 

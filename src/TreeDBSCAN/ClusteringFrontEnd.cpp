@@ -39,7 +39,6 @@
 #include "ClusteringTags.h"
 #include "Utils.h"
 
-
 /**
  * Constructor sets the clustering configuration parameters.
  */
@@ -105,10 +104,11 @@ int ClusteringFrontEnd::Run()
    stXchangeDims->send(p);
 
    cout << "[FE] Computing global hulls..." << endl;
-   /* Receive the resulting global hulls */
    do
    {
       MRN_STREAM_RECV(stClustering, &tag, p, TAG_ANY);
+#if 0
+      /* Receive the resulting global hulls one by one */
       if (tag == TAG_HULL)
       {
          HullModel *GlobalHull = NULL;
@@ -127,6 +127,26 @@ int ClusteringFrontEnd::Run()
          GlobalHull->Flush();
          std::cout << "********** [FE] END BROADCASTING HULL " << countGlobalHulls << std::endl; */
       }
+#endif
+      /* Receive 1 packet with all resulting global hulls at once */
+      if (tag == TAG_ALL_HULLS)
+      {
+         HullManager HM = HullManager();
+         HM.Unpack(p, GlobalModel);
+         vector<HullModel *> FilteredGlobalModel;
+         for (unsigned int i = 0; i<GlobalModel.size(); i++)
+         {
+            if (GlobalModel[i]->Density() >= MinPoints)
+            {
+               FilteredGlobalModel.push_back( GlobalModel[i] );
+            }
+         }
+         /* Broadcast back the global model */
+         HM.SerializeAll(stClustering, FilteredGlobalModel);
+         countGlobalHulls = FilteredGlobalModel.size();
+
+      }
+
 #if defined(PROCESS_NOISE)
       /* Count the remaining noise points */
       else if (tag == TAG_NOISE)
@@ -142,6 +162,34 @@ int ClusteringFrontEnd::Run()
    stClustering->send(TAG_ALL_HULLS_SENT, "");
    cout << "[FE] Broadcasted " << countGlobalHulls << " global hulls!" << endl;
 
+   /* Receive the statistics from all nodes */
+   Statistics ClusteringStats(WhoAmI());
+   MRN_STREAM_RECV(stClustering, &tag, p, TAG_STATISTICS);
+   ClusteringStats.Unpack(p);
+   PrintGraphStats(ClusteringStats); 
+
    return countGlobalHulls;
+}
+
+void ClusteringFrontEnd::PrintGraphStats(Statistics &ClusteringStats)
+{
+  string TreeLayoutFileName = "MRNetStats.layout";
+  GetNetwork()->get_NetworkTopology()->print_DOTGraph( TreeLayoutFileName.c_str() );
+
+  string StatsFileName = "MRNetStats.data";
+  ofstream StatsFile;
+  StatsFile.open (StatsFileName.c_str());
+  ClusteringStats.DumpAllStats(StatsFile);
+  StatsFile.close();
+
+  string OutputDOTName = "MRNetStats.dot";
+  string CMD = string(getenv("TREE_DBSCAN_HOME")) + "/bin/draw_stats " + TreeLayoutFileName + " " + StatsFileName + " " + OutputDOTName;
+
+  cout << "[FE] Generating debug statistics... ";
+  system(CMD.c_str());
+  cout << "done!" << endl;
+
+  unlink(TreeLayoutFileName.c_str());
+  unlink(StatsFileName.c_str());
 }
 

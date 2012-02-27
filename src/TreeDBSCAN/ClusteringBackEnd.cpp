@@ -39,6 +39,7 @@
 #include "HullManager.h"
 #include "ClusteringTags.h"
 #include "Utils.h"
+#include "Statistics.h"
 
 using namespace cepba_tools;
 
@@ -80,6 +81,7 @@ int ClusteringBackEnd::Run()
    PACKET_new(p);
    vector<HullModel*>::iterator it;
    Timer t;
+   Statistics ClusteringStats(WhoAmI());
 
    /* Delete any previous clustering */
    if (libClustering != NULL) delete libClustering;
@@ -106,18 +108,25 @@ int ClusteringBackEnd::Run()
    }
    if (WhoAmI() == 0) cout << "[BE " << WhoAmI() << "] Data extraction time: " << t.end() << endl;
 
+   ClusteringStats.IncreaseInputPoints( libClustering->GetNumberOfPoints() );
+
    /* Start the clustering analysis */
    t.begin();
+   ClusteringStats.ClusteringTimeStart();
    if (!AnalyzeData())
    {
       cerr << "[BE " << WhoAmI() << "] Error analyzing data. Exiting..." << endl;
       exit (EXIT_FAILURE);
    }
+   ClusteringStats.ClusteringTimeStop();
+   
 
 #if defined(PROCESS_NOISE)
-   /* DEBUG -- count remaining noise points
    vector<const Point *> NoisePoints;
    libClustering->GetNoisePoints(NoisePoints);
+   ClusteringStats.IncreaseOutputPoints( NoisePoints.size() );
+
+   /* DEBUG -- count remaining noise points
    if (Verbose) cerr << "[BE " << WhoAmI() << "] Number of noise points = " << NoisePoints.size() << endl; */
 
    NoiseManager Noise = NoiseManager(libClustering);
@@ -126,11 +135,14 @@ int ClusteringBackEnd::Run()
 
    /* Send the local hulls */
    if (Verbose) cout << "[BE " << WhoAmI() << "] Sending " << LocalModel.size() << " local hulls" << endl;
+   ClusteringStats.IncreaseOutputHulls( LocalModel.size() );
 
    HullManager HM = HullManager();
-   HM.Serialize(stClustering, LocalModel);
+//   HM.Serialize(stClustering, LocalModel);
+   HM.SerializeAll(stClustering, LocalModel);
 
-   /* Receive the resulting global hulls */
+#if 0
+   /* Receive the resulting global hulls one by one */
    do
    {
       STREAM_recv(stClustering, &tag, p, TAG_HULL);
@@ -147,6 +159,20 @@ int ClusteringBackEnd::Run()
          GlobalModel.push_back(Hull);
       }
    } while (tag != TAG_ALL_HULLS_SENT);
+#endif
+   /* Receive 1 packet with all the resulting global hulls */
+   do
+   {
+      STREAM_recv(stClustering, &tag, p, TAG_ANY);
+      if (tag == TAG_ALL_HULLS)
+      {
+         HullManager HM  = HullManager();
+         HM.Unpack(p, GlobalModel);
+      }
+   } while (tag != TAG_ALL_HULLS_SENT);
+
+   /* Once the clustering is over, send the statistics to the root */
+   ClusteringStats.Serialize(stClustering);
 
    if (Verbose) cout << "[BE " << WhoAmI() << "] Received " << GlobalModel.size() << " global hulls." << endl;
    // cout << "[BE " << WhoAmI() << "] >> Clustering time: " << t.end() << "[" << NumBackEnds() << " BEs]" << endl;

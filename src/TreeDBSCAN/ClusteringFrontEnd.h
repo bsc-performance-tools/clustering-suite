@@ -38,6 +38,7 @@
 #include <vector>
 #include <FrontProtocol.h>
 #include "ClusteringCore.h"
+#include "Statistics.h"
 
 /**
  * This class implements the front-end side of the TreeDBSCAN protocol, 
@@ -58,6 +59,8 @@ class ClusteringFrontEnd : public ClusteringCore, public FrontProtocol
       string ID() { return "CLUSTERING"; }
       void   Setup(void);
       int    Run  (void);
+
+      void PrintGraphStats(Statistics &ClusteringStats);
 };
 
 #endif /* __CLUSTERING_FRONTEND_H__ */

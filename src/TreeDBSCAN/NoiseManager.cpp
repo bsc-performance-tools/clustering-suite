@@ -108,11 +108,20 @@ void NoiseManager::Serialize(int StreamID, std::vector< PacketPtr >& OutputPacke
  * Called from the MRNet filter to cluster the noise points.
  * @param Points Noise points to cluster.
  * @param NoiseModel The resulting models for the clustered points.
+ * @param CountRemainingNoise The number of remaining noise points after clustering.
  * @return true on success; false otherwise.
  */
-bool NoiseManager::ClusterNoise(vector<const Point*>& Points, vector<HullModel*>& NoiseModel)
+bool NoiseManager::ClusterNoise(vector<const Point*>& Points, vector<HullModel*>& NoiseModel, int &CountRemainingNoise)
 {
-   return libClustering->ClusterAnalysis(Points, NoiseModel);
+   int rc = libClustering->ClusterAnalysis(Points, NoiseModel);
+
+   CountRemainingNoise = 0;
+   vector<const Point*> RemainingNoisePoints;
+   if (libClustering->GetNoisePoints(RemainingNoisePoints))
+   {
+      CountRemainingNoise = RemainingNoisePoints.size();
+   }
+   return rc;
 }
 
 

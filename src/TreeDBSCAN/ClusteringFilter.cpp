@@ -42,6 +42,7 @@
 #include "HullManager.h"
 #include "ClusteringTags.h"
 #include "Utils.h"
+#include "Statistics.h"
 
 using namespace MRN;
 using namespace std;
@@ -52,10 +53,14 @@ const char *filterTreeDBSCAN_format_string = "";
 
 int  WaitForNoise = 0;
 int  WaitForHulls = 0;
+int  WaitForStats = 0;
 bool NeedsReset   = true;
 
 vector<const Point *> NoisePoints;
-vector<HullModel*>    ClustersHulls;
+vector<HullModel *>   MergedHulls;
+
+Statistics *ClusteringStats = NULL;
+
 
 
 /**
@@ -64,14 +69,27 @@ vector<HullModel*>    ClustersHulls;
  */
 void Init(const TopologyLocalInfo & top_info)
 {
-   WaitForNoise = WaitForHulls = top_info.get_NumChildren();
+   WaitForNoise = WaitForHulls = WaitForStats = top_info.get_NumChildren();
+
+   if (ClusteringStats == NULL)
+   {
+     ClusteringStats = new Statistics( FILTER_ID(top_info) );
+   }
+   else ClusteringStats->Reset();
 
    NoisePoints.clear();
-   ClustersHulls.clear();
+
+   for (unsigned int i=0; i<MergedHulls.size(); i++)
+   {
+      delete MergedHulls[i];
+   }
+   MergedHulls.clear();
 
    NeedsReset = false;
 }
 
+
+int IAmTopFilter = 0;
 
 /**
  * The clustering filter receives the noise points from all children,
@@ -89,6 +107,8 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
    int    tag = packets_in[0]->get_Tag();
    double Epsilon   = 0.0;
    int    MinPoints = 0;
+
+   IAmTopFilter = TOP_FILTER( top_info );
 
    /* DEBUG - Bypass all messages
    for (unsigned int i=0; i<packets_in.size(); i++)
@@ -139,13 +159,19 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
          /* Check whether all children sent their noise points */
          if (WaitForNoise <= 0)
          {
+            ClusteringStats->IncreaseInputPoints( NoisePoints.size() );
+
             NoiseManager Noise = NoiseManager(Epsilon, WeightedMinPoints);
             /* DEBUG -- Number of noise points
             cerr << "[DEBUG FILTER " << FILTER_ID(top_info) << "] NoisePoints.size()=" << NoisePoints.size() << endl; */
 
             /* Cluster all children noise points */
+            ClusteringStats->ClusteringTimeStart();
             vector<HullModel*> NoiseModel;
-            Noise.ClusterNoise( NoisePoints, NoiseModel );
+            int CountRemainingNoise = 0;
+            Noise.ClusterNoise( NoisePoints, NoiseModel, CountRemainingNoise );
+            ClusteringStats->ClusteringTimeStop();
+            ClusteringStats->IncreaseOutputPoints( CountRemainingNoise );
 
             /* Send remaining noise points to the next tree level */
             Noise.Serialize(packets_in[0]->get_StreamId(), packets_out);
@@ -153,12 +179,13 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
             /* Store the new noise hulls in the global array ClustersHulls */
             for (unsigned int i=0; i<NoiseModel.size(); i++)
             {
-               ClustersHulls.push_back( NoiseModel[i] );
+               MergedHulls.push_back( NoiseModel[i] );
             }
          }
          break;
       }
 #endif
+#if 0
       case TAG_HULL:
       {
          /* Receive hull from one child */
@@ -190,6 +217,48 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
          }
          break;
       }
+#endif
+      case TAG_ALL_HULLS:
+      {
+         /* Receive all hulls from a single back-end in a single packet */
+         vector<HullModel *> ChildHulls;
+         HullManager HM = HullManager();
+         HM.Unpack(packets_in[0], ChildHulls);
+         /* Merge the hulls as they arrive */
+         for (unsigned int i = 0; i < ChildHulls.size(); i ++)
+         {
+            ClusteringStats->IntersectTimeStart();
+            NewMerge(ChildHulls[i], Epsilon, WeightedMinPoints);
+            ClusteringStats->IntersectTimeStop();
+         }
+         ClusteringStats->IncreaseInputHulls( ChildHulls.size() );
+         break;
+      }
+      case TAG_ALL_HULLS_SENT:
+      {
+         WaitForHulls --;
+         /* Check whether all children sent their hulls */
+         if (WaitForHulls <= 0)
+         {
+            /* Send the joint hulls */
+            HullManager HM = HullManager();
+            HM.SerializeAll(packets_in[0]->get_StreamId(), packets_out, MergedHulls);
+            ClusteringStats->IncreaseOutputHulls( MergedHulls.size() );
+         }
+         break;
+      }
+      case TAG_STATISTICS:
+      {
+        WaitForStats --;
+        ClusteringStats->Unpack(packets_in[0]);
+        if (WaitForStats <= 0)
+        {
+          ClusteringStats->Serialize(packets_in[0]->get_StreamId(), packets_out);
+          /* Reset the filter next time it triggers */
+          NeedsReset = true;
+        }
+        break;
+      }
       default:
       {
         cerr << "[FILTER " << FILTER_ID(top_info) << "] WARNING: Unknown message tag '" << tag << "'" << endl;
@@ -199,6 +268,7 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
 }
 
 
+#if 0
 /**
  * Takes all hulls in the input array ClustersHulls and checks whether they intersect
  * with each other. When two hulls intersect, a new hull is build that embraces both of them,
@@ -270,6 +340,36 @@ void MergeAlltoAll(vector<HullModel*> &ClustersHulls,
    ClustersHulls.clear(); /* It is also cleared in Init, but just to make
                              sure we don't use it after this function, as
                              it's been reused to store the intermediate merged hulls */
+}
+#endif
+
+
+void NewMerge(HullModel *ChildHull, double Epsilon, int MinPoints)
+{
+  /* Try to merge it (incrementally) with all hulls received previously */
+  unsigned int i = 0;
+  HullModel   *Intersect = NULL, *MaxMerge = NULL;
+
+  MaxMerge = ChildHull;
+
+  while (i < MergedHulls.size())
+  {
+    Intersect = MaxMerge->Merge(MergedHulls[i], Epsilon, MinPoints);
+    ClusteringStats->IncreaseNumIntersects( (Intersect != NULL) );
+    if (Intersect != NULL)
+    {
+      delete MaxMerge;
+      delete MergedHulls[i];
+      MergedHulls.erase(MergedHulls.begin()+i);
+      MaxMerge = Intersect;
+    }
+    else
+    {
+      i++;
+    }
+  }
+  /* Store the merged hull in the list */
+  MergedHulls.push_back( MaxMerge );
 }
 
 

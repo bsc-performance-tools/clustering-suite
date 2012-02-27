@@ -51,14 +51,30 @@ class HullManager
 
     /* Common API */
     HullModel* Unpack(PACKET_PTR InputPacket);
+    void Unpack(PACKET_PTR InputPacket, vector<HullModel *> &HullsList);
+
 
     /* Back-end API */
     void Serialize(STREAM *OutputStream, vector<HullModel*> &HullsList);
+    void SerializeAll(STREAM *OutputStream, vector<HullModel*> &HullsList);
 
     /* Filter API */
     void Serialize(int StreamID, vector<PacketPtr> &OutputPackets, vector<HullModel*> &HullsList);
+    void SerializeAll(int StreamID, vector<PacketPtr> &OutputPackets, vector<HullModel*> &HullsList);
 
   private:
+    void SerializeAll(
+      vector<HullModel*> &HullsList, 
+      int                &NumberOfHulls,
+      long long         *&DensityArray,
+      int               *&NumberOfPointsArray,
+      int               *&NumberOfDimensionsArray,
+      int                &TotalNumberOfPoints,
+      long long         *&InstancesArray,
+      long long         *&NeighbourhoodSizesArray,
+      int                &TotalDimensionsValues,
+      double            *&DimensionsValuesArray);
+
     /* Back-end API */
     void SerializeOne(STREAM *OutputStream, HullModel *Hull);
     void SerializeDone(STREAM *OutputStream);
