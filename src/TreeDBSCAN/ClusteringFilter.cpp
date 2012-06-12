@@ -79,10 +79,12 @@ void Init(const TopologyLocalInfo & top_info)
 
    NoisePoints.clear();
 
+/*
    for (unsigned int i=0; i<MergedHulls.size(); i++)
    {
       delete MergedHulls[i];
    }
+*/
    MergedHulls.clear();
 
    NeedsReset = false;
@@ -358,8 +360,8 @@ void NewMerge(HullModel *ChildHull, double Epsilon, int MinPoints)
     ClusteringStats->IncreaseNumIntersects( (Intersect != NULL) );
     if (Intersect != NULL)
     {
-      delete MaxMerge;
-      delete MergedHulls[i];
+//      delete MaxMerge;
+//      delete MergedHulls[i];
       MergedHulls.erase(MergedHulls.begin()+i);
       MaxMerge = Intersect;
     }

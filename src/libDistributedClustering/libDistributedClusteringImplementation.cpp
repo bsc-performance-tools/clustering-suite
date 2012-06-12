@@ -1174,11 +1174,25 @@ bool libDistributedClusteringImplementation::GenerateClusterModels(vector<HullMo
 
   for (size_t i = NOISE_CLUSTERID+1; i < PointsPerCluster.size(); i++)
   {
-    /*ConvexHullModel NewHull(PointsPerCluster[i]);
-    NewHull.Print();
-    Models.push_back(NewHull);*/
+    HullModel *NewHull = new HullModel(new ConvexHullModel(PointsPerCluster[i]));
+    
+    Models.push_back(NewHull);
 
-    Models.push_back(new HullModel(new ConvexHullModel(PointsPerCluster[i])));
+    /* DEBUG
+    if (NewHull->Size() < 3)
+    {
+      // MAY HAPPEN WHEN CLUSTERING POINTS ARE 1-DIMENSIONAL 
+      std::cout << "[DEBUG] Hull points=" << NewHull->Size() << " Cluster points=" << PointsPerCluster[i].size() << std::endl;
+      std::cout << "[DEBUG] Dumping cluster..." << endl;
+      for (int k=0; k<PointsPerCluster[i].size(); k++)
+      {
+        Point *p = (Point*)PointsPerCluster[i][k];
+        p->PrintPoint();
+      }
+      std::cout << "[DEBUG] Dumping hull..." << endl;
+      NewHull->Flush(); 
+    } */
+
   }
 
   return true;

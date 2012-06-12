@@ -319,40 +319,69 @@ ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsil
   std::cerr.flush();
   */
 
-  for (size_t i = 0; i < HullPoints.size(); i++)
+  if (this->size() < MIN_HULL_POINTS || CHull2->size() < MIN_HULL_POINTS)
   {
-    P.push_back(HullPoints[i]);
-  }
-
-  for (size_t i = 0; i < Hull2Points.size(); i++)
-  {
-    Q.push_back(Hull2Points[i]);
-  }
-
-  /* DEBUG 
-  std::cout << "Polygon P characteristics: ";
-  std::cout << "Is " <<
-  (P.is_simple() ? "" : "not ") << "simple. ";
-  std::cout << "Is " <<
-  (P.is_convex() ? "" : "not ") << "convex." << std::endl;
-  */
-
-  /* DEBUG 
-  std::cout << "Polygon Q characteristics: ";
-  std::cout << "Is " <<
-  (Q.is_simple() ? "" : "not ") << "simple. ";
-  std::cout << "Is " <<
-  (Q.is_convex() ? "" : "not ") << "convex." << std::endl; */
-
-  /* Check polygon intersection */
-  if (CGAL::do_intersect (P, Q))
-  {
-    doMerge = true;
-  }
-  else if (Epsilon > 0)
-  {
-    /* Check distances and density */
+    /* Check if the points in the hulls are close enough */
     doMerge = this->IsNear(CHull2, Epsilon, MinPoints);
+  }  
+  else
+  {
+    for (size_t i = 0; i < HullPoints.size(); i++)
+    {
+      P.push_back(HullPoints[i]);
+    }
+
+    for (size_t i = 0; i < Hull2Points.size(); i++)
+    {
+      Q.push_back(Hull2Points[i]);
+    }
+
+    /* DEBUG 
+    std::cout << "Polygon P characteristics: ";
+    std::cout << "Is " <<
+    (P.is_simple() ? "" : "not ") << "simple. ";
+    std::cout << "Is " <<
+    (P.is_convex() ? "" : "not ") << "convex." << std::endl;
+    */
+
+    /* DEBUG 
+    std::cout << "Polygon Q characteristics: ";
+    std::cout << "Is " <<
+    (Q.is_simple() ? "" : "not ") << "simple. ";
+    std::cout << "Is " <<
+    (Q.is_convex() ? "" : "not ") << "convex." << std::endl; */
+  
+    /* Check polygon intersection */
+   
+    /* DEBUG 
+    if (P.size() < 3) 
+    {
+      std::cerr << "[DEBUG] P.size()=" << P.size() << endl;
+    }
+    if (Q.size() < 3) 
+    {
+      std::cerr << "[DEBUG] Q.size()=" << Q.size() << endl;
+    }
+    Polygon_2::Vertex_iterator it;
+    for (it = P.vertices_begin(); it != P.vertices_end(); ++it)
+    {
+      std::cerr << "[DEBUG] P x=" << it->x() << " " << it->y() << endl;
+    }
+    for (it = Q.vertices_begin(); it != Q.vertices_end(); ++it)
+    {
+      std::cerr << "[DEBUG] Q x=" << it->x() << " " << it->y() << endl;
+    }
+    */
+
+    if (CGAL::do_intersect (P, Q))
+    {
+      doMerge = true;
+    }
+    else if (Epsilon > 0)
+    {
+      /* Check if the hulls are close enough */
+      doMerge = this->IsNear(CHull2, Epsilon, MinPoints);
+    }
   }
 
   if (doMerge)

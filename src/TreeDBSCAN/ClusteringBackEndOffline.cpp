@@ -35,6 +35,8 @@
 #include <Timer.hpp>
 using cepba_tools::Timer;
 
+#include <SystemMessages.hpp>
+
 #include "ClusteringBackEndOffline.h"
 #include "ClusteringTags.h"
 
@@ -57,6 +59,8 @@ bool ClusteringBackEndOffline::InitLibrary(void)
       cerr << "[BE " << Protocol::WhoAmI() << "] Error setting up clustering library: " << libClustering->GetErrorMessage() << endl;
       return false;
    }
+   cepba_tools::system_messages::verbose = true;
+   cepba_tools::system_messages::messages_from_all_ranks = false;
    return true;
 }
 
@@ -114,7 +118,7 @@ bool ClusteringBackEndOffline::ProcessResults(void)
 {
    /* Print the local model */
    ostringstream ModelTitle;
-   Timer t;
+   cepba_tools::Timer t;
 
    if (Verbose) cout << "[BE " << WhoAmI() << "] Printing local model" << endl;
 

@@ -10,6 +10,13 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-06-12 German Llort <german.llort@bsc.es>
+	* Changed the default datatype for the CGAL kernel
+
+	* Checks for hulls having 3 points or more before trying to intersect them. 
+	Hulls may have less than 3 points when the all points have the same value in one
+	dimension, forming a line instead of a polygon which ends up crashing CGAL.
+
 2012-02-27 German Llort <german.llort@bsc.es>
 	* Added script draw_stats to print a DOT graph with each MRNet node statistics.
 

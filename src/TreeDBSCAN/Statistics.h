@@ -53,8 +53,8 @@ class Statistics
     int NumTotalIntersects;
     double ElapsedTimeClustering;
     double ElapsedTimeIntersecting;
-    Timer IntersectTimer;
-    Timer ClusteringTimer;
+    cepba_tools::Timer IntersectTimer;
+    cepba_tools::Timer ClusteringTimer;
 
     map< int, pair<string, string> > NodeStats;
     

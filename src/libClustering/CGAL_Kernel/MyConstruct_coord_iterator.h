@@ -4,13 +4,13 @@
 /*
 #include <CGAL/MP_Float.h>
 #include <CGAL/Quotient.h>
-typedef  CGAL::Quotient<CGAL::MP_Float> ET; */
+typedef  CGAL::Lazy_exact_nt< CGAL::Quotient<CGAL::MP_Float> > ET; */
 
-/* Try using this data type in case it fails */
+/* Try using this data type in case it fails  */
 #include <CGAL/Gmpq.h>
-typedef CGAL::Lazy_exact_nt<CGAL::Gmpq> ET;
+typedef CGAL::Lazy_exact_nt<CGAL::Gmpq> ET; 
 
-/* Try using this data type in case it fails
+/* Try using this data type in case it fails 
 #include <CGAL/Gmpq.h>
 typedef CGAL::Gmpq ET; */
 

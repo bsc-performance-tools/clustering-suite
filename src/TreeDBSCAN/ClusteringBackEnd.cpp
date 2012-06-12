@@ -80,7 +80,7 @@ int ClusteringBackEnd::Run()
    int tag;
    PACKET_new(p);
    vector<HullModel*>::iterator it;
-   Timer t;
+   cepba_tools::Timer t;
    Statistics ClusteringStats(WhoAmI());
 
    /* Delete any previous clustering */
@@ -120,7 +120,6 @@ int ClusteringBackEnd::Run()
    }
    ClusteringStats.ClusteringTimeStop();
    
-
 #if defined(PROCESS_NOISE)
    vector<const Point *> NoisePoints;
    libClustering->GetNoisePoints(NoisePoints);
@@ -132,6 +131,8 @@ int ClusteringBackEnd::Run()
    NoiseManager Noise = NoiseManager(libClustering);
    Noise.Serialize(stClustering);
 #endif
+
+
 
    /* Send the local hulls */
    if (Verbose) cout << "[BE " << WhoAmI() << "] Sending " << LocalModel.size() << " local hulls" << endl;
