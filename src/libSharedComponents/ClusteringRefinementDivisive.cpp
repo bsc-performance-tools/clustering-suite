@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -58,7 +58,7 @@ using std::setprecision;
  * \param MinPoints       MinPoints value to be used in all DBSCAN runs
  * \param EpsilonPerLevel Different values of epsilons to be used
  *
- */ 
+ */
 ClusteringRefinementDivisive::ClusteringRefinementDivisive(INT32         MinPoints,
                                                           vector<double> EpsilonPerLevel)
 {
@@ -76,7 +76,7 @@ ClusteringRefinementDivisive::~ClusteringRefinementDivisive(void)
   {
     delete ClusteringCore;
   }
-  
+
   for (size_t i = 0; i < NodesPerLevel.size(); i++)
   {
     for (size_t j = 0; j < NodesPerLevel[i].size(); j++)
@@ -97,7 +97,7 @@ ClusteringRefinementDivisive::~ClusteringRefinementDivisive(void)
  *
  * \return True if the refinement worked properly, false otherwise
  *
- */ 
+ */
 bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
                                        vector<Partition>&       IntermediatePartitions,
                                        Partition&               LastPartition,
@@ -108,7 +108,7 @@ bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
   ostringstream  Messages;
 
   this->OutputFilePrefix = OutputFilePrefix;
-  
+
   if (OutputFilePrefix.compare("") == 0)
   {
     PrintStepsInformation = false;
@@ -123,7 +123,7 @@ bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
     SetErrorMessage("no bursts no analyze");
     return false;
   }
-  
+
   if (Steps <= 1)
   {
     SetErrorMessage("number of steps in a refinement should be higher than 1");
@@ -140,15 +140,15 @@ bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
 
   StatisticsHistory.clear();
   StatisticsHistory.push_back(ClusteringStatistics());
-  
+
   NodesPerLevel.clear();
   NodesPerLevel.push_back(vector<ClusterInformation*>(0));
-  
+
   ClusteringCore = new libClustering();
 
   Messages << "*** TOTAL NUMBER OF BURSTS = " << Bursts.size() << " ***" << endl;
   Messages << "*** STEP 1 (Eps = " << EpsilonPerLevel[0] << ") ***" << endl;
-  system_messages::information(Messages.str());  
+  system_messages::information(Messages.str());
   if (!RunFirstStep(Bursts, IntermediatePartitions[0]))
   {
     return false;
@@ -160,12 +160,12 @@ bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
   LastStep = 0;
 
   /* Iterate through the epsilon values, and generate the clusters hierarchy */
-  for (size_t CurrentStep = 1; 
+  for (size_t CurrentStep = 1;
               CurrentStep < Steps && !Stop;
               CurrentStep++)
   {
     Messages.str("");
-    
+
     Messages << "****** STEP " << (CurrentStep+1) << " (Eps = " << EpsilonPerLevel[CurrentStep];;
     Messages << ") ******" << endl;
     system_messages::information(Messages.str());
@@ -173,7 +173,7 @@ bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
     IntermediatePartitions.push_back(Partition());
     StatisticsHistory.push_back(ClusteringStatistics());
     NodesPerLevel.push_back(vector<ClusterInformation*>(0));
-    
+
     Stop = true;
     if (!RunStep(CurrentStep,
                  Bursts,
@@ -200,7 +200,7 @@ bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
   Messages.str("");
   Messages << "****** PRUNING TREE ******" << endl;
   system_messages::information(Messages.str());
-  
+
   for (size_t i = 0; i < NodesPerLevel[0].size(); i++)
   {
     if (NodesPerLevel[0][i]->GetID() != NOISE_CLUSTERID)
@@ -213,9 +213,9 @@ bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
   /* Generate last partition */
   GeneratePartition(LastPartition);
 
-  /* DEBUG 
+  /* DEBUG
   cout << "Last Partition has " << LastPartition.NumberOfClusters() << " clusters" << endl; */
-  
+
   if (PrintStepsInformation)
   {
     Messages.str("");
@@ -227,7 +227,7 @@ bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
       return false;
     }
   }
-  
+
   return true;
 }
 
@@ -250,7 +250,7 @@ bool ClusteringRefinementDivisive::RunFirstStep(const vector<CPUBurst*>& Bursts,
   Messages.str("");
   Messages << "-> Running DBSCAN for top level" << endl;
   system_messages::information(Messages.str());
-  
+
   if (!RunDBSCAN ((vector<const Point*>&) Bursts,
                                           Epsilon,
                                           FirstPartition))
@@ -285,7 +285,7 @@ bool ClusteringRefinementDivisive::RunFirstStep(const vector<CPUBurst*>& Bursts,
       return false;
     }
   }
-  
+
   return true;
 }
 
@@ -296,7 +296,7 @@ bool ClusteringRefinementDivisive::RunFirstStep(const vector<CPUBurst*>& Bursts,
  * \param Bursts            Vector of bursts to analyze
  * \param PreviousPartition Results of the previous step
  * \param NewPartition      Results of the current step
- * \param Stop              I/O parameter to indicate that no more clusters 
+ * \param Stop              I/O parameter to indicate that no more clusters
  *                          were generated
  *
  * \return True if the step was executed correctly, false otherwise
@@ -313,16 +313,16 @@ bool ClusteringRefinementDivisive::RunStep(size_t                   Step,
   timestamp_t    TotalParentDurations;
   size_t         NodesAnalyzed = 0;
   double         Epsilon       = EpsilonPerLevel[Step];
-  
+
   vector<ClusterInformation*>& ParentNodes   = NodesPerLevel[Step-1];
   vector<ClusterInformation*>& ChildrenNodes = NodesPerLevel[Step];
-  
+
   /*
   Messages.str("");
   Messages << "|-> Generating candidates" << endl;
   system_messages::information(Messages.str());
   */
- 
+
   // GenerateCandidates(Step,);
 
   /* Compute ParentNodes totalizations */
@@ -348,10 +348,10 @@ bool ClusteringRefinementDivisive::RunStep(size_t                   Step,
       vector<ClusterInformation*> CurrentChildrenNodes;
 
       NodesAnalyzed++;
-      
+
       /* Run DBSCAN in the subset of bursts */
       BurstsSubset = GenerateBurstsSubset(Bursts, ParentNodes[i]);
-      
+
       Messages.str("");
       Messages << "|---> Running DBSCAN for ID = " << ParentNodes[i]->GetID();
       Messages << " (" << BurstsSubset.size() << " bursts)" << endl;
@@ -403,13 +403,13 @@ bool ClusteringRefinementDivisive::RunStep(size_t                   Step,
     system_messages::information(Messages.str());
     return true;
   }
-  
+
   /* Rename the children */
   /* THAT'S BUGGY! TAKE INTO ACCOUNT ALL LEVEL NODES */
   Messages.str("");
   Messages << "|-> Renaming nodes" << endl;
   system_messages::information(Messages.str());
-  
+
   cluster_id_t MaxIDAssigned = NOISE_CLUSTERID;
   for (size_t i = 0; i < Step; i++)
   {
@@ -437,14 +437,14 @@ bool ClusteringRefinementDivisive::RunStep(size_t                   Step,
   {
     ParentNodes[i]->RenameChildren(MaxIDAssigned);
   }
-  
+
   /* Join results for current level */
   Messages.str("");
   Messages << "|-> Joining results" << endl;
   system_messages::information(Messages.str());
 
   GeneratePartition(NewPartition);
-  
+
 
   /* DEBUG
   cout << "Current Assignment Vector Has " << CurrentAssignmentVector.size();
@@ -461,17 +461,17 @@ bool ClusteringRefinementDivisive::RunStep(size_t                   Step,
     {
       return false;
     }
-    
+
     Messages.str("");
     Messages << "|-> Printing plots" << endl;
     system_messages::information(Messages.str());
-    
+
     if (!PrintPlots(Bursts, NewPartition, Step))
     {
       return false;
     }
   }
-  
+
   return true;
 }
 
@@ -508,7 +508,7 @@ vector<CPUBurst*> ClusteringRefinementDivisive::GenerateBurstsSubset(const vecto
  *
  * \return True if the step was executed correctly, false otherwise
  *
- */ 
+ */
 bool ClusteringRefinementDivisive::RunDBSCAN(const vector<const Point*>& CurrentData,
                                      double                      Epsilon,
                                      Partition&                  CurrentPartition)
@@ -536,7 +536,7 @@ bool ClusteringRefinementDivisive::RunDBSCAN(const vector<const Point*>& Current
 
   bool verbose_state = system_messages::verbose;
   system_messages::verbose = false;
-  
+
   if (!ClusteringCore->ExecuteClustering(CurrentData,
                                          CurrentPartition))
   {
@@ -546,7 +546,7 @@ bool ClusteringRefinementDivisive::RunDBSCAN(const vector<const Point*>& Current
     return false;
   }
   system_messages::verbose = verbose_state;
-  
+
   return true;
 }
 
@@ -561,7 +561,7 @@ bool ClusteringRefinementDivisive::RunDBSCAN(const vector<const Point*>& Current
  *
  * \return True if the the node were generated correctly, false otherwise
  *
- */ 
+ */
 bool ClusteringRefinementDivisive::GenerateNodes(const vector<CPUBurst*>&     Bursts,
                                                  Partition&                   CurrentPartition,
                                                  vector<ClusterInformation*>& Nodes)
@@ -574,7 +574,7 @@ bool ClusteringRefinementDivisive::GenerateNodes(const vector<CPUBurst*>&     Bu
   map<cluster_id_t, vector<instance_t> >::iterator BurstPerNodeIt;
 
   bool NoNoise = false;
-  
+
   ostringstream  Messages;
 
   ClusteringStatistics Statistics;
@@ -587,12 +587,12 @@ bool ClusteringRefinementDivisive::GenerateNodes(const vector<CPUBurst*>&     Bu
     ErrorMessage << "number of points (" << Bursts.size();
     ErrorMessage << ") different from number of IDs (" << AssignmentVector.size() << ")";
     ErrorMessage << " when generating partition points";
-    
+
     SetErrorMessage(ErrorMessage.str());
     SetError(true);
     return false;
   }
-  
+
   /* Update Statistics */
   Statistics.InitStatistics(CurrentPartition.GetIDs());
 
@@ -606,15 +606,15 @@ bool ClusteringRefinementDivisive::GenerateNodes(const vector<CPUBurst*>&     Bu
     SetErrorMessage(Statistics.GetLastError());
     return false;
   }
-  
+
   Statistics.TranslatedIDs(CurrentPartition.GetAssignmentVector());
-  
-  PercentageDurations = Statistics.GetPercentageDurations(); 
+
+  PercentageDurations = Statistics.GetPercentageDurations();
 
   Messages.str("");
   Messages << "|-----> Computing score" << endl;
   system_messages::information(Messages.str());
-  
+
   if (!Scoring.ComputeScore(Bursts,
                             CurrentPartition.GetAssignmentVector(),
                             PercentageDurations,
@@ -631,14 +631,14 @@ bool ClusteringRefinementDivisive::GenerateNodes(const vector<CPUBurst*>&     Bu
   /* Generate current level hierarchy */
   map<cluster_id_t, double> CurrentClustersDurations   = Statistics.GetDurationSums();
   map<cluster_id_t, size_t> CurrentClustersIndividuals = Statistics.GetIndividuals();
-  
+
   Nodes.clear();
-  
+
   for (size_t i = 0; i < CurrentClustersScores.size(); i++)
   {
     cluster_id_t CurrentID = CurrentClustersScores[i].GetID();
 
-    ClusterInformation* NewNode = 
+    ClusterInformation* NewNode =
       new ClusterInformation(CurrentClustersScores[i].GetID(),
                              CurrentClustersScores[i].GetClusterScore(),
                              CurrentClustersScores[i].GetOccurrences(),
@@ -646,8 +646,8 @@ bool ClusteringRefinementDivisive::GenerateNodes(const vector<CPUBurst*>&     Bu
                              CurrentClustersIndividuals[CurrentID]);
 
     Nodes.push_back(NewNode);
-    
-    /* DEBUG 
+
+    /* DEBUG
     cout << "Subcluster ID = " << CurrentID << " Score = " << CurrentClustersScores[i].GetClusterScore();
     cout << " Individuals = " << CurrentClustersIndividuals[CurrentID] << endl; */
 
@@ -660,17 +660,17 @@ bool ClusteringRefinementDivisive::GenerateNodes(const vector<CPUBurst*>&     Bu
   for (size_t i = 0; i < Bursts.size(); i++)
   {
     BurstsPerNode[AssignmentVector[i]].push_back(Bursts[i]->GetInstance());
-    /* DEBUG 
+    /* DEBUG
     cout << "NODE ID = " << AssignmentVector[i] << " INSTANCE = " << Bursts[i]->GetInstance() << endl; */
   }
 
   for (size_t i = 0; i < Nodes.size(); i++)
   {
-    /* DEBUG 
+    /* DEBUG
     cout << "NODE with ID = " << Nodes[i]->GetID() << " has " << BurstsPerNode[i].size() << " instances" << endl; */
     Nodes[i]->SetInstances(BurstsPerNode[Nodes[i]->GetID()]);
   }
-  
+
   return true;
 }
 
@@ -692,10 +692,10 @@ void ClusteringRefinementDivisive::GeneratePartition(Partition& NewPartition)
 
     PartialAssignment = GetAssignment(TopLevelNodes[i], 0);
 
-    /* DEBUG 
+    /* DEBUG
     cout << "PartialAssignment from ID = " << TopLevelNodes[i]->GetID();
     cout << " sizes " << PartialAssignment.size() << endl; */
-    
+
     for (size_t j = 0; j < PartialAssignment.size(); j++)
     {
       Assignment[PartialAssignment[j].first] = PartialAssignment[j].second;
@@ -711,9 +711,9 @@ void ClusteringRefinementDivisive::GeneratePartition(Partition& NewPartition)
        AssignmentIt != Assignment.end();
        ++AssignmentIt)
   {
-    /* DEBUG 
+    /* DEBUG
     cout << "Instance = " << AssignmentIt->first << " ID = " << AssignmentIt->second << endl; */
-    
+
     CurrentAssignmentVector.push_back(AssignmentIt->second);
     DifferentIDs.insert(AssignmentIt->second);
   }
@@ -724,7 +724,7 @@ void ClusteringRefinementDivisive::GeneratePartition(Partition& NewPartition)
 }
 
 /**
- * Returns an assignment vector based on instances for the tree which root is 
+ * Returns an assignment vector based on instances for the tree which root is
  * the given node
  *
  * \param Node The root of a tree where we want to extract the assignment
@@ -738,11 +738,11 @@ vector<pair<instance_t, cluster_id_t> > ClusteringRefinementDivisive::GetAssignm
   vector<pair<instance_t, cluster_id_t> > Result = vector<pair<instance_t, cluster_id_t> > (0);
 
   bool LeafNode;
-  
+
   /* Node not taken into account */
   if (Node->IsDiscarded())
   {
-    /* DEBUG 
+    /* DEBUG
     cout << "LEVEL " << Level+1 << " Node ID = " << Node->GetID() << " discarded" << endl; */
     return Result;
   }
@@ -756,7 +756,7 @@ vector<pair<instance_t, cluster_id_t> > ClusteringRefinementDivisive::GetAssignm
   else
   {
     LeafNode = true;
-    
+
     for (size_t i = 0; i < Children.size(); i++)
     {
       if (!Children[i]->IsDiscarded())
@@ -774,8 +774,8 @@ vector<pair<instance_t, cluster_id_t> > ClusteringRefinementDivisive::GetAssignm
     {
       Result.push_back(make_pair(Instances[i], Node->GetID()));
     }
-    
-    /* DEBUG 
+
+    /* DEBUG
     cout << "LEVEL " << Level+1 << " Node ID = " << Node->GetID();
     cout  << " adds " << Result.size() << " instances" << endl; */
 
@@ -798,24 +798,24 @@ vector<pair<instance_t, cluster_id_t> > ClusteringRefinementDivisive::GetAssignm
       }
     }
 
-    /* DEBUG 
+    /* DEBUG
     cout << "NODE with ID = " << Node->GetID() << " has ";
     cout << Result.size() << " instances in its assignment" << endl; */
-    
+
     return Result;
   }
 }
 
 
 /**
- * Heuristic to Decide if it is better to split the current cluster (represented 
+ * Heuristic to Decide if it is better to split the current cluster (represented
  * as a top node) of keep it as a single one
  *
  * \param Parent Node that contains the information of the hierarchy
  *
  * \return True if the split is OK, false otherwise
  *
- */ 
+ */
 bool ClusteringRefinementDivisive::IsSplitOK(ClusterInformation* Parent)
 {
   timestamp_t          ParentDuration = 0, NoiseDuration = 0;
@@ -826,17 +826,17 @@ bool ClusteringRefinementDivisive::IsSplitOK(ClusterInformation* Parent)
   bool Result;
 
   vector<ClusterInformation*>& Children = Parent->GetChildren();
-  
+
   if (Children.size() == 0)
   { /* No children */
-    /* DEBUG 
+    /* DEBUG
     cout << "No children!" << endl; */
     return false;
   }
 
   if (Children.size() == 1 && Children[0]->GetID() == NOISE_CLUSTERID)
   { /* Everything turned into noise */
-    /* DEBUG 
+    /* DEBUG
     cout << "Everything turned into noise!" << endl; */
     Children[0]->Discard();
     return false;
@@ -861,10 +861,10 @@ bool ClusteringRefinementDivisive::IsSplitOK(ClusterInformation* Parent)
       Children[i]->Discard();
     }
 
-    /* DEBUG 
+    /* DEBUG
     cout << "Noise duration (" << NoiseDuration << ")";
     cout << " bigger than 80% of parent duration (" << ParentDuration << ")" << endl; */
-    
+
     return false;
   }
 
@@ -887,7 +887,7 @@ bool ClusteringRefinementDivisive::IsSplitOK(ClusterInformation* Parent)
       Children[i]->Discard();
     }
 
-    /* DEBUG 
+    /* DEBUG
     cout << "ChildrenWeightedScore (" << ChildrenWeightedScore << ") ";
     cout << " less than 80% of Parent Score (" << Parent->GetScore() << ")" << endl; */
     return false;
@@ -904,16 +904,16 @@ bool ClusteringRefinementDivisive::IsSplitOK(ClusterInformation* Parent)
  *
  * \return The total number of divisions in the subtree
  *
- */  
+ */
 size_t ClusteringRefinementDivisive::ColapseNonDividedSubtrees(ClusterInformation* Node)
 {
   size_t NumberOfDivisions = 0;
-  
+
   vector<ClusterInformation*>& Children = Node->GetChildren();
-  
+
   if (Children.size() == 0) /* Base Case */
-  { 
-      /* DEBUG 
+  {
+      /* DEBUG
     cout << "ID " << Node->GetID() << " on Level " << Level+1 << " is a LEAF" << endl; */
 
     return 1;
@@ -931,7 +931,7 @@ size_t ClusteringRefinementDivisive::ColapseNonDividedSubtrees(ClusterInformatio
   if (NumberOfDivisions == 1 || NumberOfDivisions == 0)
   { /* Delete the subtree! */
 
-    /* DEBUG 
+    /* DEBUG
     cout << "** Collapsing node " << Node->GetID() << " on level " << Level+1;
     cout << " (" << Children[1] << ") **" << endl; */
 
@@ -956,11 +956,11 @@ size_t ClusteringRefinementDivisive::ColapseNonDividedSubtrees(ClusterInformatio
   {
     NumberOfDivisions++;
   }
-  
+
   /* DEBUG
   cout << "ID " << Node->GetID() << " on Level " << Level+1 << " ";
   cout << "has " << NumberOfDivisions << " divisions" << endl; */
-  
+
   return NumberOfDivisions;
 }
 
@@ -987,7 +987,7 @@ void ClusteringRefinementDivisive::ReclassifyNoise(const vector<CPUBurst*>& Burs
       LeafChildren = false;
     }
   }
-  
+
   if (!LeafChildren)
   { /* Descend to leaves */
     for (size_t i = 0; i < Children.size(); i++)
@@ -1007,10 +1007,10 @@ void ClusteringRefinementDivisive::ReclassifyNoise(const vector<CPUBurst*>& Burs
     ClusterInformation*                    NoiseNode;
     map<cluster_id_t, ClusterInformation*> ClusterNodes;
 
-    /* DEBUG 
+    /* DEBUG
     cout << "Reclassifying Noise of Node ID = " << Node->GetID();
     cout << " on Level " << Level+1 << endl; */
-    
+
     /* Separate noise and clusters instances */
     for (size_t i = 0; i < Children.size(); i++)
     {
@@ -1037,7 +1037,7 @@ void ClusteringRefinementDivisive::ReclassifyNoise(const vector<CPUBurst*>& Burs
         }
       }
     }
-    
+
     if (NoiseInstances.size() == 0)
     {
       return;
@@ -1080,7 +1080,7 @@ void ClusteringRefinementDivisive::ReclassifyNoise(const vector<CPUBurst*>& Burs
       /* DEBUG
       cout << "Child Noise of Node = " << Node->GetID() << " on Level " << Level+1;
       cout << " reclassified as " << ClassificationID << endl; */
-      
+
       ClusterNodes[ClassificationID]->AddInstance(NoiseInstances[i]);
     }
   }
@@ -1096,7 +1096,7 @@ void ClusteringRefinementDivisive::ReclassifyNoise(const vector<CPUBurst*>& Burs
  *
  * \return True ID is inside IDsSet, false otherwise
  *
- */ 
+ */
 bool ClusteringRefinementDivisive::IsIDInSet(cluster_id_t       ID,
                                              set<cluster_id_t>& IDsSet)
 {
@@ -1117,7 +1117,7 @@ bool ClusteringRefinementDivisive::IsIDInSet(cluster_id_t       ID,
  *
  * \return True if plots were printed correctly, false otherwise
  *
- */ 
+ */
 bool ClusteringRefinementDivisive::PrintPlots(const vector<CPUBurst*>& Bursts,
                                               Partition&               CurrentPartition,
                                               size_t                   Step)
@@ -1138,12 +1138,12 @@ bool ClusteringRefinementDivisive::PrintPlots(const vector<CPUBurst*>& Bursts,
     ErrorMessage << "number of points (" << Bursts.size();
     ErrorMessage << ") different from number of IDs (" << IDs.size() << ")";
     ErrorMessage << " when printing plots";
-    
+
     SetErrorMessage(ErrorMessage.str());
     SetError(true);
     return false;
   }
-  
+
   CurrentDataStream.open(CurrentDataFileName.str().c_str(), ios_base::trunc);
 
   if (CurrentDataStream.fail())
@@ -1153,14 +1153,14 @@ bool ClusteringRefinementDivisive::PrintPlots(const vector<CPUBurst*>& Bursts,
     ErrorMessage << "unable to open data output file for step " << Step;
     SetError(true);
     SetErrorMessage(ErrorMessage.str().c_str(), strerror(errno));
-    
+
     return false;
 
   }
 
   /* Flush points */
   ParametersManager *Parameters = ParametersManager::GetInstance();
-      
+
   vector<string> ClusteringParametersNames;
   vector<string> ExtrapolationParametersNames;
 
@@ -1172,7 +1172,7 @@ bool ClusteringRefinementDivisive::PrintPlots(const vector<CPUBurst*>& Bursts,
 
   ClusteringParametersPrecision    = Parameters->GetClusteringParametersPrecision();
   ExtrapolationParametersPrecision = Parameters->GetExtrapolationParametersPrecision();
-  
+
 
   CurrentDataStream << "# Instance,TaskId,ThreadId,Begin_Time,End_Time,Duration, Line";
   for (size_t i = 0; i < ClusteringParametersNames.size(); i++)
@@ -1202,19 +1202,19 @@ bool ClusteringRefinementDivisive::PrintPlots(const vector<CPUBurst*>& Bursts,
 
   /* Create plots */
   PlottingManager *Plots;
-  
+
   Plots = PlottingManager::GetInstance();  // No Data Extraction
 
-  /* DEBUG 
+  /* DEBUG
   cout << __FUNCTION__ << "Algorithm name = " << ClusteringCore->GetClusteringAlgorithmName() << endl;
   cout << "Current partition has " << CurrentPartition.NumberOfClusters() << " clusters" << endl; */
-  
+
   PlotTitle << "REFINEMENT STEP " << Step+1 << " - ";
   PlotTitle << ClusteringCore->GetClusteringAlgorithmName();
 
   bool verbose_state = system_messages::verbose;
   system_messages::verbose = false;
-  
+
   if (!Plots->PrintPlots(CurrentDataFileName.str(),
                          CurrentPlotFileNamePrefix.str(),
                          PlotTitle.str(),
@@ -1225,22 +1225,22 @@ bool ClusteringRefinementDivisive::PrintPlots(const vector<CPUBurst*>& Bursts,
     SetErrorMessage(Plots->GetLastError());
     return false;
   }
-  
+
   system_messages::verbose = verbose_state;
-  
-  
+
+
   return true;
 }
 
 /**
  * Generates a representation of the resulting partitioning tree to a file
- * 
+ *
  * \param Step    Current step to be printed
  * \param Epsilon Epsilon used in the current
- * 
+ *
  * \return True if the tree was written correctly, false otherwise
  *
- */  
+ */
 bool ClusteringRefinementDivisive::PrintTrees(size_t Step,
                                               bool   LastTree)
 {
@@ -1248,7 +1248,7 @@ bool ClusteringRefinementDivisive::PrintTrees(size_t Step,
 
   vector<ClusterInformation*>& TopLevelNodes = NodesPerLevel[0];
   vector<string>               LevelNames;
-  
+
   if (PrintStepsInformation)
   {
     ostringstream TreeFileName;
@@ -1270,7 +1270,7 @@ bool ClusteringRefinementDivisive::PrintTrees(size_t Step,
       SetErrorMessage ("unable to open tree file", strerror(errno));
       return false;
     }
-    
+
   }
   else
   {
@@ -1286,12 +1286,12 @@ bool ClusteringRefinementDivisive::PrintTrees(size_t Step,
   for (size_t i = 0; i <= Step; i++)
   {
     ostringstream LevelName;
-    
+
     LevelName << "\"STEP " << i+1 << " Eps = " << EpsilonPerLevel[i] << "\"";
     LevelNames.push_back(LevelName.str());
-    
+
     (*Output) << LevelName.str();
-    
+
     if (i != Step)
     {
       (*Output) << "->";
@@ -1299,20 +1299,20 @@ bool ClusteringRefinementDivisive::PrintTrees(size_t Step,
   }
   (*Output) << ";" << endl;
   (*Output) << "}" << endl;
-  
+
   /* Print the tree itself */
   (*Output) << "{" << endl;
-  
+
   /*
   for (size_t i = 0; i < NodesPerLevel.size(); i++)
   {
     vector<ClusterInformation*>& CurrentLevelNodes = NodesPerLevel[i];
-    
+
     (*Output) << "subgraph cluster" << i+1 << " {" << endl;
     for (size_t j = 0; j < CurrentLevelNodes.size(); j++)
     {
       ClusterInformation* Node = CurrentLevelNodes[j];
-      
+
       if (Node->GetID() != NOISE_CLUSTERID || Node->GetIndividuals() != 0)
       {
         (*Output) << Node->NodeName() << " " << Node->NodeLabel() << ";" << endl;
@@ -1323,27 +1323,27 @@ bool ClusteringRefinementDivisive::PrintTrees(size_t Step,
     (*Output) << "}" << endl;
   }
   */
-  
+
   for (size_t i = 0; i < TopLevelNodes.size(); i++)
   {
-    
+
     PrintTreeNodes ((*Output), TopLevelNodes[i]);
 
     (*Output) << endl;
 
     PrintTreeLinks ((*Output), TopLevelNodes[i]);
-    
+
     (*Output) << endl;
   }
   (*Output) << "}" << endl;
-  
-  /* Rank nodes per level 
+
+  /* Rank nodes per level
   (*Output) << "{" << endl;
-  
+
   for (size_t i = 0; i <= Step; i++)
   {
     vector<ClusterInformation*>& LevelNodes = NodesPerLevel[i];
-    
+
     (*Output) << "{ rank = same; " << LevelNames[i];
     for (size_t j = 0; j < LevelNodes.size(); j++)
     {
@@ -1360,12 +1360,12 @@ bool ClusteringRefinementDivisive::PrintTrees(size_t Step,
   */
 
   (*Output) << "}" << endl << endl;
-  
-  /* DEBUG 
+
+  /* DEBUG
   cout << "TOP LEVEL HAS " << ClustersHierarchy[0].size() << " NODES" << endl; */
 
   Output->close();
-  
+
   return true;
 }
 
@@ -1377,7 +1377,7 @@ bool ClusteringRefinementDivisive::PrintTreeNodes(ofstream&           str,
   if (Node->GetID() != NOISE_CLUSTERID || Node->GetIndividuals() != 0)
   {
     str << Node->NodeName() << " " << Node->NodeLabel() << ";" << endl;
-    
+
     for (size_t i = 0; i < Children.size(); i++)
     {
       PrintTreeNodes(str, Children[i]);
@@ -1391,7 +1391,7 @@ bool ClusteringRefinementDivisive::PrintTreeLinks(ofstream&           str,
                                                   ClusterInformation* Node)
 {
   vector<ClusterInformation*>& Children = Node->GetChildren();
-  
+
   for (size_t i = 0; i < Children.size(); i++)
   {
     if (Children[i]->GetID() != NOISE_CLUSTERID || Children[i]->GetIndividuals() != 0)
@@ -1408,7 +1408,7 @@ bool ClusteringRefinementDivisive::PrintTreeLinks(ofstream&           str,
       PrintTreeLinks(str, Children[i]);
     }
   }
-  
+
   return true;
 }
 

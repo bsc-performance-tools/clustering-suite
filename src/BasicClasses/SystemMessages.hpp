@@ -63,23 +63,54 @@ namespace cepba_tools
 
       static int  last_percentage_written;
 
-      static void information(string message, FILE* channel = stdout);
+      static void information(string message,
+                              FILE*  channel = stdout);
 
-      static void information(const char* message, FILE* channel = stdout);
+      static void information(const char* message,
+                              FILE*       channel = stdout);
 
-      static void die(const char* message, FILE* channel = stderr);
+      static void die(const char* message,
+                      FILE*       channel = stderr);
 
-      static void show_progress(const char* message, int current, int total, FILE* channel = stdout);
+      static void show_progress(const char* message,
+                                int         current,
+                                int         total,
+                                FILE*       channel = stdout);
 
-      static void show_progress_end(const char* message, int total, FILE* channel = stdout);
+      static void show_progress(string message,
+                                int    current,
+                                int    total,
+                                FILE*  channel = stdout);
 
-      static void show_percentage_progress(const char* message, int current_percentage, FILE* channel = stdout);
+      static void show_progress_end(const char* message,
+                                    int         total,
+                                    FILE*       channel = stdout);
 
-      static void show_percentage_end(const char* message, FILE* channel = stdout);
+      static void show_progress_end(string message,
+                                    int    total,
+                                    FILE*  channel = stdout);
 
-      static void show_timer(string message, Timer::diff_type Time, FILE* channel = stdout);
+      static void show_percentage_progress(const char* message,
+                                           int         current_percentage,
+                                           FILE*       channel = stdout);
 
-      static void show_timer(const char* message, Timer::diff_type Time, FILE* channel = stdout);
+      static void show_percentage_progress(string message,
+                                           int    current_percentage,
+                                           FILE*  channel = stdout);
+
+      static void show_percentage_end(string message,
+                                      FILE*  channel = stdout);
+
+      static void show_percentage_end(const char* message,
+                                      FILE*       channel = stdout);
+
+      static void show_timer(string           message,
+                             Timer::diff_type Time,
+                             FILE*            channel = stdout);
+
+      static void show_timer(const char*      message,
+                             Timer::diff_type Time,
+                             FILE*            channel = stdout);
   };
 }
 #endif // _SYSTEMMESSAGES_HPP_

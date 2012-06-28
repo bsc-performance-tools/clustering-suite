@@ -682,7 +682,7 @@ bool TraceData::FlushPoints(ostream&             str,
 {
   size_t TotalPoints;
 
-  bool   Unclassified;
+  bool   Unclassified = false;
 
   ParametersManager *Parameters = ParametersManager::GetInstance();
 
@@ -704,12 +704,18 @@ bool TraceData::FlushPoints(ostream&             str,
   {
     Unclassified = true;
     // Cluster_IDs = vector<cluster_id_t> (ClusteringBursts.size(), UNCLASSIFIED);
+
+    /* DEBUG
+    cout << "Clustering Bursts = " << ClusteringBursts.size() << endl;
+    cout << "Complete Bursts = " << CompleteBursts.size() << endl; */
   }
 
   switch (WhatToPrint)
   {
     case PrintClusteringBursts:
     {
+      /* DEBUG 
+      cout << "Printing Clustering Bursts" << endl; */
       if (Cluster_IDs.size() != ClusteringBursts.size())
       {
         ostringstream Message;
@@ -734,6 +740,9 @@ bool TraceData::FlushPoints(ostream&             str,
     }
     case PrintCompleteBursts:
     {
+      /* DEBUG 
+      cout << "Printing Complete Bursts" << endl; */
+
       if (Cluster_IDs.size() != CompleteBursts.size())
       {
         ostringstream Message;
@@ -756,6 +765,9 @@ bool TraceData::FlushPoints(ostream&             str,
     }
     case PrintAllBursts:
     {
+      /* DEBUG
+      cout << "Printint All Bursts" << endl; */
+
       /* When printing all bursts, or the data have not been classified
          or  all the complete bursts must have an ID  */
       if (!Unclassified && (Cluster_IDs.size() != CompleteBursts.size()))
@@ -777,6 +789,18 @@ bool TraceData::FlushPoints(ostream&             str,
       sort(AllBursts.begin(), AllBursts.end(), InstanceNumCompare());
 
       break;
+    }
+    default:
+    {
+      ostringstream Message;
+      Message << "wrong definition about what to print ";
+      Message << "number of IDs (" << Cluster_IDs.size() << ") ";
+      Message << "different from number of bursts (";
+      Message << CompleteBursts.size() << ")";
+
+      SetErrorMessage(Message.str());
+      SetError(true);
+      return false;
     }
   }
 
@@ -828,16 +852,24 @@ bool TraceData::FlushPoints(ostream&             str,
     switch((*BurstsIterator)->GetBurstType())
     {
       case CompleteBurst:
-        CurrentClusterId = Cluster_IDs[ClusteringBurstsCounter]+PARAVER_OFFSET;
-        ++ClusteringBurstsCounter;
+
+        if (Unclassified)
+        {
+          CurrentClusterId = UNCLASSIFIED+PARAVER_OFFSET;
+        }
+        else
+        {
+          CurrentClusterId = Cluster_IDs[ClusteringBurstsCounter]+PARAVER_OFFSET;
+          ++ClusteringBurstsCounter;
+        }
         // cout << " Complete" << endl;
         break;
       case DurationFilteredBurst:
-        CurrentClusterId = DURATION_FILTERED_CLUSTERID;
+        CurrentClusterId = DURATION_FILTERED_CLUSTERID+PARAVER_OFFSET;
         // cout << " Duration Filtered" << endl;
         break;
       case RangeFilteredBurst:
-        CurrentClusterId = RANGE_FILTERED_CLUSTERID;
+        CurrentClusterId = RANGE_FILTERED_CLUSTERID+PARAVER_OFFSET;
         // cout << " Range Filtered" << endl;
         break;
       default:

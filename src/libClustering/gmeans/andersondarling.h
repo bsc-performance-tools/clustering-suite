@@ -23,7 +23,7 @@
 #define EPS 0.00000000000003
 
 int compare_doubles(const void *a, const void *b);
-int compare_floats (const float *a, const float *b);
+int compare_floats (const void *a, const void*b);
 void sort(float *x, int length);
 void andersondarling(float *x, int n, float *a2, float sum, float sum2);
 

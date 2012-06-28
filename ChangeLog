@@ -10,6 +10,23 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-06-28 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Major change in 'SequenceScore' algorithm. Remove use of SeqAn library.
+	Embedded code of 'Kalign2' application. It is still experimental but
+	lot faster than 'Muscle' (the SeqAn MSA algorithm). The compilation still
+	requires SeqAn because of the sequence containers.
+
+	* Added new binary 'ClustersDiff' that compares two CSV cluster result
+	files using the Mirkin Distance
+
+	* Added prototypes for 'ClustersSequenceScore' isolated binary that loads
+	a CSV cluster result file.
+
+	* Added a CSVDataExtractor skeleton to extract data points from CSV cluster
+	files (needed to 'ClustersSequenceScore', 'ClustersDiff' uses a simplistic
+	CSV parser).
+
+
 2012-06-12 German Llort <german.llort@bsc.es>
 	* Changed the default datatype for the CGAL kernel
 

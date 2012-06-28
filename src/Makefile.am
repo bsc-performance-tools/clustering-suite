@@ -11,7 +11,9 @@ SUBDIRS = \
 	libTraceClustering \
 	ClusteringDataExtractor \
 	DBSCANParametersApproximation \
-	BurstClustering 
+	BurstClustering \
+	ClustersDiff \
+	ClustersSequenceScore
 	
 
 if HAVE_MPI
@@ -27,7 +29,7 @@ SUBDIRS += \
 
 if HAVE_MRNETAPP
 SUBDIRS += \
-  TreeDBSCAN
+  TreeDBSCAN 
 endif
 
 endif

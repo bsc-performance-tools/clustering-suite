@@ -334,6 +334,7 @@ libTraceClusteringImplementation::FlushData(string OutputCSVFileNamePrefix)
                           ".csv";
 
   ofstream     OutputStream (OutputFileName.c_str(), ios_base::trunc);
+
   Partition   &PartitionUsed = (SampleData ? ClassificationPartition : LastPartition);
   DataPrintSet WhatToPrint;
 
@@ -353,20 +354,33 @@ libTraceClusteringImplementation::FlushData(string OutputCSVFileNamePrefix)
   if (USE_CLUSTERING(UseFlags) || USE_CLUSTERING_REFINEMENT(UseFlags))
   {
     WhatToPrint = PrintCompleteBursts;
-
   }
   else
   {
     WhatToPrint = PrintAllBursts;
   }
 
-  if (!Data->FlushPoints(OutputStream,
-                         PartitionUsed.GetAssignmentVector(),
-                         WhatToPrint))
+  if (USE_CLUSTERING(UseFlags) || USE_CLUSTERING_REFINEMENT(UseFlags))
   {
-    SetError(true);
-    SetErrorMessage(Data->GetLastError());
-    return false;
+    if (!Data->FlushPoints(OutputStream,
+                           PartitionUsed.GetAssignmentVector(),
+                           WhatToPrint))
+    {
+      SetError(true);
+      SetErrorMessage(Data->GetLastError());
+      return false;
+    }
+  }
+  else
+  {
+    if (!Data->FlushPoints(OutputStream,
+                           vector<cluster_id_t> (0),
+                           WhatToPrint))
+    {
+      SetError(true);
+      SetErrorMessage(Data->GetLastError());
+      return false;
+    }
   }
 
   OutputStream.close();
@@ -625,10 +639,10 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
 
   /* New way to find Epsilons */
   size_t Elements   = Distances.size();
-  // size_t MinX = (Elements*5)/1000;
-  // size_t MaxX = (Elements*995)/1000;
-  size_t MinX = 0;
-  size_t MaxX = Elements - 1;
+  size_t MinX       = static_cast<size_t>((Elements*5)/1000);
+  size_t MaxX       = static_cast<size_t>((Elements*995)/1000);
+  //size_t MinX = 0;
+  //size_t MaxX = Elements - 1;
 
   double SumEps = 0;
   for (size_t i = 0; i < Distances.size(); i++)
@@ -638,20 +652,106 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
 
   double AvgEps     = SumEps/Distances.size();
   double MaxEpsilon = Distances[MinX];   // < 0.5%  data discarded
-  double MinEpsilon = Distances[MaxX]; // > 99.5% data discarded
+  double MinEpsilon = Distances[MaxX];   // > 99.5% data discarded
 
-  /*
   cout << "MaxEpsilon = " << MaxEpsilon << " ";
   cout << "MinEpsilon = " << MinEpsilon << " ";
   cout << "Avg.Epsilon = " << AvgEps << endl;
-  */
 
   double Intercept = MaxEpsilon;
   double Slope     = -1.0*(MaxEpsilon/(MaxX/2));
+  // double Slope     = -1.0*(MaxEpsilon/MaxX);
 
   size_t MaxIndex = 0;
   double MaxDelta = 0;
+  double MinDelta = MAX_DOUBLE;
+  double SumDeltas = 0;
 
+
+  /*
+  ofstream DISTANCES;
+  DISTANCES.open("next_point_distance.csv");
+  double MaxPairDistance = 0;
+  double MinPairDistance = MAX_DOUBLE;
+  double SumPairDistance = 0;
+
+  // vector<double> RangePairDistances;
+  vector<double> NewCandidates;
+
+  cout << "New Candidates = [ ";
+  for (size_t i = 0; i < Distances.size()-1; i++)
+  {
+    double PairDistance  = Distances[i] - Distances[i+1];
+    SumPairDistance     += PairDistance;
+
+    if (PairDistance > 0.0005 && PairDistance < 0.0015)
+    {
+      NewCandidates.push_back(Distances[i]);
+      cout << Distances[i] << " ";
+    }
+    if (PairDistance > MaxPairDistance)
+    {
+      MaxPairDistance = PairDistance;
+    }
+
+    if (PairDistance < MinPairDistance)
+    {
+      MinPairDistance = PairDistance;
+    }
+    // DISTANCES << PairDistance << endl;
+  }
+  cout << "]" << endl;
+  // DISTANCES.close();
+
+  for (size_t i = 0; i < Distances.size(); i++)
+  {
+    double PairDistance  = Distances[i] - Distances[i+1];
+
+    DISTANCES << ( PairDistance - MinPairDistance ) / ( MaxPairDistance - MinPairDistance) << endl;
+  }
+
+  DISTANCES.close();
+
+  // exit(EXIT_SUCCESS);
+
+  cout << "MaxPairDistance = " << MaxPairDistance << " ";
+  cout << "MinPairDistance = " << MinPairDistance << " ";
+  cout << "AvgPairDistance = " << SumPairDistance/ (Distances.size()-1) << endl;
+  */
+
+
+  /* DEBUG: Avg Delta
+  ofstream DELTAS;
+
+  DELTAS.open("deltas.csv");
+  for (size_t i = MinX; i <= (MaxX/2); i++)
+  {
+    double Delta = ((Slope * i) + Intercept) - Distances[i];
+
+    SumDeltas += Delta;
+
+    /* DEBUG
+    DELTAS << Delta << endl;;
+
+    if (Delta > MaxDelta)
+    {
+      MaxIndex = i;
+      MaxDelta = Delta;
+    }
+    else if (Delta < MinDelta)
+    {
+      MinDelta = Delta;
+    }
+  }
+  DELTAS.close();
+
+  cout << "Average Delta = " << SumDeltas/Elements << endl;
+  cout << "Max Delta = " << MaxDelta << endl;
+  cout << "Min Delta = " << MinDelta << endl;
+
+  */
+
+  /* */
   for (size_t i = MinX; i <= (MaxX/2); i++)
   {
     double Delta = ((Slope * i) + Intercept) - Distances[i];
@@ -663,7 +763,21 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
     }
   }
 
-  // cout << "Candidate MinEpsilon = " << Distances[MaxIndex] << endl;
+  /* DEBUG: 2on Delta!
+  double MaxDelta2 = 0;
+  for (size_t i = MinX; i <= MaxDelta; i++)
+  {
+    double Delta = ((Slope * i) + Intercept) - Distances[i];
+
+    if (Delta > MaxDelta2)
+    {
+      MaxIndex = i;
+      MaxDelta2 = Delta;
+    }
+  }
+  */
+
+  cout << "Candidate MinEpsilon: idx = " << MaxIndex << " Value = " << Distances[MaxIndex] << endl;
 
   MinEpsilon        = Distances[MaxIndex];
   size_t IndexRange = MaxIndex - MinX;
@@ -691,6 +805,10 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
     // cout << "]" << endl;
   }
 
+  /* DEBUG!
+  Epsilons = NewCandidates;
+  */
+
   if (Divisive)
   {
     sort(Epsilons.rbegin(), Epsilons.rend());
@@ -711,6 +829,8 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   }
   Messages << "]" << endl;
   system_messages::information(Messages.str());
+
+  // exit (EXIT_SUCCESS);
 
   return GenericRefinement(Divisive, MinPoints, Epsilons, OutputFileNamePrefix);
 

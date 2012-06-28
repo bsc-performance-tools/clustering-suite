@@ -50,12 +50,14 @@ bool system_messages::print_timers            = false;
 bool system_messages::percentage_ongoing      = false;
 int  system_messages::last_percentage_written = 0;
 
-void system_messages::information(string message, FILE* channel)
+void system_messages::information(string message,
+                                  FILE*  channel)
 {
   system_messages::information(message.c_str(), channel);
 }
 
-void system_messages::information(const char* message, FILE* channel)
+void system_messages::information(const char* message,
+                                  FILE*       channel)
 {
   if (system_messages::verbose)
   {
@@ -80,6 +82,17 @@ void system_messages::information(const char* message, FILE* channel)
   }
 }
 
+void system_messages::show_progress(string message,
+                                    int    current,
+                                    int    total,
+                                    FILE*  channel)
+{
+  system_messages::show_progress(message.c_str(),
+                                 current,
+                                 total,
+                                 channel);
+}
+
 void system_messages::show_progress(const char* message,
                                     int         current,
                                     int         total,
@@ -92,6 +105,15 @@ void system_messages::show_progress(const char* message,
   }
 }
 
+void system_messages::show_progress_end(string message,
+                                        int    total,
+                                        FILE*  channel)
+{
+  system_messages::show_progress_end(message.c_str(),
+                                     total,
+                                     channel);
+}
+
 void system_messages::show_progress_end(const char* message,
                                         int         total,
                                         FILE*       channel)
@@ -101,6 +123,15 @@ void system_messages::show_progress_end(const char* message,
     fprintf(channel, "\r%s %d/%d\n", message, total, total);
     fflush(channel);
   }
+}
+
+void system_messages::show_percentage_progress(string  message,
+                                               int     current_percentage,
+                                               FILE*   channel)
+{
+  system_messages::show_percentage_progress(message.c_str(),
+                                            current_percentage,
+                                            channel);
 }
 
 void system_messages::show_percentage_progress(const char* message,
@@ -152,7 +183,14 @@ void system_messages::show_percentage_progress(const char* message,
 
 }
 
-void system_messages::show_percentage_end(const char* message, FILE* channel)
+void system_messages::show_percentage_end(string message,
+                                          FILE*  channel)
+{
+  system_messages::show_percentage_end(message.c_str(), channel);
+}
+
+void system_messages::show_percentage_end(const char* message,
+                                          FILE*       channel)
 {
   if (system_messages::verbose)
   {
@@ -168,12 +206,16 @@ void system_messages::show_percentage_end(const char* message, FILE* channel)
   }
 }
 
-void system_messages::show_timer(string message, Timer::diff_type Time, FILE* channel)
+void system_messages::show_timer(string           message,
+                                 Timer::diff_type Time,
+                                 FILE*            channel)
 {
   show_timer(message.c_str(), Time, channel);
 }
 
-void system_messages::show_timer(const char* message, Timer::diff_type Time, FILE* channel)
+void system_messages::show_timer(const char*      message,
+                                 Timer::diff_type Time,
+                                 FILE*            channel)
 {
   if (system_messages::print_timers)
   {

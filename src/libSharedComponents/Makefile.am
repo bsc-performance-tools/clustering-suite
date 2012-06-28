@@ -1,5 +1,7 @@
 common_filesdir = @common_filesdir@
 
+SUBDIRS = kalign2
+
 INCLUDES = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/BasicClasses \
@@ -12,7 +14,8 @@ noinst_LTLIBRARIES = libSharedComponents.la
 
 libSharedComponents_la_LIBADD =  \
 	$(top_srcdir)/src/libClustering/libClustering.la \
-	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la
+	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la \
+	./kalign2/libKalign2.la
 
 libSharedComponents_la_CFLAGS   = @XML2_CFLAGS@
 libSharedComponents_la_CXXFLAGS = @XML2_CFLAGS@
@@ -48,6 +51,8 @@ libSharedComponents_la_SOURCES = \
 	PRVEventsDataExtractor.hpp \
 	TRFDataExtractor.cpp \
 	TRFDataExtractor.hpp \
+	CSVDataExtractor.cpp \
+	CSVDataExtractor.hpp \
 	ClusteringConfiguration.cpp \
 	ClusteringConfiguration.hpp \
 	ClusteringParameter.cpp \

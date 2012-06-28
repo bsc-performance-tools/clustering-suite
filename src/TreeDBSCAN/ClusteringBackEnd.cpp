@@ -106,6 +106,7 @@ int ClusteringBackEnd::Run()
       cerr << "[BE " << WhoAmI() << "] Error extracting clustering data. Exiting..." << endl;
       exit (EXIT_FAILURE);
    }
+  
    if (WhoAmI() == 0) cout << "[BE " << WhoAmI() << "] Data extraction time: " << t.end() << endl;
 
    ClusteringStats.IncreaseInputPoints( libClustering->GetNumberOfPoints() );

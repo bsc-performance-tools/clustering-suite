@@ -5,11 +5,13 @@
  *      Author: aislan
  */
 
+#include <stdlib.h>
+
 #include "andersondarling.h"
 
 // comparing function for sort function
-int compare_floats (const float *a, const float *b) {
-	if (*a > *b)
+int compare_floats (const void *a, const void*b) {
+	if (*(const float*) a > *(const float*)b)
 		return 1;
 	else
 		return -1;

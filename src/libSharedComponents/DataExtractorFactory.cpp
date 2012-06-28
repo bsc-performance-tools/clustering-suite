@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -56,7 +56,7 @@ DataExtractorFactory* DataExtractorFactory::GetInstance()
   {
     DataExtractorFactory::Instance = new DataExtractorFactory();
   }
-  
+
   return (DataExtractorFactory::Instance);
 }
 
@@ -78,7 +78,7 @@ bool DataExtractorFactory::GetExtractor(string          InputFileName,
     return false;
   }
 #endif
-  
+
   switch(FileType)
   {
     case ParaverTrace:
@@ -118,33 +118,33 @@ bool DataExtractorFactory::CheckFileType(string InputTraceName)
 {
   FILE* InputTraceFile;
   char  Magic[10];
-  
+
   if ( (InputTraceFile = fopen(InputTraceName.c_str(), "r")) == NULL)
   {
     ostringstream ErrorMessage;
-    
+
     ErrorMessage << "unable to open input file \"" << InputTraceName << "\"";
     SetErrorMessage(ErrorMessage.str());
 
     return false;
   }
-  
+
   if (fread(Magic, sizeof(char), 8, InputTraceFile) != 8)
   {
     ostringstream ErrorMessage;
-    
+
     ErrorMessage << "error reading input file (" << strerror(errno) << ")";
     SetErrorMessage(ErrorMessage.str());
 
     return false;
   }
-  
+
   if (strncmp(Magic, "#Paraver", 8) == 0)
   {
     FileType = ParaverTrace;
     return true;
   }
-  
+
   if (strncmp(Magic, "\nSDDFA;;", 8) == 0 ||
       strncmp(Magic, "SDDFA;;", 7) == 0)
   {
@@ -152,12 +152,12 @@ bool DataExtractorFactory::CheckFileType(string InputTraceName)
     return true;
   }
 
-  if (strncmp(Magic, "#ClusteringCSV", 14) == 0)
+  if (strncmp(Magic, "# Instance", 10) == 0)
   {
     FileType = ClusteringCSV;
     return true;
   }
-  
+
   SetErrorMessage("unable to detect input file type");
   return false;
 }

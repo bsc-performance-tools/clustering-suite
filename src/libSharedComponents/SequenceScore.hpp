@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -67,6 +67,34 @@ using std::ios_base;
 
 static const cluster_id_t SEQUENCE_GAP = NOISE_CLUSTERID-1;
 
+/* Functor to compare the objects */
+struct TraceObjectsCompare
+{
+  bool operator()(const pair<task_id_t, thread_id_t>& obj1,
+                  const pair<task_id_t, thread_id_t>& obj2)
+  {
+    if (obj1.first < obj2.first)
+    {
+      return true;
+    }
+    else if (obj1.first > obj2.first)
+    {
+      return false;
+    }
+    else  // same task_id, compare thread_id
+    {
+      if (obj1.second < obj2.second)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+  }
+};
+
 class SequenceScoreValue
 {
   private:
@@ -77,7 +105,7 @@ class SequenceScoreValue
 
   public:
     SequenceScoreValue(void) {};
-    
+
     SequenceScoreValue(cluster_id_t ID, percentage_t Weight);
 
     cluster_id_t GetID(void) { return ID; };
@@ -91,15 +119,20 @@ class SequenceScoreValue
     double GetWeightedScore(void);
 };
 
-class SequenceScore: public Error 
+class SequenceScore: public Error
 {
   // using namespace seqan;
   typedef seqan::String<cluster_id_t>                      TSequence;
-  typedef seqan::Align<TSequence, seqan::ArrayGaps>        TAlign;
+  typedef seqan::Align<TSequence>                          TAlign;
+  // typedef seqan::Align<TSequence, seqan::ArrayGaps>     TAlign;
   typedef seqan::Row<TAlign>::Type                         TRow;
   typedef seqan::Iterator<TRow, seqan::Rooted>::Type       TIterator;
   typedef seqan::Position<seqan::Rows<TAlign>::Type>::Type TRowsPosition;
   typedef seqan::Position<TAlign>::Type                    TPosition;
+
+  typedef map<pair<task_id_t, thread_id_t>, vector<cluster_id_t>, TraceObjectsCompare> TSequenceMap;
+  typedef TSequenceMap::iterator TSequenceMapIterator;
+
 
   private:
 
@@ -125,14 +158,16 @@ class SequenceScore: public Error
     vector<vector<cluster_id_t> >& GetSequencesMatrix(void) { return SequencesMatrix; };
 
   private:
-    
-  
+    void Kalign2Score(TSequenceMap&                    Sequences,
+                      set<cluster_id_t>                DifferentIDs,
+                      map<cluster_id_t, percentage_t>& PercentageDurations);
+
     void AlignmentToMatrix(TAlign& Alignment);
 
     bool EffectiveScoreComputation(map<cluster_id_t, percentage_t>& PercentageDurations,
                                    vector<SequenceScoreValue>&      ClusterScores,
                                    double&                          GlobalScore);
-    
+
     bool FlushSequences(vector<pair<task_id_t, thread_id_t> >& ObjectIDs,
                         ofstream&                              str,
                         bool                                   FASTA);
@@ -140,7 +175,7 @@ class SequenceScore: public Error
     bool FlushScores(vector<SequenceScoreValue>& ClusterScores,
                      double&                     GlobalScore,
                      ofstream&                   str);
-                               
+
   protected:
 };
 
