@@ -202,7 +202,7 @@ dnl =========================================================================
 dnl AX_CHECK_SEQAN: check for Seqan installation to perform the iterative
 dnl refinement
 dnl =========================================================================
-AX_CHECK_SEQAN()
+dnl AX_CHECK_SEQAN()
 
 AC_SUBST(CLUSTERING_DYNAMIC_PATH)
 AC_SUBST(CGAL_DYNAMIC_PATH)
@@ -222,6 +222,8 @@ src/libTraceClustering/Makefile
 src/ClusteringDataExtractor/Makefile
 src/DBSCANParametersApproximation/Makefile
 src/BurstClustering/Makefile
+src/ClustersDiff/Makefile
+src/ClustersSequenceScore/Makefile
 scripts/Makefile
 ])
 
@@ -240,8 +242,7 @@ src/TreeDBSCAN/Makefile
 src/TreeDBSCAN/scripts/Makefile
 ])
 fi
-
-fi
+fi # cgal_enabled
 
 CFLAGS="-DCLUSTERING_SUITE $CFLAGS"
 CXXFLAGS="-DCLUSTERING_SUITE $CXXFLAGS"

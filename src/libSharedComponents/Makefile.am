@@ -71,19 +71,13 @@ libSharedComponents_la_SOURCES = \
 	ClusteringStatistics.cpp \
 	ClusteringStatistics.hpp \
 	XMLParser.cpp \
-	XMLParser.hpp 
-
-if HAVE_SEQAN
-libSharedComponents_la_CFLAGS   += @SEQAN_CPPFLAGS@
-libSharedComponents_la_CXXFLAGS += @SEQAN_CPPFLAGS@
-
-libSharedComponents_la_SOURCES += \
+	XMLParser.hpp \
 	ClusterInformation.hpp \
-	ClusterInformation.cpp \
-	ClusteringRefinementDivisive.hpp \
-	ClusteringRefinementDivisive.cpp \
-	ClusteringRefinementAggregative.hpp \
-	ClusteringRefinementAggregative.cpp \
-	SequenceScore.hpp \
-	SequenceScore.cpp
-endif
+    ClusterInformation.cpp \
+    ClusteringRefinementDivisive.hpp \
+    ClusteringRefinementDivisive.cpp \
+    ClusteringRefinementAggregative.hpp \
+    ClusteringRefinementAggregative.cpp \
+    SequenceScore.hpp \
+    SequenceScore.cpp
+

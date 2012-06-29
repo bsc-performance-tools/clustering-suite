@@ -68,6 +68,9 @@ using std::ios_base;
 #include <sstream>
 using std::ostringstream;
 
+#include <algorithm>
+using std::sort;
+
 #ifdef HAVE_MPI
 #include <mpi.h>
 

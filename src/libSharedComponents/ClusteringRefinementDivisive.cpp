@@ -42,8 +42,9 @@ using cepba_tools::system_messages;
 #include <DBSCAN.hpp>
 
 #include <sstream>
-using std::ostringstream;
+#include <iomanip>
 using std::setfill;
+using std::ostringstream;
 using std::setw;
 using std::setprecision;
 

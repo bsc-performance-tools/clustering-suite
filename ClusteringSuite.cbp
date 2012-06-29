@@ -82,6 +82,10 @@
 		<Unit filename="src/ClusteringDataExtractor/ClusteringDataExtractorMain.cpp">
 			<Option target="Compile" />
 		</Unit>
+		<Unit filename="src/ClustersDiff/ClustersDiff.cpp" />
+		<Unit filename="src/ClustersDiff/MirkinDistance.cpp" />
+		<Unit filename="src/ClustersDiff/MirkinDistance.hpp" />
+		<Unit filename="src/ClustersSequenceScore/ClustersSequenceScore.cpp" />
 		<Unit filename="src/DBSCANParametersApproximation/DBSCANParametersApproximationMain.cpp">
 			<Option target="Compile" />
 		</Unit>
@@ -309,150 +313,122 @@
 		<Unit filename="src/libParaverTraceParser/ParaverTraceParser.hpp">
 			<Option target="Compile" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/CPIStackModel.hpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/CPIStackModel.hpp" />
+		<Unit filename="src/libSharedComponents/CPUBurst.cpp" />
+		<Unit filename="src/libSharedComponents/CPUBurst.hpp" />
+		<Unit filename="src/libSharedComponents/CSVDataExtractor.cpp" />
+		<Unit filename="src/libSharedComponents/CSVDataExtractor.hpp" />
+		<Unit filename="src/libSharedComponents/ClusterInformation.cpp" />
+		<Unit filename="src/libSharedComponents/ClusterInformation.hpp" />
+		<Unit filename="src/libSharedComponents/ClusteredEventsPRVGenerator.cpp" />
+		<Unit filename="src/libSharedComponents/ClusteredEventsPRVGenerator.hpp" />
+		<Unit filename="src/libSharedComponents/ClusteredStatesPRVGenerator.cpp" />
+		<Unit filename="src/libSharedComponents/ClusteredStatesPRVGenerator.hpp" />
+		<Unit filename="src/libSharedComponents/ClusteredTRFGenerator.cpp" />
+		<Unit filename="src/libSharedComponents/ClusteredTRFGenerator.hpp" />
+		<Unit filename="src/libSharedComponents/ClusteredTraceGenerator.cpp" />
+		<Unit filename="src/libSharedComponents/ClusteredTraceGenerator.hpp" />
+		<Unit filename="src/libSharedComponents/ClusteringConfiguration.cpp" />
+		<Unit filename="src/libSharedComponents/ClusteringConfiguration.hpp" />
+		<Unit filename="src/libSharedComponents/ClusteringParameter.cpp" />
+		<Unit filename="src/libSharedComponents/ClusteringParameter.hpp" />
+		<Unit filename="src/libSharedComponents/ClusteringRefinementAggregative.cpp" />
+		<Unit filename="src/libSharedComponents/ClusteringRefinementAggregative.hpp" />
+		<Unit filename="src/libSharedComponents/ClusteringRefinementDivisive.cpp" />
+		<Unit filename="src/libSharedComponents/ClusteringRefinementDivisive.hpp" />
+		<Unit filename="src/libSharedComponents/ClusteringStatistics.cpp" />
+		<Unit filename="src/libSharedComponents/ClusteringStatistics.hpp" />
+		<Unit filename="src/libSharedComponents/DataExtractor.cpp" />
+		<Unit filename="src/libSharedComponents/DataExtractor.hpp" />
+		<Unit filename="src/libSharedComponents/DataExtractorFactory.cpp" />
+		<Unit filename="src/libSharedComponents/DataExtractorFactory.hpp" />
+		<Unit filename="src/libSharedComponents/PRVEventsDataExtractor.cpp" />
+		<Unit filename="src/libSharedComponents/PRVEventsDataExtractor.hpp" />
+		<Unit filename="src/libSharedComponents/PRVStatesDataExtractor.cpp" />
+		<Unit filename="src/libSharedComponents/PRVStatesDataExtractor.hpp" />
+		<Unit filename="src/libSharedComponents/ParametersManager.cpp" />
+		<Unit filename="src/libSharedComponents/ParametersManager.hpp" />
+		<Unit filename="src/libSharedComponents/PlottingManager.cpp" />
+		<Unit filename="src/libSharedComponents/PlottingManager.hpp" />
+		<Unit filename="src/libSharedComponents/SequenceScore.cpp" />
+		<Unit filename="src/libSharedComponents/SequenceScore.hpp" />
+		<Unit filename="src/libSharedComponents/SequenceScoreMatrices.hpp" />
+		<Unit filename="src/libSharedComponents/State.cpp" />
+		<Unit filename="src/libSharedComponents/State.hpp" />
+		<Unit filename="src/libSharedComponents/TRFDataExtractor.cpp" />
+		<Unit filename="src/libSharedComponents/TRFDataExtractor.hpp" />
+		<Unit filename="src/libSharedComponents/TraceData.cpp" />
+		<Unit filename="src/libSharedComponents/TraceData.hpp" />
+		<Unit filename="src/libSharedComponents/XMLParser.cpp" />
+		<Unit filename="src/libSharedComponents/XMLParser.hpp" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2.h" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_advanced_gaps.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/CPUBurst.cpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_advanced_gaps.h" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_alignment_types.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/CPUBurst.hpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_conservation.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusterInformation.cpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_distance_calculation.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusterInformation.hpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_dp.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteredEventsPRVGenerator.cpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_feature.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteredEventsPRVGenerator.hpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_feature.h" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_hirschberg.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteredStatesPRVGenerator.cpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_hirschberg.h" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_hirschberg_dna.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteredStatesPRVGenerator.hpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_hirschberg_dna.h" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_hirschberg_large.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteredTRFGenerator.cpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_hirschberg_large.h" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_inferface.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteredTRFGenerator.hpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_main.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteredTraceGenerator.cpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_mem.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteredTraceGenerator.hpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_misc.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringConfiguration.cpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_profile.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringConfiguration.hpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_profile_alignment.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringParameter.cpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_profile_alignment.h" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_simple_gaps.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringParameter.hpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_stats.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringRefinement.cpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_string_matching.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringRefinement.hpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_tree.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringRefinementAggregative.cpp">
-			<Option target="Compile" />
+		<Unit filename="src/libSharedComponents/kalign2/kalign2_upgma.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringRefinementAggregative.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringRefinementDivisive.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringRefinementDivisive.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringStatistics.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/ClusteringStatistics.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/DataExtractor.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/DataExtractor.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/DataExtractorFactory.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/DataExtractorFactory.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/PRVEventsDataExtractor.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/PRVEventsDataExtractor.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/PRVStatesDataExtractor.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/PRVStatesDataExtractor.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/ParametersManager.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/ParametersManager.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/PlottingManager.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/PlottingManager.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/SequenceScore.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/SequenceScore.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/State.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/State.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/TRFDataExtractor.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/TRFDataExtractor.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/TraceData.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/TraceData.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/XMLParser.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/XMLParser.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libSharedComponents/trace_clustering_types.h">
-			<Option target="Compile" />
-		</Unit>
+		<Unit filename="src/libSharedComponents/trace_clustering_types.h" />
 		<Unit filename="src/libTraceClustering/libTraceClustering.cpp">
 			<Option target="Compile" />
 		</Unit>

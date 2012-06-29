@@ -46,10 +46,14 @@ using cepba_tools::system_messages;
 #include <DBSCAN.hpp>
 
 #include <sstream>
+#include <iomanip>
 using std::ostringstream;
 using std::setfill;
 using std::setw;
 using std::setprecision;
+
+#include <algorithm>
+using std::sort;
 
 /******************************************************************************
  * CLASS 'ClusteringRefinementAggregative'

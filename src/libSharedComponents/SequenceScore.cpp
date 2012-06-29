@@ -539,6 +539,7 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
 
 }
 
+/*
 void SequenceScore::AlignmentToMatrix(TAlign& Alignment)
 {
   TPosition begin = beginPosition(cols(Alignment));
@@ -569,6 +570,8 @@ void SequenceScore::AlignmentToMatrix(TAlign& Alignment)
     }
   }
 }
+*/
+
 
 bool SequenceScore::EffectiveScoreComputation(map<cluster_id_t, percentage_t>& PercentageDurations,
                                               vector<SequenceScoreValue>&      ClusterScores,

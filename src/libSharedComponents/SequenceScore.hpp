@@ -59,11 +59,13 @@ using std::make_pair;
 using std::ofstream;
 using std::ios_base;
 
+/*
 #include <seqan/align.h>
 #include <seqan/graph_align.h>
 #include <seqan/graph_msa.h>
 #include <seqan/score.h>
 #include <seqan/basic.h>
+*/
 
 static const cluster_id_t SEQUENCE_GAP = NOISE_CLUSTERID-1;
 
@@ -121,6 +123,7 @@ class SequenceScoreValue
 
 class SequenceScore: public Error
 {
+  /*
   // using namespace seqan;
   typedef seqan::String<cluster_id_t>                      TSequence;
   typedef seqan::Align<TSequence>                          TAlign;
@@ -128,7 +131,7 @@ class SequenceScore: public Error
   typedef seqan::Row<TAlign>::Type                         TRow;
   typedef seqan::Iterator<TRow, seqan::Rooted>::Type       TIterator;
   typedef seqan::Position<seqan::Rows<TAlign>::Type>::Type TRowsPosition;
-  typedef seqan::Position<TAlign>::Type                    TPosition;
+  typedef seqan::Position<TAlign>::Type                    TPosition; */
 
   typedef map<pair<task_id_t, thread_id_t>, vector<cluster_id_t>, TraceObjectsCompare> TSequenceMap;
   typedef TSequenceMap::iterator TSequenceMapIterator;
@@ -162,7 +165,7 @@ class SequenceScore: public Error
                       set<cluster_id_t>                DifferentIDs,
                       map<cluster_id_t, percentage_t>& PercentageDurations);
 
-    void AlignmentToMatrix(TAlign& Alignment);
+    /* void AlignmentToMatrix(TAlign& Alignment); */
 
     bool EffectiveScoreComputation(map<cluster_id_t, percentage_t>& PercentageDurations,
                                    vector<SequenceScoreValue>&      ClusterScores,

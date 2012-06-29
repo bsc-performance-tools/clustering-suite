@@ -10,10 +10,16 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-06-29 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Erased all references to SeqAn library in SequenceScore code. It is still
+	pending the license problems of Kalign2
+
+	* Updated the 'svn:keywords' to all new files in added to the package.
+
 2012-06-28 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Major change in 'SequenceScore' algorithm. Remove use of SeqAn library.
-	Embedded code of 'Kalign2' application. It is still experimental but
-	lot faster than 'Muscle' (the SeqAn MSA algorithm). The compilation still
+	Embedded code of Kalign2 application. It is still experimental but
+	lot faster than Muscle (the SeqAn MSA algorithm). The compilation still
 	requires SeqAn because of the sequence containers.
 
 	* Added new binary 'ClustersDiff' that compares two CSV cluster result
