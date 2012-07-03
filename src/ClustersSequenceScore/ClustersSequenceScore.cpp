@@ -32,9 +32,10 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#include <types.h>
+#include <trace_clustering_types.h>
 
 #include <Utilities.hpp>
+
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 #include <FileNameManipulator.hpp>
@@ -42,6 +43,12 @@ using cepba_tools::FileNameManipulator;
 #include <Timer.hpp>
 using cepba_tools::Timer;
 
+/* That should be done using the 'libTraceClustering' library, but the
+   interface has to be modified :( */
+#include <CSVDataExtractor.hpp>
+#include <Partition.hpp>
+#include <ClusteringStatistics.hpp>
+#include <SequenceScore.hpp>
 
 #include <cstring>
 #include <cstdlib>
@@ -52,9 +59,14 @@ using cepba_tools::Timer;
 #include <getopt.h>
 
 #include <iostream>
+#include <iomanip>
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::fixed;
+using std::setprecision;
+using std::setw;
+using std::setfill;
 
 #include <string>
 #include <sstream>
@@ -67,10 +79,12 @@ using std::vector;
 using std::set;
 
 
+
 struct globalArgs_t {
   bool   verbosity;              /* -v option */
   string ClustersFile;
-  bool   UseNoise;
+  string ClustersFilePrefix;
+  bool   GenerateOutputs;
 } globalArgs;
 
 #define ABOUT \
@@ -80,7 +94,8 @@ struct globalArgs_t {
 
 #define HELP \
 "Usage: ClustersSequenceScore [options] <clusters_data_csv>\n"\
-"  -n  : Do not consider noise points to compute the score (Default: Yes)\n"\
+"  -f  : Generates a FASTA file with the MSA results and a CSV file with\n"\
+"        the detailed score results (using the input file a file name prefix\n"\
 "  -v  : Verbose mode\n"\
 "  -h  : Print this help\n"
 
@@ -89,6 +104,36 @@ void PrintUsage(void)
   cout << ABOUT;
   cout << HELP;
 }
+
+void CheckInput(void)
+{
+  string InputFileExtension =
+    FileNameManipulator::GetExtension(globalArgs.ClustersFile);
+
+  if (InputFileExtension.compare("csv") == 0 ||
+      InputFileExtension.compare("CSV") == 0)
+  {
+    if (globalArgs.GenerateOutputs)
+    {
+      FileNameManipulator NameManipulator(globalArgs.ClustersFile,
+                                          InputFileExtension);
+
+      globalArgs.ClustersFilePrefix = NameManipulator.GetChoppedFileName();
+    }
+    else
+    {
+      globalArgs.ClustersFilePrefix = "";
+    }
+  }
+  else
+  {
+    cerr << "Input file does not have 'csv' extension, please rename it" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  return;
+}
+
 
 void ReadArgs(int argc, char *argv[])
 {
@@ -102,17 +147,17 @@ void ReadArgs(int argc, char *argv[])
   }
 
   /* Initialize globalArgs before we get to work. */
-  globalArgs.verbosity           = false;
-  globalArgs.ClustersFile        = "";
-  globalArgs.UseNoise            = true;
+  globalArgs.verbosity       = false;
+  globalArgs.ClustersFile    = "";
+  globalArgs.GenerateOutputs = false;
 
 
-  while( (opt = getopt( argc, argv, "nvh")) != -1 )
+  while( (opt = getopt( argc, argv, "fvh")) != -1 )
   {
     switch( opt )
     {
-      case 'n':
-        globalArgs.UseNoise = false;
+      case 'f':
+        globalArgs.GenerateOutputs = true;
         break;
 
       case 'v':
@@ -139,19 +184,117 @@ void ReadArgs(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
+  if (globalArgs.verbosity)
+  {
+    system_messages::verbose = true;
+  }
+
   /* Las parameter is the clusters csv file name */
   globalArgs.ClustersFile = argv[optind];
+  CheckInput();
 
   return;
 }
 
 int main(int argc, char *argv[])
 {
-  Timer          T;
+  Timer      T;
+  TraceData *DataSet = TraceData::GetInstance();
+
+  map<cluster_id_t, percentage_t> PercentageDurations;
+  SequenceScore                   Scoring;
+  vector<SequenceScoreValue>      ScoresPerCluster;
+  double                          GlobalScore;
+
+  ClusteringStatistics Statistics;
+  Partition            DataPartition;
 
   ReadArgs(argc, argv);
 
-  std::cout << "Hello Clusters!" << endl;
+  CSVDataExtractor CSVParser (globalArgs.ClustersFile);
+
+  if (CSVParser.GetError())
+  {
+    cerr << "Error reading file: " << CSVParser.GetErrorMessage() << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  /* Extract the data from the CSV file */
+  system_messages::information("**** READING INPUT ****\n");
+  if (!CSVParser.ExtractData(DataSet))
+  {
+    cerr << "Error reading file: " << CSVParser.GetErrorMessage() << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  /* Retrieve the data partition present on the file */
+  if (!CSVParser.GetPartition(DataPartition))
+  {
+    cerr << "Input file does not contain a cluster analysis results" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  /* Compute the statistics */
+  system_messages::information("**** COMPUTING SCORE ****\n");
+  Statistics.InitStatistics(DataPartition.GetIDs());
+
+  if (!Statistics.ComputeStatistics(DataSet->GetCompleteBursts(),
+                                    DataPartition.GetAssignmentVector()))
+  {
+    cerr << "Unable to compute clusters statistics: ";
+    cerr << Statistics.GetErrorMessage();
+    cerr << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  /* Compute the Sequence Score */
+
+  PercentageDurations = Statistics.GetPercentageDurations();
+
+  if(!Scoring.ComputeScore(DataSet->GetClusteringBursts(),
+                           DataPartition.GetAssignmentVector(),
+                           PercentageDurations,
+                           ScoresPerCluster,
+                           GlobalScore,
+                           globalArgs.ClustersFilePrefix,
+                           true)) // Generate a FASTA file
+  {
+    cerr << "Unable to compute the Cluster Sequence Score: ";
+    cerr << Scoring.GetErrorMessage() << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  system_messages::information("**** RESULTS ****\n");
+  if (system_messages::verbose)
+  {
+    for (vector<SequenceScoreValue>::size_type i = 0;
+         i < ScoresPerCluster.size();
+         i++)
+  {
+    cout << fixed;
+    if (i == NOISE_CLUSTERID)
+    {
+      cout << "NOISE      = ";
+      cout << setprecision(6);
+      cout << ScoresPerCluster[i].GetClusterScore() << endl;
+    }
+    else
+    {
+      cout << "Cluster " << setw(2) << setfill(' ');
+      cout << ScoresPerCluster[i].GetID() << " = ";
+      cout << setprecision(6);
+      cout << ScoresPerCluster[i].GetClusterScore() << endl;
+
+    }
+  }
+    cout << "-> Cluster Sequence Score = " << GlobalScore << endl;
+  }
+  else
+  {
+    cout << fixed;
+    cout << setprecision(6);
+    cout << GlobalScore << endl;
+  }
 
   exit(EXIT_SUCCESS);
 }

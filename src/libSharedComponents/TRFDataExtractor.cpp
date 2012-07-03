@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -51,10 +51,10 @@ TRFDataExtractor::TRFDataExtractor(string InputTraceName)
 :DataExtractor(InputTraceName)
 {
   struct stat FileStat;
-  
+
   if (GetError())
     return;
-  
+
   if (fstat(fileno(InputTraceFile), &FileStat) < 0)
   {
     SetError(true);
@@ -76,8 +76,8 @@ TRFDataExtractor::~TRFDataExtractor()
 bool TRFDataExtractor::SetEventsToDealWith(set<event_type_t>& EventsToDealWith)
 {
   SetError(true);
-  SetErrorMessage("TRF traces doesn't permit parsing based on events");
-  
+  SetErrorMessage("TRF traces do not permit parsing based on events");
+
   return false;
 }
 
@@ -86,7 +86,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
 {
   char   Buffer[256];
   size_t BufferSize = sizeof(Buffer);
-  
+
   bool          OngoingBurst, InIdleBlock;
   task_id_t     TaskId, LastTaskId = 0;
   thread_id_t   ThreadId, LastThreadId = 0;
@@ -96,12 +96,12 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
   double        ReadBurstDuration;
   duration_t    LastBurstDuration;
   line_t        CurrentLine, LastBurstLine;
-  
+
   map<event_type_t, event_value_t> EventsData;
   map<event_type_t, event_value_t>::iterator EventsDataIterator;
-  
-  
-  
+
+
+
   percentage_t  CurrentPercentage = 0;
 
   /*
@@ -120,7 +120,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
                     strerror(errno));
     return false;
   }
-  
+
   system_messages::show_percentage_progress("Parsing Dimemas Input Trace",
                                             CurrentPercentage);
   CurrentLine = 0;
@@ -131,7 +131,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
   while (true)
   {
     INT32 PercentageRead;
-    
+
     if (fgets(Buffer, BufferSize, this->InputTraceFile) == NULL)
     { /* End Of File reachead (or error...) */
       break;
@@ -146,7 +146,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
     {
       InIdleBlock = true;
     }
-    
+
     if (sscanf(Buffer,
                "\"block end\" { %d, %d, 0 };;\n",
                &TaskId,
@@ -154,7 +154,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
     {
       InIdleBlock = false;
     }
-    
+
     if (sscanf(Buffer,
                "\"CPU burst\" { %d, %d, %le };;\n",
                &TaskId,
@@ -176,9 +176,9 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
                           TraceDataSet->GetLastError());
           return false;
         }
-        /* DEBUG 
+        /* DEBUG
         cout << "Current Point (" << LastBurstLine << " - " << LastBurstDuration << "): ";
-        
+
         for (EventsDataIterator  = EventsData.begin();
              EventsDataIterator != EventsData.end();
              EventsDataIterator++)
@@ -187,17 +187,17 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
         }
         cout << endl;
         */
-        
+
         /* Reset variables */
         EventsData.clear();
         OngoingBurst = false;
       }
-      
+
       if (FirstsBursts < TaskId)
       {
         FirstsBursts++;
       }
-      
+
       if (!InIdleBlock)
       { /* Save current 'CPU burst' information */
         LastBurstLine     = CurrentLine;
@@ -205,9 +205,9 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
         LastTaskId        = TaskId;
         LastThreadId      = ThreadId;
         OngoingBurst      = true;
-        
+
         /* Process next trace line */
-        continue; 
+        continue;
       }
     }
 
@@ -222,16 +222,16 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
       {
         /* Avoid repeating events */
         EventsDataIterator = EventsData.find(CurrentEventType);
-        
+
         if (EventsDataIterator == EventsData.end())
         { /* Add this event to 'EventsData' map */
           EventsData[CurrentEventType] = CurrentEventValue;
         }
-        
+
         /* Process next trace line */
         continue;
       }
-      
+
       /* Check if a communication primitive is read */
       if ((sscanf(Buffer, "\"NX send\" { %d, %d", &TaskId, &ThreadId) == 2) ||
           (sscanf(Buffer, "\"NX recv\" { %d, %d", &TaskId, &ThreadId) == 2) ||
@@ -246,14 +246,14 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
                                     EventsData))
         {
           SetError(true);
-          SetErrorMessage("error storing burst data", 
+          SetErrorMessage("error storing burst data",
                           TraceDataSet->GetLastError());
           return false;
         }
-        
-        /* DEBUG 
+
+        /* DEBUG
         cout << "Current Point (" << LastBurstLine << " - " << LastBurstDuration << "): ";
-        
+
         for (EventsDataIterator  = EventsData.begin();
              EventsDataIterator != EventsData.end();
              EventsDataIterator++)
@@ -262,13 +262,13 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
         }
         cout << endl;
         */
-        
+
         /* Reset variables */
         EventsData.clear();
         OngoingBurst = false;
       }
     }
-    
+
     /* Show progress */
     PercentageRead = GetInputTraceFilePercentage();
     if (PercentageRead > CurrentPercentage)
@@ -278,7 +278,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
                                                 CurrentPercentage);
     }
   }
-  
+
   system_messages::show_percentage_end("Parsing Dimemas Input Trace");
 
   if (ferror(InputTraceFile) != 0)
@@ -307,8 +307,8 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
   }
 
   TraceDataSet->Normalize();
-  
-  /* No more burst 
+
+  /* No more burst
   if (!TraceDataSet->NoMoreBursts())
   {
     SetError(true);
@@ -316,6 +316,6 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
     return false;
   }
   */
-  
+
   return true;
 }

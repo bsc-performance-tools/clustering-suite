@@ -25,44 +25,24 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id:: SystemMessages.hpp 23 2011-05-17 09:47:12#$:  Id
-  $Rev:: 23                                       $:  Revision of last commit
-  $Author:: jgonzale                              $:  Author of last commit
-  $Date:: 2011-05-17 11:47:12 +0200 (Tue, 17 May #$:  Date of last commit
+  $Id::                                           $:  Id
+  $Rev::                                          $:  Revision of last commit
+  $Author::                                       $:  Author of last commit
+  $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef _UTILITIES_HPP_
-#define _UTILITIES_HPP_
+#ifndef _SYSTEMMESSAGES_H_
+#define _SYSTEMMESSAGES_H_
 
-#include <clustering_suite_config.h>
+#include <stdio.h>
 
-#include <cstdio>
-#include <string>
-using std::string;
+void show_percentage_progress(const char* message,
+                              int         current_percentage,
+                              FILE*       channel);
 
-#include <stdio.h>  /* defines FILENAME_MAX */
-#ifdef WIN32
-    #include <direct.h>
-    #define GetCurrentDir _getcwd
-#else
-    #include <unistd.h>
-    #define GetCurrentDir getcwd
- #endif
+void show_percentage_end(const char* message,
+                         FILE*       channel);
 
 
-namespace cepba_tools
-{
-  string GetCWD(void);
-
-  std::string &ltrim(std::string &s);
-
-  std::string &rtrim(std::string &s);
-
-  std::string &trim(std::string &s);
-
-}
-
-
-
-#endif // _UTILITIES_HPP_
+#endif // _SYSTEMMESSAGES_H_

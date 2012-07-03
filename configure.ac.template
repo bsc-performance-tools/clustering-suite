@@ -215,6 +215,7 @@ src/Makefile
 src/BasicClasses/Makefile
 src/libParaverTraceParser/Makefile
 src/libSharedComponents/Makefile
+src/libSharedComponents/kalign2/Makefile
 src/libANN/Makefile
 src/libClustering/gmeans/Makefile
 src/libClustering/Makefile

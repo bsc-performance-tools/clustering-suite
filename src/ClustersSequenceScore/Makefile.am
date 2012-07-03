@@ -5,6 +5,7 @@ INCLUDES =  \
 	-I$(top_srcdir)/../common-files \
     -I$(top_srcdir)/src/BasicClasses \
 	-I$(top_srcdir)/src/libClustering \
+	-I$(top_srcdir)/src/libSharedComponents \
 	-I$(top_srcdir)/src/libTraceClustering
 
 
@@ -18,3 +19,4 @@ ClustersSequenceScore_LDADD = \
 	$(top_srcdir)/src/libTraceClustering/libTraceClustering.la
 
 ClustersSequenceScore_CXXFLAGS = ${CXXFLAGS}
+ClustersSequenceScore_LDFLAGS  = ${LDFLAGS} -static

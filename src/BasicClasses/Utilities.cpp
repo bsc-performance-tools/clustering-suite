@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -50,4 +50,29 @@ string cepba_tools::GetCWD(void)
   cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
 
   return string(cCurrentPath);
+}
+
+#include <algorithm>
+#include <functional>
+#include <cctype>
+#include <locale>
+
+// trim from start
+std::string& cepba_tools::ltrim(std::string &s)
+{
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+  return s;
+}
+
+// trim from end
+std::string& cepba_tools::rtrim(std::string &s)
+{
+  s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+  return s;
+}
+
+// trim from both ends
+std::string& cepba_tools::trim(std::string &s)
+{
+  return ltrim(rtrim(s));
 }

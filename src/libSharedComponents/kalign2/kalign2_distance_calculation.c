@@ -23,6 +23,8 @@
   timolassmann@gmail.com
 */
 
+#include <SystemMessages.h>
+
 #include "kalign2.h"
 
 float** protein_pairwise_alignment_distance (struct alignment* aln,
@@ -37,8 +39,6 @@ float** protein_pairwise_alignment_distance (struct alignment* aln,
   struct dp_matrix *dp = 0;
   int a, b;
 
-
-  fprintf (stderr, "Distance Calculation:\n");
 
   b = (numseq * (numseq - 1) ) / 2;
   a = 1;
@@ -83,6 +83,10 @@ float** protein_pairwise_alignment_distance (struct alignment* aln,
       dm[i][j] = 0.0f;
     }
   }*/
+  int current_percentage = 0;
+
+  show_percentage_progress("Distances Calculation (Protein Pairwise)", current_percentage, stdout);
+
   for (i = 0; i < numseq - 1; i++)
   {
     len_a = aln->sl[i];
@@ -102,12 +106,19 @@ float** protein_pairwise_alignment_distance (struct alignment* aln,
       path = ss_dyn (subm, path, dp, aln->s[i], aln->s[j], len_a, len_b);
       dm[i][j] = get_distance_from_pairwise_alignment (path, aln->s[i], aln->s[j]);
       dm[j][i] = dm[i][j];
-      fprintf (stderr, "\r%8.0f percent done", (float) a / (float) b * 100);
-      a++;
 
+      if ( (int) (1.0 * a / b * 100) > current_percentage)
+      {
+        current_percentage = (int) (1.0 * a / b * 100);
+        show_percentage_progress("Distances Calculation (Protein Pairwise)",
+                                 current_percentage,
+                                 stdout);
+      }
+      a++;
       free (path);
     }
   }
+  show_percentage_end("Distances Calculation (Protein Pairwise)", stdout);
 
   dp_matrix_free (dp);
   return dm;
@@ -849,7 +860,7 @@ float** protein_wu_distance (struct alignment  *si,
     hash[i] = NULL;
   }
 
-  printf("nj = %d\tnumprofiles = %d\tnumseq = %d\n", nj, numprofiles, numseq);
+  // printf("nj = %d\tnumprofiles = %d\tnumseq = %d\n", nj, numprofiles, numseq);
 
   if (nj)
   {
@@ -880,10 +891,13 @@ float** protein_wu_distance (struct alignment  *si,
     }
   }
 
-  fprintf (stderr, "Distance Calculation:\n");
   b = (numseq * (numseq - 1) ) / 2;
   a = 1;
 
+  int current_percentage = 0;
+  show_percentage_progress("Distances Calculation (Wu Distance)",
+                           current_percentage,
+                           stdout);
   for (i = 0; i < numseq - 1; i++)
   {
     p = si->s[i];
@@ -915,9 +929,17 @@ float** protein_wu_distance (struct alignment  *si,
       //dm[i][j] /= min;
       //dm[i][j] /= (si->sl[i] > si->sl[j]) ? si->sl[j] :si->sl[i];
       dm[j][i] = dm[i][j];
-      fprintf (stderr, "\r%8.0f percent done", (float) a / (float) b * 100);
+
+      if ( (int) ( 1.0 * a /  b * 100) > current_percentage)
+      {
+        current_percentage = (int) ( 1.0 * a /  b * 100);
+        show_percentage_progress("Distances Calculation (Wu Distance)",
+                                 current_percentage,
+                                 stdout);
+      }
       a++;
     }
+    show_percentage_end("Distances Calculation (Wu Distance)", stdout);
 
 
     for (j = 1024; j--;)
@@ -1039,9 +1061,6 @@ float** dna_distance (struct alignment* si, float** dm, struct parameters* param
   unsigned int hv;
 
 
-  fprintf (stderr, "Distance Calculation:\n");
-
-
   for (i = 0; i < 1024; i++)
   {
     hash[i] = 0;
@@ -1079,6 +1098,10 @@ float** dna_distance (struct alignment* si, float** dm, struct parameters* param
   b = (numseq * (numseq - 1) ) / 2;
   a = 1;
 
+  int current_percentage = 0;
+  show_percentage_progress("Distances Calculation (DNA Distance)",
+                           current_percentage,
+                           stdout);
   for (i = 0; i < numseq - 1; i++)
   {
     p = si->s[i];
@@ -1105,7 +1128,14 @@ float** dna_distance (struct alignment* si, float** dm, struct parameters* param
       dm[i][j] = dna_distance_calculation (hash, si->s[j], si->sl[j], si->sl[j] + si->sl[i], param->zlevel);
       dm[i][j] /= (si->sl[i] > si->sl[j]) ? si->sl[j] : si->sl[i];
       dm[j][i] = dm[i][j];
-      fprintf (stderr, "\r%8.0f percent done", (float) a / (float) b * 100);
+
+      if ( (int) ( 1.0 * a /  b * 100) > current_percentage)
+      {
+        current_percentage = (int) ( 1.0 * a /  b * 100);
+        show_percentage_progress("Distances Calculation (DNA Distance)",
+                                 current_percentage,
+                                 stdout);
+      }
       a++;
     }
 
@@ -1118,6 +1148,7 @@ float** dna_distance (struct alignment* si, float** dm, struct parameters* param
       }
     }
   }
+  show_percentage_end("Distances Calculation (DNA Distance)", stdout);
 
   return dm;
 }

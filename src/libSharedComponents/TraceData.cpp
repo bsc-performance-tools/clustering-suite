@@ -136,59 +136,19 @@ TraceData::TraceData(void)
   NumberOfTasks = 0;
 }
 
-/*
-void
-TraceData::SetUseDuration(bool UseDuration)
-{
-  this->UseDuration = UseDuration;
-}
-
-void
-TraceData::SetDurationFilter(UINT64 DurationFilter)
-{
-  this->DurationFilter = DurationFilter;
-}
-*/
-
-/*
-void
-TraceData::SetClusteringParameters(
-  vector<ClusteringParameter*>& ClusteringParamters)
-{
-  this->ClusteringParameters = ClusteringParameters;
-}
-*/
-
-/*
-void
-TraceData::SetExtrapolationParameters(
-  vector<ClusteringParameter*> ExtrapolationParameters)
-{
-  this->ExtrapolationParameters = ExtrapolationParameters;
-}
-*/
-
-/*
-void
-TraceData::SetFilterThreshold(double FilterThreshold)
-{
-  this->FilterThreshold = FilterThreshold;
-}
-*/
 
 /****************************************************************************
  * NewBurst
  ***************************************************************************/
 
-bool
-TraceData::NewBurst(task_id_t                         TaskId,
-                    thread_id_t                       ThreadId,
-                    line_t                            Line,
-                    timestamp_t                       BeginTime,
-                    timestamp_t                       EndTime,
-                    duration_t                        BurstDuration,
-                    map<event_type_t, event_value_t>& EventsData,
-                    bool                              toCluster)
+bool TraceData::NewBurst(task_id_t                         TaskId,
+                         thread_id_t                       ThreadId,
+                         line_t                            Line,
+                         timestamp_t                       BeginTime,
+                         timestamp_t                       EndTime,
+                         duration_t                        BurstDuration,
+                         map<event_type_t, event_value_t>& EventsData,
+                         bool                              toCluster)
 {
   CPUBurst* Burst;
 
@@ -304,6 +264,85 @@ TraceData::NewBurst(task_id_t                         TaskId,
 /****************************************************************************
  * NewBurst
  ***************************************************************************/
+bool TraceData::NewBurst(instance_t           Instance,
+                         task_id_t            TaskId,
+                         thread_id_t          ThreadId,
+                         line_t               Line,
+                         timestamp_t          BeginTime,
+                         timestamp_t          EndTime,
+                         duration_t           BurstDuration,
+                         vector<double>      &ClusteringRawData,
+                         vector<double>      &ClusteringProcessedData,
+                         map<size_t, double> &ExtrapolationData,
+                         burst_type_t         BurstType)
+{
+  CPUBurst *Burst = new CPUBurst (Instance,
+                                  TaskId,
+                                  ThreadId,
+                                  Line,
+                                  BeginTime,
+                                  EndTime,
+                                  BurstDuration,
+                                  ClusteringRawData,
+                                  ClusteringProcessedData,
+                                  ExtrapolationData,
+                                  BurstType);
+
+  /* DEBUG
+  ostringstream Messages;
+  Messages << "Burst number " << Burst->GetInstance() << " Type = " << BurstType << endl;
+  system_messages::information(Messages.str().c_str());
+  */
+
+  if (Master || ReadThisTask(TaskId))
+  {
+    AllBursts.push_back(Burst);
+  }
+
+  if (BurstType == CompleteBurst)
+  {
+    if (Master || ReadThisTask(TaskId))
+    {
+      if (TaskId > NumberOfTasks)
+      { /* Keep track of the total number of tasks */
+        NumberOfTasks = TaskId;
+      }
+
+      CompleteBursts.push_back(Burst);
+    }
+
+    for (size_t i = 0; i < ClusteringDimensions; i++)
+    {
+      if (ClusteringProcessedData[i] > MaxValues[i])
+      {
+        MaxValues[i]    = ClusteringProcessedData[i];
+        MaxInstances[i] = Burst->GetInstance();
+      }
+
+      if (ClusteringProcessedData[i] < MinValues[i])
+      {
+        MinValues[i]    = ClusteringProcessedData[i];
+        MinInstances[i] = Burst->GetInstance();
+      }
+
+      SumValues[i] += ClusteringProcessedData[i];
+    }
+
+    if (ReadThisTask(TaskId))
+    {
+      ClusteringBursts.push_back(Burst);
+    }
+  }
+
+  if (!Master && !ReadThisTask(TaskId))
+  {
+    delete Burst;
+  }
+
+  return true;
+}
+
+
 bool TraceData::Sampling(size_t MaxSamples)
 {
   vector< vector<CPUBurst*> > BurstsPerTask (NumberOfTasks, vector<CPUBurst*>());
@@ -714,7 +753,7 @@ bool TraceData::FlushPoints(ostream&             str,
   {
     case PrintClusteringBursts:
     {
-      /* DEBUG 
+      /* DEBUG
       cout << "Printing Clustering Bursts" << endl; */
       if (Cluster_IDs.size() != ClusteringBursts.size())
       {
@@ -740,7 +779,7 @@ bool TraceData::FlushPoints(ostream&             str,
     }
     case PrintCompleteBursts:
     {
-      /* DEBUG 
+      /* DEBUG
       cout << "Printing Complete Bursts" << endl; */
 
       if (Cluster_IDs.size() != CompleteBursts.size())

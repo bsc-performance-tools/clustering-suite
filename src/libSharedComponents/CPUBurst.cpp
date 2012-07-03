@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -59,6 +59,32 @@ CPUBurst::CPUBurst(task_id_t            TaskId,
   this->ToClassify              = ToClassify;
 }
 
+CPUBurst::CPUBurst(instance_t          Instance,
+                   task_id_t           TaskId,
+                   thread_id_t         ThreadId,
+                   line_t              Line,
+                   timestamp_t         BeginTime,
+                   timestamp_t         EndTime,
+                   duration_t          Duration,
+                   vector<double>&     ClusteringRawData,
+                   vector<double>&     ClusteringProcessedData,
+                   map<size_t, double>& ExtrapolationData,
+                   burst_type_t        BurstType,
+                   bool                ToClassify)
+:Point(Instance, ClusteringProcessedData)
+{
+  this->TaskId                  = TaskId;
+  this->ThreadId                = ThreadId;
+  this->Line                    = Line;
+  this->BeginTime               = BeginTime;
+  this->EndTime                 = EndTime;
+  this->Duration                = Duration;
+  this->RawDimensions           = ClusteringRawData;
+  this->ExtrapolationDimensions = ExtrapolationData;
+  this->BurstType               = BurstType;
+  this->ToClassify              = ToClassify;
+}
+
 CPUBurst::~CPUBurst(void)
 {
   /*
@@ -92,13 +118,13 @@ bool CPUBurst::Scale(vector<double>& Mean, vector<double>& RMS)
        RMS.size()  != Dimensions.size())
     return false;
 
-  
+
   for (size_t i = 0; i < Dimensions.size(); i++)
   {
     Dimensions[i] =
       (Dimensions[i]-Mean[i])/RMS[i];
   }
-  
+
   return true;
 }
 
@@ -107,12 +133,12 @@ CPUBurst::MeanAdjust(vector<double>& DimensionsAverage)
 {
   if (DimensionsAverage.size() != RawDimensions.size())
     return false;
-  
+
   for (INT32 i = 0; i < DimensionsAverage.size(); i++)
   {
     Dimensions[i] = RawDimensions[i] - DimensionsAverage[i];
   }
-  
+
   return true;
 }
 
@@ -128,7 +154,7 @@ CPUBurst::BaseChange(vector< vector<double> >& BaseChangeMatrix)
     cout << RawDimensions[i] << " ";
   }
   cout << "}" << endl;
-  
+
   cout << "Original NormalizedDimensions = {";
   for (INT32 i = 0; i < NormalizedDimensions.size(); i++)
   {
@@ -137,7 +163,7 @@ CPUBurst::BaseChange(vector< vector<double> >& BaseChangeMatrix)
   cout << "}" << endl;
   */
 
-      
+
   for (INT32 i = 0; i < BaseChangeMatrix.size(); i++)
   {
     if (BaseChangeMatrix[i].size() != Dimensions.size())
@@ -147,19 +173,19 @@ CPUBurst::BaseChange(vector< vector<double> >& BaseChangeMatrix)
       cout << " NormalizedDimensions.size = " << Dimensions.size() << endl;
       return false;
     }
-    
+
     BaseChangedDimensions[i] = 0.0;
-    
+
     for (INT32 j = 0; j < BaseChangeMatrix[i].size(); j++)
     {
-      BaseChangedDimensions[i] += 
+      BaseChangedDimensions[i] +=
         (Dimensions[j]*BaseChangeMatrix[i][j]);
     }
   }
-  
+
   Dimensions = BaseChangedDimensions;
-  
-  /* DEBUG 
+
+  /* DEBUG
   cout << "Base changed NormalizedDimensions = {";
   for (INT32 i = 0; i < NormalizedDimensions.size(); i++)
   {
@@ -167,7 +193,7 @@ CPUBurst::BaseChange(vector< vector<double> >& BaseChangeMatrix)
   }
   cout << "}" << endl;
   */
-  
+
   return true;
 }
 
@@ -186,13 +212,13 @@ CPUBurst::Print(ostream&       str,
   map<size_t, double>::iterator ExtrapolationData;
 
   size_t TotalExtrapolationDimensions = ExtrapolationParametersPrecision.size();
-  
+
   /* Common data */
   str << Instance  << "," << TaskId  << "," << ThreadId << ",";
   str << BeginTime << "," << EndTime << "," << Duration << "," << Line;
 
   str.setf(ios::fixed,ios::floatfield);
-  
+
   /* Clustering Dimensions Raw */
   for (INT32 i = 0; i < RawDimensions.size(); i++)
   {
@@ -204,7 +230,7 @@ CPUBurst::Print(ostream&       str,
     {
       str.precision(0);
     }
-    
+
     str << "," << RawDimensions[i];
   }
 
@@ -232,7 +258,7 @@ CPUBurst::Print(ostream&       str,
       {
         str.precision(0);
       }
-      
+
       str << ExtrapolationData->second;
     }
     else
@@ -243,7 +269,7 @@ CPUBurst::Print(ostream&       str,
 
   /* ClusterID */
   str << "," << ClusterId << endl;
-  
+
   return true;
 }
 
@@ -254,4 +280,26 @@ CPUBurst::PrintBurst(void)
   cout << "Instance: " << Instance;
 
   PrintPoint ();
+}
+
+string CPUBurst::BurstTypeStr(burst_type_t T)
+{
+  switch(T)
+  {
+    case CompleteBurst:
+      return "CompleteBurst";
+      break;
+    case MissingDataBurst:
+      return "MissingDataBurst";
+      break;
+    case DurationFilteredBurst:
+      return "DurationFilteredBurst";
+      break;
+    case RangeFilteredBurst:
+      return "RangeFilteredBurst";
+      break;
+    default:
+      return "ERROR";
+      break;
+  }
 }

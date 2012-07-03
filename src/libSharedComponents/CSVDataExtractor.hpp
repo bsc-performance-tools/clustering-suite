@@ -25,10 +25,10 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id:: PRVEventsDataExtractor.hpp 23 2011-05-17 #$:  Id
-  $Rev:: 23                                       $:  Revision of last commit
-  $Author:: jgonzale                              $:  Author of last commit
-  $Date:: 2011-05-17 11:47:12 +0200 (Tue, 17 May #$:  Date of last commit
+  $Id::                                           $:  Id
+  $Rev::                                          $:  Revision of last commit
+  $Author::                                       $:  Author of last commit
+  $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
@@ -39,34 +39,56 @@
 
 #include "DataExtractor.hpp"
 
-#include <math.h>
+#include <Partition.hpp>
+
+#include <cmath>
 #include <string>
 
-#include <map>
-using std::map;
-
-#include <stack>
-using std::stack;
-
-
-/* Common semantic of Paraver */
+#include <fstream>
+using std::ifstream;
 
 class CSVDataExtractor: public DataExtractor
 {
-  public:
-
   private:
+    string              CSVFileName;
+    ifstream            CSVFile;
+
+    ifstream::pos_type FirstPos;
+    ifstream::pos_type EndPos;
+
+    set<cluster_id_t>    IDs;
+    vector<cluster_id_t> AssignmentVector;
+
+    vector<string>       ClusteringParameters;
+    vector<string>       NormalizedParameters;
+    vector<string>       ExtrapolationParameters;
+
+    vector<string>::size_type RecordSize;
+    UINT32                    CurrentLine;
+
   public:
 
-    CSVDataExtractor(string InputTraceName);
+    CSVDataExtractor(string CSVFileName);
     ~CSVDataExtractor();
 
+    bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith);
+
     bool ExtractData(TraceData* TraceDataSet);
+
+    bool GetPartition(Partition& ReadPartition);
 
     input_file_t GetFileType(void) { return ClusteringCSV; };
 
   private:
 
+    void PopulateRecord(vector<string> &Record,
+                        const string   &Line,
+                        char            Delimiter);
+
+    bool ParseHeader(vector<string> &Record);
+
+    bool ParseRecord(vector<string> &Record, TraceData* TraceDataSet);
+
 };
 
-#endif /* PRVSTATESDATAEXTRACTOR_H */
+#endif /* CSVDATAEXTRACTOR_H */

@@ -80,6 +80,20 @@ Point::Point(vector<double>& _Dimensions)
   */
 }
 
+Point::Point(instance_t _Instance, vector<double>& _Dimensions)
+{
+  Instance   = _Instance;
+  Dimensions = _Dimensions;
+  Normalized = true;
+
+#if defined (HAVE_MUSTER) && defined (HAVE_MPI)
+  if (Point::PointDimensions == 0)
+  {
+    Point::PointDimensions = _Dimensions.size();
+  }
+#endif
+}
+
 void
 Point::RangeNormalization(const vector<double>& MaxValues,
                           const vector<double>& MinValues,

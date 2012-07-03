@@ -19,6 +19,7 @@ libBasicClasses_la_SOURCES= \
 	Error.hpp \
 	FileNameManipulator.cpp \
 	FileNameManipulator.hpp \
+	SystemMessage.h \
 	SystemMessages.cpp \
 	SystemMessages.hpp \
 	Utilities.cpp \

@@ -10,6 +10,22 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-07-03 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Full implementation of 'ClustersSequenceScore' as an independent binary.
+	It does not use 'libTraceClustering' due to the bad integration of the
+	CSV parser and the library.
+
+	* First implementation of a 'CSVDataExtractor', just with basic features.
+	It is a first (experimental) version that does not communicate with the
+	Parameters Manager.
+
+	* Erased remaing 'SeqAn' tags/calls/etc.
+
+	* Added 'kalign2' calls to 'system_messages' class to correctly show the
+	alignment progress.
+
+	* Added 'system_messages' hooks to call percentage progress from C code.
+
 2012-06-29 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Erased all references to SeqAn library in SequenceScore code. It is still
 	pending the license problems of Kalign2

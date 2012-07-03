@@ -358,9 +358,15 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
 
   if (MaxClusterId >= 1)
   {
-    gpo  = 10;
-    gpe  = 5;
-    tgpe = 5;
+    gpo  = MaxClusterId*2;
+    gpe  = MaxClusterId/2;
+    tgpe = MaxClusterId/2;
+
+    /* DEBUG
+    cout << "Gap Open: " << gpo << endl;
+    cout << "Gap Extension: " << gpe << endl;
+    cout << "Terminal Gap Extension: " << tgpe << endl;
+    */
   }
 
   for (i = MaxClusterId; i--;)
@@ -377,17 +383,20 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
           if ( i == NOISE_CLUSTERID || j == NOISE_CLUSTERID)
           {
             // submatrix[i+1][j+1] = PercentageDurations[NOISE_CLUSTERID]*100;
-            submatrix[i+1][j+1] = 5;
+            submatrix[i+1][j+1] = MaxClusterId/2;
           }
           else if ( i == j )
           {
-            // submatrix[i+1][j+1] = PercentageDurations[i]*100;
-             submatrix[i+1][j+1] = (MaxClusterId-i)+5;
+            //submatrix[i+1][j+1] = PercentageDurations[i]*20);
+            //submatrix[i+1][j+1] = i+5;
+            //submatrix[i+1][j+1] = (MaxClusterId-i) + (2*PercentageDurations[i]*MaxClusterId);
+            submatrix[i+1][j+1] = MaxClusterId-i;
+
           }
           else
           {
             // submatrix[i+1][j+1] = PercentageDurations[NOISE_CLUSTERID]*100;
-            submatrix[i+1][j+1] = 3;
+            submatrix[i+1][j+1] = MaxClusterId/4;
           }
         }
       }
@@ -400,6 +409,17 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
       }
     }
   }
+
+  /* DEBUG
+  for (size_t i = 0; i < MaxClusterId; i++)
+  {
+    for (size_t j = 0; j < MaxClusterId; j++)
+    {
+      cout << "[" << i << "|" << j << "] = " << submatrix[i+1][j+1] << " ";
+    }
+    cout << endl;
+  }
+  */
 
   /* Prepare sequences */
   for (SequencesIt  = Sequences.begin(), i = 0;
@@ -538,40 +558,6 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
 
 
 }
-
-/*
-void SequenceScore::AlignmentToMatrix(TAlign& Alignment)
-{
-  TPosition begin = beginPosition(cols(Alignment));
-  TPosition end   = endPosition(cols(Alignment));
-
-  SequencesMatrix.clear();
-  SequencesMatrix = vector<vector<cluster_id_t> > (length(rows(Alignment)));
-
-  for(size_t i = 0; i < length(rows(Alignment)); ++i)
-  {
-    TRow& CurrentRow = row(Alignment, i);
-
-    TIterator SequencePosition = iter(CurrentRow, begin);
-    TIterator SequenceEnd      = iter(CurrentRow, end);
-
-    while (SequencePosition != SequenceEnd)
-    {
-      if (isGap(SequencePosition))
-      {
-        SequencesMatrix[i].push_back(SEQUENCE_GAP);
-      }
-      else
-      {
-        SequencesMatrix[i].push_back((cluster_id_t) value(SequencePosition));
-      }
-
-      SequencePosition++;
-    }
-  }
-}
-*/
-
 
 bool SequenceScore::EffectiveScoreComputation(map<cluster_id_t, percentage_t>& PercentageDurations,
                                               vector<SequenceScoreValue>&      ClusterScores,

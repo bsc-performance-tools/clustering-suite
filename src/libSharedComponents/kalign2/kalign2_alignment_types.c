@@ -52,7 +52,8 @@ int** default_alignment (struct alignment* aln, int* tree, float**submatrix, int
 
   dp = dp_matrix_alloc (dp, 511, 511);
 
-  fprintf (stderr, "\nAlignment:\n");
+  int current_percentage = 0;
+  show_percentage_progress("Alignment (Default)", 0, stdout);
 
   //c = numseq;
   for (i = 0; i < (numseq - 1); i++)
@@ -60,11 +61,20 @@ int** default_alignment (struct alignment* aln, int* tree, float**submatrix, int
     a = tree[i*3];
     b = tree[i*3+1];
     c = tree[i*3+2];
-    fprintf (stderr, "\r%8.0f percent done", (float) (i) / (float) numseq * 100);
+
     // fprintf(stderr,"Aligning:%d %d->%d  %d  %d\n",a,b,c,numseq,i);
     len_a = aln->sl[a];
     len_b = aln->sl[b];
     dp = dp_matrix_realloc (dp, len_a, len_b);
+
+
+    if ( (int) ( 1.0 * i / numseq * 100) > current_percentage)
+    {
+      current_percentage = (int) ( 1.0 * i / numseq * 100);
+      show_percentage_progress("Alignment (Default)",
+                               current_percentage,
+                               stdout);
+    }
 
     map[c] = malloc (sizeof (int) * (len_a + len_b + 2) );
 
@@ -148,7 +158,7 @@ int** default_alignment (struct alignment* aln, int* tree, float**submatrix, int
     free (profile[b]);
   }
 
-  fprintf (stderr, "\r%8.0f percent done\n", 100.0);
+  show_percentage_end("Alignment (Default)", stdout);
   free (profile[numprofiles-1]);
   free (profile);
 
@@ -850,7 +860,7 @@ struct ntree_data* ntree_sub_alignment (struct ntree_data* ntree_data, int* tree
   {
     if (ntree_data->map[c][ntree_data->map[c][0] + 2]  < local_map[c][local_map[c][0] + 2])
     {
-      fprintf (stderr, "%d\n", local_map[c][local_map[c][0] + 2]);
+      // fprintf (stderr, "%d\n", local_map[c][local_map[c][0] + 2]);
 
       //remove old map,profile,etc..
       for (i = 0; i < num - 1; i++)
@@ -897,12 +907,12 @@ struct ntree_data* ntree_sub_alignment (struct ntree_data* ntree_data, int* tree
     }
     else
     {
-      fprintf (stderr, "no improvement\n");
+      // fprintf (stderr, "no improvement\n");
     }
   }
   else
   {
-    fprintf (stderr, "%d\n", local_map[c][local_map[c][0] + 2]);
+    // fprintf (stderr, "%d\n", local_map[c][local_map[c][0] + 2]);
 
     for (i = 0; i < num - 1; i++)
     {

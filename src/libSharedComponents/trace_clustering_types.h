@@ -1,4 +1,4 @@
-/*****************************************************************************\ 
+/*****************************************************************************\
  *                        ANALYSIS PERFORMANCE TOOLS                         *
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
@@ -23,7 +23,7 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\ 
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
   $URL:: https://svn.bsc.es/repos/ptools/prv2dim/                          $:
 

@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -48,19 +48,21 @@ namespace cepba_tools
 
       bool   _Warning;
       string LastWarning;
-        
+
     public:
       Error(void) { _Error = false; _Warning = false; };
-      
+
       bool GetError(void)        { return _Error; };
       void SetError(bool _Error) { this->_Error = _Error; };
 
       bool GetWarning(void)          { return _Warning; };
       void SetWarning(bool _Warning) { this->_Warning = _Warning; };
-      
-      string GetLastError(void)   { return LastError;   };
-      string GetLastWarning(void) { return LastWarning; };
-      
+
+      string GetLastError(void)      { return LastError;   };
+      string GetErrorMessage(void)   { return LastError;   };
+      string GetLastWarning(void)    { return LastWarning; };
+      string GetWarningMessage(void) { return LastWarning; };
+
       void SetErrorMessage(string& UserMessage, string& SysMessage);
       void SetErrorMessage(const char* UserMessage, const char* SysMessage);
       void SetErrorMessage(string& UserMessage, const char* SysMessage);
@@ -79,7 +81,7 @@ namespace cepba_tools
 } /* End namespace */
 
 /* Special prototype of 'error' function needed by R*-Tree. Impemented in
- * 'main.cpp' 
+ * 'main.cpp'
 extern void error (char* Message, bool Exit); */
 
 #endif /* _ERROR_H */

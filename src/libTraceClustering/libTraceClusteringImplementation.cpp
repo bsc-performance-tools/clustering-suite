@@ -52,11 +52,9 @@ using cepba_tools::FileNameManipulator;
 #include "ClusteredTRFGenerator.hpp"
 #include "PlottingManager.hpp"
 
-#ifdef HAVE_SEQAN
 #include "SequenceScore.hpp"
 #include "ClusteringRefinementDivisive.hpp"
 #include "ClusteringRefinementAggregative.hpp"
-#endif
 
 #include <cerrno>
 #include <cstring>
@@ -292,6 +290,23 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
     Data->Sampling(MaxSamples);
   }
 
+  if (Extractor->GetFileType() == ClusteringCSV)
+  {
+    if (Extractor->GetPartition(LastPartition))
+    {
+      ClusteringExecuted = true;
+
+      Statistics.InitStatistics(LastPartition.GetIDs());
+
+      if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
+                                        LastPartition.GetAssignmentVector()))
+      {
+        SetErrorMessage(Statistics.GetLastError());
+        return false;
+      }
+    }
+  }
+
   /*
   DataExtractionManager* ExtractionManager;
 
@@ -329,8 +344,7 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
  *
  * \result True if data got written correctly, false otherwise
  */
-bool
-libTraceClusteringImplementation::FlushData(string OutputCSVFileNamePrefix)
+bool libTraceClusteringImplementation::FlushData(string OutputCSVFileNamePrefix)
 {
   string OutputFileName = OutputCSVFileNamePrefix + "." +
                           libTraceClusteringImplementation::DataFilePostFix +
@@ -545,8 +559,6 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
 bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive,
                                                                  string OutputFileNamePrefix)
 {
-#ifdef HAVE_SEQAN
-
   map<string, string> ClusteringAlgorithmParameters;
   ostringstream       Converter;
   ostringstream       Messages;
@@ -837,11 +849,6 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
 
   return GenericRefinement(Divisive, MinPoints, Epsilons, OutputFileNamePrefix);
 
-#else /* !HAVE_SEQAN */
-  SetErrorMessage("Refinement analysis is not available due to the unavailability of SeqAn library");
-  SetError(true);
-  return false;
-#endif
 }
 
 /**
@@ -865,7 +872,6 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
                                                                  int    Steps,
                                                                  string OutputFileNamePrefix)
 {
-#ifdef HAVE_SEQAN
   vector<double>     EpsilonPerLevel;
   double             StepSize    = (MaxEps - MinEps)/(Steps-1);
 
@@ -893,15 +899,6 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   }
 
   return GenericRefinement(Divisive, MinPoints, EpsilonPerLevel, OutputFileNamePrefix);
-
-#else
-
-  SetErrorMessage("Refinement analysis is not available due to the unavailability of SeqAn library");
-  SetError(true);
-  return false;
-
-#endif
-
 }
 
 /**
@@ -920,8 +917,6 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
                                                          vector<double> EpsilonPerLevel,
                                                          string         OutputFileNamePrefix)
 {
-#ifdef HAVE_SEQAN
-
   if (SampleData)
   {
     SetErrorMessage("Refinement analysis plus sampling not implemented yet");
@@ -1075,14 +1070,6 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
   ClusteringExecuted = true;
 
   return true;
-
-#else
-
-  SetErrorMessage("Refinement analysis is not available due to the unavailability of SeqAn library");
-  SetError(true);
-  return false;
-
-#endif
 }
 
 /**
@@ -1128,7 +1115,6 @@ bool libTraceClusteringImplementation::FlushClustersInformation(string OutputClu
 bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePrefix,
                                                             bool   FASTASequencesFile)
 {
-#ifdef HAVE_SEQAN
   map<cluster_id_t, percentage_t> PercentageDurations;
   SequenceScore                   Scoring;
   vector<SequenceScoreValue>      ScoresPerCluster;
@@ -1157,14 +1143,6 @@ bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePre
   }
 
   return true;
-
-#else
-
-  SetError(true);
-  SetErrorMessage("SeqAn not available, sequence score could not be computed");
-  return false;
-
-#endif
 
 }
 

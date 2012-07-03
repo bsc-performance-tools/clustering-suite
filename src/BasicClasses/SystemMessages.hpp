@@ -113,4 +113,5 @@ namespace cepba_tools
                              FILE*            channel = stdout);
   };
 }
+
 #endif // _SYSTEMMESSAGES_HPP_

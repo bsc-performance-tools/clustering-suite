@@ -161,7 +161,7 @@ struct alignment* sort_sequences (struct alignment* aln, int* tree, char* sort)
     }
   }
 
-  fprintf (stderr, "COICE:%d\n", choice);
+  // fprintf (stderr, "CHOICE:%d\n", choice);
 
   switch (choice)
   {

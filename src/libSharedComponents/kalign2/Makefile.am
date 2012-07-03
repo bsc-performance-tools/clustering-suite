@@ -1,3 +1,5 @@
+INCLUDES = -I$(top_srcdir)/src/BasicClasses 
+
 noinst_LTLIBRARIES = libKalign2.la
 
 libKalign2_la_SOURCES = \

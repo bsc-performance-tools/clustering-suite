@@ -20,3 +20,4 @@ ClustersDiff_LDADD = \
 	$(top_srcdir)/src/BasicClasses/libBasicClasses.la
 
 ClustersDiff_CXXFLAGS = ${CXXFLAGS}
+ClustersDiff_LDFLAGS  = ${LDFLAGS} -static

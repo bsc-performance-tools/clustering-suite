@@ -53,9 +53,12 @@ using cepba_tools::Timer;
 #include <getopt.h>
 
 #include <iostream>
+#include <iomanip>
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::fixed;
+using std::setprecision;
 
 #include <string>
 #include <sstream>
@@ -195,10 +198,14 @@ int main(int argc, char *argv[])
     if (globalArgs.UseNoise)
       cout << "(with NOISE points) ";
 
+    cout << fixed;
+    cout << setprecision(6);
     cout << "= " << Distance << endl;
   }
   else
   {
+    cout << fixed;
+    cout << setprecision(6);
     cout << Distance << endl;
   }
 

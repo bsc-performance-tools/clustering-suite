@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -54,7 +54,7 @@ using std::set;
  * CLASS 'MetricContainer'
  *****************************************************************************/
 
-/// 
+///
 /// Container to easily manipulate the statistics of a given metric
 ///
 class MetricContainer
@@ -79,7 +79,7 @@ class MetricContainer
 /******************************************************************************
  * CLASS 'StatisticsContainer'
  *****************************************************************************/
-/// 
+///
 /// Container to easily manipulate the statistics of a given cluster
 ///
 class StatisticsContainer
@@ -92,14 +92,14 @@ class StatisticsContainer
     double       DurationMean;
     double       DurationM2;
     double       DurationStdDev_2;
-    
+
     vector<MetricContainer> ClusteringParameters;
     vector<MetricContainer> ExtrapolationMetrics;
 
   public:
 
     StatisticsContainer(void);
-    
+
     StatisticsContainer(cluster_id_t OriginalClusterID,
                         size_t       ClusteringParametersCount,
                         size_t       ExtrapolationMetricsCount);
@@ -124,12 +124,12 @@ class StatisticsContainer
  * CLASS 'ClusteringStatistics'
  *****************************************************************************/
 
-/// 
+///
 /// Container to manipulate the statistics of every cluster found during the
 /// cluster analysis, and also needed to sort the results with respect to the
 /// total bursts duration
 ///
-class ClusteringStatistics: public Error 
+class ClusteringStatistics: public Error
 {
   private:
 
@@ -146,13 +146,13 @@ class ClusteringStatistics: public Error
     vector<bool>                ClusteringParametersPrecision;
     vector<string>              ExtrapolationMetricsNames;
     vector<bool>                ExtrapolationMetricsPrecision;
-    
+
     bool                        Translated;
 
   public:
 
     ClusteringStatistics() {} ;
-    
+
     ClusteringStatistics(set<cluster_id_t>& IDs,
                          vector<string> ClusteringParametersNames     = vector<string>(0),
                          vector<bool>   ClusteringParametersPrecision = vector<bool>(0),
@@ -166,7 +166,7 @@ class ClusteringStatistics: public Error
                         vector<bool>   ExtrapolationMetricsPrecision = vector<bool>(0));
 
     bool ComputeStatistics(const vector<CPUBurst*>& Bursts, const vector<cluster_id_t>& IDs);
-    
+
     void TranslatedIDs(vector<cluster_id_t>& NewIDs);
 
     map<cluster_id_t, percentage_t> GetPercentageDurations(void);

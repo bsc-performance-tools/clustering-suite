@@ -62,14 +62,24 @@ int** feature_hirschberg_alignment (struct alignment* aln, int* tree, float**sub
 
   hm = hirsch_mem_alloc (hm, 1024);
 
-  fprintf (stderr, "\nAlignment:\n");
+  int current_percentage = 0;
+  show_percentage_progress("Alignment (Feature Hirschberg)",
+                           current_percentage,
+                           stdout);
 
   for (i = 0; i < (numseq - 1); i++)
   {
     a = tree[i*3];
     b = tree[i*3+1];
     c = tree[i*3+2];
-    fprintf (stderr, "\r%8.0f percent done", (float) (i) / (float) numseq * 100);
+
+    if ( (int) ( 1.0 * i / numseq * 100) > current_percentage)
+    {
+      current_percentage = (int) ( 1.0 * i / numseq * 100);
+      show_percentage_progress("Alignment (Feature Hirschberg)",
+                               current_percentage,
+                               stdout);
+    }
     //fprintf(stderr,"Aligning:%d %d->%d  done:%f\n",a,b,c,((float)(i+1)/(float)numseq)*100);
     len_a = aln->sl[a];
     len_b = aln->sl[b];
@@ -164,7 +174,7 @@ int** feature_hirschberg_alignment (struct alignment* aln, int* tree, float**sub
     free (profile[b]);
   }
 
-  fprintf (stderr, "\r%8.0f percent done\n", 100.0);
+  show_percentage_end("Alignment (Feature Hirschberg)", stdout);
   free (profile);
   hirsch_mem_free (hm);
 

@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -85,7 +85,7 @@ void MetricContainer::Update(double NewValue)
  * \param str Stream where the data will be flush
  * \param HasNoise True if the cluster_id noise should be printed
  * \param TranslationMap Renaming of clusters
- * 
+ *
  * \return True if the metric means where correctly writen, false otherwise
  *
 
@@ -94,9 +94,9 @@ bool MetricContainer::Flush(ostream&              str,
                             vector<cluster_id_t>& SortedClusters)
 {
   size_t NumberOfClusters = Individuals.size();
-  
+
   str << Name;
-  
+
   if (HighPrecision)
   {
     str.precision(5);
@@ -106,7 +106,7 @@ bool MetricContainer::Flush(ostream&              str,
     str.precision(0);
   }
   str << fixed;
-  
+
   if (HasNoise)
   {
     str << "," << Mean[SortedClusters[NOISE_CLUSTERID]];
@@ -126,7 +126,7 @@ bool MetricContainer::Flush(ostream&              str,
   }
 
   str << '\n';
-  
+
   return true;
 }
 */
@@ -139,8 +139,8 @@ bool MetricContainer::Flush(ostream&              str,
  * Empty constructor
  *
  *
- */ 
- 
+ */
+
 StatisticsContainer::StatisticsContainer(void)
 {
   this->OriginalClusterID = UNCLASSIFIED;
@@ -161,7 +161,7 @@ StatisticsContainer::StatisticsContainer(void)
  * \param ClusteringMetrics Number of metrics used in the cluster analysis
  * \param ExtrapolationMetrics Number of metrics to extrapolate
  *
- */ 
+ */
 StatisticsContainer::StatisticsContainer(cluster_id_t OriginalClusterID,
                                          size_t       ClusteringParametersCount,
                                          size_t       ExtrapolationMetricsCount)
@@ -172,10 +172,10 @@ StatisticsContainer::StatisticsContainer(cluster_id_t OriginalClusterID,
   TotalDuration    = 0.0;
   DurationMean     = 0.0;
   DurationM2       = 0.0;
-  
+
   ClusteringParameters = vector<MetricContainer>(ClusteringParametersCount);
   ExtrapolationMetrics = vector<MetricContainer>(ExtrapolationMetricsCount);
-}  
+}
 
 /**
  * Updates the statistics of a given cluster, with the data contained in the CPU burst
@@ -190,7 +190,7 @@ void StatisticsContainer::NewBurst(CPUBurst* Burst)
 
   /* Update Duration Sum/Mean/StdDeviation */
   x = Burst->GetDuration();
-  
+
   Individuals      = Individuals + 1;
   TotalDuration    = TotalDuration + x;
   Delta            = x - DurationMean;
@@ -207,13 +207,13 @@ void StatisticsContainer::NewBurst(CPUBurst* Burst)
   {
     ClusteringParameters[CurrentParameter].Update(Burst->GetRawDimension(CurrentParameter));
   }
-  
+
   /* Update Extrapolation Metrics values */
 
   if (ExtrapolationMetrics.size() > 0)
   {
     map<size_t, double>::const_iterator Iterator;
-    
+
     for (Iterator  = Burst->GetExtrapolationDimensions().begin();
          Iterator != Burst->GetExtrapolationDimensions().end();
          ++Iterator)
@@ -233,7 +233,7 @@ void StatisticsContainer::NewBurst(CPUBurst* Burst)
  *
  * \return The mean of the i-th clustering metric, NaN otherwise
  *
- */ 
+ */
 double StatisticsContainer::GetClusteringParameterMean(size_t i)
 {
   if (i >= 0 && i < ClusteringParameters.size())
@@ -253,7 +253,7 @@ double StatisticsContainer::GetClusteringParameterMean(size_t i)
  *
  * \return The mean of the i-th extrapolation metric, NaN otherwise
  *
- */ 
+ */
 double StatisticsContainer::GetExtrapolationMetricMean(size_t i)
 {
   if (i >= 0 && i < ExtrapolationMetrics.size())
@@ -278,7 +278,7 @@ double StatisticsContainer::GetExtrapolationMetricMean(size_t i)
  * NOISE cluster, it comes always first, otherwise, we take into account the
  * total duration
  *
- */ 
+ */
 bool StatisticsContainer::operator<(const StatisticsContainer& other) const
 {
   if (this->GetOriginalClusterID() == NOISE_CLUSTERID)
@@ -309,7 +309,7 @@ bool StatisticsContainer::operator<(const StatisticsContainer& other) const
  * \param IDs Set containing the different IDs used
  * \param HasNoise Boolean that indicates if the current burst contain noise
  * \param ClusteringParametersNames Names of the parameters used in the cluster analysis
- * \param ClusteringParametersPrecision Precision of the parameters used in 
+ * \param ClusteringParametersPrecision Precision of the parameters used in
  * \param ExtrapolationMetricsNames Names of the extrapolation metrics
  * \param ExtrapolationMetricsPrecision Precision of the extrapolation metrics
  *
@@ -332,25 +332,25 @@ ClusteringStatistics::ClusteringStatistics(set<cluster_id_t>& IDs,
  *
  * \param IDs Set containing the different IDs used
  * \param ClusteringParametersNames Names of the parameters used in the cluster analysis
- * \param ClusteringParametersPrecision Precision of the parameters used in 
+ * \param ClusteringParametersPrecision Precision of the parameters used in
  * \param ExtrapolationMetricsNames Names of the extrapolation metrics
  * \param ExtrapolationMetricsPrecision Precision of the extrapolation metrics
  *
  */
-void ClusteringStatistics::InitStatistics(set<cluster_id_t>& IDs,
-                                          vector<string>     ClusteringParametersNames,
-                                          vector<bool>       ClusteringParametersPrecision,
-                                          vector<string>     ExtrapolationMetricsNames,
-                                          vector<bool>       ExtrapolationMetricsPrecision)
+void ClusteringStatistics::InitStatistics(set<cluster_id_t> &IDs,
+                                          vector<string>    ClusteringParametersNames,
+                                          vector<bool>      ClusteringParametersPrecision,
+                                          vector<string>    ExtrapolationMetricsNames,
+                                          vector<bool>      ExtrapolationMetricsPrecision)
 {
   set<cluster_id_t>::iterator IDsIterator;
   size_t ClusteringParameters = ClusteringParametersNames.size();
   size_t ExtrapolationMetrics = ExtrapolationMetricsNames.size();
   size_t Position;
-  
+
   this->NumberOfClusters = IDs.size();
   this->HasNoise         = HasNoise;
-  
+
   this->ClusteringParametersNames     = ClusteringParametersNames;
   this->ClusteringParametersPrecision = ClusteringParametersPrecision;
   this->ExtrapolationMetricsNames     = ExtrapolationMetricsNames;
@@ -358,9 +358,9 @@ void ClusteringStatistics::InitStatistics(set<cluster_id_t>& IDs,
 
   TotalBurstsDuration = 0.0;
 
-  /* DEBUG 
+  /* DEBUG
   cout << "IDs = "; */
-  
+
   for (IDsIterator  = IDs.begin(), Position = 0;
        IDsIterator != IDs.end();
        ++IDsIterator)
@@ -381,13 +381,13 @@ void ClusteringStatistics::InitStatistics(set<cluster_id_t>& IDs,
       Position++;
     }
 
-    /* DEBUG 
+    /* DEBUG
     cout << (*IDsIterator) << " "; */
   }
-  
+
   Translated = false;
 
-  /* DEBUG 
+  /* DEBUG
   cout << endl; */
 }
 
@@ -402,16 +402,16 @@ void ClusteringStatistics::InitStatistics(set<cluster_id_t>& IDs,
 bool ClusteringStatistics::ComputeStatistics(const vector<CPUBurst*>&    Bursts,
                                              const vector<cluster_id_t>& IDs)
 {
-  
-  
+
+
   if (Bursts.size() != IDs.size())
   {
     ostringstream Messages;
-    
+
     Messages << "number of bursts (" << Bursts.size() << ") ";
     Messages << "different from number of IDs (" << IDs.size() << ") ";
     Messages << "when computing statistics";
-    
+
     SetError(true);
     SetErrorMessage(Messages.str());
     return false;
@@ -432,8 +432,8 @@ bool ClusteringStatistics::ComputeStatistics(const vector<CPUBurst*>&    Bursts,
       if (CurrentIDPosition == IDsPosition.end())
       {
         ostringstream ErrorMessage;
-        ErrorMessage << "incorrect cluster ID (" << IDs[i] << ") when computing statistics"; 
-        
+        ErrorMessage << "incorrect cluster ID (" << IDs[i] << ") when computing statistics";
+
         SetError(true);
         SetErrorMessage(ErrorMessage.str());
         return false;
@@ -450,7 +450,7 @@ bool ClusteringStatistics::ComputeStatistics(const vector<CPUBurst*>&    Bursts,
     TotalBurstsDuration += Bursts[i]->GetDuration();
 
   }
-  
+
   return true;
 }
 
@@ -466,14 +466,14 @@ void ClusteringStatistics::TranslatedIDs(vector<cluster_id_t>& NewIDs)
   map<cluster_id_t, cluster_id_t>::iterator TranslationMapIterator;
 
   cluster_id_t NewClusterId;
-  
+
   sort(StatisticsPerCluster.rbegin(), StatisticsPerCluster.rend());
 
   if (HasNoise)
   {
     TranslationMap[NOISE_CLUSTERID] = NOISE_CLUSTERID;
   }
-  
+
   for (size_t i = 0, NewClusterId = MIN_CLUSTERID;
        i < StatisticsPerCluster.size();
        i++, NewClusterId++)
@@ -493,12 +493,12 @@ void ClusteringStatistics::TranslatedIDs(vector<cluster_id_t>& NewIDs)
     cout << endl;
   }
   */
-  
+
   for (size_t i = 0; i < NewIDs.size(); i++)
   {
     NewIDs[i] = TranslationMap[NewIDs[i]];
   }
-  
+
   Translated = true;
 
   return;
@@ -512,14 +512,14 @@ void ClusteringStatistics::TranslatedIDs(vector<cluster_id_t>& NewIDs)
 map<cluster_id_t, percentage_t> ClusteringStatistics::GetPercentageDurations(void)
 {
   map<cluster_id_t, percentage_t> Result;
-  
+
   sort(StatisticsPerCluster.rbegin(), StatisticsPerCluster.rend());
 
   if (HasNoise)
   {
     Result[NOISE_CLUSTERID] = NoiseStatistics.GetTotalDuration()/TotalBurstsDuration;
   }
-  
+
   for (size_t i = 0; i < StatisticsPerCluster.size(); i++)
   {
     if (Translated)
@@ -532,7 +532,7 @@ map<cluster_id_t, percentage_t> ClusteringStatistics::GetPercentageDurations(voi
         StatisticsPerCluster[i].GetTotalDuration()/TotalBurstsDuration;
     }
   }
-  
+
   return Result;
 }
 
@@ -544,14 +544,14 @@ map<cluster_id_t, percentage_t> ClusteringStatistics::GetPercentageDurations(voi
 map<cluster_id_t, double> ClusteringStatistics::GetDurationSums(void)
 {
   map<cluster_id_t, double> Result;
-  
+
   sort(StatisticsPerCluster.rbegin(), StatisticsPerCluster.rend());
 
   if (HasNoise)
   {
     Result[NOISE_CLUSTERID] = NoiseStatistics.GetTotalDuration();
   }
-  
+
   for (size_t i = 0; i < StatisticsPerCluster.size(); i++)
   {
     if (Translated)
@@ -564,7 +564,7 @@ map<cluster_id_t, double> ClusteringStatistics::GetDurationSums(void)
         StatisticsPerCluster[i].GetTotalDuration();
     }
   }
-  
+
   return Result;
 }
 
@@ -576,14 +576,14 @@ map<cluster_id_t, double> ClusteringStatistics::GetDurationSums(void)
 map<cluster_id_t, size_t> ClusteringStatistics::GetIndividuals(void)
 {
   map<cluster_id_t, size_t> Result;
-  
+
   sort(StatisticsPerCluster.rbegin(), StatisticsPerCluster.rend());
 
   if (HasNoise)
   {
     Result[NOISE_CLUSTERID] = NoiseStatistics.GetIndividuals();
   }
-  
+
   for (size_t i = 0; i < StatisticsPerCluster.size(); i++)
   {
     if (Translated)
@@ -596,7 +596,7 @@ map<cluster_id_t, size_t> ClusteringStatistics::GetIndividuals(void)
         StatisticsPerCluster[i].GetIndividuals();
     }
   }
-  
+
   return Result;
 }
 
@@ -639,7 +639,7 @@ bool ClusteringStatistics::Flush(ostream& str)
 
   str.precision(0);
   str << fixed;
-  
+
   if (HasNoise)
   {
     str << "," << NoiseStatistics.GetIndividuals();
@@ -657,18 +657,18 @@ bool ClusteringStatistics::Flush(ostream& str)
 
   // str.precision(3);
   // str << scientific;
-  
+
   if (HasNoise)
   {
     str << ",";
-    
+
     str << NoiseStatistics.GetTotalDuration();
   }
 
   for (size_t i = 0; i < StatisticsPerCluster.size(); i++)
   {
     str << ",";
-    
+
     str << StatisticsPerCluster[i].GetTotalDuration();
   }
 
@@ -708,7 +708,7 @@ bool ClusteringStatistics::Flush(ostream& str)
 
   str << '\n';
 
-  /* Clustering Metrics: ORIGINAL 'clusters_info' file didn't have clustering metrics 
+  /* Clustering Metrics: ORIGINAL 'clusters_info' file didn't have clustering metrics
   for (size_t CurrentMetric = 0; CurrentMetric < ClusteringMetrics; CurrentMetric++)
   {
     str << ClusteringParameterNames[CurrentMetric];
@@ -743,7 +743,7 @@ bool ClusteringStatistics::Flush(ostream& str)
       str.precision(0);
     }
     str << fixed;
-    
+
     if (HasNoise)
     {
       str << "," << NoiseStatistics.GetExtrapolationMetricMean(CurrentMetric);

@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -49,22 +49,24 @@ class TRFDataExtractor: public DataExtractor
 {
   private:
     off_t  InputTraceFileSize;
-  
+
   public:
     TRFDataExtractor(string InputTraceName);
 
     ~TRFDataExtractor();
 
     bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith);
-    
+
+    bool GetPartition(Partition& DataPartition) { return false; };
+
     bool ExtractData(TraceData* TraceDataSet);
 
     input_file_t GetFileType(void) { return DimemasTrace; };
-    
+
   private:
 
     bool NormalizeData(void);
-    
+
     INT32 GetInputTraceFilePercentage(void)
     {
       off_t CurrentPosition = ftello(InputTraceFile);

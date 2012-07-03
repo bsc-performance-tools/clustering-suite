@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -71,7 +71,7 @@ class PRVEventsDataExtractor: public DataExtractor
         timestamp_t                      EndTime;
         duration_t                       BurstDuration;
         map<event_type_t, event_value_t> EventsData;
-      
+
         TaskDataContainer() {
           TaskId        = 0;
           ThreadId      = 0;
@@ -82,7 +82,7 @@ class PRVEventsDataExtractor: public DataExtractor
           EventsData.clear();
           OngoingBurst  = false;
         };
-      
+
         void Clear() {
           TaskId        = 0;
           ThreadId      = 0;
@@ -93,7 +93,7 @@ class PRVEventsDataExtractor: public DataExtractor
           EventsData.clear();
           OngoingBurst  = false;
         }
-      
+
         TaskDataContainer& operator= (const TaskDataContainer& Other)
         {
           TaskId        = Other.TaskId;
@@ -105,40 +105,42 @@ class PRVEventsDataExtractor: public DataExtractor
           EventsData    = Other.EventsData;
         }
     };
-  
+
   private:
     ParaverTraceParser                   *TraceParser;
     vector<vector<TaskDataContainer> >    TaskData;
     vector<vector<TaskDataContainer> >    FutureTaskData;
     vector<vector<stack<event_type_t> > > EventsStack;
-    
+
     double                              TimeFactor;
 
     set<event_type_t> EventsToDealWith;
-  
+
   public:
-    
+
     PRVEventsDataExtractor(string InputTraceName);
     ~PRVEventsDataExtractor();
 
     bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith);
-    
+
+    bool GetPartition(Partition& DataPartition) { return false; };
+
     bool ExtractData(TraceData* TraceDataSet);
 
     input_file_t GetFileType(void) { return ParaverTrace; };
-  
+
   private:
 
     bool NormalizeData(void);
-  
+
     bool CheckEvent(Event* CurrentEvent, TraceData* TraceDataSet);
-    
+
     void FillDataContainer(TaskDataContainer &DataContainer,
                            Event             *CurrentEvent);
 
     bool GenerateBurst(TraceData*         TraceDataSet,
                        TaskDataContainer& Data);
-    
+
     bool BurstOpeningEvent(event_type_t EventType, event_value_t EventValue);
 
     bool BurstClosingEvent(event_type_t EventType, event_value_t EventValue);

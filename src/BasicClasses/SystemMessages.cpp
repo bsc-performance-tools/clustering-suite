@@ -230,3 +230,18 @@ void system_messages::show_timer(const char*      message,
     }
   }
 }
+
+extern "C" void show_percentage_progress(const char* message,
+                                         int         current_percentage,
+                                         FILE*       channel)
+{
+  system_messages::show_percentage_progress(message,
+                                            current_percentage,
+                                            channel);
+}
+
+extern "C" void show_percentage_end(const char* message,
+                                    FILE*       channel)
+{
+  system_messages::show_percentage_end(message, channel);
+}

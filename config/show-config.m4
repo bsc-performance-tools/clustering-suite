@@ -43,9 +43,4 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
     	echo -e \\\tMRNetApp config script: "${MRNETAPP_HOME}/bin/mrnapp-config"
 	fi
 
-	echo SeqAn support: ${seqan_enabled}
-	if test "x${seqan_enabled}" = "xyes"; then
-		echo -e \\\tSEQAN_CPPFLAGS:          ${SEQAN_CPPFLAGS}
-	fi
-
 ])

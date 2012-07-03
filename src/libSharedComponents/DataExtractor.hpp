@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -45,8 +45,11 @@ using std::set;
 
 #include <TraceData.hpp>
 
+#include <Partition.hpp>
+
 /* Forward declarations */
 class DataExtractionManager;
+class Partition;
 
 class DataExtractor: public Error
 {
@@ -55,16 +58,18 @@ class DataExtractor: public Error
     FILE*  InputTraceFile;
     string TraceDataFileName;
 
-  
+
   public:
     DataExtractor(string InputTraceName);
     ~DataExtractor() {};
-  
+
     virtual bool   ExtractData(TraceData* DataContainer) = 0;
     virtual input_file_t GetFileType(void) = 0;
 
     virtual bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith) = 0;
-  
+
+    virtual bool GetPartition(Partition& DataPartition) = 0;
+
     string GetTraceDataFileName(void) { return TraceDataFileName; };
 };
 
