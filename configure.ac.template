@@ -226,24 +226,11 @@ src/BurstClustering/Makefile
 src/ClustersDiff/Makefile
 src/ClustersSequenceScore/Makefile
 scripts/Makefile
-])
-
-if test "${MPI_INSTALLED}" = "yes" -a "x$muster_enabled" = "xyes"; then
-AC_CONFIG_FILES([src/MusterDistributedClustering/Makefile])
-fi
-
-if test "${cgal_enabled}" = "yes"; then
-AC_CONFIG_FILES([
+src/MusterDistributedClustering/Makefile
 src/libDistributedClustering/Makefile
-])
-
-if test "${MRNETAPP_INSTALLED}" = "yes"; then
-AC_CONFIG_FILES([
 src/TreeDBSCAN/Makefile
 src/TreeDBSCAN/scripts/Makefile
 ])
-fi
-fi # cgal_enabled
 
 CFLAGS="-DCLUSTERING_SUITE $CFLAGS"
 CXXFLAGS="-DCLUSTERING_SUITE $CXXFLAGS"

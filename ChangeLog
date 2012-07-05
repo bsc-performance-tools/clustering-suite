@@ -9,6 +9,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	to myfile.ext but completely unrelated to the above
 
 	* anotherfile.ext (somefunction): more changes
+2012-07-05 Juan Gonzalez <juan.gonzalez@bsc.>
+	* Changed 'configure.ac.template' to correctly generate distribution
+	packages
 
 2012-07-05 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Changed the random sampling in 'TraceData'. Previous version was buggy
