@@ -10,6 +10,13 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-07-05 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Changed the random sampling in 'TraceData'. Previous version was buggy
+	in 64 bit systems.
+
+	* Changed the 'kalign2' building rules to just compile the files really
+	used.
+
 2012-07-03 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Full implementation of 'ClustersSequenceScore' as an independent binary.
 	It does not use 'libTraceClustering' due to the bad integration of the

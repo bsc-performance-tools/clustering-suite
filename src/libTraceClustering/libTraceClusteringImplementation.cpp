@@ -410,15 +410,15 @@ bool libTraceClusteringImplementation::FlushData(string OutputCSVFileNamePrefix)
                       + libTraceClusteringImplementation::SampledDataFilePostFix
                       + ".csv";
 
-    ofstream SmapledOutputStream (SampledOutputFileName.c_str(), ios_base::trunc);
-    if (!SmapledOutputStream)
+    ofstream SampledOutputStream (SampledOutputFileName.c_str(), ios_base::trunc);
+    if (!SampledOutputStream)
     {
       SetError(true);
       SetErrorMessage("unable to open smapling output file", strerror(errno));
       return false;
     }
 
-    if (!Data->FlushPoints(SmapledOutputStream,
+    if (!Data->FlushPoints(SampledOutputStream,
                            LastPartition.GetAssignmentVector(),
                            PrintClusteringBursts))
     {
@@ -427,7 +427,7 @@ bool libTraceClusteringImplementation::FlushData(string OutputCSVFileNamePrefix)
       return false;
     }
 
-    SmapledOutputStream.close();
+    SampledOutputStream.close();
   }
 
   return true;

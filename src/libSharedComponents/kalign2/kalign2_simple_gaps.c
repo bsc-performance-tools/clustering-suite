@@ -876,7 +876,9 @@ struct states* simple_foward_hirsch_pp_dyn (const int* prof1, const int* prof2, 
   return s;
 }
 
-struct states* simple_backward_hirsch_pp_dyn (const int* prof1, const int* prof2, struct hirsch_mem* hm)
+struct states* simple_backward_hirsch_pp_dyn (const int         *prof1,
+                                              const int         *prof2,
+                                              struct hirsch_mem *hm)
 {
   unsigned int freq[23];
   struct states* s = hm->b;

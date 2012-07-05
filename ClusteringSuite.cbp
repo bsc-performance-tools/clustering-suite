@@ -63,6 +63,7 @@
 		<Unit filename="src/BasicClasses/SystemMessages.cpp">
 			<Option target="Compile" />
 		</Unit>
+		<Unit filename="src/BasicClasses/SystemMessages.h" />
 		<Unit filename="src/BasicClasses/SystemMessages.hpp">
 			<Option target="Compile" />
 		</Unit>

@@ -33,7 +33,6 @@
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include "SequenceScore.hpp"
-#include "SequenceScoreMatrices.hpp"
 
 #include <sstream>
 using std::ostringstream;

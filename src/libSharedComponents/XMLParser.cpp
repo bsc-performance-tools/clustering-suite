@@ -693,8 +693,7 @@ XMLParser::ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent)
 }
 
 
-bool
-XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
+bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
 {
   ParameterContainer NewParameter;
   xmlNodePtr         CurrentNode;

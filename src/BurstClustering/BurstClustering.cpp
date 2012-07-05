@@ -169,17 +169,17 @@ ReadArgs(int argc, char *argv[])
   INT32 j = 1;
   INT32 ParametersRequired = 1;
 
-  if (argc == 1 ||
-      argc == 2 &&
-      ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)))
+  if ( ( argc == 1) ||
+       ((argc == 2) &&
+       (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)))
   {
     fprintf(stdout, HELP, argv[0]);
     exit(EXIT_SUCCESS);
   }
 
-  if (argc == 1 ||
-      argc == 2 &&
-      ((strcmp(argv[1], "-v") == 0 || (strcmp(argv[1], "--version") == 0))))
+  if (  argc == 1 ||
+      ((argc == 2) &&
+      ((strcmp(argv[1], "-v") == 0 || (strcmp(argv[1], "--version") == 0)))))
   {
     fprintf(stdout, ABOUT, argv[0], VERSION, __DATE__);
     exit(EXIT_SUCCESS);
@@ -290,6 +290,7 @@ ReadArgs(int argc, char *argv[])
           cerr << "**** INVALID PARAMETER " << argv[j][1] << " **** " << endl << endl;
           PrintUsage(argv[0]);
           exit(EXIT_FAILURE);
+          break;
       }
     }
   }

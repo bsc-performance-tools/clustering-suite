@@ -221,12 +221,12 @@ void system_messages::show_timer(const char*      message,
   {
     if (!system_messages::distributed)
     {
-      fprintf(channel, "%s %u us\n", message, Time);
+      fprintf(channel, "%s %lu us\n", message, Time);
     }
     else if (system_messages::messages_from_all_ranks ||
             (!system_messages::messages_from_all_ranks && my_rank == 0))
     {
-      fprintf(channel, "%s %u us\n", message, Time);
+      fprintf(channel, "%s %lu us\n", message, Time);
     }
   }
 }

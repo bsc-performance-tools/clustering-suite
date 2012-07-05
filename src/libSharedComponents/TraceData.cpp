@@ -57,6 +57,7 @@ using std::numeric_limits;
 using std::make_pair;
 
 #include <cmath>
+#include <cstdlib>
 
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -376,14 +377,13 @@ bool TraceData::Sampling(size_t MaxSamples)
 
   /* DEBUG
   cout << "Sampling Sizes = "; */
+  srand(time(NULL));
+
   for (size_t i = 0; i < BurstsPerTask.size(); i++)
   {
     size_t CurrentTaskSampleSize;
 
     CurrentTaskSampleSize = (size_t) std::floor((BurstsPerTask[i].size()*MaxSamples)/CompleteBursts.size());
-
-    /* DEBUG
-    cout << i << ":" << CurrentTaskSampleSize << " "; */
 
     if (!SampleSingleTask(BurstsPerTask[i], CurrentTaskSampleSize))
     {
@@ -980,9 +980,9 @@ bool TraceData::SampleSingleTask(vector<CPUBurst*>& TaskBursts,
 
   for (size_t i = 0; i < NumSamples; i++)
   {
-    size_t CurrentSample;
+    vector<CPUBurst*>::size_type CurrentSample;
 
-    CurrentSample  = (size_t) (SamplingFrequency*std::rand()/(RAND_MAX+1));
+    CurrentSample = ( random() % SamplingFrequency );
     CurrentSample += (i*SamplingFrequency);
 
     ClusteringBursts.push_back(TaskBursts[CurrentSample]);
