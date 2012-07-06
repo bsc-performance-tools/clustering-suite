@@ -353,7 +353,6 @@
 		<Unit filename="src/libSharedComponents/PlottingManager.hpp" />
 		<Unit filename="src/libSharedComponents/SequenceScore.cpp" />
 		<Unit filename="src/libSharedComponents/SequenceScore.hpp" />
-		<Unit filename="src/libSharedComponents/SequenceScoreMatrices.hpp" />
 		<Unit filename="src/libSharedComponents/State.cpp" />
 		<Unit filename="src/libSharedComponents/State.hpp" />
 		<Unit filename="src/libSharedComponents/TRFDataExtractor.cpp" />

@@ -452,10 +452,10 @@ bool CSVDataExtractor::ParseRecord(vector<string> &Record,
   istringstream(Record[0]) >> Instance;
   istringstream(Record[1]) >> TaskId;
   istringstream(Record[2]) >> ThreadId;
-  istringstream(Record[3]) >> Line;
-  istringstream(Record[4]) >> BeginTime;
-  istringstream(Record[5]) >> EndTime;
-  istringstream(Record[6]) >> BurstDuration;
+  istringstream(Record[3]) >> BeginTime;
+  istringstream(Record[4]) >> EndTime;
+  istringstream(Record[5]) >> BurstDuration;
+  istringstream(Record[6]) >> Line;
 
   for (vector<string>::size_type i = 0; i < ClusteringParameters.size(); i++)
   {

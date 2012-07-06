@@ -45,6 +45,12 @@ using std::string;
 
 #include <sstream>
 using std::ostringstream;
+using std::fixed;
+
+#include <iomanip>
+using std::setprecision;
+using std::setw;
+using std::setfill;
 
 #include "kalign2/kalign2.h"
 
@@ -156,28 +162,15 @@ bool SequenceScore::ComputeScore(const vector<CPUBurst*>&         DataBursts,
 {
   vector<pair<task_id_t, thread_id_t> >                             ObjectIDs;
 
-  // map<pair<task_id_t, thread_id_t>, TSequence, TraceObjectsCompare> SequencesMap;
-  // map<pair<task_id_t, thread_id_t>, TSequence >::iterator           SequencesIterator;
-  // map<pair<task_id_t, thread_id_t>, vector<cluster_id_t>, TraceObjectsCompare> SequencesMap;
-  // map<pair<task_id_t, thread_id_t>, vector<cluster_id_t> >::iterator           SequencesIterator;
   TSequenceMap         Sequences;
   TSequenceMapIterator SequencesIt;
 
   vector<vector<cluster_id_t> > SequencesMatrix;
 
   set<cluster_id_t>::iterator   DifferentIDsIterator, DifferentIDsIterator2;
+  map<cluster_id_t, percentage_t>::iterator Durations;
 
   size_t NumberOfClusters = PercentageDurations.size();
-
-  // TAlign Alignment;
-
-  int const GapOpen   = -1;
-  int const GapExtend = -2;
-
-  // seqan::Score<int> TestScore(10, 5, -5, -10);
-  //seqan::Score<int> TestScore(5, 0, -1, -2);
-  // seqan::Score<int, seqan::ScoreMatrix<cluster_id_t> > TestScore (GapOpen, GapExtend);
-  //seqan::Score<int, seqan::EditDistance> TestScore;
 
   /* Convert the Partition into a set of sequences */
   for (size_t i = 0; i < DataBursts.size(); i++)
@@ -204,6 +197,8 @@ bool SequenceScore::ComputeScore(const vector<CPUBurst*>&         DataBursts,
     SetError(true);
   }
 
+
+
   Kalign2Score(Sequences, DifferentIDs, PercentageDurations);
 
   // resize(rows(Alignment), SequencesMap.size());
@@ -216,51 +211,6 @@ bool SequenceScore::ComputeScore(const vector<CPUBurst*>&         DataBursts,
     ObjectIDs.push_back(SequencesIt->first);
     // assignSource(row(Alignment, SeqPosition), SequencesIterator->second);
   }
-
-  /* Generate the dynamic score matrix
-  for (DifferentIDsIterator  = DifferentIDs.begin();
-       DifferentIDsIterator != DifferentIDs.end();
-       ++DifferentIDsIterator)
-  {
-    for (DifferentIDsIterator2  = DifferentIDs.begin();
-         DifferentIDsIterator2 != DifferentIDs.end();
-         ++DifferentIDsIterator2)
-    {
-      cluster_id_t i, j;
-
-      i = (*DifferentIDsIterator);
-      j = (*DifferentIDsIterator2);
-
-      cout << "[" << i << "|" << j << "] ";
-
-
-      // if (i == 0 || j == 0)
-      // {
-        //seqan::setScore(TestScore, i, j, 1);
-        //seqan::setScore(TestScore, i, j, 0);
-      // }
-      // else
-      if (i == j)
-      {
-        //seqan::setScore(TestScore, i, j, static_cast<int>(ceil(PercentageDurations[i]*100)));
-        // seqan::setScore(TestScore, i, j, 5);
-      }
-      else
-      {
-        //seqan::setScore(TestScore, i, j, 1);
-        // seqan::setScore(TestScore, i, j, 0);
-      }
-
-      // cout << seqan::score(TestScore, i, j) << "\t";
-    }
-    cout << endl;
-  }
-
-  /* Analyze the sequences using SeqAn */
-  // globalMsaAlignment(Alignment, TestScore);
-
-  /* Generate the output vector
-  AlignmentToMatrix (Alignment);
 
   /* Compute the actual score per cluster */
   EffectiveScoreComputation(PercentageDurations, ClusterScores, GlobalScore);
@@ -357,9 +307,9 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
 
   if (MaxClusterId >= 1)
   {
-    gpo  = MaxClusterId*2;
-    gpe  = MaxClusterId/2;
-    tgpe = MaxClusterId/2;
+    gpo  = 15.0;
+    gpe  = 0.85;
+    tgpe = 0.45;
 
     /* DEBUG
     cout << "Gap Open: " << gpo << endl;
@@ -382,20 +332,20 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
           if ( i == NOISE_CLUSTERID || j == NOISE_CLUSTERID)
           {
             // submatrix[i+1][j+1] = PercentageDurations[NOISE_CLUSTERID]*100;
-            submatrix[i+1][j+1] = MaxClusterId/2;
+            submatrix[i+1][j+1] = gpo+2*PercentageDurations[MaxClusterId-1]*100;
           }
           else if ( i == j )
           {
             //submatrix[i+1][j+1] = PercentageDurations[i]*20);
             //submatrix[i+1][j+1] = i+5;
             //submatrix[i+1][j+1] = (MaxClusterId-i) + (2*PercentageDurations[i]*MaxClusterId);
-            submatrix[i+1][j+1] = MaxClusterId-i;
+            submatrix[i+1][j+1] = gpo+2*PercentageDurations[i]*100;
 
           }
           else
           {
             // submatrix[i+1][j+1] = PercentageDurations[NOISE_CLUSTERID]*100;
-            submatrix[i+1][j+1] = MaxClusterId/4;
+            submatrix[i+1][j+1] = -3*PercentageDurations[MaxClusterId-1]*100;
           }
         }
       }

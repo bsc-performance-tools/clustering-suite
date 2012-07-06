@@ -35,7 +35,7 @@
 		<Cursor position="2809" topLine="23" />
 	</File>
 	<File name="src/BurstClustering/BurstClustering.cpp" open="1" top="0" tabpos="4">
-		<Cursor position="6576" topLine="152" />
+		<Cursor position="6576" topLine="131" />
 	</File>
 	<File name="src/ClusteringDataExtractor/ClusteringDataExtractorMain.cpp" open="0" top="0" tabpos="8">
 		<Cursor position="7717" topLine="249" />
@@ -226,8 +226,8 @@
 	<File name="src/libSharedComponents/ClusteringConfiguration.cpp" open="0" top="0" tabpos="0">
 		<Cursor position="5253" topLine="103" />
 	</File>
-	<File name="src/libSharedComponents/ClusteringRefinementAggregative.cpp" open="0" top="0" tabpos="7">
-		<Cursor position="2739" topLine="13" />
+	<File name="src/libSharedComponents/ClusteringRefinementAggregative.cpp" open="1" top="0" tabpos="6">
+		<Cursor position="36164" topLine="1046" />
 	</File>
 	<File name="src/libSharedComponents/ClusteringRefinementDivisive.cpp" open="0" top="0" tabpos="6">
 		<Cursor position="2579" topLine="8" />
@@ -274,14 +274,11 @@
 	<File name="src/libSharedComponents/PlottingManager.hpp" open="0" top="0" tabpos="0">
 		<Cursor position="0" topLine="48" />
 	</File>
-	<File name="src/libSharedComponents/SequenceScore.cpp" open="1" top="0" tabpos="2">
-		<Cursor position="2376" topLine="12" />
+	<File name="src/libSharedComponents/SequenceScore.cpp" open="1" top="1" tabpos="2">
+		<Cursor position="12565" topLine="340" />
 	</File>
 	<File name="src/libSharedComponents/SequenceScore.hpp" open="0" top="0" tabpos="5">
 		<Cursor position="5469" topLine="137" />
-	</File>
-	<File name="src/libSharedComponents/SequenceScoreMatrices.hpp" open="0" top="0" tabpos="8">
-		<Cursor position="3302" topLine="29" />
 	</File>
 	<File name="src/libSharedComponents/TRFDataExtractor.cpp" open="0" top="0" tabpos="0">
 		<Cursor position="3225" topLine="63" />
@@ -289,8 +286,8 @@
 	<File name="src/libSharedComponents/TRFDataExtractor.hpp" open="0" top="0" tabpos="0">
 		<Cursor position="2855" topLine="35" />
 	</File>
-	<File name="src/libSharedComponents/TraceData.cpp" open="1" top="1" tabpos="5">
-		<Cursor position="27580" topLine="953" />
+	<File name="src/libSharedComponents/TraceData.cpp" open="1" top="0" tabpos="5">
+		<Cursor position="27475" topLine="938" />
 	</File>
 	<File name="src/libSharedComponents/TraceData.hpp" open="0" top="0" tabpos="7">
 		<Cursor position="2858" topLine="56" />

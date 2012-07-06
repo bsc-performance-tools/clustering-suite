@@ -9,7 +9,15 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	to myfile.ext but completely unrelated to the above
 
 	* anotherfile.ext (somefunction): more changes
-2012-07-05 Juan Gonzalez <juan.gonzalez@bsc.>
+
+2012-07-06 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a bug in 'CSVDataExtractor': the burst duration was read
+	incorrectly.
+
+	* Improvements in the generation of alignment matrix on 'SequenceScore'.
+	Now the kalign2 priorizes (even more) the alignment of 'big' clusters.
+
+2012-07-05 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Changed 'configure.ac.template' to correctly generate distribution
 	packages
 

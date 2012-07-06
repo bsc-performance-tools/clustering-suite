@@ -41,6 +41,11 @@ using std::scientific;
 #include <algorithm>
 using std::sort;
 
+#include <iomanip>
+using std::setprecision;
+using std::setw;
+using std::setfill;
+
 #include <limits>
 
 /******************************************************************************
@@ -403,6 +408,8 @@ bool ClusteringStatistics::ComputeStatistics(const vector<CPUBurst*>&    Bursts,
                                              const vector<cluster_id_t>& IDs)
 {
 
+  /* DEBUG
+  cout << "Total number of bursts = " << Bursts.size() << endl; */
 
   if (Bursts.size() != IDs.size())
   {
@@ -514,6 +521,26 @@ map<cluster_id_t, percentage_t> ClusteringStatistics::GetPercentageDurations(voi
   map<cluster_id_t, percentage_t> Result;
 
   sort(StatisticsPerCluster.rbegin(), StatisticsPerCluster.rend());
+
+  /* DEBUG
+  cout << fixed;
+  cout << setprecision(0);
+  cout << "TotalBurstsDuration = " << TotalBurstsDuration << endl;
+
+  if (HasNoise)
+  {
+    cout << "NOISE      = " << NoiseStatistics.GetTotalDuration();
+    cout << " (" << NoiseStatistics.GetIndividuals() << ")" << endl;
+  }
+
+  for (size_t i = 0; i < StatisticsPerCluster.size(); i++)
+  {
+    cout << "Cluster " << setw(2) << setfill(' ');
+    cout << StatisticsPerCluster[i].GetOriginalClusterID();
+    cout << " = " << StatisticsPerCluster[i].GetTotalDuration();
+    cout << " (" << StatisticsPerCluster[i].GetIndividuals() << ")" << endl;
+  }
+  */
 
   if (HasNoise)
   {
