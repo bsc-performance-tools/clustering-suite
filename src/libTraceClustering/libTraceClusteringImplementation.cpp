@@ -669,9 +669,11 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   double MaxEpsilon = Distances[MinX];   // < 0.5%  data discarded
   double MinEpsilon = Distances[MaxX];   // > 99.5% data discarded
 
+  /* DEBUG
   cout << "MaxEpsilon = " << MaxEpsilon << " ";
   cout << "MinEpsilon = " << MinEpsilon << " ";
   cout << "Avg.Epsilon = " << AvgEps << endl;
+  */
 
   double Intercept = MaxEpsilon;
   double Slope     = -1.0*(MaxEpsilon/(MaxX/2));
@@ -792,7 +794,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   }
   */
 
-  cout << "Candidate MinEpsilon: idx = " << MaxIndex << " Value = " << Distances[MaxIndex] << endl;
+  // cout << "Candidate MinEpsilon: idx = " << MaxIndex << " Value = " << Distances[MaxIndex] << endl;
 
   MinEpsilon        = Distances[MaxIndex];
   size_t IndexRange = MaxIndex - MinX;
@@ -1015,7 +1017,7 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
       Messages << "****** Writing events trace of STEP " << i+1 << " ******" << endl;
       system_messages::information(Messages.str());
 
-      /* Sort IDs */
+      /* Sort IDs
       Stats.InitStatistics(PartitionsHierarchy[i].GetIDs(),
                            Parameters->GetClusteringParametersNames(),
                            Parameters->GetClusteringParametersPrecision(),
@@ -1028,6 +1030,7 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
         SetErrorMessage(Stats.GetLastError());
         return false;
       }
+      */
 
       // Stats.TranslatedIDs(PartitionsHierarchy[i].GetAssignmentVector());
 

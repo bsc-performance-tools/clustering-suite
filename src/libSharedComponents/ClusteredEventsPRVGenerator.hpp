@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -48,7 +48,7 @@ class ClusteredEventsPRVGenerator: public ClusteredTraceGenerator
 {
   private:
     ParaverTraceParser *TraceParser;
-  
+
     bool   PCFPresent;
     string InputPCFName;
     FILE  *InputPCFFile;
@@ -58,24 +58,24 @@ class ClusteredEventsPRVGenerator: public ClusteredTraceGenerator
     bool   ROWPresent;
     string InputROWName;
     string OutputROWName;
-    
+
     vector<CPUBurst*> BurstsBeginTime;
 
     set<event_type_t> EventsToDealWith;
-  
+
   public:
     ClusteredEventsPRVGenerator(string  InputTraceName,
                           string  OutputTraceName);
 
-    ~ClusteredEventsPRVGenerator(void){};
+    ~ClusteredEventsPRVGenerator(void);
 
     bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith);
-    
+
     bool Run(vector<CPUBurst*>&    Bursts,
              vector<cluster_id_t>& IDs,
              set<cluster_id_t>&    DifferentIDs,
              bool                  MinimizeInformation = false);
-  
+
   private:
     bool GenerateOutputPCF(set<cluster_id_t>& DifferentIDs);
 
@@ -84,11 +84,11 @@ class ClusteredEventsPRVGenerator: public ClusteredTraceGenerator
     bool BurstClosingEvent(Event* CurrentEvent);
 
     bool CopyROWFile();
-    
+
     void PrepareClusterIDsVector(vector<cluster_id_t>& ClusterIDs,
                                  set<cluster_id_t>&    DifferentIDs,
                                  cluster_id_t&         MaxIDUsed);
-                                 
+
     string GetClusterName(cluster_id_t ID);
 };
 

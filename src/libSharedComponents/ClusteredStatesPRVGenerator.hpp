@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -48,7 +48,7 @@ class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
 {
   private:
     ParaverTraceParser *TraceParser;
-  
+
     bool   PCFPresent;
     string InputPCFName;
     FILE  *InputPCFFile;
@@ -58,22 +58,22 @@ class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
     bool   ROWPresent;
     string InputROWName;
     string OutputROWName;
-  
+
     vector<CPUBurst*> BurstsBeginTime;
-  
+
   public:
     ClusteredStatesPRVGenerator(string  InputTraceName,
                           string  OutputTraceName);
 
-    ~ClusteredStatesPRVGenerator(void){};
+    ~ClusteredStatesPRVGenerator(void);
 
     bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith);
-    
+
     bool Run(vector<CPUBurst*>&    Bursts,
              vector<cluster_id_t>& IDs,
              set<cluster_id_t>&    DifferentIDs,
              bool                  MinimizeInformation = false);
-  
+
   private:
 
     bool GenerateOutputPCF(set<cluster_id_t>& DifferentIDs);
@@ -85,7 +85,7 @@ class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
                                  cluster_id_t&         MaxIDUsed);
 
     string GetClusterName(cluster_id_t ID);
-    
+
 };
 
 #endif

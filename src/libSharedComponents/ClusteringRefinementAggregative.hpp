@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -60,24 +60,24 @@ class ClusteringRefinementAggregative: public Error
 
     size_t         Steps;
     size_t         LastStep;
-    
+
     bool           PrintStepsInformation;
     string         OutputFilePrefix;
-    
+
     libClustering*                         ClusteringCore;
 
     map<instance_t, size_t>                Instance2Burst;
     map<instance_t, vector<cluster_id_t> > IDPerLevel;
-    
+
     vector<ClusteringStatistics>           StatisticsHistory;
     vector<vector<ClusterInformation*> >   NodesPerLevel;
-    
+
     cluster_id_t                           MaxIDAssigned;
-    
+
     vector<percentage_t>                   GlobalScoresPerLevel;
 
   public:
-    
+
     ClusteringRefinementAggregative(INT32          MinPoints,
                                     vector<double> EpsilonPerLevel);
 
@@ -87,20 +87,20 @@ class ClusteringRefinementAggregative: public Error
              string                   OutputFilePrefix = "");
 
   private:
-  
+
     bool RunFirstAnalysis(const vector<CPUBurst*>& Bursts,
                           Partition&               FirstPartition);
-    
+
     bool RunStep(size_t                   Step,
                  const vector<CPUBurst*>& Bursts,
                  Partition&               PreviousPartition,
                  Partition&               NewPartition,
                  bool&                    Stop);
-    
+
     bool RunDBSCAN(const vector<const Point*>& CurrentData,
                    double                      Epsilon,
                    Partition&                  CurrentPartition);
-                   
+
     bool GenerateCandidatesAndBurstSubset(const vector<CPUBurst*>&     Bursts,
                                           vector<ClusterInformation*>& ParentNodes,
                                           vector<CPUBurst*>&           BurstsSubset,
@@ -113,7 +113,7 @@ class ClusteringRefinementAggregative: public Error
                        Partition&                   CurrentPartition,
                        vector<ClusterInformation*>& Nodes,
                        bool                         LastPartition = false);
-    
+
     void LinkNodes(const vector<CPUBurst*>&     BurstsSubset,
                    vector<ClusterInformation*>& Parent,
                    vector<ClusterInformation*>& Children,
@@ -121,38 +121,53 @@ class ClusteringRefinementAggregative: public Error
                    Partition&                   NewPartition);
 
     void GeneratePartition(Partition& NewPartition);
-    
+
     bool ComputeScores(size_t                       Step,
                        const vector<CPUBurst*>&     Bursts,
                        vector<ClusterInformation*>& NewNodes,
                        Partition&                   CurrentPartition,
                        bool                         LastPartition);
-    
+
     vector<pair<instance_t, cluster_id_t> > GetAssignment(ClusterInformation* Node);
-    
+
     bool GenerateLastPartition(const vector<CPUBurst*>& Bursts,
                                size_t                   LastStep,
                                Partition&               PreviousPartition,
                                Partition&               LastPartition);
-  
+
     void LinkLastNodes(cluster_id_t        MainClusterID,
                        set<cluster_id_t>&  Merges,
                        ClusterInformation* NewNode);
-    
+
     ClusterInformation* LocateNode(cluster_id_t ClusterID);
-  
+
+    set<set<cluster_id_t> > getSubsets(set<cluster_id_t>&          in_set,
+                                       set<cluster_id_t>::iterator index);
+
     bool PrintPlots(const vector<CPUBurst*>& Bursts,
                     Partition&               CurrentPartition,
                     size_t                   Step);
-                       
+
     bool PrintTrees(size_t Step,
                     bool   LastTree = false);
-    
-    bool PrintTreeNodes(ofstream& str);
-    bool PrintTreeLinks(ofstream& str);
-    
-    
 
+    bool PrintTreeNodes(ofstream& str);
+
+    bool PrintTreeLinks(ofstream& str);
+
+
+
+};
+
+struct setSizeCmp
+{
+  bool operator()(set<cluster_id_t> s1, set<cluster_id_t> s2) const
+  {
+    if (s1.size() == s2.size())
+      return (s1 < s2);
+    else
+      return s1.size() > s2.size();
+  }
 };
 
 #endif // _CLUSTERINGREFINEMENTAGGREGATIVE_HPP_

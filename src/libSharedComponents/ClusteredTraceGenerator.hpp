@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -52,11 +52,13 @@ class ClusteredTraceGenerator: public Error
     string OutputTraceName;
     FILE*  OutputTraceFile;
     bool   DestroyClusteredFile;
-  
+
   public:
     ClusteredTraceGenerator(string  InputTraceName,
                             string  OutputTraceName);
-  
+
+    ~ClusteredTraceGenerator(void);
+
     virtual bool Run(vector<CPUBurst*>&    Bursts,
                      vector<cluster_id_t>& IDs,
                      set<cluster_id_t>&    DifferentIDs,

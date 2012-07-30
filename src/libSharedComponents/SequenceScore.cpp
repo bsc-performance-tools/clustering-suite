@@ -275,7 +275,7 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
 
   aln    = aln_alloc (aln);
 
-  cluster_id_t MaxClusterId = 0;
+  cluster_id_t MaxClusterId = 0, MinClusterId = DifferentIDs.size();
 
   /* Check maximum cluster id */
   set<cluster_id_t>::iterator DiffIDsIt;
@@ -287,6 +287,11 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
     if ((*DiffIDsIt) > MaxClusterId)
     {
       MaxClusterId = (*DiffIDsIt);
+    }
+
+    if ((*DiffIDsIt) < MinClusterId)
+    {
+      MinClusterId = (*DiffIDsIt);
     }
   }
 
@@ -307,9 +312,20 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
 
   if (MaxClusterId >= 1)
   {
-    gpo  = 15.0;
-    gpe  = 0.85;
-    tgpe = 0.45;
+    // gpo  = 25.0;
+    // gpo  = MaxClusterId;
+    gpo = 50.0;
+
+
+    // gpe  = 0.85;
+    // gpe  = 25.00;
+    // gpe = MaxClusterId;
+    gpe = 50.0;
+
+    // tgpe = 0.45;
+    //tgpe = MaxClusterId;
+    // tgpe = 100.0;
+    tgpe = PercentageDurations[MinClusterId]*100.0;
 
     /* DEBUG
     cout << "Gap Open: " << gpo << endl;
@@ -332,20 +348,46 @@ void SequenceScore::Kalign2Score(TSequenceMap&                    Sequences,
           if ( i == NOISE_CLUSTERID || j == NOISE_CLUSTERID)
           {
             // submatrix[i+1][j+1] = PercentageDurations[NOISE_CLUSTERID]*100;
-            submatrix[i+1][j+1] = gpo+2*PercentageDurations[MaxClusterId-1]*100;
+            //submatrix[i+1][j+1] = gpo+2*PercentageDurations[MaxClusterId-1]*100;
+            // submatrix[i+1][j+1] = gpo;
+            // submatrix[i+1][j+1] = MaxClusterId;
+            if (i != NOISE_CLUSTERID)
+            {
+              submatrix[i+1][j+1] = PercentageDurations[i]*100;
+            }
+            else
+            {
+              submatrix[i+1][j+1] = PercentageDurations[j]*100;
+            }
           }
           else if ( i == j )
           {
             //submatrix[i+1][j+1] = PercentageDurations[i]*20);
             //submatrix[i+1][j+1] = i+5;
             //submatrix[i+1][j+1] = (MaxClusterId-i) + (2*PercentageDurations[i]*MaxClusterId);
-            submatrix[i+1][j+1] = gpo+2*PercentageDurations[i]*100;
+            // submatrix[i+1][j+1] = 2*gpo+3*PercentageDurations[i]*100;
+            // submatrix[i+1][j+1] = gpo+PercentageDurations[i]*100;
+            // submatrix[i+1][j+1] = MaxClusterId - i;
+            // submatrix[i+1][j+1] = PercentageDurations[i]*100.0;
+            submatrix[i+1][j+1] = 2*(PercentageDurations[i]*100.0) + MaxClusterId - i;
 
           }
-          else
+          else if ( i > j )
           {
             // submatrix[i+1][j+1] = PercentageDurations[NOISE_CLUSTERID]*100;
-            submatrix[i+1][j+1] = -3*PercentageDurations[MaxClusterId-1]*100;
+            // submatrix[i+1][j+1] = -3*PercentageDurations[MaxClusterId-1]*100;
+            //submatrix[i+1][j+1] = 2*gpo+3*PercentageDurations[i]*100;
+            // submatrix[i+1][j+1] = gpo+gpe+PercentageDurations[i]*100;
+            // submatrix[i+1][j+1] = MaxClusterId - j;
+            submatrix[i+1][j+1] = 100.0*((PercentageDurations[i] + PercentageDurations[j])/2);
+          }
+          else if ( i < j )
+          {
+            // submatrix[i+1][j+1] = 2*gpo+3*PercentageDurations[j]*100;
+            // submatrix[i+1][j+1] = gpo+gpe+PercentageDurations[i]*100;
+            // submatrix[i+1][j+1] = MaxClusterId - i;
+            // submatrix[i+1][j+1] = PercentageDurations[i];
+            submatrix[i+1][j+1] = 100.0*((PercentageDurations[i] + PercentageDurations[j])/2);
           }
         }
       }

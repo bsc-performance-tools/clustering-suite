@@ -136,7 +136,7 @@ void print_phyloxml_tree (struct aln_tree_node* p, struct alignment* aln, FILE *
   }
 }
 
-struct alignment* sort_sequences (struct alignment* aln, int* tree, char* sort)
+struct alignment* sort_sequences (struct alignment* aln, int* tree, const char* sort)
 {
   int i, j, a, b, c;
   int choice = 0;
@@ -239,7 +239,7 @@ struct alignment* sort_sequences (struct alignment* aln, int* tree, char* sort)
   return aln;
 }
 
-struct alignment* sort_in_relation (struct alignment* aln, char* sort)
+struct alignment* sort_in_relation (struct alignment* aln, const char* sort)
 {
   /* JGG DEBUG */
   int i,j,c;

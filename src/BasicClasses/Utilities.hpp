@@ -39,7 +39,7 @@
 
 #include <cstdio>
 #include <string>
-using std::string;
+#include <set>
 
 #include <stdio.h>  /* defines FILENAME_MAX */
 #ifdef WIN32
@@ -53,7 +53,7 @@ using std::string;
 
 namespace cepba_tools
 {
-  string GetCWD(void);
+  std::string GetCWD(void);
 
   std::string &ltrim(std::string &s);
 

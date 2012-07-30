@@ -162,6 +162,7 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
   }
   */
 
+  /*
   printf("Input PCF = %s\nOutput PCF = %s\n",
            InputPCFName.c_str(),
            OutputPCFName.c_str());
@@ -169,8 +170,20 @@ ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
   printf("Input ROW = %s\nOutput ROW = %s\n",
            InputROWName.c_str(),
            OutputROWName.c_str());
+  */
 
   return;
+}
+
+ClusteredEventsPRVGenerator::~ClusteredEventsPRVGenerator(void)
+{
+  if ( InputPCFFile != NULL)
+    fclose(InputPCFFile);
+
+  if ( OutputPCFFile != NULL)
+    fclose(OutputPCFFile);
+
+  delete TraceParser;
 }
 
 bool ClusteredEventsPRVGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith)
@@ -361,6 +374,8 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
             return false;
           }
 
+          delete NewEvent;
+
           BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] = 0;
         }
 
@@ -391,6 +406,8 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
                               NewEvent->GetLastError());
               return false;
             }
+
+            delete NewEvent;
 
             BeginTimeIndex++;
 
@@ -423,6 +440,8 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
                             NewEvent->GetLastError());
             return false;
           }
+
+          delete NewEvent;
 
           /* FilterBurstsEnd.pop_front(); */
           BurstsEnd[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()] = 0;
@@ -497,6 +516,8 @@ bool ClusteredEventsPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   {
     CopyROWFile();
   }
+
+  delete Header;
 
   return true;
 }

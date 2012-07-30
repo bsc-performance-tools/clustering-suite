@@ -382,7 +382,10 @@ ParaverTraceParser::GetLongLine(char** Line)
   
   /* To avoid initial position on CR */
   if (fgetc(ParaverTraceFile) == '\n')
+  {
     InitialPosition++;
+    //return 0;
+  }
   else
   {
     if ( fseeko(ParaverTraceFile, InitialPosition, SEEK_SET) < 0)
@@ -406,7 +409,7 @@ ParaverTraceParser::GetLongLine(char** Line)
   while ( (CharRead = fgetc(ParaverTraceFile)) != '\n' )
   {
     if (CharRead == EOF && LineLength < 1)
-      return -1;
+      return 0;
     LineLength++;
   }
   
@@ -448,6 +451,7 @@ ParaverRecord_t
 ParaverTraceParser::NextTraceRecord(UINT32 RecordTypeMask)
 {
   ParaverRecord_t Result;
+  INT32           LongLineResult;
   INT32           CurrentRecordType;
   UINT32          CurrentRecordTypeMask;
   char*           Line;
@@ -466,15 +470,25 @@ ParaverTraceParser::NextTraceRecord(UINT32 RecordTypeMask)
     {
       return NULL;
     }
-    
-    if (GetLongLine(&Line) <= 0)
+   
+    LongLineResult = GetLongLine(&Line);
+
+    if (LongLineResult < 0)
     {
-      if (!feof(ParaverTraceFile))
-      {
+      char CurrentError[128];
+
+        sprintf(CurrentError,
+                "Error retrieving line %llu",
+                CurrentLine);
+
         SetError(true);
-        SetErrorMessage("Error reading file", strerror(errno));
-      }
-      return NULL;
+        SetErrorMessage(CurrentError, strerror(errno));
+        
+        return NULL;
+    }
+    else if (LongLineResult == 0)
+    {
+      continue;
     }
     
     if ( sscanf(Line, "%d:", &CurrentRecordType) != 1 )

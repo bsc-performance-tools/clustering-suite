@@ -10,6 +10,13 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-07-30 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a bug in the Paraver trace parser to correctly treat empty
+	lines
+
+	* Solved a big memory leak in Paraver trace reconstructors, where all
+	clustering events produced remained undeleted
+
 2012-07-06 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a bug in 'CSVDataExtractor': the burst duration was read
 	incorrectly.

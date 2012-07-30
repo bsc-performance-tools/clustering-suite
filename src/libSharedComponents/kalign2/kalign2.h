@@ -204,7 +204,9 @@ struct ntree_data{
 	int ntree;
 };
 
-struct alignment* sort_sequences(struct alignment* aln,int* tree,char* sort);
+struct alignment* sort_sequences(struct alignment* aln,
+                                 int* tree,
+                                 const char* sort);
 
 struct aln_tree_node* real_upgma(float **dm,int ntree);
 
@@ -272,9 +274,9 @@ int byg_detect(int* text,int n);
 
 int check_identity(char* n,char*m);
 
-int byg_count(char* pattern, char*text);
-int byg_start(char* pattern, char*text);
-int byg_end  (char* pattern,  char*text);
+int byg_count(const char* pattern, const char*text);
+int byg_start(const char* pattern, const char*text);
+int byg_end  (const char* pattern, const char*text);
 
 struct node* insert(struct node *n, int pos);
 struct node* insert_hash(struct node *n, int pos);
@@ -377,7 +379,7 @@ struct alignment* make_seq(struct alignment* aln,int a,int b,int* path);
 void update_gaps(int old_len,int*gis,int new_len,int *newgaps);
 //void print_alignment(struct alignment* aln);
 
-struct alignment* sort_in_relation(struct alignment* aln,char* sort);
+struct alignment* sort_in_relation(struct alignment* aln, const char* sort);
 void quickSort(struct alignment* aln, int array_size);
 void q_sort(struct alignment* aln, int left, int right);
 

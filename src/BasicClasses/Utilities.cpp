@@ -38,18 +38,18 @@
 using std::cout;
 using std::endl;
 
-string cepba_tools::GetCWD(void)
+std::string cepba_tools::GetCWD(void)
 {
   char cCurrentPath[FILENAME_MAX];
 
   if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath)))
   {
-    return string("unable to retrive CWD");
+    return std::string("unable to retrive CWD");
   }
 
   cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
 
-  return string(cCurrentPath);
+  return std::string(cCurrentPath);
 }
 
 #include <algorithm>
@@ -76,3 +76,4 @@ std::string& cepba_tools::trim(std::string &s)
 {
   return ltrim(rtrim(s));
 }
+

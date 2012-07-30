@@ -41,8 +41,8 @@ using cepba_tools::system_messages;
 
 #include "PlottingManager.hpp"
 
+#include <Utilities.hpp>
 #include <ParaverColors.h>
-
 #include <DBSCAN.hpp>
 
 #include <sstream>
@@ -507,7 +507,7 @@ bool ClusteringRefinementAggregative::GenerateCandidatesAndBurstSubset(
     NumberOfNodes++;
     if (!ParentNodes[i]->IsDiscarded())
     {
-      if (ParentNodes[i]->GetScore() < 1)
+      if (ParentNodes[i]->GetScore() < 1) // Check here the cut value!
       {
         if(ParentNodes[i]->GetScore() > 0.9)
         {
@@ -945,6 +945,9 @@ bool ClusteringRefinementAggregative::ComputeScores(size_t                      
   Messages << "|-----> Computing score" << endl;
   system_messages::information(Messages.str());
 
+  bool verbose_state = system_messages::verbose;
+  system_messages::verbose = false;
+
   if (!Scoring.ComputeScore(Bursts,
                             CurrentPartition.GetAssignmentVector(),
                             PercentageDurations,
@@ -961,6 +964,8 @@ bool ClusteringRefinementAggregative::ComputeScores(size_t                      
 
     return false;
   }
+
+  system_messages::verbose = verbose_state;
 
   GlobalScoresPerLevel.push_back(GlobalScore);
 
@@ -1080,7 +1085,12 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
 
   size_t NumberOfSequences, SequencesLength;
 
-  map<pair<cluster_id_t, cluster_id_t>, size_t> Pairings;
+  vector<set<cluster_id_t> >                 OccurrencesSequence;
+  map<set<cluster_id_t>, size_t, setSizeCmp> SetAppearances;
+  map<cluster_id_t, size_t>                  SingleAppearances;
+  // map<pair<cluster_id_t, cluster_id_t>, size_t> PairApparences;
+  vector<set<cluster_id_t> > Merges;
+
 
   /* Update Statistics */
   Statistics.InitStatistics(LastPartition.GetIDs());
@@ -1113,157 +1123,237 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
 
   /* Check each position in the sequences to detect the simultaneous clusters */
   SequencesLength = Sequences[0].size();
+
+  OccurrencesSequence = vector<set<cluster_id_t> > (SequencesLength);
+
   for (size_t i = 0; i < SequencesLength; i++)
-  {
-    set<pair<cluster_id_t, cluster_id_t> > CurrentPositionPairing;
+  { /* i = sequence position */
+
+    set<pair<cluster_id_t, cluster_id_t> > CurrentPairings;
+    set<cluster_id_t>                      CurrentAppearances;
+    set<cluster_id_t>::iterator            AppIt;
+    map<cluster_id_t, double>::iterator    OccurrencesIt;
 
     for (size_t j = 0; j < NumberOfSequences; j++)
+    { /* j = number of sequence */
+      if (Sequences[j][i] != NOISE_CLUSTERID)
+      {
+        OccurrencesSequence[i].insert(Sequences[j][i]);
+      }
+    }
+  }
+
+  for (size_t i = 0; i < SequencesLength; i++)
+  {
+    // set<cluster_id_t>::iterator OccurrencesIt, OccurrencesInnIt;
+    set<set<cluster_id_t> >           AllSubsets;
+    set<set<cluster_id_t> >::iterator AllSubsetsIt;
+
+    // cluster_id_t FirstClusterID, OtherClusterID;
+
+    AllSubsets = getSubsets(OccurrencesSequence[i],
+                            OccurrencesSequence[i].begin());
+
+    for (AllSubsetsIt  = AllSubsets.begin();
+         AllSubsetsIt != AllSubsets.end();
+         ++AllSubsetsIt)
     {
-      cluster_id_t FirstID = Sequences[j][i];
+      const set<cluster_id_t>& CurrentSet = (*AllSubsetsIt);
 
-      if (FirstID != NOISE_CLUSTERID && FirstID != SEQUENCE_GAP)
-      { /* Noise and Gaps not taken into account */
-        for (size_t k = j+1; k < NumberOfSequences; k++)
+      if (CurrentSet.size() == 0)
+      {
+        continue;
+      }
+      else if (CurrentSet.size() == 1)
+      { /* Single element sets */
+        ++SingleAppearances[(*CurrentSet.begin())];
+      }
+      else
+      {
+        ++SetAppearances[CurrentSet];
+      }
+    }
+
+    /*
+    cout << "Sequence[" << i << "] = ";
+
+    for (OccurrencesIt  = OccurrencesSequence[i].begin();
+         OccurrencesIt != OccurrencesSequence[i].end();
+         ++OccurrencesIt)
+    {
+      FirstClusterID = (*OccurrencesIt);
+
+      cout << " " << FirstClusterID;
+
+      if (SingleAppearances.count(FirstClusterID) == 0)
+      {
+        SingleAppearances[FirstClusterID] = 1;
+      }
+      else
+      {
+        SingleAppearances[FirstClusterID]++;
+      }
+
+
+
+      for (OccurrencesInnIt   = OccurrencesIt;
+           OccurrencesInnIt  != OccurrencesSequence[i].end();
+           ++OccurrencesInnIt)
+      {
+        if (OccurrencesInnIt != OccurrencesIt)
         {
-          pair<cluster_id_t, cluster_id_t> NewPair;
-          size_t CurrentValue;
+          OtherClusterID = (*OccurrencesInnIt);
 
-          cluster_id_t SecondID = Sequences[k][i];
-
-          if (SecondID != NOISE_CLUSTERID && SecondID != SEQUENCE_GAP)
+          if (FirstClusterID != NOISE_CLUSTERID)
           {
-
-            if (FirstID != SecondID)
-            { /* Different clusters */
-              if (FirstID < SecondID)
-              {
-                NewPair = make_pair(FirstID, SecondID);
-              }
-              else
-              {
-                NewPair = make_pair(SecondID, FirstID);
-              }
-
-              if (CurrentPositionPairing.count(NewPair) == 0)
-              {
-                CurrentValue = Pairings[NewPair];
-                CurrentValue++;
-                Pairings[NewPair] = CurrentValue;
-                CurrentPositionPairing.insert(NewPair);
-              }
+            if (PairApparences.count(make_pair(FirstClusterID, OtherClusterID)) == 0)
+            {
+              PairApparences[make_pair(FirstClusterID, OtherClusterID)] = 1;
+            }
+            else
+            {
+              PairApparences[make_pair(FirstClusterID, OtherClusterID)]++;
             }
           }
         }
       }
     }
+    cout << endl;
+    */
   }
+
+
+  /*
+  for (map<cluster_id_t, size_t>::iterator It = SingleAppearances.begin();
+       It != SingleAppearances.end();
+       ++It)
+  {
+    cout << "Cluster " << (*It).first << " = " << (*It).second << endl;
+  }
+  */
 
   /* Generate all merge sets */
-  map<pair<cluster_id_t, cluster_id_t>, size_t>::iterator PairingsIt;
-  map<cluster_id_t, set<cluster_id_t> > Merges;
-  /* DEBUG */
-  for (PairingsIt  = Pairings.begin();
-       PairingsIt != Pairings.end();
-       ++PairingsIt)
+  map<set<cluster_id_t>, size_t>::iterator SetsIt;
+  for (SetsIt  = SetAppearances.begin();
+       SetsIt != SetAppearances.end();
+       ++SetsIt)
   {
-    // cout << (*PairingsIt).first.first << "->" << (*PairingsIt).first.second;
-    // cout << " " << (*PairingsIt).second << endl;
+    const set<cluster_id_t>& CurrentSet         = (*SetsIt).first;
+    size_t                   CurrentAppearances = (*SetsIt).second;
+    bool                     MergeCurrentSet    = true;
 
-    // if (((1.0*(*PairingsIt).second) / SequencesLength) > 0.05) // More than 5% apparences
-    // {
-      map<cluster_id_t, set<cluster_id_t> >::iterator PreviousMerges;
-      bool Inserted = false;
+    if (CurrentSet.size() == 1)
+    { /* No more sets to merge */
+      break;
+    }
 
-      for (PreviousMerges  = Merges.begin();
-           PreviousMerges != Merges.end();
-           ++PreviousMerges)
+    /* First check: all clusters in the set have the same number of occurrences
+       isolately */
+    // cout << "Set = {";
+    for (set<cluster_id_t>::iterator i  = CurrentSet.begin();
+                                     i != CurrentSet.end();
+                                   ++i)
+    {
+      // cout << " " << (*i);
+      if ( SingleAppearances[(*i)] != CurrentAppearances )
       {
-        set<cluster_id_t>& PreviousSet = (*PreviousMerges).second;
+        MergeCurrentSet = false;
+      }
+    }
+    // cout << " } Occ = " << CurrentAppearances;
 
-        if (PreviousSet.count((*PairingsIt).first.first) != 0)
+    /* Second check: there are no previous merge set that includes the current
+       one */
+    if (MergeCurrentSet)
+    {
+      for (size_t i = 0; i < Merges.size(); i++)
+      {
+        set<cluster_id_t> Intersection;
+
+        set_intersection(Merges[i].begin(),  Merges[i].end(),
+                         CurrentSet.begin(), CurrentSet.end(),
+                         inserter(Intersection, Intersection.begin()));
+
+        if (Intersection.size() == CurrentSet.size())
         {
-          PreviousSet.insert((*PairingsIt).first.second);
-          Inserted = true;
-          break;
+          MergeCurrentSet = false;
         }
       }
+    }
 
-      if (!Inserted)
-      {
-        Merges[(*PairingsIt).first.first].insert((*PairingsIt).first.second);
-      }
-    // }
+    if (MergeCurrentSet)
+    {
+      // cout << " MERGE!" << endl;
+      Merges.push_back(CurrentSet);
+    }
+    else
+    {
+      // cout << " NO MERGE!" << endl;
+    }
   }
 
-  if (Merges.size() > 0)
+  // cout << "Total merges = " << Merges.size() << endl;
+
+  Messages << "|-> Merging clusters " << endl;
+  system_messages::information(Messages.str());
+  for (size_t i = 0; i < Merges.size(); i++)
   {
+    cluster_id_t      MainClusterID = (*(Merges[i]).begin());
+    set<cluster_id_t> MergeSet      = set<cluster_id_t>(++(Merges[i].begin()), Merges[i].end());
 
-    map<cluster_id_t, set<cluster_id_t> >::iterator MergesIt;
+    Messages.str("");
+    Messages << "|--->";
 
-    Messages << "|-> Merging clusters " << endl;
+    for (set<cluster_id_t>::iterator MergeIt  = Merges[i].begin();
+                                     MergeIt != Merges[i].end();
+                                   ++MergeIt)
+    {
+      Messages << " " << (*MergeIt);
+    }
+    Messages << endl;
     system_messages::information(Messages.str());
 
-    for (MergesIt  = Merges.begin();
-         MergesIt != Merges.end();
-         ++MergesIt)
-    {
-      set<cluster_id_t>::iterator SetIt;
-      set<cluster_id_t>& Set = (*MergesIt).second;
+    LastPartition.MergeIDs(MergeSet, MainClusterID);
+  }
 
-      Messages.str("");
-      Messages << "|---> " << (*MergesIt).first << " => ";
-      for (SetIt  = Set.begin();
-           SetIt != Set.end();
-           ++SetIt)
+  vector<ClusterInformation*> NewNodes;
+
+  GenerateNodes(0, Bursts, LastPartition, NewNodes, true); // true => indicate last partition nodes
+
+  Messages.str("");
+  Messages << "|-> Merging Tree Nodes " << endl;
+  system_messages::information(Messages.str());
+
+  vector<ClusterInformation*> LastLevelNodes;
+
+  for (size_t i = 0; i < Merges.size(); i++)
+  {
+    cluster_id_t        MainClusterID = (*Merges[i].begin());
+    set<cluster_id_t>   MergeSet = set<cluster_id_t>(++(Merges[i].begin()), Merges[i].end());
+    ClusterInformation* MergeNode = NULL;
+
+    for (size_t i = 0; i < NewNodes.size(); i++)
+    {
+      if (NewNodes[i]->GetID() == MainClusterID)
       {
-        Messages << (*SetIt) << " ";
+        MergeNode = NewNodes[i];
+        break;
       }
-      Messages << endl;
-      system_messages::information(Messages.str());
-
-      LastPartition.MergeIDs(Set, (*MergesIt).first);
     }
 
-    vector<ClusterInformation*> NewNodes;
-
-    GenerateNodes(0, Bursts, LastPartition, NewNodes, true); // true => indicate last partition nodes
-
-    Messages << "|-> Merging Tree Nodes " << endl;
-    system_messages::information(Messages.str());
-
-    vector<ClusterInformation*> LastLevelNodes;
-
-    for (MergesIt  = Merges.begin();
-         MergesIt != Merges.end();
-         ++MergesIt)
-    {
-      cluster_id_t        MainClusterID = (*MergesIt).first;
-      set<cluster_id_t>&  Merges = (*MergesIt).second;
-      ClusterInformation* MergeNode = NULL;
-
-      for (size_t i = 0; i < NewNodes.size(); i++)
-      {
-        if (NewNodes[i]->GetID() == MainClusterID)
-        {
-          MergeNode = NewNodes[i];
-          break;
-        }
-      }
-
-      LinkLastNodes(MainClusterID, Merges, MergeNode);
-      LastLevelNodes.push_back(MergeNode);
-    }
+    LinkLastNodes(MainClusterID, MergeSet, MergeNode);
+    LastLevelNodes.push_back(MergeNode);
+  }
 
 
-    NodesPerLevel.push_back(LastLevelNodes);
+  NodesPerLevel.push_back(LastLevelNodes);
 
-    LastPartition.clear();
-    GeneratePartition(LastPartition);
+  LastPartition.clear();
+  GeneratePartition(LastPartition);
 
-    if (!ComputeScores(0, Bursts, LastLevelNodes, LastPartition, true))
-    {
-      return false;
-    }
+  if (!ComputeScores(0, Bursts, LastLevelNodes, LastPartition, true))
+  {
+    return false;
   }
 
   if (PrintStepsInformation)
@@ -1699,5 +1789,51 @@ bool ClusteringRefinementAggregative::PrintTreeLinks(ofstream& str)
   return true;
 }
 
+set<set<cluster_id_t> > ClusteringRefinementAggregative::getSubsets(set<cluster_id_t>&       in_set,
+                                                                 set<cluster_id_t>::iterator index)
 
+{
+  set <set <cluster_id_t> > allsubsets;
+
+  if(index != in_set.end())
+  {
+    cluster_id_t item = (*index);
+
+    allsubsets = getSubsets(in_set, ++index);   //get subsets for set[index+1:n]
+
+    set<set<cluster_id_t> >           moresubsets;
+    set<set<cluster_id_t> >::iterator i = allsubsets.begin();
+
+    do
+    {
+      set<cluster_id_t> newsubset;
+      for(set<cluster_id_t>::iterator j  = (*i).begin();
+                                      j != (*i).end();
+                                    ++j)
+      {
+        //make a copy of each of the subsets obtained for set[index+1:n]
+        newsubset.insert(*j);
+      }
+
+      newsubset.insert(item);       //add set[index] to each one of them
+      moresubsets.insert(newsubset);
+      ++i;
+
+    } while (i != allsubsets.end());
+
+    for( set<set<cluster_id_t> >::iterator  i  = moresubsets.begin();
+                                            i != moresubsets.end();
+                                          ++i)
+    {
+      //now this is the new set of subsets!!
+      allsubsets.insert(*i);
+    }
+
+    return allsubsets;
+  }
+
+  std::set<cluster_id_t> empty;
+  allsubsets.insert(empty);         //empty value acts as NULL for subsets
+  return allsubsets;
+}
 
