@@ -172,9 +172,11 @@ bool libTraceClustering::ClusterAnalysis()
  * \result True if the analysis finished correctly, false otherwise
  */
 bool libTraceClustering::ClusterRefinementAnalysis(bool   Divisive,
+                                                   bool   PrintStepsInformation,
                                                    string OutputFileNamePrefix)
 {
   if (!Implementation->ClusterRefinementAnalysis(Divisive,
+                                                 PrintStepsInformation,
                                                  OutputFileNamePrefix))
   {
     Error = true;
@@ -205,6 +207,7 @@ bool libTraceClustering::ClusterRefinementAnalysis(bool   Divisive,
                                                    double MaxEps,
                                                    double MinEps,
                                                    int    Steps,
+                                                   bool   PrintStepsInformation,
                                                    string OutputFileNamePrefix)
 {
   if (!Implementation->ClusterRefinementAnalysis(Divisive,
@@ -212,6 +215,7 @@ bool libTraceClustering::ClusterRefinementAnalysis(bool   Divisive,
                                                  MaxEps,
                                                  MinEps,
                                                  Steps,
+                                                 PrintStepsInformation,
                                                  OutputFileNamePrefix))
   {
     Error = true;

@@ -256,6 +256,7 @@ int main(int argc, char *argv[])
                            PercentageDurations,
                            ScoresPerCluster,
                            GlobalScore,
+                           true,  /* generate the sequence! */
                            globalArgs.ClustersFilePrefix,
                            true)) // Generate a FASTA file
   {

@@ -93,6 +93,7 @@ ClusteringRefinementAggregative::ClusteringRefinementAggregative(INT32          
 bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
                                           vector<Partition>&       IntermediatePartitions,
                                           Partition&               LastPartition,
+                                          bool                     PrintStepsInformation,
                                           string                   OutputFilePrefix)
 {
   bool   Stop;
@@ -100,14 +101,7 @@ bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
 
   this->OutputFilePrefix = OutputFilePrefix;
 
-  if (OutputFilePrefix.compare("") == 0)
-  {
-    PrintStepsInformation = false;
-  }
-  else
-  {
-    PrintStepsInformation = true;
-  }
+  this->PrintStepsInformation = PrintStepsInformation;
 
   if (Bursts.size() == 0)
   {
@@ -921,7 +915,7 @@ bool ClusteringRefinementAggregative::ComputeScores(size_t                      
 
   if (LastPartition)
   {
-    CurrentSequenceFileNamePrefix << OutputFilePrefix << ".MERGE";
+    CurrentSequenceFileNamePrefix << OutputFilePrefix;
   }
   else
   {
@@ -953,6 +947,7 @@ bool ClusteringRefinementAggregative::ComputeScores(size_t                      
                             PercentageDurations,
                             CurrentClustersScores,
                             GlobalScore,
+                            PrintStepsInformation || LastPartition,
                             CurrentSequenceFileNamePrefix.str(),
                             true))
   {
@@ -1107,6 +1102,7 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
                        PercentageDurations,
                        CurrentClustersScores,
                        GlobalScore,
+                       false, /* Print scores of last partitions! */
                        CurrentSequenceFileNamePrefix.str(),
                        true);
 
@@ -1356,16 +1352,13 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
     return false;
   }
 
-  if (PrintStepsInformation)
-  {
-    Messages.str("");
-    Messages << "|-> Printing last trees" << endl;
-    system_messages::information(Messages.str());
+  Messages.str("");
+  Messages << "|-> Printing last trees" << endl;
+  system_messages::information(Messages.str());
 
-    if (!PrintTrees(LastStep, true)) /* Last tree */
-    {
-      return false;
-    }
+  if (!PrintTrees(LastStep, true)) /* Last tree */
+  {
+    return false;
   }
 
   return true;
@@ -1565,24 +1558,15 @@ bool ClusteringRefinementAggregative::PrintPlots(const vector<CPUBurst*>& Bursts
 bool ClusteringRefinementAggregative::PrintTrees(size_t Step,
                                                  bool   LastTree)
 {
-  ofstream* Output;
+  ostringstream TreeFileName;
+  ofstream     *Output;
 
   vector<ClusterInformation*>& TopLevelNodes = NodesPerLevel[0];
   vector<string>               LevelNames;
 
-  if (PrintStepsInformation)
+  if (LastTree)
   {
-    ostringstream TreeFileName;
-
-    if (!LastTree)
-    {
-      TreeFileName << OutputFilePrefix << ".STEP" << (Step+1) << ".TREE.dot";
-    }
-    else
-    {
-      TreeFileName << OutputFilePrefix << ".MERGE.TREE.dot";
-    }
-
+    TreeFileName << OutputFilePrefix << ".TREE.dot";
     Output = new ofstream(TreeFileName.str().c_str(), ios_base::trunc);
 
     if (Output->fail())
@@ -1591,11 +1575,26 @@ bool ClusteringRefinementAggregative::PrintTrees(size_t Step,
       SetErrorMessage ("unable to open tree file", strerror(errno));
       return false;
     }
-
   }
   else
   {
-    Output = (ofstream*) &cout;
+    if (PrintStepsInformation)
+    {
+
+      TreeFileName << OutputFilePrefix << ".STEP" << (Step+1) << ".TREE.dot";
+      Output = new ofstream(TreeFileName.str().c_str(), ios_base::trunc);
+
+      if (Output->fail())
+      {
+        SetError(true);
+        SetErrorMessage ("unable to open tree file", strerror(errno));
+        return false;
+      }
+    }
+    else
+    {
+      Output = (ofstream*) &cout;
+    }
   }
 
   (*Output) << "digraph Tree {" << endl;

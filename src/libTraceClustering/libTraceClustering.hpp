@@ -93,6 +93,7 @@ class libTraceClustering
     bool ClusterAnalysis (void);
 
     bool ClusterRefinementAnalysis(bool   Divisive,
+                                   bool   PrintStepsInformation,
                                    string OutputFileNamePrefix = "");
 
     bool ClusterRefinementAnalysis(bool   Divisive,
@@ -100,6 +101,7 @@ class libTraceClustering
                                    double MaxEps,
                                    double MinEps,
                                    int    Steps,
+                                   bool   PrintStepsInformation,
                                    string OutputFileNamePrefix = "");
 
     bool FlushClustersInformation(string OutputClustersInfoFileName);

@@ -89,6 +89,7 @@ class libTraceClusteringImplementation: public Error
     bool ClusterAnalysis(void);
 
     bool ClusterRefinementAnalysis(bool   Divisive,
+                                   bool   PrintStepsInformation,
                                    string OutputFileNamePrefix);
 
     bool ClusterRefinementAnalysis(bool   Divisive,
@@ -96,6 +97,7 @@ class libTraceClusteringImplementation: public Error
                                    double MaxEps,
                                    double MinEps,
                                    int    Steps,
+                                   bool   PrintStepsInformation,
                                    string OutputFileNamePrefix);
 
     bool FlushClustersInformation(string OutputClustersInfoFileName);
@@ -115,6 +117,7 @@ class libTraceClusteringImplementation: public Error
     bool GenericRefinement(bool           Divisive,
                            int            MinPoints,
                            vector<double> EpsilonPerLevel,
+                           bool           PrintStepsInformation,
                            string         OutputFileNamePrefix);
 
     void GetTaskSet(size_t TotalTasksInTrace);

@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -64,16 +64,16 @@ class ClusteringRefinementDivisive: public Error
 
     string OutputFilePrefix;
     bool   PrintStepsInformation;
-    
+
     libClustering*                       ClusteringCore;
 
     map<instance_t, size_t>              Instance2Burst;
-    
+
     vector<ClusteringStatistics>         StatisticsHistory;
     vector<vector<ClusterInformation*> > NodesPerLevel;
-    
+
   public:
-    
+
     /*
     ClusteringRefinementDivisive(INT32      MinPoints,
                                  double     MaxEpsilon,
@@ -88,13 +88,14 @@ class ClusteringRefinementDivisive: public Error
     bool Run(const vector<CPUBurst*>& Bursts,
              vector<Partition>&       IntermediatePartitions,
              Partition&               LastPartition,
+             bool                     PrintStepsInformation,
              string                   OutputFilePrefix = "");
 
   private:
     bool GenerateEpsilons(void);
-    
+
     bool IsSplitOK(ClusterInformation* Parent);
-    
+
     vector<CPUBurst*> GenerateBurstsSubset(const vector<CPUBurst*>& Bursts,
                                            ClusterInformation*      Node);
 
@@ -106,7 +107,7 @@ class ClusteringRefinementDivisive: public Error
                  Partition&               PreviousPartition,
                  Partition&               NewPartition,
                  bool&                    Stop);
-    
+
     bool RunDBSCAN(const vector<const Point*>& CurrentData,
                    double                      Epsilon,
                    Partition&                  CurrentPartition);
@@ -121,8 +122,8 @@ class ClusteringRefinementDivisive: public Error
                                                           size_t              Level);
 
     size_t ColapseNonDividedSubtrees(ClusterInformation* Node);
-    
-    void   ReclassifyNoise(const vector<CPUBurst*>& Bursts, 
+
+    void   ReclassifyNoise(const vector<CPUBurst*>& Bursts,
                            ClusterInformation*      Node,
                            size_t                   Level);
 

@@ -437,10 +437,8 @@ void CheckOutputFile()
     // ClusterSequencesFileName           = NameManipulator.AppendString("seq");
     ClusterSequencesFileName           = NameManipulator.GetChoppedFileName();
 
-    if (PrintRefinementSteps)
-    {
-      RefinementPrefixFileName           = NameManipulator.GetChoppedFileName();
-    }
+    RefinementPrefixFileName           = NameManipulator.GetChoppedFileName();
+
     return;
   }
   else if (OutputFileExtension.compare("csv") == 0)
@@ -532,6 +530,7 @@ int main(int argc, char *argv[])
     if (AutomaticRefinement)
     {
       if (!Clustering.ClusterRefinementAnalysis(DivisiveRefinement,
+                                                PrintRefinementSteps,
                                                 RefinementPrefixFileName))
       {
         cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
@@ -545,6 +544,7 @@ int main(int argc, char *argv[])
                                                 MaxEps,
                                                 MinEps,
                                                 Steps,
+                                                PrintRefinementSteps,
                                                 RefinementPrefixFileName))
       {
         cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;

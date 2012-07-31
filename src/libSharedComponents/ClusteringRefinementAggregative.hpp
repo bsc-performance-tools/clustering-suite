@@ -84,6 +84,7 @@ class ClusteringRefinementAggregative: public Error
     bool Run(const vector<CPUBurst*>& Bursts,
              vector<Partition>&       IntermediatePartitions,
              Partition&               LastPartition,
+             bool                     PrintStepsInformation,
              string                   OutputFilePrefix = "");
 
   private:

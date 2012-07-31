@@ -10,6 +10,14 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-07-31 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added 64 bis offset file support on Linux (to correctly manage big
+	traces)
+
+	* Changed the behavior of the Cluster Refinement to always print the
+	last sequences/sequence scores/tree. That implied a LOT of modifications
+	to pass a boolean accross the different layers
+
 2012-07-30 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a bug in the Paraver trace parser to correctly treat empty
 	lines

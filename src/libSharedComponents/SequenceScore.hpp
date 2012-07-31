@@ -136,6 +136,8 @@ class SequenceScore: public Error
   typedef map<pair<task_id_t, thread_id_t>, vector<cluster_id_t>, TraceObjectsCompare> TSequenceMap;
   typedef TSequenceMap::iterator TSequenceMapIterator;
 
+  bool    PrintScores;
+
 
   private:
 
@@ -155,6 +157,7 @@ class SequenceScore: public Error
                       map<cluster_id_t, percentage_t>& PercentageDurations,
                       vector<SequenceScoreValue>&      ClusterScores,
                       double&                          GlobalScore,
+                      bool                             PrintScores,
                       string                           FileNamePrefix = "",
                       bool                             FASTA = false);
 

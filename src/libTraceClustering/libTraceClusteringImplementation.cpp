@@ -557,6 +557,7 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
  * \result True if the analysis finished correctly, false otherwise
  */
 bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive,
+                                                                 bool   PrintStepsInformation,
                                                                  string OutputFileNamePrefix)
 {
   map<string, string> ClusteringAlgorithmParameters;
@@ -849,7 +850,11 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
 
   // exit (EXIT_SUCCESS);
 
-  return GenericRefinement(Divisive, MinPoints, Epsilons, OutputFileNamePrefix);
+  return GenericRefinement(Divisive,
+                           MinPoints,
+                           Epsilons,
+                           PrintStepsInformation,
+                           OutputFileNamePrefix);
 
 }
 
@@ -872,6 +877,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
                                                                  double MaxEps,
                                                                  double MinEps,
                                                                  int    Steps,
+                                                                 bool   PrintStepsInformation,
                                                                  string OutputFileNamePrefix)
 {
   vector<double>     EpsilonPerLevel;
@@ -900,7 +906,11 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
     }
   }
 
-  return GenericRefinement(Divisive, MinPoints, EpsilonPerLevel, OutputFileNamePrefix);
+  return GenericRefinement(Divisive,
+                           MinPoints,
+                           EpsilonPerLevel,
+                           PrintStepsInformation,
+                           OutputFileNamePrefix);
 }
 
 /**
@@ -917,6 +927,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
 bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive,
                                                          int            MinPoints,
                                                          vector<double> EpsilonPerLevel,
+                                                         bool           PrintStepsInformation,
                                                          string         OutputFileNamePrefix)
 {
   if (SampleData)
@@ -937,6 +948,7 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
     if (!RefinementAnalyzer.Run(Data->GetClusteringBursts(),
                                 PartitionsHierarchy,
                                 LastPartition,
+                                PrintStepsInformation,
                                 OutputFileNamePrefix))
     {
       SetErrorMessage(RefinementAnalyzer.GetLastError());
@@ -952,6 +964,7 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
     if (!RefinementAnalyzer.Run(Data->GetClusteringBursts(),
                                 PartitionsHierarchy,
                                 LastPartition,
+                                PrintStepsInformation,
                                 OutputFileNamePrefix))
     {
       SetErrorMessage(RefinementAnalyzer.GetLastError());
@@ -997,7 +1010,7 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
   // Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
 
   /* Generate score and all intermediate (event) traces */
-  if (OutputFileNamePrefix.compare("") != 0)
+  if (PrintStepsInformation)
   {
     /* Compute resulting score */
     if (!ComputeSequenceScore (OutputFileNamePrefix, true))
@@ -1122,6 +1135,16 @@ bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePre
   SequenceScore                   Scoring;
   vector<SequenceScoreValue>      ScoresPerCluster;
   double                          GlobalScore;
+  bool                            PrintScore;
+
+  if (OutputFilePrefix.compare("") == 0)
+  {
+    PrintScore = false;
+  }
+  else
+  {
+    PrintScore = true;
+  }
 
 
   if (Data == NULL)
@@ -1137,6 +1160,7 @@ bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePre
                            PercentageDurations,
                            ScoresPerCluster,
                            GlobalScore,
+                           PrintScore,
                            OutputFilePrefix,
                            FASTASequencesFile))
   {

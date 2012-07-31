@@ -157,6 +157,7 @@ bool SequenceScore::ComputeScore(const vector<CPUBurst*>&         DataBursts,
                                  map<cluster_id_t, percentage_t>& PercentageDurations,
                                  vector<SequenceScoreValue>&      ClusterScores,
                                  double&                          GlobalScore,
+                                 bool                             PrintScores,
                                  string                           FileNamePrefix,
                                  bool                             FASTA)
 {
@@ -223,7 +224,7 @@ bool SequenceScore::ComputeScore(const vector<CPUBurst*>&         DataBursts,
   }
 
   /* If needed, generate the sequences file */
-  if (FileNamePrefix.compare("") != 0)
+  if (PrintScores)
   {
     ostringstream SequencesFileName;
     ostringstream ScoresFileName;

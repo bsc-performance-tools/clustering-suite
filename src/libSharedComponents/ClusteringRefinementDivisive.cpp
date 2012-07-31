@@ -102,6 +102,7 @@ ClusteringRefinementDivisive::~ClusteringRefinementDivisive(void)
 bool ClusteringRefinementDivisive::Run(const vector<CPUBurst*>& Bursts,
                                        vector<Partition>&       IntermediatePartitions,
                                        Partition&               LastPartition,
+                                       bool                     PrintStepsInformation,
                                        string                   OutputFilePrefix)
 {
   bool           Stop = false;
@@ -621,6 +622,7 @@ bool ClusteringRefinementDivisive::GenerateNodes(const vector<CPUBurst*>&     Bu
                             PercentageDurations,
                             CurrentClustersScores,
                             GlobalScore,
+                            false,
                             string(""),
                             true))
   {
