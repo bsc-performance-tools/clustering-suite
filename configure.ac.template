@@ -284,26 +284,20 @@ if test "x$MPI_INSTALLED" = "xyes"; then
 fi
 
 dnl =========================================================================
-dnl AX_CHECK_CGAL: set if hull models and mrnet version can be compiled
+dnl AX_LIB_SQLITE3: check SQLite3 availability to support DB bursts storage
 dnl =========================================================================
-AX_CHECK_CGAL()
-if test "x$cgal_enabled" = "xyes"; then
-  CFLAGS="-frounding-math $CFLAGS"
-  CXXFLAGS="-frounding-math $CXXFLAGS"
-  CGAL_DYNAMIC_PATH="${gmp_libdir}:${mpfr_libdir}:${cgal_libdir}:${BOOST_LDPATH}"
-  CLUSTERING_RPATH="${CLUSTERING_RPATH} ${CGAL_RPATH}"
+AX_LIB_SQLITE3()
+if test "x$SQLITE3_VERSION" != "x"; then
+  SQLITE3_INSTALLED="yes"
+else
+  SQLITE3_INSTALLED="no"
 fi
+AM_CONDITIONAL(HAVE_SQLITE3, test "$SQLITE3_INSTALLED" = "yes")
 
 dnl =========================================================================
 dnl AX_PROG_MRNETAPP: set directories of MRNetApp library to build TreeDBSCAN
 dnl =========================================================================
 AX_PROG_MRNETAPP()
-
-dnl =========================================================================
-dnl AX_CHECK_SEQAN: check for Seqan installation to perform the iterative
-dnl refinement
-dnl =========================================================================
-dnl AX_CHECK_SEQAN()
 
 AC_SUBST(CLUSTERING_DYNAMIC_PATH)
 AC_SUBST(CGAL_DYNAMIC_PATH)
@@ -339,18 +333,5 @@ CXXFLAGS="-DCLUSTERING_SUITE $CXXFLAGS"
 AC_OUTPUT
 AX_SHOW_CONFIGURATION
 
-dnl echo "
-dnl   $PACKAGE_NAME version $VERSION
 
-dnl   Prefix....................: $prefix
-dnl   Debug Build...............: $debug
-dnl   C Compiler Flags..........: $CFLAGS
-dnl   C++ Compiler Flags........: $CXXFLAGS $CPPFLAGS
-dnl   Linker flags..............: $LDFLAGS $LIBS
-dnl   'common-files' directory..: ${common_filesdir:-default}
-dnl   MUSTER Clustering enabled.: ${muster_enabled}
-dnl   MUSTER Library directory..: ${muster_dir:-not_available}
-dnl   Boost includes............: ${BOOST_CPPFLAGS:-default}
-dnl   Distributed version (MPI).: ${MPI_INSTALLED}
-dnl"
 

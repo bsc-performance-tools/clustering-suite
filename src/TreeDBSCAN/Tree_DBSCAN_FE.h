@@ -46,6 +46,9 @@
    "\n"                                                                             \
    "  -s                         Do not show information messages (silent mode)\n"  \
    "\n"                                                                             \
+   "  -r                         Reconstruct the input trace adding the cluster\n"  \
+   "                             information obtained\n"                            \
+   "\n"                                                                             \
    "  -d <clustering_def_xml>    XML containing the clustering process\n"           \
    "                             definition\n"                                      \
    "\n"                                                                             \
@@ -59,7 +62,7 @@
    "\n"                                                                             \
    "  -m <min_points>            Specify the minimum points to form a cluster\n"    \
    "\n"
-   
+
 
 #define ABOUT                                            \
    "%s v%s (%s)\n"                                       \

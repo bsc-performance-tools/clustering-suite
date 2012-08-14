@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -69,7 +69,7 @@ vector<cluster_id_t>& Partition::GetAssignmentVector(void)
  * Sets the assignment vector
  *
  * \param The new assignment vector
- */ 
+ */
 void Partition::SetAssignmentVector(vector<cluster_id_t>& ClusterAssignmentVector)
 {
   _ClusterAssignmentVector = ClusterAssignmentVector;
@@ -97,14 +97,14 @@ void Partition::SetIDs(set<cluster_id_t>& IDs)
 
 /**
  * Returns the value of the maximum cluster id used in this partition
- * 
+ *
  * \return Maximum cluster ID used in this partition
  */
 cluster_id_t Partition::GetMaxID(void)
 {
   cluster_id_t                Result = NOISE_CLUSTERID;
   set<cluster_id_t>::iterator IDsIterator;
-  
+
   for (IDsIterator  = _IDs.begin();
        IDsIterator != _IDs.end();
        ++IDsIterator)
@@ -114,16 +114,16 @@ cluster_id_t Partition::GetMaxID(void)
       Result = (*IDsIterator);
     }
   }
-  
+
   return Result;
 }
 
 /**
  * Changes all IDs of the OriginalIDs set to the ID DifinitiveID
- * 
+ *
  * \param OriginalIDs  Set of IDs to be merged
  * \param DefinitiveID Resulting ID
- * 
+ *
  */
 void Partition::MergeIDs(set<cluster_id_t>& OriginalIDs,
                          cluster_id_t       DefinitiveID)
@@ -131,23 +131,46 @@ void Partition::MergeIDs(set<cluster_id_t>& OriginalIDs,
   for (size_t i = 0; i < _ClusterAssignmentVector.size(); i++)
   {
     cluster_id_t CurrentID = _ClusterAssignmentVector[i];
-    
+
     if (OriginalIDs.count(CurrentID) != 0)
     {
       _ClusterAssignmentVector[i] = DefinitiveID;
       // cout << "Merging" << endl;
     }
   }
-  
+
   set<cluster_id_t>::iterator OriginalIDsIt;
-  
+
   for (OriginalIDsIt  = OriginalIDs.begin();
        OriginalIDsIt != OriginalIDs.end();
        ++OriginalIDsIt)
   {
     _IDs.erase((*OriginalIDsIt));
   }
-  
+
+  return;
+}
+
+/**
+ * Updates the set of different IDs present on the partition. Needed after
+ * translation
+ *
+ */
+void Partition::UpdateIDs(void)
+{
+  if (_ClusterAssignmentVector.size() == 0)
+  {
+    return;
+  }
+
+  _IDs.clear();
+  for (vector<cluster_id_t>::size_type i = 0;
+                                       i < _ClusterAssignmentVector.size();
+                                       i++)
+  {
+    _IDs.insert(_ClusterAssignmentVector[i]);
+  }
+
   return;
 }
 
@@ -165,7 +188,7 @@ size_t Partition::NumberOfClusters(void) const
  * Return if the current partition has a noise cluster
  *
  * \return True if the current partition has a noise cluster
- */ 
+ */
 bool Partition::HasNoise(void) const
 {
   if (_IDs.count(NOISE_CLUSTERID) > 0)

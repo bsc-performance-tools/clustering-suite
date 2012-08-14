@@ -44,6 +44,9 @@
 #include <iostream>
 using std::ostream;
 
+#include <sstream>
+using std::ostringstream;
+
 #include <map>
 using std::map;
 
@@ -147,7 +150,8 @@ class ClusteringStatistics: public Error
     vector<string>              ExtrapolationMetricsNames;
     vector<bool>                ExtrapolationMetricsPrecision;
 
-    bool                        Translated;
+    map<cluster_id_t, cluster_id_t> TranslationMap;
+    bool                            Translated;
 
   public:
 
@@ -167,11 +171,15 @@ class ClusteringStatistics: public Error
 
     bool ComputeStatistics(const vector<CPUBurst*>& Bursts, const vector<cluster_id_t>& IDs);
 
+    template <typename T>
+    bool ComputeStatistics(T begin, T end, size_t size, const vector<cluster_id_t>& IDs);
+
     void TranslatedIDs(vector<cluster_id_t>& NewIDs);
 
     map<cluster_id_t, percentage_t> GetPercentageDurations(void);
     map<cluster_id_t, double>       GetDurationSums(void);
     map<cluster_id_t, size_t>       GetIndividuals(void);
+    map<cluster_id_t, cluster_id_t> GetTranslationMap(void) { return TranslationMap; };
 
 
     bool Flush(ostream& str);
@@ -181,5 +189,68 @@ class ClusteringStatistics: public Error
     bool NewIndividual(CPUBurst* Burst, cluster_id_t ID);
 
 };
+
+template <typename T>
+bool ClusteringStatistics::ComputeStatistics(T                           begin,
+                                             T                           end,
+                                             size_t                      size,
+                                             const vector<cluster_id_t>& IDs)
+{
+  /* DEBUG
+  cout << "Total number of bursts = " << Bursts.size() << endl; */
+
+  if (size != IDs.size())
+  {
+    ostringstream Messages;
+
+    Messages << "number of bursts (" << size << ") ";
+    Messages << "different from number of IDs (" << IDs.size() << ") ";
+    Messages << "when computing statistics";
+
+    SetError(true);
+    SetErrorMessage(Messages.str());
+    return false;
+  }
+
+  T Burst  = begin;
+  size_t i = 0;
+
+  while (Burst != end)
+  {
+    if (HasNoise && IDs[i] == NOISE_CLUSTERID)
+    {
+      NoiseStatistics.NewBurst((*Burst));
+    }
+    else
+    {
+      map<cluster_id_t, size_t>::iterator CurrentIDPosition;
+
+      CurrentIDPosition = IDsPosition.find(IDs[i]);
+
+      if (CurrentIDPosition == IDsPosition.end())
+      {
+        ostringstream ErrorMessage;
+        ErrorMessage << "incorrect cluster ID (" << IDs[i] << ") when computing statistics";
+
+        SetError(true);
+        SetErrorMessage(ErrorMessage.str());
+        return false;
+      }
+      else
+      {
+        /* DEBUG
+        cout << "Updating Statistics for Cluster " << IDs[i];
+        cout << " (" << CurrentIDPosition->second << ")" << endl; */
+        StatisticsPerCluster[CurrentIDPosition->second].NewBurst((*Burst));
+      }
+    }
+
+    TotalBurstsDuration += (*Burst)->GetDuration();
+    ++Burst;
+    ++i;
+  }
+
+  return true;
+}
 
 #endif // _CLUSTERSTATISTICS_HPP_

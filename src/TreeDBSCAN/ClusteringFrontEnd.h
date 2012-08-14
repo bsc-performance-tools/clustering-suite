@@ -41,26 +41,29 @@
 #include "Statistics.h"
 
 /**
- * This class implements the front-end side of the TreeDBSCAN protocol, 
+ * This class implements the front-end side of the TreeDBSCAN protocol,
  * which is the same both for the on-line and off-line back-ends.
  */
 class ClusteringFrontEnd : public ClusteringCore, public FrontProtocol
 {
-   public:
-      ClusteringFrontEnd(
-         double Eps, 
-         int    MinPts,
-         string ClusteringDefinitionXML,
-         string InputTraceName,
-         string OutputFileName,
-         bool   Verbose,
-         bool   ReconstructTrace);
+  public:
+    ClusteringFrontEnd (double Eps,
+                        int    MinPts,
+                        string ClusteringDefinitionXML,
+                        string InputTraceName,
+                        string OutputFileName,
+                        bool   Verbose,
+                        bool   ReconstructTrace);
 
-      string ID() { return "CLUSTERING"; }
-      void   Setup(void);
-      int    Run  (void);
+    string ID()
+    {
+      return "CLUSTERING";
+    }
+    void   Setup (void);
+    int    Run  (void);
 
-      void PrintGraphStats(Statistics &ClusteringStats);
+    void PrintGraphStats (Statistics &ClusteringStats);
 };
 
 #endif /* __CLUSTERING_FRONTEND_H__ */
+

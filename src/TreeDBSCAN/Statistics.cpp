@@ -1,7 +1,10 @@
-#include <iostream>
 #include "ClusteringTags.h"
 #include "Statistics.h"
+
+#include <iostream>
 #include <sstream>
+#include <cstring>
+
 using std::ostringstream;
 
 
@@ -67,7 +70,7 @@ void Statistics::ClusteringTimeStop()
 }
 
 #if defined(BACKEND)
-void Statistics::to_str(string &InStats, string &OutStats) 
+void Statistics::to_str(string &InStats, string &OutStats)
 {
   ostringstream Stats;
 
@@ -75,12 +78,12 @@ void Statistics::to_str(string &InStats, string &OutStats)
   OutStats = "";
 
   Stats.str("");
-  Stats << "Clustering points=" << NumInputPoints << "\\n" 
+  Stats << "Clustering points=" << NumInputPoints << "\\n"
         << "Clustering time=" << ElapsedTimeClustering;
-  InStats = Stats.str(); 
+  InStats = Stats.str();
 
   Stats.str("");
-  Stats << "Hulls=" << NumOutputHulls << "\\n" 
+  Stats << "Hulls=" << NumOutputHulls << "\\n"
         << "Noise=" << NumOutputPoints;
   OutStats = Stats.str();
 }
@@ -93,9 +96,9 @@ void Statistics::to_str(string &InStats, string &OutStats)
   OutStats = "";
 
   Stats.str("");
-  Stats << "Sum hulls=" << NumInputHulls << "\\n" 
-        << "Noise points=" << NumInputPoints << "\\n" 
-        << "Noise time=" << ElapsedTimeClustering << "\\n" 
+  Stats << "Sum hulls=" << NumInputHulls << "\\n"
+        << "Noise points=" << NumInputPoints << "\\n"
+        << "Noise time=" << ElapsedTimeClustering << "\\n"
         << "Intersections=" << NumValidIntersects << "/" << NumTotalIntersects << " (" << (NumValidIntersects*100)/NumTotalIntersects << "%)";
     if (NumValidIntersects > 0)
     {
@@ -104,7 +107,7 @@ void Statistics::to_str(string &InStats, string &OutStats)
   InStats = Stats.str();
 
   Stats.str("");
-  Stats << "Hulls=" << NumOutputHulls << "\\n" 
+  Stats << "Hulls=" << NumOutputHulls << "\\n"
         << "Noise=" << NumOutputPoints;
   OutStats = Stats.str();
 }
@@ -142,7 +145,7 @@ void Statistics::Serialize(
     i ++;
   }
 
-  /* DEBUG 
+  /* DEBUG
   cerr << "NumberOfNodes=" << NumberOfNodes << endl;
   cerr << "IDsArray = [ ";
   for (i=0; i<NumberOfNodes; i++)

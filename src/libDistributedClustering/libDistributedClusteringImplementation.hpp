@@ -77,7 +77,7 @@ class libDistributedClusteringImplementation: public Error
     */
 
   public:
-    libDistributedClusteringImplementation(int verbose);
+    libDistributedClusteringImplementation(int verbose, const char* msg_prefix);
 
     /* This methods are intended to be used in the MRNet BE nodes, to perform
      * a local cluster analysis */

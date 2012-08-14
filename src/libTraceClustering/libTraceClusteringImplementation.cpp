@@ -930,6 +930,8 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
                                                          bool           PrintStepsInformation,
                                                          string         OutputFileNamePrefix)
 {
+  ostringstream Messages;
+
   if (SampleData)
   {
     SetErrorMessage("Refinement analysis plus sampling not implemented yet");
@@ -979,16 +981,31 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
     cout << "**** Step " << i+1 << " ****" << endl;
     cout << "-> Number of Clusters = " << PartitionsHierarchy[i].NumberOfClusters() << endl;
 
-    vector<cluster_id_t>& IDs = PartitionsHierarchy[i].GetAssignmentVector();
+    set<cluster_id_t>& IDs = PartitionsHierarchy[i].GetIDs();
 
     cout << "IDs = ";
 
-    for (size_t j = 0; j < IDs.size(); j++)
+    for (set<cluster_id_t>::iterator j  = IDs.begin();
+                                     j != IDs.end();
+                                   ++j)
     {
-      cout << IDs[j] << " ";
+      cout << (*j) << " ";
     }
     cout << endl;
   }
+
+  set<cluster_id_t>& IDs = LastPartition.GetIDs();
+  cout << "**** Last Partition ****" << endl;
+  cout << "IDs = ";
+
+
+  for (set<cluster_id_t>::iterator j  = IDs.begin();
+                                   j != IDs.end();
+                                 ++j)
+  {
+    cout << (*j) << " ";
+  }
+  cout << endl;
   */
 
   /* Statistics */
@@ -1018,6 +1035,10 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
       return false;
     }
 
+    Messages << "** WRITING INTERMEDIATE EVENT TRACES **" << endl;
+    Messages << "STEP ";
+    system_messages::information(Messages.str());
+
     for (size_t i = 0; i < PartitionsHierarchy.size(); i++)
     {
       ClusteredTraceGenerator* TraceGenerator;
@@ -1027,7 +1048,8 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
 
       ClusteringStatistics Stats;
 
-      Messages << "****** Writing events trace of STEP " << i+1 << " ******" << endl;
+      Messages.str("");
+      Messages << i+1;
       system_messages::information(Messages.str());
 
       /* Sort IDs
@@ -1082,6 +1104,10 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
       delete TraceGenerator;
     }
   }
+
+  Messages.str("");
+  Messages << endl;
+  system_messages::information(Messages.str());
 
   ClusteringExecuted = true;
 

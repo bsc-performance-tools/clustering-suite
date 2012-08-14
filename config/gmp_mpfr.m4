@@ -25,6 +25,10 @@ for mpfr_iterate in $mpfr_paths; do
     mpfr_enabled="yes"
   fi
 
+  if test -e $mpfr_iterate/include/mpfr.h -a -e $mpfr_iterate/lib/i386-linux-gnu/libmpfr.so; then
+    mpfr_enabled="yes"
+  fi
+
 	AC_MSG_CHECKING([whether MPFR is available in $mpfr_iterate])
 
   if test "$mpfr_enabled" = "yes"; then
@@ -60,6 +64,10 @@ AC_ARG_WITH(
 for gmp_iterate in $gmp_paths; do
 
   if test -e $gmp_iterate/include/gmp.h -a -e $gmp_iterate/lib/libgmp.so; then
+    gmp_enabled="yes"
+  fi
+
+  if test -e $gmp_iterate/include/gmp.h -a -e $gmp_iterate/lib/i386-linux-gnu/libgmp.so; then
     gmp_enabled="yes"
   fi
 

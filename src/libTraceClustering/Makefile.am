@@ -10,6 +10,7 @@ INCLUDES = \
 	-I$(top_srcdir)/src/libANN \
 	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libSharedComponents \
+	-I$(top_srcdir)/src/libParaverTraceParser \
 	-I$(common_filesdir)
 
 libTraceClustering_la_LIBADD =  \

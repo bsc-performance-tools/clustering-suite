@@ -69,7 +69,7 @@ NoiseManager::NoiseManager()
  */
 NoiseManager::NoiseManager(double Epsilon, int MinPoints)
 {
-   libClustering = new libDistributedClustering(false); /* true = Verbose */
+   libClustering = new libDistributedClustering(false, "NOISE"); /* true = Verbose */
 
    if (!libClustering->InitClustering(Epsilon, MinPoints))
    {

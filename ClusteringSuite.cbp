@@ -110,10 +110,13 @@
 		<Unit filename="src/TreeDBSCAN/HullManager.h" />
 		<Unit filename="src/TreeDBSCAN/NoiseManager.cpp" />
 		<Unit filename="src/TreeDBSCAN/NoiseManager.h" />
+		<Unit filename="src/TreeDBSCAN/Statistics.cpp" />
+		<Unit filename="src/TreeDBSCAN/Statistics.h" />
 		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_BE.cpp" />
 		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_FE.cpp" />
 		<Unit filename="src/TreeDBSCAN/Tree_DBSCAN_FE.h" />
 		<Unit filename="src/TreeDBSCAN/Utils.h" />
+		<Unit filename="src/TreeDBSCAN/XchangeDimensionsFilter.cpp" />
 		<Unit filename="src/libANN/ANN.cpp">
 			<Option target="Compile" />
 		</Unit>
@@ -314,6 +317,8 @@
 		<Unit filename="src/libParaverTraceParser/ParaverTraceParser.hpp">
 			<Option target="Compile" />
 		</Unit>
+		<Unit filename="src/libSharedComponents/BurstsDB.cpp" />
+		<Unit filename="src/libSharedComponents/BurstsDB.hpp" />
 		<Unit filename="src/libSharedComponents/CPIStackModel.hpp" />
 		<Unit filename="src/libSharedComponents/CPUBurst.cpp" />
 		<Unit filename="src/libSharedComponents/CPUBurst.hpp" />

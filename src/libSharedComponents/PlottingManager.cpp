@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -132,12 +132,12 @@ PlottingManager::GetPlotsWarning(void)
 
 /**
  * Print all plots correctly defined
- * 
+ *
  * \param PlotsDataFileName   Name of the file where data plots data will be located
- * \param PlotsFileNamePrefix Prefix to be used in the resulting .gnuplot files 
+ * \param PlotsFileNamePrefix Prefix to be used in the resulting .gnuplot files
  * \param Title          Title to be used in the plots
  * \param DifferentIDs Set with the different IDs present in the data
- * 
+ *
  * \return True if all plots have been written correctly, false otherwise
  */
 bool PlottingManager::PrintPlots(string             PlotsDataFileName,
@@ -148,23 +148,25 @@ bool PlottingManager::PrintPlots(string             PlotsDataFileName,
 {
 
   // system_messages::show_progress("Writing plots to disc", 0, Plots.size());
-  
+
   this->PrintingModels = PrintingModels;
-  
+
   /* Check the paths */
   string DataFileName(basename((char*) PlotsDataFileName.c_str()));
-  
+
   for (size_t i = 0; i < Plots.size(); i++)
   {
+    /*
     ostringstream PlotMessage;
     PlotMessage << "Printing plot " << i+1 << ": ";
     system_messages::information(PlotMessage.str().c_str());
-    
+    */
+
     if(CorrectPlots[i])
     {
       /* DEBUG: Temporary, raw data not available in model plots */
       if (PrintingModels && Plots[i]->RawMetrics)
-      { 
+      {
         continue;
       }
 
@@ -187,7 +189,7 @@ bool PlottingManager::PrintPlots(string             PlotsDataFileName,
     // system_messages::show_progress("Writing plots to disc", i, Plots.size());
   }
   // system_messages::show_progress_end("Writing plots to disc", Plots.size());
-  
+
   return true;
 }
 
@@ -246,7 +248,7 @@ PlottingManager::PlottingManager(bool DataExtraction)
   ClusterIdPosition = CSV_HEADING_FIELDS +
                       Parameters->GetClusteringParametersSize ()*2 +
                       Parameters->GetExtrapolationParametersSize () + 1;
-  
+
   return;
 }
 
@@ -266,10 +268,10 @@ PlottingManager::GenerateAllPlots(ParametersManager* Parameters)
 
 
   PlotDefinition* Definition;
-  
+
   ClusteringParameters      = Parameters->GetClusteringParametersSize();
   ClusteringParametersNames = Parameters->GetClusteringParametersNames();
-  
+
   ExtrapolationParameters      = Parameters->GetExtrapolationParametersSize();
   ExtrapolationParametersNames = Parameters->GetExtrapolationParametersNames();
 
@@ -295,7 +297,7 @@ PlottingManager::GenerateAllPlots(ParametersManager* Parameters)
       Plots.push_back(Definition);
       CorrectPlots.push_back(true);
       PlotsWarnings.push_back("Correct Plot");
-      
+
       /* Normalized */
       Definition = new PlotDefinition();
 
@@ -332,9 +334,9 @@ PlottingManager::GenerateAllPlots(ParametersManager* Parameters)
 
         Definition->ZMetric         = ExtrapolationParametersNames[Z];
         Definition->ZMetricTitle    = ExtrapolationParametersNames[Z];
-        Definition->ZMetricPosition = CSV_HEADING_FIELDS + 
+        Definition->ZMetricPosition = CSV_HEADING_FIELDS +
                                       (2*ClusteringParameters) + Z + 1;
-        
+
         Plots.push_back(Definition);
         CorrectPlots.push_back(true);
         PlotsWarnings.push_back("Correct Plot");
@@ -342,7 +344,7 @@ PlottingManager::GenerateAllPlots(ParametersManager* Parameters)
 
       /* And 3D plot with duration */
       Definition = new PlotDefinition();
-      
+
       Definition->RawMetrics      = true;
       Definition->ThreeDimensions = true;
 
@@ -357,7 +359,7 @@ PlottingManager::GenerateAllPlots(ParametersManager* Parameters)
       Definition->ZMetric         = "Duration";
       Definition->ZMetricTitle    = "Duration";
       Definition->ZMetricPosition = CSV_DURATION_FIELD;
-      
+
       Plots.push_back(Definition);
       CorrectPlots.push_back(true);
       PlotsWarnings.push_back("Correct Plot");
@@ -382,7 +384,7 @@ PlottingManager::LoadSinglePlot(PlotDefinition*    CurrentPlot,
 {
   INT32           XMetricPosition, YMetricPosition, ZMetricPosition;
   bool            Error = false;
-  
+
   /* Check parameters positions on the XML file */
 
   /* X axis */
@@ -417,7 +419,7 @@ PlottingManager::LoadSinglePlot(PlotDefinition*    CurrentPlot,
     return;
   }
 
-  
+
   if (CurrentPlot->ThreeDimensions)
   { /* Z axis */
     CurrentPlot->ZMetricPosition = CheckParameterPosition(CurrentPlot->ZMetric,
@@ -462,7 +464,7 @@ PlottingManager::CheckParameterPosition(string             ParameterName,
   {
     return CSV_DURATION_FIELD;
   }
-  
+
   if (!RawMetric)
   { /* Normalized metric, just look into clustering parameters */
     Position = Parameters->GetClusteringParameterPosition(ParameterName);
@@ -514,7 +516,7 @@ PlottingManager::CheckParameterPosition(string             ParameterName,
  * \param Definition     Container of the plot definition
  * \param Title          Title to be used in the plots
  * \param DifferentIDs   Set with the different IDs present in the data
- * 
+ *
  * \return True if the plot has been written correctly, false otherwise
  */
 bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
@@ -528,7 +530,7 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
   ostringstream               ScreenPlotName;
   set<cluster_id_t>::iterator IDsIterator;
   vector<cluster_id_t>        IDs;
-  
+
   /* Transform the set of different IDs into a vector and sort it */
   if (DifferentIDs.size() == 0)
   { /* Data not clustered */
@@ -577,7 +579,7 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
     ScreenPlotName << Definition->YMetricTitle << " vs. ";
     ScreenPlotName << Definition->ZMetricTitle << endl;
   }
-  
+
   OutputStream.open(OutputFileName.c_str(), ios_base::trunc);
 
   if (!OutputStream)
@@ -604,15 +606,15 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
 
   OutputStream << "set xlabel \"" << Definition->XMetricTitle << "\"" << endl;
   OutputStream << "set ylabel \"" << Definition->YMetricTitle << "\"" << endl;
-  
+
   /*
   UNCLASSIFIED;
   MISSING_DATA_CLUSTERID;
   DURATION_FILTERED_CLUSTERID;
   RANGE_FILTERED_CLUSTERID;
   THRESHOLD_FILTERED_CLUSTERID;
-  */ 
-  
+  */
+
   /* Print concrete commands */
   if (Definition->ThreeDimensions)
   {
@@ -651,7 +653,7 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
       OutputStream << Definition->YMax;
     }
     OutputStream << "]" << endl;
-    
+
     /* Z-Range */
     OutputStream << "set zrange [";
     if (Definition->ZMin != MIN_DOUBLE)
@@ -668,7 +670,7 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
     OutputStream << endl;
     OutputStream << "set key right outside";
     OutputStream << endl;
-    
+
     /* Actual plot */
     OutputStream << "splot ";
     for (size_t i = 0; i < IDs.size(); i++)
@@ -677,11 +679,11 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
                           IDs[i]+PARAVER_OFFSET,
                           GetClusterName(IDs[i]),
                           DataFileName);
-                          
+
       if (i != IDs.size()-1)
         OutputStream << ",\\" << endl;
     }
-    
+
     /*
     if (NumberOfClusters == 0)
     {
@@ -701,7 +703,7 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
         Write3D_Definition (OutputStream, X, Y, Z, NOISE_CLUSTERID+PARAVER_OFFSET, "Noise", DataFileName);
         OutputStream << ",\\" << '\n';
       }
-    
+
       for (cluster_id_t Cluster = 1; Cluster <= NumberOfClusters; Cluster++)
       {
         ostringstream ClusterName;
@@ -761,7 +763,7 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
                          IDs[i]+PARAVER_OFFSET,
                          GetClusterName(IDs[i]),
                          DataFileName);
-                          
+
       if (i != IDs.size()-1)
         OutputStream << ",\\" << endl;
     }
@@ -784,7 +786,7 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
         Write2D_Definition (OutputStream, X, Y, NOISE_CLUSTERID+PARAVER_OFFSET, "Noise", DataFileName);
         OutputStream << ",\\" << '\n';
       }
-      
+
       for (size_t Cluster = 1; Cluster <= NumberOfClusters; Cluster++)
       {
         ostringstream ClusterName;
@@ -802,10 +804,10 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
 
   /* Print clusters */
   OutputStream << endl;
-  
+
   /* Print pause command */
   OutputStream << "pause -1 \"Press return to continue...\"" << endl;
-  
+
   /* Check if there is any error in the output */
   if (OutputStream.fail())
   {
@@ -914,15 +916,15 @@ string PlottingManager::RGBStateColor(INT32 StateValue)
 
 /**
  * Returns the cluster name using the ID
- * 
+ *
  * \param ID ID value to generate the cluster name
- * 
+ *
  * \return The name of the cluster, taking into account the special cluster ids
  */
 string PlottingManager::GetClusterName(cluster_id_t ID)
 {
   ostringstream ClusterName;
-  
+
   switch (ID)
   {
     case UNCLASSIFIED:

@@ -10,6 +10,32 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-08-14 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added a DB functionality using SQLite to avoid the memory bound on
+	the MRNet tree based implementation: the master backend stores the
+	whole collection of points in a file database, so as not to occupy
+	all the memory avaible. The database management is encapsulated
+	in the 'BurstsDB' class (BurstsDB.hpp|cpp). The availability check
+	for an installation SQLite in the target system has been added
+	to the building system
+
+	* The addition of this database implied a major modification in
+	almost all the classes that used the 'CompleteBursts' vector. Now
+	this classes can iterate through a STL vector, but the inner 
+	iteration is done by a template based member function. This is the
+	only solution to both iterate through the database or an STL
+	container
+
+	* All the TreeDBSCAN source code by German Llort now uses the
+	'system_messages' interface. It has been extended to add a prefix
+	before the rank ID, to ease the legibility of the information
+	when running the distributed version
+
+	* Better support to CGAL in the building system
+
+	* Upgraded minor version to 2.3, and added a REV under the minor 
+	version (following the Paraver numbering)
+
 2012-07-31 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Added 64 bis offset file support on Linux (to correctly manage big
 	traces)

@@ -53,15 +53,17 @@ namespace cepba_tools
 
       static bool distributed;
 
-      static int  my_rank;
-
-      static bool messages_from_all_ranks;
+      static int   my_rank;
+      static bool  messages_from_all_ranks;
+      static char *rank_prefix;
 
       static bool percentage_ongoing;
 
       static bool print_timers;
 
       static int  last_percentage_written;
+
+      static void set_rank_prefix(const char* desired_rank_prefix);
 
       static void information(string message,
                               FILE*  channel = stdout);

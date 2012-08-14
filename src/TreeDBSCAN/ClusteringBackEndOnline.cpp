@@ -32,15 +32,22 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#include "ClusteringBackEndOnline.h"
-#include "ClusteringTags.h"
-#include "Utils.h"
 #include <iostream>
 #include <fstream>
 using std::ofstream;
-using std::cout;
 using std::cerr;
 using std::endl;
+
+#include <sstream>
+using std::ostringstream;
+
+#include <SystemMessages.hpp>
+using cepba_tools::system_messages;
+
+#include "ClusteringBackEndOnline.h"
+#include "ClusteringTags.h"
+#include "Utils.h"
+
 
 /**
  * Constructor sets-up a callback to extract the clustering data from.
@@ -74,38 +81,50 @@ bool ClusteringBackEndOnline::InitLibrary(void)
  */
 bool ClusteringBackEndOnline::ExtractData(void)
 {
+   ostringstream Messages;
+
    int tag, NumberOfDimensions=0, InputSize=0;
    vector<double> MinLocalDimensions, MaxLocalDimensions;
    double *MinGlobalDimensions=NULL, *MaxGlobalDimensions=NULL;
    PACKET_new(p);
 
    InputSize = DataExtractCallback(ExternalPoints, MinLocalDimensions, MaxLocalDimensions);
-   cout << "[BE " << WhoAmI() << "] Bursts to analyze: " << ExternalPoints.size() << endl;
 
-   STREAM_send(stXchangeDims, TAG_XCHANGE_DIMENSIONS, "%alf %alf", 
+   Messages << "Bursts to analyze: " << ExternalPoints.size() << endl;
+   system_messages::information(Messages.str());
+
+   STREAM_send(stXchangeDims, TAG_XCHANGE_DIMENSIONS, "%alf %alf",
       &MinLocalDimensions[0], MinLocalDimensions.size(),
       &MaxLocalDimensions[0], MaxLocalDimensions.size());
    STREAM_recv(stXchangeDims, &tag, p, TAG_XCHANGE_DIMENSIONS);
    PACKET_unpack(p, "%alf %alf", &MinGlobalDimensions, &NumberOfDimensions, &MaxGlobalDimensions, &NumberOfDimensions);
 
    /* DEBUG -- print the min/max global dimensions */
-   if (WhoAmI() == 0)
+   Messages.str("");
+   Messages << "MinGlobalDimensions = { ";
+   for (unsigned int i=0; i<NumberOfDimensions; i++)
    {
-      cout << "[BE " << WhoAmI() << "] MinGlobalDimensions = { ";
-      for (unsigned int i=0; i<NumberOfDimensions; i++)
+      cout << MinGlobalDimensions[i];
+      if (i < NumberOfDimensions-1)
       {
-         cout << MinGlobalDimensions[i];
-         if (i < NumberOfDimensions-1) cout << ", ";
+        Messages << ", ";
       }
-      cout << " }" << endl;
-      cout << "[BE " << WhoAmI() << "] MaxGlobalDimensions = { ";
-      for (unsigned int i=0; i<NumberOfDimensions; i++)
-      {
-         cout << MaxGlobalDimensions[i]; 
-         if (i < NumberOfDimensions-1) cout << ", ";
-      }
-      cout << " }" << endl;
    }
+   Messages << " }" << endl;
+   system_messages::information(Messages.str());
+
+   Messages.str("");
+   Messages << "MaxGlobalDimensions = { ";
+   for (unsigned int i=0; i<NumberOfDimensions; i++)
+   {
+     Messages << MaxGlobalDimensions[i];
+     if (i < NumberOfDimensions-1)
+     {
+        Messages << ", ";
+     }
+   }
+   Messages << " }" << endl;
+   system_messages::information(Messages.str());
 
    /* Normalize the input data with the global dimensions */
    Normalize(MinGlobalDimensions, MaxGlobalDimensions);
@@ -140,7 +159,9 @@ bool ClusteringBackEndOnline::AnalyzeData(void)
 {
    if (!libClustering->ClusterAnalysis((vector<const Point*>&) ExternalPoints, LocalModel))
    {
-      cerr << "[BE " << WhoAmI() << "] Error clustering data: " << libClustering->GetErrorMessage() << endl;
+      ostringstream Messages;
+      Messages << "Error clustering data: " << libClustering->GetErrorMessage() << endl;
+      system_messages::information(Messages.str(), stderr);
       return false;
    }
    return true;
@@ -160,9 +181,11 @@ bool ClusteringBackEndOnline::ProcessResults(void)
   {
     if (!LocalModel[i]->Flush(LocalDataFile, MIN_CLUSTERID+i+PARAVER_OFFSET))
     {
-      cerr << "[BE " << WhoAmI() << "] Error writing local hull #" << i;
-      cerr << " data (density=" << GlobalModel[i]->Density() << "): ";
-      cerr << libClustering->GetErrorMessage() << endl;
+      ostringstream Messages;
+      Messages << "Error writing local hull #" << i;
+      Messages << " data (density=" << GlobalModel[i]->Density() << "): ";
+      Messages << libClustering->GetErrorMessage() << endl;
+      system_messages::information(Messages.str(), stderr);
       return false;
     }
   }
@@ -172,19 +195,23 @@ bool ClusteringBackEndOnline::ProcessResults(void)
   if (WhoAmI() == 0)
   {
     GlobalDataFile.open (GlobalModelDataFileName.c_str());
-    
+
     for (unsigned int i=0; i<GlobalModel.size(); i++)
     {
       if (!GlobalModel[i]->Flush(GlobalDataFile, MIN_CLUSTERID+i+PARAVER_OFFSET))
       {
+        ostringstream Messages;
+
         GlobalDataFile.close();
-        cerr << "[BE " << WhoAmI() << "] Error writing global hull #" << i;
-        cerr << " data (density=" << GlobalModel[i]->Density() << "): ";
-        cerr << libClustering->GetErrorMessage() << endl;
+
+        Messages << "Error writing global hull #" << i;
+        Messages << " data (density=" << GlobalModel[i]->Density() << "): ";
+        Messages << libClustering->GetErrorMessage() << endl;
+        system_messages::information(Messages.str(), stderr);
         return false;
       }
     }
-    
+
     GlobalDataFile.close();
   }
 

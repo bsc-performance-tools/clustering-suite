@@ -63,9 +63,13 @@ class ClusteringBackEnd : public ClusteringCore, public BackProtocol
 
       /* Names of the output scripts and plots */
       string GlobalModelDataFileName;
-      string GlobalModelPlotFileName;
+      // string GlobalModelPlotFileName;
+      string GlobalModelPlotFileNamePrefix;
+
       string LocalModelDataFileName;
-      string LocalModelPlotFileName;
+      // string LocalModelPlotFileName;
+      string LocalModelPlotFileNamePrefix;
+
       string OutputDataFileName;
       string OutputLocalClusteringFileName;
       string ClustersInformationFileName;

@@ -36,6 +36,8 @@
 #include "ClusteringTags.h"
 #include "Utils.h"
 
+#include <cstring>
+
 const char *HullFormatString     = "%ld %d %d %ald %ald %alf";
 const char *AllHullsFormatString = "%ald %ad %ad %ald %ald %alf";
 const char *AllSentFormatString  = "";
@@ -89,7 +91,7 @@ void HullManager::Unpack(PACKET_PTR InputPacket, vector<HullModel *> &HullsList)
   double    *DimensionsValuesArray=NULL;
   int        TotalNumberOfPoints=0, TotalDimensionsValues=0;
 
-  
+
   PACKET_unpack(InputPacket, AllHullsFormatString,
     &DensityArray, &NumberOfHulls,
     &NumberOfPointsArray, &NumberOfHulls,
@@ -108,8 +110,8 @@ void HullManager::Unpack(PACKET_PTR InputPacket, vector<HullModel *> &HullsList)
                                     &InstancesArray[idx1],
                                     &NeighbourhoodSizesArray[idx1],
                                     &DimensionsValuesArray[idx2]);
-    
-    HullsList.push_back( Hull ); 
+
+    HullsList.push_back( Hull );
 
     idx1 += NumberOfPointsArray[i];
     idx2 += NumberOfPointsArray[i] * NumberOfDimensionsArray[i];
@@ -143,7 +145,7 @@ void HullManager::SerializeAll(STREAM *OutputStream, vector<HullModel*> &HullsLi
   int       *NumberOfPointsArray     = NULL;
   int       *NumberOfDimensionsArray = NULL;
   int        TotalNumberOfPoints     = 0;
-  long long *InstancesArray          = NULL; 
+  long long *InstancesArray          = NULL;
   long long *NeighbourhoodSizesArray = NULL;
   int        TotalDimensionsValues   = 0;
   double    *DimensionsValuesArray   = NULL;
@@ -326,7 +328,7 @@ void HullManager::SerializeDone(int StreamID, vector<PacketPtr> &OutputPackets)
 }
 
 void HullManager::SerializeAll(
-  vector<HullModel*> &HullsList, 
+  vector<HullModel*> &HullsList,
   int                &NumberOfHulls,
   long long         *&DensityArray,
   int               *&NumberOfPointsArray,
@@ -348,7 +350,7 @@ void HullManager::SerializeAll(
     long long  Density=0;
     int        NumberOfPoints=0;
     int        NumberOfDimensions=0;
-    long long *Instances=NULL; 
+    long long *Instances=NULL;
     long long *NeighbourhoodSizes=NULL;
     double    *DimensionsValues=NULL;
     int        idx=0;

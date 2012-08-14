@@ -48,8 +48,8 @@ class Classifier: virtual public Error
 
     Classifier(void) {};
 
-    virtual bool Classify(vector<const Point*>& Data,
-                          Partition&            DataPartition) = 0;
+    template <typename T>
+    bool Classify(T begin, T end, size_t size, Partition& DataPartition);
 
     virtual bool Classify(const Point* Point, cluster_id_t& ID) = 0;
 };

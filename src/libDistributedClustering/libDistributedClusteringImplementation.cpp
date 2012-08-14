@@ -68,9 +68,13 @@ using std::ostringstream;
 /**
  * Empty constructor
  */
-libDistributedClusteringImplementation::libDistributedClusteringImplementation(int verbose)
+libDistributedClusteringImplementation::libDistributedClusteringImplementation(int         verbose,
+                                                                               const char* msg_prefix)
 {
+  system_messages::set_rank_prefix(msg_prefix);
+
   system_messages::distributed = true;
+  TraceData::distributed       = true;
 
   switch(verbose)
   {
@@ -78,10 +82,12 @@ libDistributedClusteringImplementation::libDistributedClusteringImplementation(i
       system_messages::verbose = false;
       break;
     case VERBOSE:
+      system_messages::print_timers            = true;
       system_messages::verbose                 = true;
       system_messages::messages_from_all_ranks = false;
       break;
     case VVERBOSE:
+      system_messages::print_timers            = true;
       system_messages::verbose                 = true;
       system_messages::messages_from_all_ranks = true;
     default:
@@ -123,6 +129,8 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
     SetErrorMessage(ConfigurationManager->GetLastError());
     return false;
   }
+
+  ConfigurationManager->SetDistributed(true);
 
   this->Epsilon   = Epsilon;
   this->MinPoints = MinPoints;
@@ -498,9 +506,6 @@ bool libDistributedClusteringImplementation::ClusterAnalysis(vector<HullModel*>&
  */
 bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& ClusterModels)
 {
-  ostringstream Messages;
-
-  vector<const Point*>& CompletePoints = ( UsingExternalData ? ExternalData : (vector<const Point*>&) Data->GetCompleteBursts() );
   vector<ConvexHullModel> InternalHulls;
 
   for (size_t i = 0; i < ClusterModels.size(); i++)
@@ -512,11 +517,33 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& Cl
   ConvexHullClassifier ClassifierCore(InternalHulls, Epsilon, MinPoints);
 
   /* DEBUG
+  ostringstream Messages;
   Messages << "Hulls used to classify points = " << ClusterModels.size() << endl;
   system_messages::information(Messages.str().c_str());
   */
 
-  ClassifierCore.Classify(CompletePoints, ClassificationPartition);
+  if (UsingExternalData)
+  {
+    ClassifierCore.Classify(ExternalData.begin(),
+                            ExternalData.end(),
+                            ExternalData.size(),
+                            ClassificationPartition);
+  }
+  else
+  {
+#ifdef HAVE_SQLITE3
+
+    ClassifierCore.Classify(Data->GetCompleteBursts_begin(),
+                            Data->GetCompleteBursts_end(),
+                            Data->GetCompleteBurstsSize(),
+                            ClassificationPartition);
+#else
+    ClassifierCore.Classify(Data->GetCompleteBursts().begin(),
+                            Data->GetCompleteBursts().end(),
+                            Data->GetCompleteBursts().size(),
+                            ClassificationPartition);
+#endif
+  }
 
   GenerateStatistics(true); // true = UseClassificationPartition
 
@@ -556,13 +583,24 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
                               Parameters->GetClusteringParametersPrecision(),
                               Parameters->GetExtrapolationParametersNames(),
                               Parameters->GetExtrapolationParametersPrecision());
-
+#ifdef HAVE_SQLITE3
+    if (!Statistics.ComputeStatistics(Data->GetCompleteBursts_begin(),
+                                      Data->GetCompleteBursts_end(),
+                                      Data->GetCompleteBurstsSize(),
+                                      ClassificationPartition.GetAssignmentVector()))
+    {
+      SetErrorMessage(Statistics.GetLastError());
+      return false;
+    }
+#else
     if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
                                       ClassificationPartition.GetAssignmentVector()))
     {
       SetErrorMessage(Statistics.GetLastError());
       return false;
     }
+#endif
+
     Statistics.TranslatedIDs(ClassificationPartition.GetAssignmentVector());
   }
   else
@@ -608,8 +646,6 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
  */
 bool libDistributedClusteringImplementation::ReconstructInputTrace(string OutputTraceName)
 {
-  ClusteredTraceGenerator* TraceReconstructor;
-
   if (ClassificationPartition.NumberOfClusters() == 0)
   {
     SetError(true);
@@ -627,39 +663,94 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
   switch(InputFileType)
   {
     case ParaverTrace:
+    {
       if (PRVEventsParsing)
       {
-        TraceReconstructor = new ClusteredEventsPRVGenerator(InputFileName, OutputTraceName);
+        ClusteredEventsPRVGenerator* TraceReconstructor =
+          new ClusteredEventsPRVGenerator(InputFileName, OutputTraceName);
+
         TraceReconstructor->SetEventsToDealWith (EventsToDealWith);
+
+#ifdef HAVE_SQLITE3
+        if (!TraceReconstructor->Run(Data->GetAllBursts_begin(),
+                                     Data->GetAllBursts_end(),
+                                     ClassificationPartition.GetAssignmentVector(),
+                                     ClassificationPartition.GetIDs()))
+        {
+          SetErrorMessage(TraceReconstructor->GetLastError());
+          return false;
+        }
+#else
+        if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
+                                     Data->GetAllBursts().end(),
+                                     ClassificationPartition.GetAssignmentVector(),
+                                     ClassificationPartition.GetIDs()))
+        {
+          SetErrorMessage(TraceReconstructor->GetLastError());
+          return false;
+        }
+#endif
+
       }
       else
       {
-        TraceReconstructor = new ClusteredStatesPRVGenerator(InputFileName, OutputTraceName);
+        ClusteredStatesPRVGenerator* TraceReconstructor =
+          new ClusteredStatesPRVGenerator(InputFileName, OutputTraceName);
+
+#ifdef HAVE_SQLITE3
+        if (!TraceReconstructor->Run(Data->GetAllBursts_begin(),
+                                     Data->GetAllBursts_end(),
+                                     ClassificationPartition.GetAssignmentVector(),
+                                     ClassificationPartition.GetIDs()))
+        {
+          SetErrorMessage(TraceReconstructor->GetLastError());
+          return false;
+        }
+#else
+        if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
+                                     Data->GetAllBursts().end(),
+                                     ClassificationPartition.GetAssignmentVector(),
+                                     ClassificationPartition.GetIDs()))
+        {
+          SetErrorMessage(TraceReconstructor->GetLastError());
+          return false;
+        }
+#endif
+
       }
       break;
+    }
     case DimemasTrace:
-      /* TBI -> Dimemas Cluster blocks not implemented */
-      TraceReconstructor = new ClusteredTRFGenerator (InputFileName, OutputTraceName);
+    { /* TBI -> Dimemas Cluster blocks not implemented */
+      ClusteredTRFGenerator* TraceReconstructor =
+        new ClusteredTRFGenerator (InputFileName, OutputTraceName);
+
+#ifdef HAVE_SQLITE3
+      if (!TraceReconstructor->Run(Data->GetAllBursts_begin(),
+                                   Data->GetAllBursts_end(),
+                                   ClassificationPartition.GetAssignmentVector(),
+                                   ClassificationPartition.GetIDs()))
+      {
+        SetErrorMessage(TraceReconstructor->GetLastError());
+        return false;
+      }
+#else
+      if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
+                                   Data->GetAllBursts().end(),
+                                   ClassificationPartition.GetAssignmentVector(),
+                                   ClassificationPartition.GetIDs()))
+      {
+        SetErrorMessage(TraceReconstructor->GetLastError());
+        return false;
+      }
+#endif
       break;
+    }
     default:
+    {
       SetErrorMessage("unable to reconstruct an input file which is not a trace");
       return false;
-  }
-
-  if (TraceReconstructor->GetError())
-  {
-    SetErrorMessage(TraceReconstructor->GetLastError());
-    return false;
-  }
-
-
-
-  if (!TraceReconstructor->Run(Data->GetAllBursts(),
-                               ClassificationPartition.GetAssignmentVector(),
-                               ClassificationPartition.GetIDs()))
-  {
-    SetErrorMessage(TraceReconstructor->GetLastError());
-    return false;
+    }
   }
 
   return true;
@@ -952,6 +1043,7 @@ bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileNam
 
   if (!FlushData(DataFileName, LocalPartition))
   {
+    SetError(true);
     return false;
   }
 
@@ -1175,13 +1267,13 @@ bool libDistributedClusteringImplementation::GenerateClusterModels(vector<HullMo
   for (size_t i = NOISE_CLUSTERID+1; i < PointsPerCluster.size(); i++)
   {
     HullModel *NewHull = new HullModel(new ConvexHullModel(PointsPerCluster[i]));
-    
+
     Models.push_back(NewHull);
 
     /* DEBUG
     if (NewHull->Size() < 3)
     {
-      // MAY HAPPEN WHEN CLUSTERING POINTS ARE 1-DIMENSIONAL 
+      // MAY HAPPEN WHEN CLUSTERING POINTS ARE 1-DIMENSIONAL
       std::cout << "[DEBUG] Hull points=" << NewHull->Size() << " Cluster points=" << PointsPerCluster[i].size() << std::endl;
       std::cout << "[DEBUG] Dumping cluster..." << endl;
       for (int k=0; k<PointsPerCluster[i].size(); k++)
@@ -1190,7 +1282,7 @@ bool libDistributedClusteringImplementation::GenerateClusterModels(vector<HullMo
         p->PrintPoint();
       }
       std::cout << "[DEBUG] Dumping hull..." << endl;
-      NewHull->Flush(); 
+      NewHull->Flush();
     } */
 
   }

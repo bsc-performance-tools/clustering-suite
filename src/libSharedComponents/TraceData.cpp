@@ -63,6 +63,8 @@ using std::make_pair;
 #include <mpi.h>
 #endif
 
+
+
 /******************************************************************************
 /* Singleton management
  *****************************************************************************/
@@ -77,6 +79,10 @@ TraceData* TraceData::GetInstance(void)
   return TraceData::Instance;
 }
 
+/******************************************************************************
+/* Static variables
+ *****************************************************************************/
+bool TraceData::distributed = false;
 
 /****************************************************************************
  * Constructor                                                              *
@@ -105,10 +111,13 @@ TraceData::TraceData(void)
   }
 
   /* Set if we work in a distributed scenario is being used */
-  if (Distributed = Configuration->GetDistributed())
+  if (TraceData::distributed = Configuration->GetDistributed())
   {
     MyRank     = Configuration->GetMyRank();
     TotalRanks = Configuration->GetTotalRanks();
+#ifdef HAVE_SQLITE3
+    DBInitialized = false;
+#endif
   }
 
   /* Set normalization attributes */
@@ -173,6 +182,21 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
          BurstDuration);
 #endif
 
+#ifdef HAVE_SQLITE3
+  if (Master && !DBInitialized)
+  {
+    AllBurstsDB = BurstsDB(ParametersManager::GetInstance());
+    if (AllBurstsDB.GetError())
+    {
+      SetError(true);
+      SetErrorMessage(AllBurstsDB.GetLastError());
+      return false;
+    }
+
+    DBInitialized = true;
+  }
+#endif
+
   /* Add duration to events data */
   EventsData.insert(make_pair(DURATION_EVENT_TYPE,
                               (event_value_t) BurstDuration));
@@ -208,15 +232,19 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
                         ExtrapolationData,
                         BurstType);
 
-  /* DEBUG
-  ostringstream Messages;
-  Messages << "Burst number " << Burst->GetInstance() << " Type = " << BurstType << endl;
-  system_messages::information(Messages.str().c_str());
-  */
-
-  if (Master || ReadThisTask(TaskId))
+  // if (Master || ReadThisTask(TaskId))
+  if (Master)
   {
+#ifndef HAVE_SQLITE3
     AllBursts.push_back(Burst);
+#else
+    if (!AllBurstsDB.NewBurst(Burst))
+    {
+      SetError(true);
+      SetErrorMessage(AllBurstsDB.GetLastError());
+      return false;
+    }
+#endif
   }
 
   if (BurstType == CompleteBurst)
@@ -227,8 +255,9 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
       { /* Keep track of the total number of tasks */
         NumberOfTasks = TaskId;
       }
-
+#ifndef HAVE_SQLITE3
       CompleteBursts.push_back(Burst);
+#endif
     }
 
     for (size_t i = 0; i < ClusteringDimensions; i++)
@@ -254,9 +283,18 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
     }
   }
 
-  if (!Master && !ReadThisTask(TaskId))
+  if (!ReadThisTask(TaskId))
   {
-    delete Burst;
+    if (!Master)
+    {
+      delete Burst;
+    }
+#ifdef HAVE_SQLITE3
+    if (Master)
+    {
+      delete Burst;
+    }
+#endif
   }
 
   return true;
@@ -295,9 +333,28 @@ bool TraceData::NewBurst(instance_t           Instance,
   system_messages::information(Messages.str().c_str());
   */
 
+#ifdef HAVE_SQLITE3
+  if (Master && !DBInitialized)
+  {
+    AllBurstsDB = BurstsDB(ParametersManager::GetInstance());
+    if (AllBurstsDB.GetError())
+    {
+      SetError(true);
+      SetErrorMessage(AllBurstsDB.GetLastError());
+      return false;
+    }
+
+    DBInitialized = true;
+  }
+#endif
+
   if (Master || ReadThisTask(TaskId))
   {
+#ifndef HAVE_SQLITE3
     AllBursts.push_back(Burst);
+#else
+    AllBurstsDB.NewBurst(Burst);
+#endif
   }
 
   if (BurstType == CompleteBurst)
@@ -308,8 +365,9 @@ bool TraceData::NewBurst(instance_t           Instance,
       { /* Keep track of the total number of tasks */
         NumberOfTasks = TaskId;
       }
-
+#ifndef HAVE_SQLITE3
       CompleteBursts.push_back(Burst);
+#endif
     }
 
     for (size_t i = 0; i < ClusteringDimensions; i++)
@@ -499,6 +557,47 @@ void TraceData::Normalize(void)
 #endif
 
     vector<double> Factors = Parameters->GetClusteringParametersFactors();
+#ifdef HAVE_SQLITE3
+    if (Master)
+    {
+      if (!AllBurstsDB.NormalizeBursts(MaxValues, MinValues, Factors))
+      {
+        return;
+      }
+
+      for (DataIterator  = ClusteringBursts.begin();
+           DataIterator != ClusteringBursts.end();
+         ++DataIterator)
+      {
+        if (!(*DataIterator)->IsNormalized())
+        {
+          (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
+        }
+      }
+    }
+    else
+    {
+      for (DataIterator  = CompleteBursts.begin();
+           DataIterator != CompleteBursts.end();
+         ++DataIterator)
+      {
+        if (!(*DataIterator)->IsNormalized())
+        {
+          (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
+        }
+      }
+
+      for (DataIterator  = FilteredBursts.begin();
+           DataIterator != FilteredBursts.end();
+         ++DataIterator)
+      {
+        if (!(*DataIterator)->IsNormalized())
+        {
+          (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
+        }
+      }
+    }
+#else
 
     for (DataIterator  = CompleteBursts.begin();
          DataIterator != CompleteBursts.end();
@@ -509,7 +608,6 @@ void TraceData::Normalize(void)
         (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
       }
     }
-
     for (DataIterator  = FilteredBursts.begin();
          DataIterator != FilteredBursts.end();
          DataIterator++)
@@ -519,6 +617,9 @@ void TraceData::Normalize(void)
         (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
       }
     }
+#endif
+
+
 
     // cout << "END OF NORMALIZATIONS" << endl;
 
@@ -526,8 +627,7 @@ void TraceData::Normalize(void)
   }
 }
 
-void
-TraceData::ScalePoints(void)
+void TraceData::ScalePoints(void)
 {
   TraceData::iterator DataIterator;
 
@@ -618,9 +718,22 @@ TraceData::BaseChange(vector< vector<double> >& BaseChangeMatrix)
   }
 }
 
+size_t TraceData::GetAllBurstsSize(void) const
+{
+#ifdef HAVE_SQLITE3
+  return AllBurstsDB.AllBurstsSize();
+#else
+  return AllBursts.size();
+#endif
+}
+
 size_t TraceData::GetCompleteBurstsSize(void) const
 {
+#ifdef HAVE_SQLITE3
+  return AllBurstsDB.CompleteBurstsSize();
+#else
   return CompleteBursts.size();
+#endif
 }
 
 size_t TraceData::GetClusteringBurstsSize(void) const
@@ -641,104 +754,18 @@ size_t TraceData::GetTraceDataSize(void) const
 void TraceData::SetNumberOfTasks(size_t NumberOfTasks)
 {
   this->NumberOfTasks = NumberOfTasks;
-  if (Distributed)
+  if (TraceData::distributed)
   {
     SetTasksToRead();
   }
 }
 
-/*
-void TraceData::ResetClusteringPoints(void)
-{ Moves all complete bursts in 'AllBursts' vector to 'ClusteringBursts'
-  vector
-
-  ClusteringBursts.clear();
-
-  for (size_t i = 0; i < AllBursts.size(); i++)
-  {
-    if (AllBursts[i]->GetBurstType() == CompleteBurst)
-    {
-      ClusteringBursts.push_back(AllBursts[i]);
-    }
-  }
-
-  return;
-}
-*/
-
-/*
-bool
-TraceData::ReplaceClusterIds(vector< pair<UINT64, INT32> >& ClustersIdList)
-{
-  INT32 i;
-  bool MorePoints = true;
-  bool Found;
-
-  TraceData::iterator PointsIterator;
-
-  /* DEBUG
-  cout << "Real Points = " << ClusteringPoints.size() << endl;
-
-  PointsIterator = ClusteringPoints.begin();
-
-  for (i = 0; i < ClustersIdList.size() && MorePoints; i++)
-  {
-    Found = false;
-
-    while (!Found && MorePoints)
-    {
-      if ((*PointsIterator)->GetInstance() == ClustersIdList[i].first)
-      {
-        (*PointsIterator)->SetClusterId(ClustersIdList[i].second);
-        Found = true;
-      }
-
-      PointsIterator++;
-      if (PointsIterator == ClusteringPoints.end())
-      {
-        MorePoints = false;
-      }
-    }
-  }
-
-  if (i != ClustersIdList.size())
-  {
-    /* Some Points where not assigned
-    cout << "i = " << i << " ClustersIdList.size() = " << ClustersIdList.size() << endl;
-
-    SetError(true);
-    SetErrorMessage("some instances have not found the corresponding point");
-    return false;
-  }
-
-  return true;
-}
-*/
-
 bool TraceData::FlushPoints(ostream&             str,
                             vector<cluster_id_t> Cluster_IDs,
                             DataPrintSet         WhatToPrint)
 {
-  size_t TotalPoints;
+  bool Unclassified = false;
 
-  bool   Unclassified = false;
-
-  ParametersManager *Parameters = ParametersManager::GetInstance();
-
-  vector<string> ClusteringParametersNames;
-  vector<string> ExtrapolationParametersNames;
-
-  vector<bool>   ClusteringParametersPrecision;
-  vector<bool>   ExtrapolationParametersPrecision;
-
-  TraceData::iterator ClusteringBurstsIterator;
-  TraceData::iterator FilteredBurstsIterator;
-
-  TraceData::iterator BurstsIterator, BeginLimitIterator, EndLimitIterator;
-
-  size_t ClusteringBurstsCounter = 0, DataSize;
-
-  /* Check if cluster_ids is empty! */
   if (Cluster_IDs.size() == 0)
   {
     Unclassified = true;
@@ -767,21 +794,47 @@ bool TraceData::FlushPoints(ostream&             str,
         return false;
       }
 
+      /*
       BeginLimitIterator = ClusteringBursts.begin();
       EndLimitIterator   = ClusteringBursts.end();
       DataSize           = ClusteringBursts.size();
+      */
 
       sort(ClusteringBursts.begin(),
            ClusteringBursts.end(),
            InstanceNumCompare());
 
+      return GenericFlushPoints(str,
+                                ClusteringBursts.begin(),
+                                ClusteringBursts.end(),
+                                ClusteringBursts.size(),
+                                Cluster_IDs);
       break;
     }
     case PrintCompleteBursts:
     {
       /* DEBUG
       cout << "Printing Complete Bursts" << endl; */
+#ifdef HAVE_SQLITE3
+      if (Cluster_IDs.size() != AllBurstsDB.CompleteBurstsSize())
+      {
+        ostringstream Message;
+        Message << "number of IDs (" << Cluster_IDs.size() << ") ";
+        Message << "different from number of complete bursts (";
+        Message << AllBurstsDB.CompleteBurstsSize() << ")";
 
+        SetErrorMessage(Message.str());
+        SetError(true);
+        return false;
+      }
+
+      return GenericFlushPoints(str,
+                                AllBurstsDB.complete_bursts_begin(),
+                                AllBurstsDB.complete_bursts_end(),
+                                AllBurstsDB.CompleteBurstsSize(),
+                                Cluster_IDs);
+
+#else
       if (Cluster_IDs.size() != CompleteBursts.size())
       {
         ostringstream Message;
@@ -794,12 +847,14 @@ bool TraceData::FlushPoints(ostream&             str,
         return false;
       }
 
-      BeginLimitIterator = CompleteBursts.begin();
-      EndLimitIterator   = CompleteBursts.end();
-      DataSize           = CompleteBursts.size();
-
       sort(CompleteBursts.begin(), CompleteBursts.end(), InstanceNumCompare());
 
+      return GenericFlushPoints(str,
+                                CompleteBursts.begin(),
+                                CompleteBursts.end(),
+                                CompleteBursts.size(),
+                                Cluster_IDs);
+#endif
       break;
     }
     case PrintAllBursts:
@@ -807,8 +862,28 @@ bool TraceData::FlushPoints(ostream&             str,
       /* DEBUG
       cout << "Printint All Bursts" << endl; */
 
+#ifdef HAVE_SQLITE3
+      if (Cluster_IDs.size() != AllBurstsDB.AllBurstsSize())
+      {
+        ostringstream Message;
+        Message << "number of IDs (" << Cluster_IDs.size() << ") ";
+        Message << "different from number of complete bursts (";
+        Message << AllBurstsDB.AllBurstsSize() << ")";
+
+        SetErrorMessage(Message.str());
+        SetError(true);
+        return false;
+      }
+
+      return GenericFlushPoints(str,
+                                AllBurstsDB.all_bursts_begin(),
+                                AllBurstsDB.all_bursts_end(),
+                                AllBurstsDB.AllBurstsSize(),
+                                Cluster_IDs);
+#else
       /* When printing all bursts, or the data have not been classified
          or  all the complete bursts must have an ID  */
+
       if (!Unclassified && (Cluster_IDs.size() != CompleteBursts.size()))
       {
         ostringstream Message;
@@ -821,11 +896,13 @@ bool TraceData::FlushPoints(ostream&             str,
         return false;
       }
 
-      BeginLimitIterator = AllBursts.begin();
-      EndLimitIterator   = AllBursts.end();
-      DataSize           = AllBursts.size();
-
       sort(AllBursts.begin(), AllBursts.end(), InstanceNumCompare());
+
+      return GenericFlushPoints(AllBursts.begin(),
+                                AllBursts.end(),
+                                AllBursts.size(),
+                                Cluster_IDs);
+#endif
 
       break;
     }
@@ -833,109 +910,20 @@ bool TraceData::FlushPoints(ostream&             str,
     {
       ostringstream Message;
       Message << "wrong definition about what to print ";
-      Message << "number of IDs (" << Cluster_IDs.size() << ") ";
-      Message << "different from number of bursts (";
-      Message << CompleteBursts.size() << ")";
 
       SetErrorMessage(Message.str());
       SetError(true);
       return false;
     }
   }
-
-  if (NormalizeData && !Normalized)
-  {
-    Normalize();
-  }
-
-  ClusteringParametersNames    = Parameters->GetClusteringParametersNames();
-  ExtrapolationParametersNames = Parameters->GetExtrapolationParametersNames();
-
-  ClusteringParametersPrecision    = Parameters->GetClusteringParametersPrecision();
-  ExtrapolationParametersPrecision = Parameters->GetExtrapolationParametersPrecision();
-
-  /* Heading line */
-  str << "# Instance,TaskId,ThreadId,Begin_Time,End_Time,Duration, Line";
-
-  for (INT32 i = 0; i < ClusteringParametersNames.size(); i++)
-  {
-    str << "," << ClusteringParametersNames[i];
-  }
-
-  for (INT32 i = 0; i < ClusteringParametersNames.size(); i++)
-  {
-    str << "," << ClusteringParametersNames[i] << "_Norm";
-  }
-
-  for (INT32 i = 0; i < ExtrapolationParametersNames.size(); i++)
-  {
-    str << "," << ExtrapolationParametersNames[i];
-  }
-
-  str << ",ClusterID" << endl;
-
-  system_messages::show_progress("Writing point to disc", 0, DataSize);
-  for (BurstsIterator  = BeginLimitIterator, ClusteringBurstsCounter = 0, TotalPoints = 0;
-       BurstsIterator != EndLimitIterator;
-       ++BurstsIterator)
-  {
-    cluster_id_t CurrentClusterId;
-
-    /* DEBUG
-    cout << "Bursts = " << TotalPoints;
-    cout << " Dimensions = " << (*BurstsIterator)->size();
-    cout << " Burst Type = " << (*BurstsIterator)->GetBurstType();
-    */
-    ++TotalPoints;
-
-    switch((*BurstsIterator)->GetBurstType())
-    {
-      case CompleteBurst:
-
-        if (Unclassified)
-        {
-          CurrentClusterId = UNCLASSIFIED+PARAVER_OFFSET;
-        }
-        else
-        {
-          CurrentClusterId = Cluster_IDs[ClusteringBurstsCounter]+PARAVER_OFFSET;
-          ++ClusteringBurstsCounter;
-        }
-        // cout << " Complete" << endl;
-        break;
-      case DurationFilteredBurst:
-        CurrentClusterId = DURATION_FILTERED_CLUSTERID+PARAVER_OFFSET;
-        // cout << " Duration Filtered" << endl;
-        break;
-      case RangeFilteredBurst:
-        CurrentClusterId = RANGE_FILTERED_CLUSTERID+PARAVER_OFFSET;
-        // cout << " Range Filtered" << endl;
-        break;
-      default:
-        /* This bursts should not be printed */
-        // cout << " Unknown!" << endl;
-        continue;
-    }
-
-    (*BurstsIterator)->Print(str,
-                             ClusteringParametersPrecision,
-                             ExtrapolationParametersPrecision,
-                             CurrentClusterId);
-
-    system_messages::show_progress("Writing point to disc", TotalPoints, DataSize);
-  }
-  system_messages::show_progress_end("Writing point to disc", DataSize);
-
   return true;
 }
-
 
 /*****************************************************************************
  * Debug/Informative Methods
  ****************************************************************************/
 
-void
-TraceData::PrintPoints(void)
+void TraceData::PrintPoints(void)
 {
   TraceData::iterator BurstsIterator;
 

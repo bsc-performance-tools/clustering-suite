@@ -81,3 +81,13 @@ libSharedComponents_la_SOURCES = \
     SequenceScore.hpp \
     SequenceScore.cpp
 
+if HAVE_SQLITE3
+libSharedComponents_la_CXXFLAGS += @SQLITE3_CFLAGS@
+libSharedComponents_la_LDFLAGS += @SQLITE3_LDFLAGS@
+
+libSharedComponents_la_SOURCES += \
+	BurstsDB.hpp \
+	BurstsDB.cpp
+
+endif
+

@@ -68,6 +68,8 @@ class Point
 
     instance_t GetInstance(void) const { return this->Instance; }
 
+    vector<double>& GetDimensions(void);
+
     void       SetNeighbourhoodSize(size_t NeighbourhoodSize) { this->NeighbourhoodSize = NeighbourhoodSize; }
     size_t     GetNeighbourhoodSize(void) const               { return this->NeighbourhoodSize; }
 

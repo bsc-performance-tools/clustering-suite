@@ -759,6 +759,9 @@ AC_DEFUN([AX_OFF_T_64BIT],
 	fi
 ])
 
+# AX_CHECK_CGAL
+# ----------------
+
 dnl Check for CGAL and MPFR (uses AX_LIB_CGAL_CORE)
 AC_DEFUN([AX_CHECK_CGAL],
 [
@@ -773,7 +776,7 @@ if test "x$have_mpfr" = "xyes" -a "x$have_gmp" = "xyes"; then
   
 	dnl AC_MSG_CHECKING([for CGAL installation])
 
-	if test "$BOOST_THREAD_LIBS"; then
+	if test -n "$BOOST_THREAD_LIBS"; then
 	
 		AX_FLAGS_SAVE()
 
@@ -783,14 +786,14 @@ if test "x$have_mpfr" = "xyes" -a "x$have_gmp" = "xyes"; then
 		LIBS="$LIBS $MPFR_LIBS $BOOST_THREAD_LIBS $gmplibs"
     
 		AX_LIB_CGAL_CORE(
-			CGAL_CPPFLAGS="$CGAL_CPPFLAGS -frounding-math $MPFR_CXXFLAGS $BOOST_CPPFLAGS $gmpinc"
-			CGAL_LDFLAGS="$CGAL_LDFLAGS $MPFR_LDFLAGS $MPFR_LIBS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS $gmplibs"
-			AC_SUBST(CGAL_CPPFLAGS)
-			AC_SUBST(CGAL_LDFLAGS)
-	      	cgal_enabled="yes",
-			    cgal_enabled="no")
+CGAL_CPPFLAGS="$CGAL_CPPFLAGS -frounding-math $MPFR_CXXFLAGS $BOOST_CPPFLAGS $gmpinc"
+CGAL_LDFLAGS="$CGAL_LDFLAGS $MPFR_LDFLAGS $MPFR_LIBS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS $gmplibs"
+AC_SUBST(CGAL_CPPFLAGS)
+AC_SUBST(CGAL_LDFLAGS)
+cgal_enabled=yes,
+cgal_enabled=no)
 
-		if test ! "x$cgal_enabled" = "xyes"; then
+		if test "x$cgal_enabled" = "xno"; then
 			AC_MSG_RESULT([CGAL not found, some functionalities will be missing])
     else
       CGAL_RPATH="-R ${mpfr_libdir} -R ${gmp_libdir} -R ${cgal_libdir}"

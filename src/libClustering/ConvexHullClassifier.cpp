@@ -46,41 +46,9 @@ using std::ostringstream;
 bool ConvexHullClassifier::Classify(vector<const Point*>& Data,
                                     Partition&            DataPartition)
 {
-  cluster_id_t          CurrentClusterId;
-  vector<cluster_id_t>& AssignmentVector = DataPartition.GetAssignmentVector();
-  set<cluster_id_t>&    DifferentIDs     = DataPartition.GetIDs();
-
-  ostringstream Message;
-
-  for (size_t i = 0; i < Data.size(); i++)
-  {
-    /* DEBUG
-    Message.str("");
-    Message << "Point[" << i << "]";
-    system_messages::information(Message.str()); */
-
-    Classify(Data[i], CurrentClusterId);
-    AssignmentVector.push_back(CurrentClusterId);
-
-    DifferentIDs.insert(CurrentClusterId);
-
-    /* DEBUG
-    Message.str("");
-    Message << " ID = " << CurrentClusterId << endl;
-    system_messages::information(Message.str()); */
-  }
-
-  // DataPartition.NumberOfClusters(HullModels.size()+1);
-  // DataPartition.HasNoise(true);
-
-  /* DEBUG
-  Message.str("");
-  Message << "Classification Partition Size = " << DataPartition.NumberOfClusters() << endl;
-  system_messages::information(Message.str().c_str());
-  */
-
-  return true;
+  return Classify(Data.begin(), Data.end(), (size_t) Data.size(), DataPartition);
 }
+
 
 bool ConvexHullClassifier::Classify(const Point* QueryPoint, cluster_id_t& ID)
 {
@@ -88,6 +56,13 @@ bool ConvexHullClassifier::Classify(const Point* QueryPoint, cluster_id_t& ID)
   ID = NOISE_CLUSTERID;
 
   double MinSqDistance = MAX_DOUBLE;
+
+  if (QueryPoint == NULL)
+  {
+    SetErrorMessage("no point to classify!");
+    SetError(true);
+    return false;
+  }
 
   /* To improve the search, first we just look using the inclusion */
   for (size_t i = 0; i < HullModels.size(); i++)

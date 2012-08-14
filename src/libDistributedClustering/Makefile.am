@@ -10,7 +10,9 @@ INCLUDES = \
 	-I$(top_srcdir)/src/libANN \
 	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libTraceClustering \
-	-I$(top_srcdir)/src/libSharedComponents 
+	-I$(top_srcdir)/src/libSharedComponents \
+	-I$(top_srcdir)/src/libParaverTraceParser \
+	-I$(common_filesdir)
 
 libDistributedClustering_la_LIBADD= \
 	$(top_srcdir)/src/BasicClasses/libBasicClasses.la \
@@ -47,4 +49,6 @@ libDistributedClustering_la_SOURCES = \
 	libDistributedClusteringImplementation.hpp \
 	libDistributedClusteringImplementation.cpp \
 	HullModel.hpp \
-	HullModel.cpp
+	HullModel.cpp 
+
+

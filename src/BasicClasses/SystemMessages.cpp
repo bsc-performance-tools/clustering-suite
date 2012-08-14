@@ -35,20 +35,35 @@
 #include "SystemMessages.hpp"
 using cepba_tools::system_messages;
 
+#include <cstring>
+#include <cstdlib>
+
 #include <iostream>
 using std::cout;
 using std::endl;
 
+#include <sstream>
+using std::ostringstream;
+
 bool system_messages::verbose                 = false;
 bool system_messages::distributed             = false;
 
-int  system_messages::my_rank                 = -1;
-bool system_messages::messages_from_all_ranks = false;
+int   system_messages::my_rank                 = -1;
+bool  system_messages::messages_from_all_ranks = false;
+char* system_messages::rank_prefix             = NULL;
 
 bool system_messages::print_timers            = false;
 
 bool system_messages::percentage_ongoing      = false;
 int  system_messages::last_percentage_written = 0;
+
+void system_messages::set_rank_prefix(const char* desired_rank_prefix)
+{
+  ostringstream prefix;
+  prefix << desired_rank_prefix << " ";
+  system_messages::rank_prefix = (char*) malloc(strlen(prefix.str().c_str())+1);
+  strcpy(system_messages::rank_prefix, prefix.str().c_str());
+}
 
 void system_messages::information(string message,
                                   FILE*  channel)
@@ -65,13 +80,21 @@ void system_messages::information(const char* message,
     {
       if (system_messages::messages_from_all_ranks)
       {
-        fprintf(channel, "[%d] %s", system_messages::my_rank, message);
+        fprintf(channel,
+                "[%s%d] %s",
+                system_messages::rank_prefix,
+                system_messages::my_rank,
+                message);
       }
       else
       {
         if (my_rank == 0)
         {
-          fprintf(channel, "[%d] %s", system_messages::my_rank, message);
+          fprintf(channel,
+                  "[%s%d] %s",
+                  system_messages::rank_prefix,
+                  system_messages::my_rank,
+                  message);
         }
       }
     }
@@ -162,7 +185,8 @@ void system_messages::show_percentage_progress(const char* message,
         if(!system_messages::percentage_ongoing)
         {
           fprintf(channel,
-                  "[%d] %s %03d%%",
+                  "[%s%d] %s %03d%%",
+                  system_messages::rank_prefix,
                   system_messages::my_rank,
                   message,
                   real_percentage);
@@ -203,6 +227,8 @@ void system_messages::show_percentage_end(const char* message,
       fprintf(channel, " 100%%\n");
       system_messages::percentage_ongoing = false;
     }
+
+    fflush(channel);
   }
 }
 
@@ -226,7 +252,11 @@ void system_messages::show_timer(const char*      message,
     else if (system_messages::messages_from_all_ranks ||
             (!system_messages::messages_from_all_ranks && my_rank == 0))
     {
-      fprintf(channel, "%s %lu us\n", message, Time);
+      fprintf(channel, "[%s%d] %s %lu us\n",
+              system_messages::rank_prefix,
+              system_messages::my_rank,
+              message,
+              Time);
     }
   }
 }

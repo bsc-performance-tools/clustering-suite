@@ -42,6 +42,7 @@ using cepba_tools::Error;
 #include "Partition.hpp"
 #include "ClusteringStatistics.hpp"
 #include "ClusterInformation.hpp"
+#include "SequenceScore.hpp"
 
 #include <list>
 using std::list;
@@ -74,6 +75,8 @@ class ClusteringRefinementAggregative: public Error
 
     cluster_id_t                           MaxIDAssigned;
 
+    vector<SequenceScoreValue>             CurrentClustersScores;
+    double                                 CurrentGlobalScore;
     vector<percentage_t>                   GlobalScoresPerLevel;
 
   public:
@@ -132,13 +135,15 @@ class ClusteringRefinementAggregative: public Error
     vector<pair<instance_t, cluster_id_t> > GetAssignment(ClusterInformation* Node);
 
     bool GenerateLastPartition(const vector<CPUBurst*>& Bursts,
-                               size_t                   LastStep,
                                Partition&               PreviousPartition,
                                Partition&               LastPartition);
 
     void LinkLastNodes(cluster_id_t        MainClusterID,
                        set<cluster_id_t>&  Merges,
                        ClusterInformation* NewNode);
+
+    bool RenameLastPartition(const vector<CPUBurst*>& Bursts,
+                             Partition& LastPartition);
 
     ClusterInformation* LocateNode(cluster_id_t ClusterID);
 
@@ -149,8 +154,7 @@ class ClusteringRefinementAggregative: public Error
                     Partition&               CurrentPartition,
                     size_t                   Step);
 
-    bool PrintTrees(size_t Step,
-                    bool   LastTree = false);
+    bool PrintTree(string TreeFileName, bool FinalTree);
 
     bool PrintTreeNodes(ofstream& str);
 

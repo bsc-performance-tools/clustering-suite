@@ -47,6 +47,8 @@ using std::set;
 class ClusteredTraceGenerator: public Error
 {
   protected:
+    enum   ReconstructorType { PRVStates, PRVEvents, TRF };
+
     string InputTraceName;
     FILE*  InputTraceFile;
     string OutputTraceName;
@@ -54,17 +56,27 @@ class ClusteredTraceGenerator: public Error
     bool   DestroyClusteredFile;
 
   public:
-    ClusteredTraceGenerator(string  InputTraceName,
-                            string  OutputTraceName);
+    ClusteredTraceGenerator (string  InputTraceName,
+                             string  OutputTraceName);
 
-    ~ClusteredTraceGenerator(void);
+    ~ClusteredTraceGenerator (void);
 
-    virtual bool Run(vector<CPUBurst*>&    Bursts,
-                     vector<cluster_id_t>& IDs,
-                     set<cluster_id_t>&    DifferentIDs,
-                     bool                  MinimizeInformation = false) = 0;
+    virtual ReconstructorType GetType(void) = 0;
 
-    virtual bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith) = 0;
+    template <typename T>
+    bool Run (T                     begin,
+              T                     end,
+              vector<cluster_id_t>& IDs,
+              set<cluster_id_t>&    DifferentIDs,
+              bool                  MinimizeInformation = false);
+
+    virtual bool Run (vector<CPUBurst*>&    Bursts,
+                      vector<cluster_id_t>& IDs,
+                      set<cluster_id_t>&    DifferentIDs,
+                      bool                  MinimizeInformation = false) = 0;
+
+    virtual bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith) = 0;
 };
+
 
 #endif

@@ -44,7 +44,7 @@ AC_ARG_WITH([cgal],
 	AS_HELP_STRING([--with-cgal@<:@=DIR@:>@],
 			[location of cgal installation, default $CGAL_HOME]),
 	[ac_cgal_dirs="$withval"],
-	)
+	[ac_cgal_dirs="$CGAL_HOME"' /usr /usr/local /opt /opt/local'])
 
 dnl This test program is taken from:
 dnl http://www.cgal.org/Manual/latest/examples/Convex_hull_2/vector_convex_hull_2.cpp
@@ -54,6 +54,7 @@ TEST_PROGRAM='
 AC_LANG_PUSH([C++])
 
 for ac_cgal_iterate in $ac_cgal_dirs ; do
+
 	CPPFLAGS_SAVED="$CPPFLAGS"
 	CGAL_CPPFLAGS="-DNDEBUG -I$ac_cgal_iterate/include"
 	CPPFLAGS="$CPPFLAGS $CGAL_CPPFLAGS"

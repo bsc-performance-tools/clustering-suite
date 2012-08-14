@@ -47,6 +47,7 @@ using std::setw;
 using std::setfill;
 
 #include <limits>
+#include <cstring>
 
 /******************************************************************************
  * CLASS 'MetricContainer'
@@ -363,8 +364,11 @@ void ClusteringStatistics::InitStatistics(set<cluster_id_t> &IDs,
 
   TotalBurstsDuration = 0.0;
 
+  StatisticsPerCluster.clear();
+
   /* DEBUG
-  cout << "IDs = "; */
+  cout << "IDs = ";
+  */
 
   for (IDsIterator  = IDs.begin(), Position = 0;
        IDsIterator != IDs.end();
@@ -387,13 +391,15 @@ void ClusteringStatistics::InitStatistics(set<cluster_id_t> &IDs,
     }
 
     /* DEBUG
-    cout << (*IDsIterator) << " "; */
+    cout << (*IDsIterator) << " ";
+    */
   }
 
   Translated = false;
 
   /* DEBUG
-  cout << endl; */
+  cout << endl;
+  */
 }
 
 /**
@@ -407,58 +413,8 @@ void ClusteringStatistics::InitStatistics(set<cluster_id_t> &IDs,
 bool ClusteringStatistics::ComputeStatistics(const vector<CPUBurst*>&    Bursts,
                                              const vector<cluster_id_t>& IDs)
 {
+  return ComputeStatistics(Bursts.begin(), Bursts.end(), Bursts.size(), IDs);
 
-  /* DEBUG
-  cout << "Total number of bursts = " << Bursts.size() << endl; */
-
-  if (Bursts.size() != IDs.size())
-  {
-    ostringstream Messages;
-
-    Messages << "number of bursts (" << Bursts.size() << ") ";
-    Messages << "different from number of IDs (" << IDs.size() << ") ";
-    Messages << "when computing statistics";
-
-    SetError(true);
-    SetErrorMessage(Messages.str());
-    return false;
-  }
-
-  for (size_t i = 0; i < Bursts.size(); i++)
-  {
-    if (HasNoise && IDs[i] == NOISE_CLUSTERID)
-    {
-      NoiseStatistics.NewBurst(Bursts[i]);
-    }
-    else
-    {
-      map<cluster_id_t, size_t>::iterator CurrentIDPosition;
-
-      CurrentIDPosition = IDsPosition.find(IDs[i]);
-
-      if (CurrentIDPosition == IDsPosition.end())
-      {
-        ostringstream ErrorMessage;
-        ErrorMessage << "incorrect cluster ID (" << IDs[i] << ") when computing statistics";
-
-        SetError(true);
-        SetErrorMessage(ErrorMessage.str());
-        return false;
-      }
-      else
-      {
-        /* DEBUG
-        cout << "Updating Statistics for Cluster " << IDs[i];
-        cout << " (" << CurrentIDPosition->second << ")" << endl; */
-        StatisticsPerCluster[CurrentIDPosition->second].NewBurst(Bursts[i]);
-      }
-    }
-
-    TotalBurstsDuration += Bursts[i]->GetDuration();
-
-  }
-
-  return true;
 }
 
 /**
@@ -469,7 +425,6 @@ bool ClusteringStatistics::ComputeStatistics(const vector<CPUBurst*>&    Bursts,
  */
 void ClusteringStatistics::TranslatedIDs(vector<cluster_id_t>& NewIDs)
 {
-  map<cluster_id_t, cluster_id_t> TranslationMap;
   map<cluster_id_t, cluster_id_t>::iterator TranslationMapIterator;
 
   cluster_id_t NewClusterId;
@@ -481,11 +436,21 @@ void ClusteringStatistics::TranslatedIDs(vector<cluster_id_t>& NewIDs)
     TranslationMap[NOISE_CLUSTERID] = NOISE_CLUSTERID;
   }
 
+  /* DEBUG
+  cout << "StatisticsPerCluster.size = " << StatisticsPerCluster.size() << endl;
+  cout << "MIN_CLUSTERID = " << MIN_CLUSTERID << endl;
+  */
+
   for (size_t i = 0, NewClusterId = MIN_CLUSTERID;
        i < StatisticsPerCluster.size();
        i++, NewClusterId++)
   {
+    /* DEBUG
+    cout << "i = " << i << " NewClusterId = " << NewClusterId << endl;
+    */
+
     cluster_id_t OriginalClusterID = StatisticsPerCluster[i].GetOriginalClusterID();
+
     TranslationMap[OriginalClusterID] = NewClusterId;
   }
 

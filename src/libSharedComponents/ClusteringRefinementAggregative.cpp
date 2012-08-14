@@ -37,7 +37,7 @@
 using cepba_tools::system_messages;
 
 #include "ClusteringRefinementAggregative.hpp"
-#include "SequenceScore.hpp"
+
 
 #include "PlottingManager.hpp"
 
@@ -96,8 +96,9 @@ bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
                                           bool                     PrintStepsInformation,
                                           string                   OutputFilePrefix)
 {
-  bool   Stop;
-  ostringstream  Messages;
+  bool                 Stop;
+  ostringstream        Messages;
+  ClusteringStatistics Statistics;
 
   this->OutputFilePrefix = OutputFilePrefix;
 
@@ -133,6 +134,7 @@ bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
   NodesPerLevel.push_back(vector<ClusterInformation*>(0));
 
   /* Generate top level leaves :D */
+  LastStep = 0;
   if (!RunFirstAnalysis(Bursts,
                         IntermediatePartitions[0]))
   {
@@ -145,11 +147,14 @@ bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
               CurrentStep < Steps && !Stop;
               CurrentStep++)
   {
+    LastStep = CurrentStep;
+
     IntermediatePartitions.push_back(Partition());
     NodesPerLevel.push_back(vector<ClusterInformation*>(0));
 
     Messages.str("");
-    Messages << "****** STEP " << (CurrentStep+1) << " (Eps = " << EpsilonPerLevel[CurrentStep];;
+    Messages << endl << "****** STEP " << (CurrentStep+1);
+    Messages << " (Eps = " << EpsilonPerLevel[CurrentStep];;
     Messages << ") ******" << endl;
     system_messages::information(Messages.str());
 
@@ -172,20 +177,34 @@ bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
       Messages << "****** CONVERGENCE ******" << endl;
       system_messages::information(Messages.str());
     }
+
+    /*
     else
     {
       Messages.str("");
       Messages << "****** STEP " << CurrentStep+1 << " FINISHED ******" << endl;
       system_messages::information(Messages.str());
     }
+    */
   }
+
+  Messages.str("");
+  Messages << endl << "****** LAST PARTITION POST-PROCESS ******" << endl;
+  system_messages::information(Messages.str());
 
   LastPartition = IntermediatePartitions.back();
 
   if (!GenerateLastPartition(Bursts,
-                             IntermediatePartitions.size(),
                              IntermediatePartitions.back(),
                              LastPartition))
+  {
+    return false;
+  }
+
+  Messages.str("");
+  Messages << endl << "****** LAST PARTITION RENAMING ******" << endl;
+  system_messages::information(Messages.str());
+  if (!RenameLastPartition(Bursts, LastPartition))
   {
     return false;
   }
@@ -241,7 +260,7 @@ bool ClusteringRefinementAggregative::RunFirstAnalysis(const vector<CPUBurst*>& 
     Messages << "|-> Printing trees" << endl;
     system_messages::information(Messages.str());
 
-    if (!PrintTrees(0))
+    if (!PrintTree(OutputFilePrefix+".STEP1.TREE.dot", false )) // false -> Not final tree
     {
       return false;
     }
@@ -293,11 +312,20 @@ bool ClusteringRefinementAggregative::RunStep(size_t                   Step,
   system_messages::information(Messages.str());
   */
 
+  Messages.str("");
+  Messages << "|---> Generating candidates" << endl;
+  system_messages::information(Messages.str());
+
   if (!GenerateCandidatesAndBurstSubset(Bursts, ParentNodes, BurstsSubset, CandidateNodes))
   {
     Stop = true;
     return true;
   }
+
+  Messages.str("");
+  Messages << "|  └--> " << CandidateNodes.size() << " clusters. ";
+  Messages << BurstsSubset.size() << " bursts" << endl;
+  system_messages::information(Messages.str());
 
   /* DEBUG
   cout << "Candidate Bursts" << endl;
@@ -306,6 +334,8 @@ bool ClusteringRefinementAggregative::RunStep(size_t                   Step,
     cout << "Instance = " << BurstsSubset[i]->GetInstance() << endl;
   }
   */
+
+  /*
   Messages.str("");
   Messages << "|---> Candidate IDs = ";
   for (size_t i = 0; i < CandidateNodes.size(); i++)
@@ -321,10 +351,12 @@ bool ClusteringRefinementAggregative::RunStep(size_t                   Step,
   }
   Messages << endl;
   system_messages::information(Messages.str());
+  */
+
 
   /* Run DBSCAN in the subset of bursts */
   Messages.str("");
-  Messages << "|---> Running DBSCAN (" << BurstsSubset.size() << " bursts)" << endl;
+  Messages << "|---> Running DBSCAN" << endl;
   system_messages::information(Messages.str());
 
   if (!RunDBSCAN ((vector<const Point*>&) BurstsSubset,
@@ -334,9 +366,13 @@ bool ClusteringRefinementAggregative::RunStep(size_t                   Step,
     return false;
   }
 
+  Messages.str("");
+  Messages << "|  └--> detected " << ChildrenPartition.GetIDs().size() << " clusters" << endl;
+  system_messages::information(Messages.str());
+
   /* Create children nodes */
   Messages.str("");
-  Messages << "|---> Generating current nodes" << endl;
+  Messages << "|---> Generating nodes" << endl;
   system_messages::information(Messages.str());
 
   if (!GenerateNodes(Step,
@@ -346,10 +382,6 @@ bool ClusteringRefinementAggregative::RunStep(size_t                   Step,
   {
     return false;
   }
-
-  Messages.str("");
-  Messages << "|---> " << ChildrenNodes.size() << " nodes" << endl;
-  system_messages::information(Messages.str());
 
   /* Link this level with the previous one */
   LinkNodes(BurstsSubset,
@@ -390,7 +422,10 @@ bool ClusteringRefinementAggregative::RunStep(size_t                   Step,
     Messages << "|-> Printing trees" << endl;
     system_messages::information(Messages.str());
 
-    if (!PrintTrees(Step))
+    Messages.str("");
+    Messages << OutputFilePrefix << ".STEP" << Step+1 << ".TREE.dot";
+
+    if (!PrintTree(Messages.str(), false)) // false -> not Final Tree
     {
       return false;
     }
@@ -583,10 +618,12 @@ bool ClusteringRefinementAggregative::StopCondition(void)
     SumOfScores += Leaves[i]->GetScore();
   }
 
+  /*
   Messages.str("");
   Messages << "|---> Sum. of Scores = " << SumOfScores << " | Number of Nodes = ";
   Messages << Leaves.size() << " | Avg. Score per Node = " << SumOfScores/Leaves.size() << endl;
   system_messages::information(Messages.str());
+  */
 
   /*
   double Remainder = SumOfScores - floor(SumOfScores);
@@ -636,8 +673,8 @@ bool ClusteringRefinementAggregative::GenerateNodes(size_t                      
   vector<SequenceScoreValue> CurrentClustersScores;
   double                     GlobalScore;
 
-  map<cluster_id_t, percentage_t>          PercentageDurations;
-  map<cluster_id_t, vector<instance_t> >   BurstsPerNode;
+  map<cluster_id_t, percentage_t>                  PercentageDurations;
+  map<cluster_id_t, vector<instance_t> >           BurstsPerNode;
   map<cluster_id_t, vector<instance_t> >::iterator BurstPerNodeIt;
 
   set<cluster_id_t>           DifferentIDs;
@@ -904,18 +941,15 @@ bool ClusteringRefinementAggregative::ComputeScores(size_t                      
                                                     Partition&                   CurrentPartition,
                                                     bool                         LastPartition)
 {
-  ostringstream        CurrentSequenceFileNamePrefix, Messages;
-
-  SequenceScore              Scoring;
-  vector<SequenceScoreValue> CurrentClustersScores;
-  double                     GlobalScore;
+  ostringstream                   CurrentSequenceFileNamePrefix, Messages;
+  SequenceScore                   Scoring;
 
   ClusteringStatistics            Statistics;
   map<cluster_id_t, percentage_t> PercentageDurations;
 
   if (LastPartition)
   {
-    CurrentSequenceFileNamePrefix << OutputFilePrefix;
+    CurrentSequenceFileNamePrefix << OutputFilePrefix << ".MERGE";
   }
   else
   {
@@ -931,7 +965,6 @@ bool ClusteringRefinementAggregative::ComputeScores(size_t                      
     SetErrorMessage(Statistics.GetLastError());
     return false;
   }
-
   PercentageDurations = Statistics.GetPercentageDurations();
 
   /* Compute Score */
@@ -946,8 +979,8 @@ bool ClusteringRefinementAggregative::ComputeScores(size_t                      
                             CurrentPartition.GetAssignmentVector(),
                             PercentageDurations,
                             CurrentClustersScores,
-                            GlobalScore,
-                            PrintStepsInformation || LastPartition,
+                            CurrentGlobalScore,
+                            PrintStepsInformation,
                             CurrentSequenceFileNamePrefix.str(),
                             true))
   {
@@ -962,7 +995,7 @@ bool ClusteringRefinementAggregative::ComputeScores(size_t                      
 
   system_messages::verbose = verbose_state;
 
-  GlobalScoresPerLevel.push_back(GlobalScore);
+  GlobalScoresPerLevel.push_back(CurrentGlobalScore);
 
   /* Assign Score to each node */
   for (size_t i = 0; i < NewNodes.size(); i++)
@@ -1066,7 +1099,6 @@ vector<pair<instance_t, cluster_id_t> > ClusteringRefinementAggregative::GetAssi
  *                      false otherwise
  */
 bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurst*>& Bursts,
-                                                            size_t                   LastStep,
                                                             Partition&               PreviousPartition,
                                                             Partition&               LastPartition)
 {
@@ -1085,7 +1117,6 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
   map<cluster_id_t, size_t>                  SingleAppearances;
   // map<pair<cluster_id_t, cluster_id_t>, size_t> PairApparences;
   vector<set<cluster_id_t> > Merges;
-
 
   /* Update Statistics */
   Statistics.InitStatistics(LastPartition.GetIDs());
@@ -1169,64 +1200,7 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
         ++SetAppearances[CurrentSet];
       }
     }
-
-    /*
-    cout << "Sequence[" << i << "] = ";
-
-    for (OccurrencesIt  = OccurrencesSequence[i].begin();
-         OccurrencesIt != OccurrencesSequence[i].end();
-         ++OccurrencesIt)
-    {
-      FirstClusterID = (*OccurrencesIt);
-
-      cout << " " << FirstClusterID;
-
-      if (SingleAppearances.count(FirstClusterID) == 0)
-      {
-        SingleAppearances[FirstClusterID] = 1;
-      }
-      else
-      {
-        SingleAppearances[FirstClusterID]++;
-      }
-
-
-
-      for (OccurrencesInnIt   = OccurrencesIt;
-           OccurrencesInnIt  != OccurrencesSequence[i].end();
-           ++OccurrencesInnIt)
-      {
-        if (OccurrencesInnIt != OccurrencesIt)
-        {
-          OtherClusterID = (*OccurrencesInnIt);
-
-          if (FirstClusterID != NOISE_CLUSTERID)
-          {
-            if (PairApparences.count(make_pair(FirstClusterID, OtherClusterID)) == 0)
-            {
-              PairApparences[make_pair(FirstClusterID, OtherClusterID)] = 1;
-            }
-            else
-            {
-              PairApparences[make_pair(FirstClusterID, OtherClusterID)]++;
-            }
-          }
-        }
-      }
-    }
-    cout << endl;
-    */
   }
-
-
-  /*
-  for (map<cluster_id_t, size_t>::iterator It = SingleAppearances.begin();
-       It != SingleAppearances.end();
-       ++It)
-  {
-    cout << "Cluster " << (*It).first << " = " << (*It).second << endl;
-  }
-  */
 
   /* Generate all merge sets */
   map<set<cluster_id_t>, size_t>::iterator SetsIt;
@@ -1341,8 +1315,10 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
     LastLevelNodes.push_back(MergeNode);
   }
 
-
-  NodesPerLevel.push_back(LastLevelNodes);
+  if (LastLevelNodes.size() > 0)
+  {
+    NodesPerLevel.push_back(LastLevelNodes);
+  }
 
   LastPartition.clear();
   GeneratePartition(LastPartition);
@@ -1352,13 +1328,16 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
     return false;
   }
 
-  Messages.str("");
-  Messages << "|-> Printing last trees" << endl;
-  system_messages::information(Messages.str());
-
-  if (!PrintTrees(LastStep, true)) /* Last tree */
+  if (PrintStepsInformation)
   {
-    return false;
+    Messages.str("");
+    Messages << "|-> Printing merge trees" << endl;
+    system_messages::information(Messages.str());
+
+    if (!PrintTree(OutputFilePrefix+".MERGE.TREE.dot", true)) /* true -> final tree */
+    {
+      return false;
+    }
   }
 
   return true;
@@ -1394,6 +1373,115 @@ void ClusteringRefinementAggregative::LinkLastNodes(cluster_id_t        MainClus
   }
 
   return;
+}
+
+/**
+ * Generates the outputs obtained after renaming the last partition in terms of
+ * the clusters duration
+ *
+ * \return True if the outputs (tree/sequence/scores) are generated correctly.
+ *         False otherwise
+ */
+bool ClusteringRefinementAggregative::RenameLastPartition(const vector<CPUBurst*>& Bursts,
+                                                          Partition& LastPartition)
+{
+  ClusteringStatistics                                   Statistics;
+  SequenceScore                                          Scoring;
+  vector<vector<ClusterInformation*> >::reverse_iterator Nodes;
+
+  cluster_id_t         MaxUsedCluster;
+  ostringstream        Messages;
+
+  Messages.str("");
+  Messages << "|-> Renaming final partition clusters" << endl;
+  system_messages::information(Messages.str());
+
+  /* Sort the resulting clusters */
+  Statistics.InitStatistics(LastPartition.GetIDs());
+  if (!Statistics.ComputeStatistics(Bursts,
+                                    LastPartition.GetAssignmentVector()))
+  {
+    SetErrorMessage(Statistics.GetLastError());
+    return false;
+  }
+  Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
+  LastPartition.UpdateIDs();
+
+  /* Rename the refinement tree */
+  map<cluster_id_t, cluster_id_t> TranslationMap = Statistics.GetTranslationMap();
+
+  MaxUsedCluster = TranslationMap.size();
+
+  for ( Nodes  = NodesPerLevel.rbegin();
+        Nodes != NodesPerLevel.rend();
+      ++Nodes)
+  {
+      for (vector<ClusterInformation*>::size_type j = 0; j < (*Nodes).size(); j++)
+    {
+      map<cluster_id_t, cluster_id_t>::iterator FindCluster;
+
+      cluster_id_t CurrentID = (*Nodes)[j]->GetID();
+
+      if (CurrentID == NOISE_CLUSTERID)
+      {
+        continue;
+      }
+
+      if (TranslationMap.count(CurrentID) == 0)
+      {
+        /* No translation found, generate a new one */
+        MaxUsedCluster++;
+        TranslationMap[CurrentID] = MaxUsedCluster;
+        (*Nodes)[j]->SetID(MaxUsedCluster);
+      }
+      else
+      {
+        (*Nodes)[j]->SetID(TranslationMap[CurrentID]);
+      }
+    }
+  }
+
+  /* Print the tree */
+  Messages.str("");
+  Messages << "|-> Printing renamed trees" << endl;
+  system_messages::information(Messages.str());
+
+  if (!PrintTree(OutputFilePrefix+".TREE.dot", true)) /* true -> final tree */
+  {
+    return false;
+  }
+
+  /* Print the sequences and scores */
+  Messages.str("");
+  Messages << "|-> Computing rename scores" << endl;
+  system_messages::information(Messages.str());
+
+  map<cluster_id_t, double> PercentageDurations = Statistics.GetPercentageDurations();
+
+  bool verbose_state = system_messages::verbose;
+  system_messages::verbose = false;
+
+  if (!Scoring.ComputeScore(Bursts,
+                            LastPartition.GetAssignmentVector(),
+                            PercentageDurations,
+                            CurrentClustersScores,
+                            CurrentGlobalScore,
+                            true,
+                            OutputFilePrefix,
+                            true))
+  {
+    ostringstream ErrorMessage;
+    ErrorMessage << "unable to compute sequence score:" << Scoring.GetLastError();
+
+    SetError(true);
+    SetErrorMessage(ErrorMessage.str());
+
+    return false;
+  }
+
+  system_messages::verbose = verbose_state;
+
+  return true;
 }
 
 /**
@@ -1555,82 +1643,55 @@ bool ClusteringRefinementAggregative::PrintPlots(const vector<CPUBurst*>& Bursts
  * \return True if the tree was written correctly, false otherwise
  *
  */
-bool ClusteringRefinementAggregative::PrintTrees(size_t Step,
-                                                 bool   LastTree)
+bool ClusteringRefinementAggregative::PrintTree(string TreeFileName,
+                                                bool   FinalTree)
 {
-  ostringstream TreeFileName;
-  ofstream     *Output;
-
   vector<ClusterInformation*>& TopLevelNodes = NodesPerLevel[0];
   vector<string>               LevelNames;
 
-  if (LastTree)
+  ofstream Output (TreeFileName.c_str(), ios_base::trunc);
+
+  if (Output.fail())
   {
-    TreeFileName << OutputFilePrefix << ".TREE.dot";
-    Output = new ofstream(TreeFileName.str().c_str(), ios_base::trunc);
-
-    if (Output->fail())
-    {
-      SetError(true);
-      SetErrorMessage ("unable to open tree file", strerror(errno));
-      return false;
-    }
-  }
-  else
-  {
-    if (PrintStepsInformation)
-    {
-
-      TreeFileName << OutputFilePrefix << ".STEP" << (Step+1) << ".TREE.dot";
-      Output = new ofstream(TreeFileName.str().c_str(), ios_base::trunc);
-
-      if (Output->fail())
-      {
-        SetError(true);
-        SetErrorMessage ("unable to open tree file", strerror(errno));
-        return false;
-      }
-    }
-    else
-    {
-      Output = (ofstream*) &cout;
-    }
+    SetError(true);
+    SetErrorMessage ("unable to open tree file", strerror(errno));
+    return false;
   }
 
-  (*Output) << "digraph Tree {" << endl;
+  Output << "digraph Tree {" << endl;
 
   /* Level Information */
-  (*Output) << endl << "{" << endl;
-  (*Output) << "node [shape=plaintext]" << endl;
+  Output << endl << "{" << endl;
+  Output << "node [shape=plaintext]" << endl;
 
-  for (size_t i = 0; i <= Step; i++)
+  for (size_t i = 0; i <= LastStep; i++)
   {
     ostringstream LevelName;
 
-    if (LastTree && i == Steps)
+    if (FinalTree && i == LastStep)
     {
-      (*Output) << "\"SEQUENCE BASED MERGE | Global Score =";
-      (*Output) << GlobalScoresPerLevel[i]*100 << "% \"" << endl;
+      Output << "\"SEQUENCE BASED MERGE | Global Score =";
+      Output << GlobalScoresPerLevel[i]*100 << "% \"" << endl;
     }
     else
     {
-      (*Output) << "\"STEP " << i+1 << " Eps = " << EpsilonPerLevel[i];
-      (*Output) << " | Global Score = " << GlobalScoresPerLevel[i]*100 << "% \"";
+      Output << "\"STEP " << i+1 << " Eps = " << EpsilonPerLevel[i];
+      Output << " | Global Score = " << GlobalScoresPerLevel[i]*100 << "% \"";
       // LevelNames.push_back(LevelName.str());
 
-      (*Output) << LevelName.str();
+      Output << LevelName.str();
     }
 
-    if (i != Step)
+    if (i != LastStep)
     {
-      (*Output) << "->";
+      Output << "->";
     }
   }
-  (*Output) << ";" << endl;
-  (*Output) << "}" << endl;
+  Output << ";" << endl;
+  Output << "}" << endl;
 
   /* Print the tree itself */
-  (*Output) << "{" << endl;
+  Output << "{" << endl;
 
   /*
   for (size_t i = 0; i < NodesPerLevel.size(); i++)
@@ -1657,12 +1718,12 @@ bool ClusteringRefinementAggregative::PrintTrees(size_t Step,
   for (size_t i = 0; i < TopLevelNodes.size(); i++)
   {
   */
-    PrintTreeNodes ((*Output));
-    (*Output) << endl;
-    PrintTreeLinks ((*Output));
-    (*Output) << endl;
+    PrintTreeNodes (Output);
+    Output << endl;
+    PrintTreeLinks (Output);
+    Output << endl;
   // }
-  (*Output) << "}" << endl;
+  Output << "}" << endl;
 
   /* Rank nodes per level
   (*Output) << "{" << endl;
@@ -1686,12 +1747,12 @@ bool ClusteringRefinementAggregative::PrintTrees(size_t Step,
   (*Output) << "}" << endl;
   */
 
-  (*Output) << "}" << endl << endl;
+  Output << "}" << endl << endl;
 
   /* DEBUG
   cout << "TOP LEVEL HAS " << ClustersHierarchy[0].size() << " NODES" << endl; */
 
-  Output->close();
+  Output.close();
 
   return true;
 }

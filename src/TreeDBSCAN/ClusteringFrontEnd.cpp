@@ -33,6 +33,12 @@
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include <iostream>
+#include <sstream>
+using std::ostringstream;
+
+#include <SystemMessages.hpp>
+using cepba_tools::system_messages;
+
 #include "ClusteringFrontEnd.h"
 #include "NoiseManager.h"
 #include "HullManager.h"
@@ -42,22 +48,24 @@
 /**
  * Constructor sets the clustering configuration parameters.
  */
-ClusteringFrontEnd::ClusteringFrontEnd(
-   double Eps,
-   int    MinPts,
-   string ClusteringDefinitionXML,
-   string InputTraceName,
-   string OutputFileName,
-   bool   Verbose,
-   bool   ReconstructTrace)
+ClusteringFrontEnd::ClusteringFrontEnd (
+  double Eps,
+  int    MinPts,
+  string ClusteringDefinitionXML,
+  string InputTraceName,
+  string OutputFileName,
+  bool   Verbose,
+  bool   ReconstructTrace)
 {
-   this->Epsilon                 = Eps;
-   this->MinPoints               = MinPts;
-   this->ClusteringDefinitionXML = ClusteringDefinitionXML;
-   this->InputTraceName          = InputTraceName;
-   this->OutputFileName          = OutputFileName;
-   this->Verbose                 = Verbose;
-   this->ReconstructTrace        = ReconstructTrace;
+  this->Epsilon                 = Eps;
+  this->MinPoints               = MinPts;
+  this->ClusteringDefinitionXML = ClusteringDefinitionXML;
+  this->InputTraceName          = InputTraceName;
+  this->OutputFileName          = OutputFileName;
+  this->Verbose                 = Verbose;
+  this->ReconstructTrace        = ReconstructTrace;
+
+  system_messages::verbose      = Verbose;
 }
 
 
@@ -66,9 +74,9 @@ ClusteringFrontEnd::ClusteringFrontEnd(
  */
 void ClusteringFrontEnd::Setup()
 {
-   stClustering = Register_Stream("TreeDBSCAN", SFILTER_DONTWAIT);
-   stClustering->set_FilterParameters(FILTER_UPSTREAM_TRANS, "%lf %d", Epsilon, MinPoints);
-   stXchangeDims = Register_Stream("XchangeDimensions", SFILTER_WAITFORALL);
+  stClustering = Register_Stream ("TreeDBSCAN", SFILTER_DONTWAIT);
+  stClustering->set_FilterParameters (FILTER_UPSTREAM_TRANS, "%lf %d", Epsilon, MinPoints);
+  stXchangeDims = Register_Stream ("XchangeDimensions", SFILTER_WAITFORALL);
 }
 
 
@@ -77,119 +85,154 @@ void ClusteringFrontEnd::Setup()
  */
 int ClusteringFrontEnd::Run()
 {
-   int       countGlobalHulls = 0;
-   int       tag;
-   PacketPtr p;
+  ostringstream Messages;
 
-   cout << "[FE] Sending clustering configuration:"                       << endl;
-   cout << "[FE] + Epsilon     = " << Epsilon                             << endl;
-   cout << "[FE] + Min Points  = " << MinPoints                           << endl;
-   cout << "[FE] + XML         = " << ClusteringDefinitionXML             << endl;
-   
-   if (InputTraceName != "")
-   {
-      cout << "[FE] + Input       = " << InputTraceName                      << endl;
-   }
-   cout << "[FE] + Output      = " << OutputFileName                      << endl;
-   cout << "[FE] + Verbose     = " << ( Verbose          ? "yes" : "no" ) << endl;
-   cout << "[FE] + Reconstruct = " << ( ReconstructTrace ? "yes" : "no" ) << endl;
-   cout << endl;
+  int       countGlobalHulls = 0;
+  int       tag;
+  PacketPtr p;
 
-   /* Send the clustering configuration to the back-ends */
-   Send_Configuration();
+  Messages << "[FE] Sending clustering configuration:"                       << endl;
+  Messages << "[FE] + Epsilon     = " << Epsilon                             << endl;
+  Messages << "[FE] + Min Points  = " << MinPoints                           << endl;
+  Messages << "[FE] + XML         = " << ClusteringDefinitionXML             << endl;
 
-   cout << "[FE] Computing global dimensions..." << endl;
-   /* Receive and broadcast back the global dimensions */
-   MRN_STREAM_RECV(stXchangeDims, &tag, p, TAG_XCHANGE_DIMENSIONS);
-   stXchangeDims->send(p);
+  if (InputTraceName != "")
+  {
+    Messages << "[FE] + Input       = " << InputTraceName                      << endl;
+  }
 
-   cout << "[FE] Computing global hulls..." << endl;
-   do
-   {
-      MRN_STREAM_RECV(stClustering, &tag, p, TAG_ANY);
+  Messages << "[FE] + Output      = " << OutputFileName                      << endl;
+  Messages << "[FE] + Verbose     = " << ( Verbose          ? "yes" : "no" ) << endl;
+  Messages << "[FE] + Reconstruct = " << ( ReconstructTrace ? "yes" : "no" ) << endl;
+  Messages << endl;
+
+  system_messages::information (Messages.str() );
+
+  /* Send the clustering configuration to the back-ends */
+  Send_Configuration();
+
+
+
+  Messages.str ("");
+  Messages << "[FE] Computing global dimensions..." << endl;
+  system_messages::information (Messages.str() );
+
+  /* Receive and broadcast back the global dimensions */
+  MRN_STREAM_RECV (stXchangeDims, &tag, p, TAG_XCHANGE_DIMENSIONS);
+  stXchangeDims->send (p);
+
+
+  Messages.str ("");
+  Messages << "[FE] Computing global hulls..." << endl;
+  system_messages::information (Messages.str() );
+
+  do
+  {
+    MRN_STREAM_RECV (stClustering, &tag, p, TAG_ANY);
 #if 0
-      /* Receive the resulting global hulls one by one */
-      if (tag == TAG_HULL)
-      {
-         HullModel *GlobalHull = NULL;
-         HullManager HM        = HullManager();
 
-         GlobalHull = HM.Unpack(p);
-         GlobalModel.push_back( GlobalHull );
+    /* Receive the resulting global hulls one by one */
+    if (tag == TAG_HULL)
+    {
+      HullModel *GlobalHull = NULL;
+      HullManager HM        = HullManager();
 
-         /* Broadcast back the global hull */
-         stClustering->send(p);
-         countGlobalHulls ++;
+      GlobalHull = HM.Unpack (p);
+      GlobalModel.push_back ( GlobalHull );
 
-         /* DEBUG
-         std::cout << "********** [FE] BROADCASTING HULL " << countGlobalHulls << std::endl;
-         std::cout << "Current Hull size = " << GlobalHull->Size() << " density = " << GlobalHull->Density() << std::endl;
-         GlobalHull->Flush();
-         std::cout << "********** [FE] END BROADCASTING HULL " << countGlobalHulls << std::endl; */
-      }
+      /* Broadcast back the global hull */
+      stClustering->send (p);
+      countGlobalHulls ++;
+
+      /* DEBUG
+      std::cout << "********** [FE] BROADCASTING HULL " << countGlobalHulls << std::endl;
+      std::cout << "Current Hull size = " << GlobalHull->Size() << " density = " << GlobalHull->Density() << std::endl;
+      GlobalHull->Flush();
+      std::cout << "********** [FE] END BROADCASTING HULL " << countGlobalHulls << std::endl; */
+    }
+
 #endif
-      /* Receive 1 packet with all resulting global hulls at once */
-      if (tag == TAG_ALL_HULLS)
-      {
-         HullManager HM = HullManager();
-         HM.Unpack(p, GlobalModel);
-         vector<HullModel *> FilteredGlobalModel;
-         for (unsigned int i = 0; i<GlobalModel.size(); i++)
-         {
-            if (GlobalModel[i]->Density() >= MinPoints)
-            {
-               FilteredGlobalModel.push_back( GlobalModel[i] );
-            }
-         }
-         /* Broadcast back the global model */
-         HM.SerializeAll(stClustering, FilteredGlobalModel);
-         countGlobalHulls = FilteredGlobalModel.size();
 
+    /* Receive 1 packet with all resulting global hulls at once */
+    if (tag == TAG_ALL_HULLS)
+    {
+      HullManager HM = HullManager();
+      HM.Unpack (p, GlobalModel);
+      vector<HullModel *> FilteredGlobalModel;
+
+      for (unsigned int i = 0; i < GlobalModel.size(); i++)
+      {
+        if (GlobalModel[i]->Density() >= MinPoints)
+        {
+          FilteredGlobalModel.push_back ( GlobalModel[i] );
+        }
       }
+
+      /* Broadcast back the global model */
+      HM.SerializeAll (stClustering, FilteredGlobalModel);
+      countGlobalHulls = FilteredGlobalModel.size();
+
+    }
 
 #if defined(PROCESS_NOISE)
-      /* Count the remaining noise points */
-      else if (tag == TAG_NOISE)
-      {
-         vector<const Point *> NoisePoints;
-         NoiseManager Noise = NoiseManager();
-         Noise.Unpack(p, NoisePoints);
-         cout << "[FE] Remaining noise points = " << NoisePoints.size() << endl;
-      }
+    /* Count the remaining noise points */
+    else if (tag == TAG_NOISE)
+    {
+      vector<const Point *> NoisePoints;
+      NoiseManager Noise = NoiseManager();
+      Noise.Unpack (p, NoisePoints);
+
+      Messages.str ("");
+      Messages << "[FE] Remaining noise points = " << NoisePoints.size() << endl;
+      system_messages::information (Messages.str() );
+    }
+
 #endif
-   } while (tag != TAG_ALL_HULLS_SENT);
+  }
+  while (tag != TAG_ALL_HULLS_SENT);
 
-   stClustering->send(TAG_ALL_HULLS_SENT, "");
-   cout << "[FE] Broadcasted " << countGlobalHulls << " global hulls!" << endl;
+  stClustering->send (TAG_ALL_HULLS_SENT, "");
 
-   /* Receive the statistics from all nodes */
-   Statistics ClusteringStats(WhoAmI());
-   MRN_STREAM_RECV(stClustering, &tag, p, TAG_STATISTICS);
-   ClusteringStats.Unpack(p);
-   PrintGraphStats(ClusteringStats); 
+  Messages.str ("");
+  Messages << "[FE] Broadcasted " << countGlobalHulls << " global hulls!" << endl;
+  system_messages::information (Messages.str() );
 
-   return countGlobalHulls;
+  /* Receive the statistics from all nodes */
+  Statistics ClusteringStats (WhoAmI() );
+  MRN_STREAM_RECV (stClustering, &tag, p, TAG_STATISTICS);
+  ClusteringStats.Unpack (p);
+  PrintGraphStats (ClusteringStats);
+
+  return countGlobalHulls;
 }
 
-void ClusteringFrontEnd::PrintGraphStats(Statistics &ClusteringStats)
+void ClusteringFrontEnd::PrintGraphStats (Statistics &ClusteringStats)
 {
+  ostringstream Messages;
+
   string TreeLayoutFileName = "MRNetStats.layout";
-  GetNetwork()->get_NetworkTopology()->print_DOTGraph( TreeLayoutFileName.c_str() );
+  GetNetwork()->get_NetworkTopology()->print_DOTGraph ( TreeLayoutFileName.c_str() );
 
   string StatsFileName = "MRNetStats.data";
   ofstream StatsFile;
-  StatsFile.open (StatsFileName.c_str());
-  ClusteringStats.DumpAllStats(StatsFile);
+  StatsFile.open (StatsFileName.c_str() );
+  ClusteringStats.DumpAllStats (StatsFile);
   StatsFile.close();
 
   string OutputDOTName = "MRNetStats.dot";
-  string CMD = string(getenv("TREE_DBSCAN_HOME")) + "/bin/draw_stats " + TreeLayoutFileName + " " + StatsFileName + " " + OutputDOTName;
+  string CMD = string (getenv ("TREE_DBSCAN_HOME") ) + "/bin/draw_stats " + TreeLayoutFileName + " " + StatsFileName + " " + OutputDOTName;
 
-  cout << "[FE] Generating debug statistics... ";
-  system(CMD.c_str());
-  cout << "done!" << endl;
 
-  unlink(TreeLayoutFileName.c_str());
-  unlink(StatsFileName.c_str());
+  Messages << "[FE] Generating debug statistics... ";
+  system_messages::information (Messages.str() );
+
+  system (CMD.c_str() );
+
+  Messages.str ("");
+  Messages << "done!" << endl;
+  system_messages::information (Messages.str() );
+
+  unlink (TreeLayoutFileName.c_str() );
+  unlink (StatsFileName.c_str() );
 }
 

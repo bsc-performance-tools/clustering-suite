@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -48,7 +48,7 @@ class Partition
   private:
     set<cluster_id_t>    _IDs;
     vector<cluster_id_t> _ClusterAssignmentVector;
-    
+
 
   public:
 
@@ -65,9 +65,11 @@ class Partition
 
     void MergeIDs(set<cluster_id_t>& OriginalIDs, cluster_id_t DefinitiveID);
 
+    void UpdateIDs(void);
+
     size_t NumberOfClusters(void) const;
     bool   HasNoise(void) const;
-  
+
 };
 
 #endif // _PARTITION_HPP_

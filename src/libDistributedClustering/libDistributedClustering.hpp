@@ -70,7 +70,8 @@ class libDistributedClustering
     */
 
   public:
-    libDistributedClustering(int verbose);
+    libDistributedClustering(int         verbose,
+                             const char *msg_prefix);
 
     /* This methods are intended to be used in the MRNet BE nodes, to perform
      * a local cluster analysis */

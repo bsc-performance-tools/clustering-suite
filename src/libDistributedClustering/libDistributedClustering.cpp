@@ -41,9 +41,11 @@ using cepba_tools::system_messages;
 /**
  * Empty constructor
  */
-libDistributedClustering::libDistributedClustering(int verbose)
+libDistributedClustering::libDistributedClustering(int         verbose,
+                                                   const char* msg_prefix)
 {
-  Implementation  = new libDistributedClusteringImplementation(verbose);
+  Implementation  = new libDistributedClusteringImplementation(verbose,
+                                                               msg_prefix);
   Error = Warning = false;
 }
 
@@ -169,7 +171,7 @@ bool libDistributedClustering::ExtractData(string    InputFileName,
   {
     Error        = true;
     ErrorMessage = Implementation->GetLastError();
-    return true;
+    return false;
   }
 
   return true;
@@ -189,7 +191,7 @@ bool libDistributedClustering::ExtractData(string InputFileName)
   {
     Error        = true;
     ErrorMessage = Implementation->GetLastError();
-    return true;
+    return false;
   }
 
   return true;
@@ -420,7 +422,7 @@ bool libDistributedClustering::GetFullBurstsInformation(vector<Point*>       &Po
 
 /**
  * Returns the Cluster IDs obtained in the last cluster analys
- * 
+ *
  * \param ClusterIDs I/O vector containing the resulting cluster IDs
  *
  * \result True if the operation finished succesfuly, false otherwise

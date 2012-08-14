@@ -150,8 +150,6 @@ void SequenceScore::LoadTranslationTables(void)
   SequenceScore::TablesLoaded = true;
 }
 
-
-
 bool SequenceScore::ComputeScore(const vector<CPUBurst*>&         DataBursts,
                                  vector<cluster_id_t>&            AssignmentVector,
                                  map<cluster_id_t, percentage_t>& PercentageDurations,

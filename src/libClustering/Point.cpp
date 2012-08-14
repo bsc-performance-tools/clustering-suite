@@ -94,6 +94,11 @@ Point::Point(instance_t _Instance, vector<double>& _Dimensions)
 #endif
 }
 
+vector<double>& Point::GetDimensions(void)
+{
+  return Dimensions;
+}
+
 void
 Point::RangeNormalization(const vector<double>& MaxValues,
                           const vector<double>& MinValues,

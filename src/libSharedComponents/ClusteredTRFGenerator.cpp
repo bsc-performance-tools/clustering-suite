@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -61,7 +61,7 @@ ClusteredTRFGenerator::ClusteredTRFGenerator(string       InputTraceName,
 {
   if (GetError())
     return;
-  
+
   this->PrintClusterBlocks = PrintClusterBlocks;
 }
 
@@ -72,10 +72,10 @@ ClusteredTRFGenerator::~ClusteredTRFGenerator(void)
 
 bool ClusteredTRFGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith)
 {
-  
+
   SetError(true);
   SetErrorMessage("TRF traces doesn't permit parsing based on events");
-  
+
   return false;
 }
 
@@ -84,139 +84,7 @@ bool ClusteredTRFGenerator::Run(vector<CPUBurst*>&    Bursts,
                                 set<cluster_id_t>&    DifferentIDs,
                                 bool                  MinimizeInformation)
 {
-  vector<cluster_id_t> CompleteIDs;
-  
-  bool               InIdleBlock = false;
-  char               Buffer[256], AuxBuffer[256];
-  size_t             BufferSize = sizeof(Buffer);
-  INT32              TaskId, ThreadId, FirstsBursts = -1;
-  double             BurstDuration;
-  UINT64             InternalBurstDuration;
-  line_t             CurrentLine;
-  size_t             CurrentBurst, TotalBursts;
-  bool               FirstBlockDefinitionFound = false;
-
-  if (fseeko(this->InputTraceFile, 0, SEEK_SET) == -1)
-  {
-    SetError(true);
-    SetErrorMessage("unable to seek initial position on input trace file",
-                    strerror(errno));
-    return false;
-  }
-
-  /* Create the single cluster IDs vector */
-  size_t CurrentClusteringBurst = 0;
-  for (size_t i = 0; i < Bursts.size(); i++)
-  {
-    switch(Bursts[i]->GetBurstType())
-    {
-      case CompleteBurst:
-        CompleteIDs.push_back(IDs[CurrentClusteringBurst]);
-        CurrentClusteringBurst++;
-        break;
-      case DurationFilteredBurst:
-        CompleteIDs.push_back(DURATION_FILTERED_CLUSTERID);
-        break;
-      case RangeFilteredBurst:
-        CompleteIDs.push_back(RANGE_FILTERED_CLUSTERID);
-        break;
-      case MissingDataBurst:
-        CompleteIDs.push_back(MISSING_DATA_CLUSTERID);
-        break;
-      default:
-        /* This option should never happen */
-          SetErrorMessage("incorrect burst type when generating Paraver trace");
-          SetError(false);
-          return false;
-    }
-  }
-  
-  /* Sort all bursts in terms of trace appearance, using the line comparison */
-  sort(Bursts.begin(), Bursts.end(), LineCompare());
-
-  CurrentBurst = 0;
-  CurrentLine  = 0;
-  while (true)
-  {
-    if (fgets(Buffer, BufferSize, InputTraceFile) == NULL)
-    { /* End Of File reachead (or error...) */
-      break;
-    }
-    CurrentLine++;
-
-    if (!FirstBlockDefinitionFound)
-    { /* Search for the first 'block definition' record */
-      FirstBlockDefinitionFound = CheckFirstBlockDefinition (Buffer,
-                                                             DifferentIDs);
-      
-      fprintf(OutputTraceFile, "%s", Buffer);
-      continue; /* Do not look for CPU bursts */
-    }
-    else
-    {
-      if (sscanf(Buffer,
-               "\"CPU burst\" { %d, %d, %le };;\n",
-               &TaskId,
-               &ThreadId,
-               &BurstDuration) == 3)
-      {
-        
-        if (FirstsBursts < TaskId)
-        {
-          FirstsBursts++;
-          // fprintf(OutputTraceFile, "%s", Buffer);
-          // continue;
-        }
-
-        /* DEBUG */
-        cout << "CurrentLine = " << CurrentLine << " - ";
-        cout << "CurrentClusterLine = " << Bursts[CurrentBurst]->GetLine() << endl;
-        
-        if (CurrentLine != Bursts[CurrentBurst]->GetLine())
-        {
-          if (!PrintClusteredBurst(OutputTraceFile,
-                                   TaskId,
-                                   ThreadId,
-                                   BurstDuration,
-                                   MISSING_DATA_CLUSTERID+PARAVER_OFFSET))
-          {
-            return false;
-          }
-        }
-        else
-        {
-          if (!PrintClusteredBurst(OutputTraceFile,
-                                   TaskId,
-                                   ThreadId,
-                                   BurstDuration,
-                                   CompleteIDs[Bursts[CurrentBurst]->GetInstance()]+PARAVER_OFFSET))
-          {
-            return false;
-          }
-          CurrentBurst++;
-        }
-      }
-      else
-        fprintf(OutputTraceFile, "%s", Buffer);
-    }
-  }
-
-  /* TESTING
-  CurrentClusterId = GetNextClusterId();
-  while (CurrentClusterId != ClusteredTRFGenerator::NO_MORE_CLUSTERS)
-  {
-    cout << "ClusterID: " << CurrentClusterId << endl;
-    CurrentClusterId = GetNextClusterId();
-
-    if (CurrentClusterId == ClusteredTRFGenerator::READ_ERROR)
-    {
-      cout << "ERROR!!!!" << endl;
-      break;
-    }
-  }
-  */
-
-  return true;
+  return Run(Bursts.begin(), Bursts.end(), IDs, DifferentIDs, MinimizeInformation);
 }
 
 /* PrintClusteredBurst *******************************************************/
@@ -228,7 +96,7 @@ ClusteredTRFGenerator::CheckFirstBlockDefinition(char              *Buffer,
   bool Result = false;
   set<cluster_id_t>::iterator DifferentIDsIterator;
   vector<cluster_id_t>        ClusterIDs;
-  
+
   cluster_id_t MaxIDUsed;
   PrepareClusterIDsVector(ClusterIDs, DifferentIDs, MaxIDUsed);
 
@@ -243,7 +111,7 @@ ClusteredTRFGenerator::CheckFirstBlockDefinition(char              *Buffer,
     fprintf(OutputTraceFile, "\"user event value definition\" { 90000001, ");
     fprintf(OutputTraceFile, " 0, \"End\" };;\n");
 
-    /* Cluster for missing data bursts 
+    /* Cluster for missing data bursts
     fprintf(OutputTraceFile, "\"user event value definition\" { 90000001, ");
     fprintf(OutputTraceFile,
             " %d, \"Missing Data\"};;\n",
@@ -255,7 +123,7 @@ ClusteredTRFGenerator::CheckFirstBlockDefinition(char              *Buffer,
     fprintf(OutputTraceFile,
             " %d, \"Dur. Filtered\"};;\n",
             DURATION_FILTERED_CLUSTERID+PARAVER_OFFSET);
-    
+
      /* Cluster for range filtered bursts
     fprintf(OutputTraceFile, "\"user event value definition\" { 90000001, ");
     fprintf(OutputTraceFile,
@@ -268,24 +136,24 @@ ClusteredTRFGenerator::CheckFirstBlockDefinition(char              *Buffer,
     fprintf(OutputTraceFile,
             " %d, \"Th. Filtered\"};;\n",
             THRESHOLD_FILTERED_CLUSTERID+PARAVER_OFFSET);
-    
+
     /* Cluster for noise bursts
     fprintf(OutputTraceFile, "\"user event value definition\" { 90000001, ");
     fprintf(OutputTraceFile,
             " %d, \"Noise\"};;\n",
             NOISE_CLUSTERID+PARAVER_OFFSET);
 
-    
+
     /*
     for (size_t i = 1; i < NumberOfClusters; i++)
     {
-      
-      if (ClusterInformationVector[i]->GetClusterId() + 
+
+      if (ClusterInformationVector[i]->GetClusterId() +
           DataPoint::CLUSTERS_OFFSET ==  DataPoint::DURATION_FILTERED)
       {
         break;
       }
-      
+
 
       fprintf(OutputTraceFile,
               "\"user event value definition\" { 90000001, ");
@@ -418,29 +286,29 @@ void ClusteredTRFGenerator::PrepareClusterIDsVector(vector<cluster_id_t>& Cluste
                                                     cluster_id_t&         MaxIDUsed)
 {
   set<cluster_id_t>::iterator DifferentIDsIterator;
-  
+
   MaxIDUsed = NOISE_CLUSTERID;
-  
+
   if (DifferentIDs.count(DURATION_FILTERED_CLUSTERID) == 0)
   {
     ClusterIDs.push_back(DURATION_FILTERED_CLUSTERID);
   }
-  
+
   if (DifferentIDs.count(RANGE_FILTERED_CLUSTERID) == 0)
   {
     ClusterIDs.push_back(RANGE_FILTERED_CLUSTERID);
   }
-  
+
   if (DifferentIDs.count(THRESHOLD_FILTERED_CLUSTERID) == 0)
   {
     ClusterIDs.push_back(THRESHOLD_FILTERED_CLUSTERID);
   }
-  
+
   if (DifferentIDs.count(NOISE_CLUSTERID) == 0)
   {
     ClusterIDs.push_back(NOISE_CLUSTERID);
   }
-  
+
   for (DifferentIDsIterator  = DifferentIDs.begin();
        DifferentIDsIterator != DifferentIDs.end();
        ++DifferentIDsIterator)
@@ -452,21 +320,21 @@ void ClusteredTRFGenerator::PrepareClusterIDsVector(vector<cluster_id_t>& Cluste
     }
   }
   sort(ClusterIDs.begin(), ClusterIDs.end());
-  
+
   return;
 }
 
 /**
  * Returns the cluster name using the ID
- * 
+ *
  * \param ID ID value to generate the cluster name
- * 
+ *
  * \return The name of the cluster, taking into account the special cluster ids
  */
 string ClusteredTRFGenerator::GetClusterName(cluster_id_t ID)
 {
   ostringstream ClusterName;
-  
+
   switch (ID)
   {
     case UNCLASSIFIED:
