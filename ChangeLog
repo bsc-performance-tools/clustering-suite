@@ -10,6 +10,13 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-08-16 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Minor changes in the 'SystemMessages' class to improve the 
+	TreeDBSCAN outputs
+
+	* The tree implementation still has a memory leak difficult to 
+	detect (a double free at the end of the BackEnds)
+
 2012-08-14 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Added a DB functionality using SQLite to avoid the memory bound on
 	the MRNet tree based implementation: the master backend stores the

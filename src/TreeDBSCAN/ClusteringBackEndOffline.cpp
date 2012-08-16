@@ -69,8 +69,9 @@ bool ClusteringBackEndOffline::InitLibrary (void)
     return false;
   }
 
-  cepba_tools::system_messages::verbose = true;
+  cepba_tools::system_messages::verbose                 = true;
   cepba_tools::system_messages::messages_from_all_ranks = false;
+  cepba_tools::system_messages::print_timers            = true;
   return true;
 }
 
@@ -128,7 +129,7 @@ bool ClusteringBackEndOffline::AnalyzeData (void)
     return false;
   }
 
-  system_messages::show_timer ("Trace reconstruction time", t.end() );
+  system_messages::show_timer ("Local clustering time", t.end() );
   return true;
 }
 
