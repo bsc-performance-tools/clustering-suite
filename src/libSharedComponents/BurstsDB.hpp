@@ -58,8 +58,12 @@ class BurstsDB: public Error
     string             AllBurstsTable;
     string             CompleteBurstsView;
 
+    size_t             FieldsCount;
+
     string             TableCreationQuery;
-    string             BurstInsertPrefix;
+    string             BurstInsertQuery;
+
+    sqlite3_stmt*      BurstInsertStatement;
 
     bool               DBActive;
 
@@ -70,7 +74,7 @@ class BurstsDB: public Error
 
     vector<instance_t> CompleteBurstsInstances;
 
-    bool                NormalizedBursts;
+    bool               NormalizedBursts;
 
   public:
     BurstsDB(void);
@@ -80,6 +84,9 @@ class BurstsDB: public Error
 
     void CloseDB(void);
 
+    bool BeginInserts(void);
+    bool CommitInserts(void);
+
     bool NewBurst(CPUBurst* Burst);
 
     bool NormalizeBursts(const vector<double>& MaxValues,
@@ -88,8 +95,6 @@ class BurstsDB: public Error
 
     size_t AllBurstsSize(void) const      { return AllBurstsInstances.size(); };
     size_t CompleteBurstsSize(void) const { return CompleteBurstsInstances.size();};
-
-
 
   private:
 

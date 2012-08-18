@@ -533,6 +533,10 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& Cl
   {
 #ifdef HAVE_SQLITE3
 
+    // ostringstream Messages;
+    // Messages << "Points to classify: " << Data->GetCompleteBurstsSize() << endl;
+    // system_messages::information(Messages.str());
+
     ClassifierCore.Classify(Data->GetCompleteBursts_begin(),
                             Data->GetCompleteBursts_end(),
                             Data->GetCompleteBurstsSize(),

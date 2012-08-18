@@ -193,6 +193,13 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
       return false;
     }
 
+    if (!AllBurstsDB.BeginInserts())
+    {
+      SetError(true);
+      SetErrorMessage(AllBurstsDB.GetLastError());
+      return false;
+    }
+
     DBInitialized = true;
   }
 #endif
@@ -402,6 +409,31 @@ bool TraceData::NewBurst(instance_t           Instance,
 }
 
 
+/****************************************************************************
+ * DataExtractionFinished
+ ***************************************************************************/
+bool TraceData::DataExtractionFinished(void)
+{
+#ifdef HAVE_SQLITE3
+
+  if (!AllBurstsDB.CommitInserts())
+  {
+    SetErrorMessage(AllBurstsDB.GetLastError());
+    SetError(true);
+    return false;
+  }
+
+#endif
+
+  Normalize();
+
+  return true;
+}
+
+
+/****************************************************************************
+ * Sampling
+ ***************************************************************************/
 bool TraceData::Sampling(size_t MaxSamples)
 {
   vector< vector<CPUBurst*> > BurstsPerTask (NumberOfTasks, vector<CPUBurst*>());

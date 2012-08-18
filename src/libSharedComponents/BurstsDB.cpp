@@ -34,12 +34,15 @@
 
 #include "BurstsDB.hpp"
 
+#include <unistd.h>
 #include <ctime>
 #include <cstdio>
 #include <cstring>
 
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
+#include <Timer.hpp>
+using cepba_tools::Timer;
 
 #include <sstream>
 using std::ostringstream;
@@ -70,13 +73,16 @@ BurstsDB::BurstsDB(ParametersManager* Parameters)
   ostringstream NameManipulator;
   time_t        TableCreationTime;
 
-  DBFileName = "ClusteringSuiteDB.sqlite";
+  NameManipulator << "ClusteringSuiteDB_" << getpid() << ".db";
+
+  DBFileName = NameManipulator.str();
+  NameManipulator.str("");
 
   char* SQLErrorMessage;
 
-  //if (sqlite3_open(DBFileName.c_str(), &DB) != SQLITE_OK)
+  if (sqlite3_open(DBFileName.c_str(), &DB) != SQLITE_OK)
   // if the database is open with no name, SQLite creates just a temporal file
-  if (sqlite3_open("", &DB) != SQLITE_OK)
+  // if (sqlite3_open("", &DB) != SQLITE_OK)
   {
     //SetErrorMessage(string("unable to open temporal bursts database "+DBFileName).c_str(),
     //                sqlite3_errmsg(DB));
@@ -169,6 +175,118 @@ void BurstsDB::CloseDB(void)
 }
 
 /**
+ * Starts the transaction of the insertions
+ *
+ * \return True on success, false otherwise
+ */
+bool BurstsDB::BeginInserts(void)
+{
+  char         *DBErrorMessage = NULL;
+  ostringstream InsertionQuery;
+
+  InsertionQuery << "INSERT INTO " << AllBurstsTable << " (";
+  InsertionQuery << "instance, type, taskid, threadid";
+  InsertionQuery << ", begin_time,  end_time, duration, line";
+
+  for (vector<string>::iterator Param  = ParamsNames.begin();
+                                Param != ParamsNames.end();
+                              ++Param)
+  {
+    InsertionQuery << ", " << (*Param) << ", " << (*Param) << "_Norm";
+  }
+
+  for (vector<string>::iterator ExtraParam  = ExtraParamsNames.begin();
+                                ExtraParam != ExtraParamsNames.end();
+                              ++ExtraParam)
+  {
+    InsertionQuery << ", Extr_" << (*ExtraParam);
+  }
+
+  InsertionQuery << ") VALUES (";
+
+  for (size_t i = 0; i < FieldsCount; i++)
+  {
+    InsertionQuery << "?";
+
+    if (i+1 < FieldsCount)
+    {
+      InsertionQuery << ", ";
+    }
+  }
+
+  InsertionQuery << ")";
+
+  BurstInsertQuery = InsertionQuery.str();
+
+  if (sqlite3_prepare_v2(DB,
+                         BurstInsertQuery.c_str(),
+                         -1,
+                         &BurstInsertStatement,
+                         NULL) != SQLITE_OK)
+  {
+    SetErrorMessage(sqlite3_errmsg(DB));
+    SetError(true);
+    return false;
+  }
+
+  sqlite3_exec(DB, "BEGIN TRANSACTION", NULL, NULL, &DBErrorMessage);
+
+  if (DBErrorMessage != NULL)
+  {
+    SetErrorMessage(DBErrorMessage);
+    SetError(true);
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Finishes the transaction of the insertions and creates an index for the
+ * 'instance' field
+ *
+ * \return True on success, false otherwise
+ */
+bool BurstsDB::CommitInserts(void)
+{
+  char *DBErrorMessage = NULL;
+  ostringstream CreateIndexQuery;
+  ostringstream Messages;
+  Timer         t;
+
+  system_messages::information("Commit of the DB insertions\n");
+
+  t.begin();
+  sqlite3_exec(DB, "END TRANSACTION", NULL, NULL, &DBErrorMessage);
+
+  if (DBErrorMessage != NULL)
+  {
+    SetErrorMessage(DBErrorMessage);
+    SetError(true);
+    return false;
+  }
+
+  sqlite3_finalize(BurstInsertStatement);
+  system_messages::show_timer("Insertion transaction time", t.end());
+
+/* First, create an index on the table to speed-up the update/querys */
+  CreateIndexQuery << "CREATE INDEX " << AllBurstsTable << "_idx ";
+  CreateIndexQuery << "ON " << AllBurstsTable << " (instance)";
+
+  DBErrorMessage = NULL;
+  sqlite3_exec(DB, CreateIndexQuery.str().c_str(), NULL, NULL, &DBErrorMessage);
+
+  if (DBErrorMessage != NULL)
+  {
+    SetError(true);
+    SetErrorMessage(DBErrorMessage);
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Inserts a CPU bursts in the database
  *
  * \param Burst The burst to be inserted
@@ -179,6 +297,11 @@ bool BurstsDB::NewBurst(CPUBurst* Burst)
 {
   ostringstream       InsertQuery;
   ostringstream       ExtraParamsValues;
+  size_t              CurrentField = 0;
+
+  vector<double>&      RawClusteringValues       = Burst->GetRawDimensions();
+  vector<double>&      ProcessedClusteringValues = Burst->GetDimensions();
+  map<size_t, double>& ExtrapolationValues       = Burst->GetExtrapolationDimensions();
 
   map<size_t, double> ExtraParamsMap = Burst->GetExtrapolationDimensions();
   map<size_t, double>::iterator ExtraParameter;
@@ -192,6 +315,82 @@ bool BurstsDB::NewBurst(CPUBurst* Burst)
     return false;
   }
 
+  /* Bind of the location information fields */
+
+  sqlite3_bind_int64(BurstInsertStatement, ++CurrentField, Burst->GetInstance());
+  sqlite3_bind_int  (BurstInsertStatement, ++CurrentField, Burst->GetBurstType());
+  sqlite3_bind_int64(BurstInsertStatement, ++CurrentField, Burst->GetTaskId());
+  sqlite3_bind_int64(BurstInsertStatement, ++CurrentField, Burst->GetThreadId());
+  sqlite3_bind_int64(BurstInsertStatement, ++CurrentField, Burst->GetBeginTime());
+  sqlite3_bind_int64(BurstInsertStatement, ++CurrentField, Burst->GetEndTime());
+  sqlite3_bind_int64(BurstInsertStatement, ++CurrentField, Burst->GetDuration());
+  sqlite3_bind_int64(BurstInsertStatement, ++CurrentField, Burst->GetLine());
+
+  /* Bind of the clustering parameters. Remember raw clustering values and
+   * processed clustering values (_Norm) are inserted consecutively */
+
+  for (size_t i = 0; i < ParamsNames.size(); i++)
+  {
+    if (Burst->GetBurstType() != MissingDataBurst)
+    {
+      sqlite3_bind_double(BurstInsertStatement,
+                          ++CurrentField,
+                          RawClusteringValues[i]);
+
+      sqlite3_bind_double(BurstInsertStatement,
+                          ++CurrentField,
+                          ProcessedClusteringValues[i]);
+    }
+    else
+    {
+      sqlite3_bind_null(BurstInsertStatement, ++CurrentField);
+      sqlite3_bind_null(BurstInsertStatement, ++CurrentField);
+    }
+  }
+
+  /* Bind of extrapolation parameters, in this case, we have to check if
+   * each value is included in the map of the current burst, otherwise, we
+   * have to bind them to null */
+  for (size_t i = 0; i < ExtraParamsNames.size(); i++)
+  {
+    if (Burst->GetBurstType() != MissingDataBurst)
+    {
+      if (ExtrapolationValues.count(i) > 0)
+      {
+        sqlite3_bind_double(BurstInsertStatement,
+                          ++CurrentField,
+                          ExtrapolationValues[i]);
+      }
+      else
+      {
+        sqlite3_bind_null(BurstInsertStatement, ++CurrentField);
+      }
+    }
+    else
+    {
+      sqlite3_bind_null(BurstInsertStatement, ++CurrentField);
+    }
+  }
+
+  /* Actual execution of the statement! */
+  if (sqlite3_step(BurstInsertStatement) == SQLITE_ERROR)
+  {
+    SetErrorMessage(sqlite3_errmsg(DB));
+    SetError(true);
+    return false;
+  }
+
+  sqlite3_clear_bindings(BurstInsertStatement);
+  sqlite3_reset(BurstInsertStatement);
+
+  if (Burst->GetBurstType() == CompleteBurst)
+  {
+    CompleteBurstsInstances.push_back(Burst->GetInstance());
+  }
+
+  return true;
+
+#if 0
   /* Row insertion common fields */
   InsertQuery << "INSERT INTO " << AllBurstsTable << "( ";
   InsertQuery << "instance, type, taskid, threadid";
@@ -286,6 +485,7 @@ bool BurstsDB::NewBurst(CPUBurst* Burst)
   {
     CompleteBurstsInstances.push_back(Burst->GetInstance());
   }
+#endif
 
   return true;
 }
@@ -317,20 +517,6 @@ bool BurstsDB::NormalizeBursts(const vector<double>& MaxValues,
   {
     SetError(true);
     SetErrorMessage("number of max/min range values different from number of parameters");
-    return false;
-  }
-
-  /* First, create an index on the table to speed-up the update/querys */
-  SQLQuery << "CREATE INDEX " << AllBurstsTable << "_idx ";
-  SQLQuery << "ON " << AllBurstsTable << " (instance)";
-
-  SQLErrorMessage = NULL;
-  sqlite3_exec(DB, SQLQuery.str().c_str(), NULL, NULL, &SQLErrorMessage);
-
-  if (SQLErrorMessage != NULL)
-  {
-    SetError(true);
-    SetErrorMessage("database index creation problem", SQLErrorMessage);
     return false;
   }
 
@@ -380,8 +566,6 @@ bool BurstsDB::NormalizeBursts(const vector<double>& MaxValues,
   sqlite3_finalize(CompiledSQLQuery);
 
   return true;
-
-  return true;
 }
 
 /**
@@ -415,8 +599,10 @@ bool BurstsDB::CreateDB(ParametersManager* Parameters)
   CreationQuery << ", duration INTEGER ";
   CreationQuery << ", line INTEGER ";
 
+  FieldsCount = 8;
+
   /* Clustering Parameters */
-  for (vector<string>::size_type  i = 0; i < ParamsNames.size(); i++)
+  for (vector<string>::size_type  i = 0; i < ParamsNames.size(); i++, FieldsCount++)
   {
     CreationQuery << ", " << ParamsNames[i];
     // Clustering parameters are always stored as 'double' values
@@ -425,7 +611,7 @@ bool BurstsDB::CreateDB(ParametersManager* Parameters)
   }
 
   /* Clustering Parameters Normalized */
-  for (vector<string>::size_type  i = 0; i < ParamsNames.size(); i++)
+  for (vector<string>::size_type  i = 0; i < ParamsNames.size(); i++, FieldsCount++)
   {
     CreationQuery << ", " << ParamsNames[i] << "_Norm";
     CreationQuery << " REAL";
@@ -433,7 +619,7 @@ bool BurstsDB::CreateDB(ParametersManager* Parameters)
 
 
   /* Extrapolation Parameters */
-  for (vector<string>::size_type i = 0; i < ExtraParamsNames.size(); i++)
+  for (vector<string>::size_type i = 0; i < ExtraParamsNames.size(); i++, FieldsCount++)
   {
     CreationQuery << ", " << "Extr_" << ExtraParamsNames[i];
     // Extrapolation dimensions are always 'double' values
@@ -468,7 +654,7 @@ bool BurstsDB::CreateDB(ParametersManager* Parameters)
   CreationQuery.str("");
   CreationQuery << "CREATE VIEW " << CompleteBurstsView << " AS ";
   CreationQuery << "SELECT * FROM " << AllBurstsTable << " ";
-  CreationQuery << "WHERE " << AllBurstsTable << ".type=\"COMPLETE\"";
+  CreationQuery << "WHERE " << AllBurstsTable << ".type=\"" << CompleteBurst << "\"";
 
   if (sqlite3_prepare_v2(DB,
                          CreationQuery.str().c_str(),

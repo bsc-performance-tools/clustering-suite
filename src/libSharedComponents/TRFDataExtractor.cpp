@@ -306,7 +306,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
     }
   }
 
-  TraceDataSet->Normalize();
+  TraceDataSet->DataExtractionFinished();
 
   /* No more burst
   if (!TraceDataSet->NoMoreBursts())

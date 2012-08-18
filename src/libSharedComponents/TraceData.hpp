@@ -109,8 +109,8 @@ class TraceData: public Error
     bool Normalized;
 
     bool     Master;
-    INT32    MyRank;
-    INT32    TotalRanks;
+    INT32     MyRank;
+    INT32     TotalRanks;
     bool     ReadAllTasks;
     set<int> TasksToRead;
 
@@ -122,8 +122,8 @@ class TraceData: public Error
 
     vector<double>      SumValues; /* Sumatory of each clustering dimension */
 
-    vector<instance_t>  MaxInstances; /* Instances containing the max and min */
-    vector<instance_t>  MinInstances; /* values */
+    vector<instance_t>   MaxInstances; /* Instances containing the max and min */
+    vector<instance_t>   MinInstances; /* values */
 
   public:
 
@@ -154,6 +154,8 @@ class TraceData: public Error
                   vector<double>      &ClusteringProcessedData,
                   map<size_t, double> &ExtrapolationData,
                   burst_type_t         BurstType);
+
+    bool DataExtractionFinished(void);
 
     bool Sampling(size_t MaxSamples);
 

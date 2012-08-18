@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -62,19 +62,19 @@ PRVEventsDataExtractor::PRVEventsDataExtractor(string InputTraceName)
     return;
 
   TraceParser = new ParaverTraceParser(InputTraceName, InputTraceFile);
-  
+
   if (!TraceParser->InitTraceParsing())
   {
     SetError(true);
     SetErrorMessage("error init tracing", TraceParser->GetLastError());
     return;
   }
-  
+
   if (TraceParser->GetTimeUnits() == MICROSECONDS)
     TimeFactor = 1e3;
   else
     TimeFactor = 1;
-  
+
   return;
 }
 
@@ -92,10 +92,10 @@ bool PRVEventsDataExtractor::SetEventsToDealWith (set<event_type_t>& EventsToDea
   {
     SetErrorMessage("no events definend in a PRV event parsing extractor");
     SetError(true);
-    
+
     return false;
   }
-  
+
   return true;
 }
 
@@ -104,11 +104,11 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
   vector<ApplicationDescription_t> AppsDescription;
   vector<TaskDescription_t>        TaskInfo;
   size_t                           TraceObjects = 0;
-  
+
   ParaverRecord *CurrentRecord;
   State         *CurrentState;
   Event         *CurrentEvent;
-  
+
   percentage_t  CurrentPercentage = 0;
 
   if (EventsToDealWith.size() == 0)
@@ -117,10 +117,10 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
     SetErrorMessage("event types not set in that event based Paraver parser");
     return false;
   }
-  
+
   /* Create the structure to manage the different bursts foreach task/thread */
   AppsDescription = TraceParser->GetApplicationsDescription();
-  
+
   if (TraceParser->GetError())
   {
     SetError(true);
@@ -128,19 +128,19 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
                     TraceParser->GetLastError());
     return false;
   }
-  
+
   if (AppsDescription.size() != 1)
   {
     SetError(true);
     SetErrorMessage("unable to clusterize a trace with more than one application");
     return false;
   }
-  
+
   TaskInfo = AppsDescription[0]->GetTaskInfo();
 
   /* Set the number of tasks on trace data, to perform the possible data distribution */
   TraceDataSet->SetNumberOfTasks(TaskInfo.size());
-  
+
   for (size_t i = 0; i < TaskInfo.size(); i++)
   {
     TraceObjects += TaskInfo[i]->GetThreadCount();
@@ -148,9 +148,9 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
     FutureTaskData.push_back(vector<TaskDataContainer>(TaskInfo[i]->GetThreadCount()));
     EventsStack.push_back(vector<stack<event_type_t> > (TaskInfo[i]->GetThreadCount()));
   }
-  
+
   TraceDataSet->SetTraceObjects(TraceObjects);
-  
+
   for (size_t i = 0; i < TaskData.size(); i++)
   {
     for (size_t j = 0; j < TaskData[i].size(); j++)
@@ -160,16 +160,16 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
       TaskData[i][j].ThreadId = j;
       */
       TaskData[i][j].Clear();
-      
+
       /*
       FutureTaskData[i][j].TaskId   = i;
       FutureTaskData[i][j].ThreadId = j;
       */
-      
+
       FutureTaskData[i][j].Clear();
     }
   }
-  
+
   CurrentPercentage = TraceParser->GetFilePercentage();
 
   system_messages::show_percentage_progress("Parsing Paraver Input Trace",
@@ -178,12 +178,12 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
   while (true)
   {
     INT32 PercentageRead;
-    
+
     CurrentRecord = TraceParser->GetNextRecord(EVENT_REC);
-    
+
     if (CurrentRecord == NULL)
       break;
-    
+
     if (!CheckEvent((Event*) CurrentRecord, TraceDataSet))
     {
       return false;
@@ -200,14 +200,14 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
     /* Free memory used by the parser */
     delete CurrentRecord;
   }
-  
+
   if (TraceParser->GetError())
   {
     SetError(true);
     SetErrorMessage("error parsing trace ", TraceParser->GetLastError());
     return false;
   }
-  
+
   system_messages::show_percentage_end("Parsing Paraver Input Trace");
 
   if (ferror(InputTraceFile) != 0)
@@ -242,9 +242,9 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
     }
   }
 
-  TraceDataSet->Normalize();
-  
-  /* No more burst 
+  TraceDataSet->DataExtractionFinished();
+
+  /* No more burst
   if (!TraceDataSet->NoMoreBursts())
   {
     SetError(true);
@@ -252,20 +252,20 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
     return false;
   }
   */
-  
+
 #ifdef DEBUG_PARAVER_INPUT
   // cout << "Data Size = " << TraceDataSet->GetDataSetSize() << endl;
 #endif
-  
+
   return true;
 }
 
 bool PRVEventsDataExtractor::CheckEvent(Event     *CurrentEvent,
                                         TraceData *TraceDataSet)
 {
-  TaskDataContainer& CurrentTaskData = 
+  TaskDataContainer& CurrentTaskData =
     TaskData[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()];
-  
+
   TaskDataContainer& NextTaskData =
     FutureTaskData[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()];
 
@@ -273,11 +273,11 @@ bool PRVEventsDataExtractor::CheckEvent(Event     *CurrentEvent,
   {
     event_type_t  CurrentType  = CurrentEvent->GetType(i);
     event_value_t CurrentValue = CurrentEvent->GetValue(i);
-      
+
     if (BurstOpeningEvent(CurrentType, CurrentValue))
     {
       if (CurrentTaskData.OngoingBurst)
-      { 
+      {
         if (CurrentTaskData.EndTime != 0)
         {
           if (CurrentEvent->GetTimestamp() > CurrentTaskData.EndTime)
@@ -317,7 +317,7 @@ bool PRVEventsDataExtractor::CheckEvent(Event     *CurrentEvent,
 
         ErrorMessage << "closing stacked region (" << CurrentEvent->GetTimestamp();
         ErrorMessage << ") not implemented yet";
-        
+
         SetError(true);
         SetErrorMessage(ErrorMessage.str());
         return false;
@@ -340,7 +340,7 @@ bool PRVEventsDataExtractor::CheckEvent(Event     *CurrentEvent,
             {
               UpdateTaskData (NextTaskData, CurrentType, CurrentValue);
             }
-          
+
             /* Create the burst */
             if (!GenerateBurst(TraceDataSet, CurrentTaskData))
             {
@@ -366,7 +366,7 @@ bool PRVEventsDataExtractor::CheckEvent(Event     *CurrentEvent,
       }
     }
   }
-  
+
   return true;
 }
 
@@ -387,7 +387,7 @@ bool PRVEventsDataExtractor::GenerateBurst(TraceData*         TraceDataSet,
   /* Set the burst  duration */
   Data.BurstDuration = Data.EndTime - Data.BeginTime;
 
-  /* DEBUG 
+  /* DEBUG
   cout << "Calling 'GenerateBurst'. Duration = " << Data.BurstDuration << endl; */
 
   /* Add it to the Trace Data Set */
@@ -417,7 +417,7 @@ bool PRVEventsDataExtractor::GenerateBurst(TraceData*         TraceDataSet,
 
 bool PRVEventsDataExtractor::BurstOpeningEvent(event_type_t  EventType,
                                                event_value_t EventValue)
-{ 
+{
   if (EventsToDealWith.count(EventType) == 1 && EventValue != 0)
   {
     return true;
@@ -446,9 +446,9 @@ bool PRVEventsDataExtractor::UpdateTaskData(TaskDataContainer& DataContainer,
                                             event_value_t      EventValue)
 {
    map<event_type_t, event_value_t>::iterator EventsDataIterator;
-  
+
   EventsDataIterator = DataContainer.EventsData.find(EventType);
-  
+
   if (EventsDataIterator == DataContainer.EventsData.end())
   { /* Add this event to 'EventsData' map */
     DataContainer.EventsData[EventType] = EventValue;
