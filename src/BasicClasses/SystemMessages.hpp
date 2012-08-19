@@ -58,6 +58,7 @@ namespace cepba_tools
       static char *rank_prefix;
 
       static bool percentage_ongoing;
+      static bool progress_ongoing;
 
       static bool print_timers;
 

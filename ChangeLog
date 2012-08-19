@@ -10,10 +10,18 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-08-19 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Minor changes in the 'SystemMessages' class to transform the
+	progress visualization of 'status/total' messages to percentages
+	to ease the visualization in the tree implementation
+
+	* Correction to actually install the script 'sl_expand_nodelist.pl'
+	in the installation 'bin' directory
+
 2012-08-18 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* The insertion method in the bursts database now is managed as a 
 	transaction, divided in three operations, BeginInserts+NewBurst+
-	CommitInserts.
+	CommitInserts
 
 	* Added the Perl script 'sl_expand_nodelist.pl' required in Sierra (not
 	sure if it is required in other systems)
