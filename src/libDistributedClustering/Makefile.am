@@ -37,6 +37,12 @@ libDistributedClustering_la_LIBADD   += @MPI_LIBS@
 endif
 endif
 
+if HAVE_SQLITE3
+libDistributedClustering_la_CXXFLAGS += @SQLITE3_CFLAGS@
+libDistributedClustering_la_LDFLAGS  += @SQLITE3_LDFLAGS@
+endif
+
+
 instdir = $(includedir)
 
 inst_HEADERS = \

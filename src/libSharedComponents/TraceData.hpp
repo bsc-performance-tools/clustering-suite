@@ -369,6 +369,8 @@ bool TraceData::GenericFlushPoints(ostream&             str,
   }
   system_messages::show_progress_end("Writing point to disc", DataSize);
 
+  return true;
+
 }
 
 #endif /* _TRACEDATA_HPP_ */

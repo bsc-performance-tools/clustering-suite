@@ -531,6 +531,11 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& Cl
   }
   else
   {
+    ClassifierCore.Classify(Data->GetClusteringBursts().begin(),
+                            Data->GetClusteringBursts().end(),
+                            Data->GetClusteringBursts().size(),
+                            ClassificationPartition);
+#if 0
 #ifdef HAVE_SQLITE3
 
     // ostringstream Messages;
@@ -546,6 +551,7 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& Cl
                             Data->GetCompleteBursts().end(),
                             Data->GetCompleteBursts().size(),
                             ClassificationPartition);
+#endif
 #endif
   }
 

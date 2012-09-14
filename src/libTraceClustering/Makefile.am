@@ -41,6 +41,11 @@ libTraceClustering_la_CXXFLAGS +=  @CGAL_CPPFLAGS@
 libTraceClustering_la_LDFLAGS += @CGAL_LDFLAGS@ 
 endif
 
+if HAVE_SQLITE3
+libTraceClustering_la_CXXFLAGS += @SQLITE3_CFLAGS@
+libTraceClustering_la_LDFLAGS  += @SQLITE3_LDFLAGS@
+endif
+
 instdir = $(includedir)
 
 inst_HEADERS = \

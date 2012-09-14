@@ -240,19 +240,24 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
                         BurstType);
 
   // if (Master || ReadThisTask(TaskId))
+
+#ifdef HAVE_SQLITE3
   if (Master)
   {
-#ifndef HAVE_SQLITE3
-    AllBursts.push_back(Burst);
-#else
     if (!AllBurstsDB.NewBurst(Burst))
     {
       SetError(true);
       SetErrorMessage(AllBurstsDB.GetLastError());
       return false;
     }
-#endif
   }
+#else
+  if (Master || ReadThisTask((TaskId)))
+  {
+    AllBursts.push_back(Burst);
+  }
+#endif
+
 
   if (BurstType == CompleteBurst)
   {
@@ -355,14 +360,23 @@ bool TraceData::NewBurst(instance_t           Instance,
   }
 #endif
 
-  if (Master || ReadThisTask(TaskId))
+#ifdef HAVE_SQLITE3
+  if (Master)
   {
-#ifndef HAVE_SQLITE3
-    AllBursts.push_back(Burst);
-#else
-    AllBurstsDB.NewBurst(Burst);
-#endif
+    if (!AllBurstsDB.NewBurst(Burst))
+    {
+      SetError(true);
+      SetErrorMessage(AllBurstsDB.GetLastError());
+      return false;
+    }
   }
+#else
+  if (Master || ReadThisTask((TaskId)))
+  {
+    AllBursts.push_back(Burst);
+  }
+#endif
+
 
   if (BurstType == CompleteBurst)
   {
@@ -930,7 +944,8 @@ bool TraceData::FlushPoints(ostream&             str,
 
       sort(AllBursts.begin(), AllBursts.end(), InstanceNumCompare());
 
-      return GenericFlushPoints(AllBursts.begin(),
+      return GenericFlushPoints(str,
+                                AllBursts.begin(),
                                 AllBursts.end(),
                                 AllBursts.size(),
                                 Cluster_IDs);

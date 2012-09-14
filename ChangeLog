@@ -10,6 +10,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2012-09-14 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a bug when storing 'AllBursts' read from a trace and
+	not using a SQLite3
+
 2012-08-19 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Minor changes in the 'SystemMessages' class to transform the
 	progress visualization of 'status/total' messages to percentages

@@ -20,3 +20,8 @@ ClustersSequenceScore_LDADD = \
 
 ClustersSequenceScore_CXXFLAGS = ${CXXFLAGS}
 ClustersSequenceScore_LDFLAGS  = ${LDFLAGS} -static
+
+if HAVE_SQLITE3
+ClustersSequenceScore_CXXFLAGS += @SQLITE3_CFLAGS@
+ClustersSequenceScore_LDFLAGS  += @SQLITE3_LDFLAGS@
+endif
