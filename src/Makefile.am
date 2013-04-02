@@ -1,6 +1,6 @@
 include $(top_srcdir)/PATHS
 
-common_filesdir = @common_filesdir@
+# common_filesdir = @common_filesdir@
 
 SUBDIRS = \
 	BasicClasses \

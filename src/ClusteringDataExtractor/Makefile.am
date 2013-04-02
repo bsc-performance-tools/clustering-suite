@@ -20,7 +20,7 @@ ClusteringDataExtractor_LDADD = \
 ClusteringDataExtractor_CXXFLAGS = ${CXXFLAGS}
 ClusteringDataExtractor_CFLAGS   = ${CFLAGS}
 ClusteringDataExtractor_LDFLAGS  = ${LDFLAGS} -static
-ClusteringDataExtractor_LDADD   +=  @XML2_LIBS@ ${LIBS}
+ClusteringDataExtractor_LDADD   +=  @XML2_LDFLAGS@ @XML2_LIBS@ ${LIBS}
 
 if HAVE_MUSTER
 

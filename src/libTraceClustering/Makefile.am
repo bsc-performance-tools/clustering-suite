@@ -2,7 +2,7 @@
 
 lib_LTLIBRARIES = libTraceClustering.la
 
-common_filesdir = @common_filesdir@
+## common_filesdir = @common_filesdir@
 
 INCLUDES = \
 	-I$(top_srcdir)/include \
@@ -11,7 +11,7 @@ INCLUDES = \
 	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libSharedComponents \
 	-I$(top_srcdir)/src/libParaverTraceParser \
-	-I$(common_filesdir)
+	-I$(top_srcdir)/common_utilities
 
 libTraceClustering_la_LIBADD =  \
 	$(top_srcdir)/src/libClustering/libClustering.la \
@@ -20,7 +20,7 @@ libTraceClustering_la_LIBADD =  \
 
 
 libTraceClustering_la_CXXFLAGS=@XML2_CXXFLAGS@
-libTraceClustering_la_LDFLAGS=@LDFLAGS@ -static @XML2_LIBS@ 
+libTraceClustering_la_LDFLAGS=@LDFLAGS@ @XML2_LDFLAGS@ -static @XML2_LIBS@
 libTraceClustering_la_LIBS=
 
 if HAVE_MUSTER

@@ -1,6 +1,6 @@
 INCLUDES = \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/../common-files \
+	-I$(top_srcdir)/common_utilities \
 	-I$(top_srcdir)/src/BasicClasses \
 	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libSharedComponents \
@@ -19,7 +19,7 @@ BurstClustering_LDADD = \
 BurstClustering_CXXFLAGS = ${CXXFLAGS}
 BurstClustering_CFLAGS   = ${CFLAGS}
 BurstClustering_LDFLAGS  = ${LDFLAGS} -static
-BurstClustering_LDADD   +=  @XML2_LIBS@ ${LIBS}
+BurstClustering_LDADD   +=  @XML2_LDFLAGS@ @XML2_LIBS@ ${LIBS}
 
 if HAVE_MUSTER
 

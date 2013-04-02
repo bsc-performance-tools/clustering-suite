@@ -6,8 +6,6 @@ endif
 
 instdir = $(includedir)
 
-
-
 inst_HEADERS = \
 	Error.hpp \
 	FileNameManipulator.hpp \

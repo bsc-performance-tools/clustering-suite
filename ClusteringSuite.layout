@@ -37,11 +37,11 @@
 	<File name="src/BasicClasses/Utilities.hpp" open="0" top="0" tabpos="0">
 		<Cursor position="2845" topLine="36" />
 	</File>
-	<File name="src/BurstClustering/BurstClustering.cpp" open="1" top="0" tabpos="4">
-		<Cursor position="19186" topLine="590" />
+	<File name="src/BurstClustering/BurstClustering.cpp" open="1" top="0" tabpos="7">
+		<Cursor position="14478" topLine="492" />
 	</File>
-	<File name="src/ClusteringDataExtractor/ClusteringDataExtractorMain.cpp" open="0" top="0" tabpos="6">
-		<Cursor position="3030" topLine="46" />
+	<File name="src/ClusteringDataExtractor/ClusteringDataExtractorMain.cpp" open="1" top="0" tabpos="3">
+		<Cursor position="5699" topLine="149" />
 	</File>
 	<File name="src/ClustersDiff/ClustersDiff.cpp" open="0" top="0" tabpos="3">
 		<Cursor position="2766" topLine="22" />
@@ -202,8 +202,8 @@
 	<File name="src/libClustering/libClustering.cpp" open="0" top="0" tabpos="0">
 		<Cursor position="6337" topLine="12" />
 	</File>
-	<File name="src/libClustering/libClustering.hpp" open="0" top="0" tabpos="0">
-		<Cursor position="3034" topLine="48" />
+	<File name="src/libClustering/libClustering.hpp" open="1" top="0" tabpos="11">
+		<Cursor position="3377" topLine="50" />
 	</File>
 	<File name="src/libClustering/libClusteringImplementation.cpp" open="0" top="0" tabpos="0">
 		<Cursor position="4214" topLine="87" />
@@ -230,15 +230,15 @@
 		<Cursor position="6312" topLine="133" />
 	</File>
 	<File name="src/libParaverTraceParser/ParaverTraceParser.cpp" open="0" top="0" tabpos="2">
-		<Cursor position="11607" topLine="453" />
+		<Cursor position="11607" topLine="724" />
 	</File>
 	<File name="src/libParaverTraceParser/ParaverTraceParser.hpp" open="0" top="0" tabpos="3">
 		<Cursor position="2864" topLine="27" />
 	</File>
-	<File name="src/libSharedComponents/BurstsDB.cpp" open="1" top="0" tabpos="2">
+	<File name="src/libSharedComponents/BurstsDB.cpp" open="0" top="0" tabpos="2">
 		<Cursor position="11252" topLine="304" />
 	</File>
-	<File name="src/libSharedComponents/BurstsDB.hpp" open="1" top="0" tabpos="1">
+	<File name="src/libSharedComponents/BurstsDB.hpp" open="0" top="0" tabpos="1">
 		<Cursor position="3777" topLine="74" />
 	</File>
 	<File name="src/libSharedComponents/CPUBurst.cpp" open="0" top="0" tabpos="26">
@@ -262,10 +262,10 @@
 	<File name="src/libSharedComponents/ClusteredEventsPRVGenerator.hpp" open="0" top="0" tabpos="3">
 		<Cursor position="2744" topLine="34" />
 	</File>
-	<File name="src/libSharedComponents/ClusteredStatesPRVGenerator.cpp" open="1" top="0" tabpos="8">
+	<File name="src/libSharedComponents/ClusteredStatesPRVGenerator.cpp" open="0" top="0" tabpos="8">
 		<Cursor position="6093" topLine="176" />
 	</File>
-	<File name="src/libSharedComponents/ClusteredStatesPRVGenerator.hpp" open="1" top="0" tabpos="9">
+	<File name="src/libSharedComponents/ClusteredStatesPRVGenerator.hpp" open="0" top="0" tabpos="9">
 		<Cursor position="7672" topLine="182" />
 	</File>
 	<File name="src/libSharedComponents/ClusteredTRFGenerator.cpp" open="0" top="0" tabpos="0">
@@ -274,10 +274,10 @@
 	<File name="src/libSharedComponents/ClusteredTRFGenerator.hpp" open="0" top="0" tabpos="6">
 		<Cursor position="2385" topLine="33" />
 	</File>
-	<File name="src/libSharedComponents/ClusteredTraceGenerator.cpp" open="1" top="0" tabpos="6">
+	<File name="src/libSharedComponents/ClusteredTraceGenerator.cpp" open="0" top="0" tabpos="6">
 		<Cursor position="2690" topLine="17" />
 	</File>
-	<File name="src/libSharedComponents/ClusteredTraceGenerator.hpp" open="1" top="0" tabpos="7">
+	<File name="src/libSharedComponents/ClusteredTraceGenerator.hpp" open="0" top="0" tabpos="7">
 		<Cursor position="2559" topLine="39" />
 	</File>
 	<File name="src/libSharedComponents/ClusteringConfiguration.cpp" open="0" top="0" tabpos="0">
@@ -286,8 +286,11 @@
 	<File name="src/libSharedComponents/ClusteringConfiguration.hpp" open="0" top="0" tabpos="10">
 		<Cursor position="2924" topLine="38" />
 	</File>
+	<File name="src/libSharedComponents/ClusteringParameter.cpp" open="1" top="0" tabpos="8">
+		<Cursor position="5749" topLine="153" />
+	</File>
 	<File name="src/libSharedComponents/ClusteringRefinementAggregative.cpp" open="0" top="0" tabpos="1">
-		<Cursor position="9142" topLine="246" />
+		<Cursor position="3331" topLine="175" />
 	</File>
 	<File name="src/libSharedComponents/ClusteringRefinementAggregative.hpp" open="0" top="0" tabpos="2">
 		<Cursor position="2838" topLine="37" />
@@ -316,20 +319,20 @@
 	<File name="src/libSharedComponents/DataExtractorFactory.hpp" open="0" top="0" tabpos="0">
 		<Cursor position="3139" topLine="41" />
 	</File>
-	<File name="src/libSharedComponents/PRVEventsDataExtractor.cpp" open="0" top="0" tabpos="5">
-		<Cursor position="7733" topLine="211" />
+	<File name="src/libSharedComponents/PRVEventsDataExtractor.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="7697" topLine="226" />
 	</File>
 	<File name="src/libSharedComponents/PRVEventsDataExtractor.hpp" open="0" top="0" tabpos="19">
 		<Cursor position="2699" topLine="36" />
 	</File>
-	<File name="src/libSharedComponents/PRVStatesDataExtractor.cpp" open="0" top="0" tabpos="6">
-		<Cursor position="7962" topLine="234" />
+	<File name="src/libSharedComponents/PRVStatesDataExtractor.cpp" open="1" top="0" tabpos="5">
+		<Cursor position="7926" topLine="231" />
 	</File>
 	<File name="src/libSharedComponents/PRVStatesDataExtractor.hpp" open="0" top="0" tabpos="0">
 		<Cursor position="4720" topLine="90" />
 	</File>
-	<File name="src/libSharedComponents/ParametersManager.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="9669" topLine="190" />
+	<File name="src/libSharedComponents/ParametersManager.cpp" open="1" top="0" tabpos="9">
+		<Cursor position="9488" topLine="309" />
 	</File>
 	<File name="src/libSharedComponents/ParametersManager.hpp" open="0" top="0" tabpos="13">
 		<Cursor position="3657" topLine="57" />
@@ -346,17 +349,17 @@
 	<File name="src/libSharedComponents/SequenceScore.hpp" open="0" top="0" tabpos="10">
 		<Cursor position="5484" topLine="133" />
 	</File>
-	<File name="src/libSharedComponents/TRFDataExtractor.cpp" open="0" top="0" tabpos="7">
-		<Cursor position="9796" topLine="285" />
+	<File name="src/libSharedComponents/TRFDataExtractor.cpp" open="1" top="1" tabpos="6">
+		<Cursor position="9501" topLine="285" />
 	</File>
 	<File name="src/libSharedComponents/TRFDataExtractor.hpp" open="0" top="0" tabpos="0">
 		<Cursor position="2855" topLine="35" />
 	</File>
-	<File name="src/libSharedComponents/TraceData.cpp" open="1" top="0" tabpos="10">
-		<Cursor position="11602" topLine="354" />
+	<File name="src/libSharedComponents/TraceData.cpp" open="1" top="0" tabpos="4">
+		<Cursor position="12754" topLine="411" />
 	</File>
-	<File name="src/libSharedComponents/TraceData.hpp" open="1" top="0" tabpos="3">
-		<Cursor position="5735" topLine="135" />
+	<File name="src/libSharedComponents/TraceData.hpp" open="1" top="0" tabpos="10">
+		<Cursor position="6001" topLine="144" />
 	</File>
 	<File name="src/libSharedComponents/XMLParser.cpp" open="0" top="0" tabpos="13">
 		<Cursor position="5704" topLine="162" />
@@ -421,14 +424,14 @@
 	<File name="src/libSharedComponents/trace_clustering_types.h" open="0" top="0" tabpos="7">
 		<Cursor position="2987" topLine="36" />
 	</File>
-	<File name="src/libTraceClustering/libTraceClustering.cpp" open="0" top="0" tabpos="6">
-		<Cursor position="11180" topLine="275" />
+	<File name="src/libTraceClustering/libTraceClustering.cpp" open="1" top="0" tabpos="12">
+		<Cursor position="4386" topLine="78" />
 	</File>
 	<File name="src/libTraceClustering/libTraceClustering.hpp" open="0" top="0" tabpos="4">
 		<Cursor position="4166" topLine="70" />
 	</File>
-	<File name="src/libTraceClustering/libTraceClusteringImplementation.cpp" open="1" top="1" tabpos="5">
-		<Cursor position="36651" topLine="1225" />
+	<File name="src/libTraceClustering/libTraceClusteringImplementation.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="9313" topLine="254" />
 	</File>
 	<File name="src/libTraceClustering/libTraceClusteringImplementation.hpp" open="0" top="0" tabpos="10">
 		<Cursor position="4950" topLine="94" />

@@ -441,6 +441,11 @@ bool TraceData::DataExtractionFinished(void)
 
   Normalize();
 
+  if (!Normalized)
+  {
+    return false;
+  }
+
   return true;
 }
 
@@ -508,6 +513,8 @@ bool TraceData::Sampling(size_t MaxSamples)
 
 void TraceData::Normalize(void)
 {
+  bool EmptyRanges = true;
+
   TraceData::iterator DataIterator;
 
   if (NormalizeData && !Normalized)
@@ -603,6 +610,25 @@ void TraceData::Normalize(void)
 #endif
 
     vector<double> Factors = Parameters->GetClusteringParametersFactors();
+
+    /* Check parameters ranges */
+    for (size_t i = 0; i < MaxValues.size(); i++)
+    {
+      if (MaxValues[i] !=  MinValues[i])
+      {
+        EmptyRanges = false;
+        break;
+      }
+    }
+
+    if (EmptyRanges)
+    {
+      SetError(true);
+      SetErrorMessage("All clustering parameters have empty ranges");
+      Normalized = false;
+      return;
+    }
+
 #ifdef HAVE_SQLITE3
     if (Master)
     {

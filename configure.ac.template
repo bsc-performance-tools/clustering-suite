@@ -196,30 +196,30 @@ dnl COMMON_FILES_DIR: point the compiling system where the tools 'common-files'
 dnl directory is located
 dnl =========================================================================
 
-AC_ARG_WITH(
-  [common-files-dir],
-  AS_HELP_STRING(
-    [--with-common-files-dir=LIB_DIR],
-    [force given directory as BSC Performance Tools common-files location]
-  ),
-  [
-  if test -d $withval; then
-    common_filesdir="$withval"
-  else
-    AC_MSG_ERROR(--with-common-files-dir expected directory name)
-  fi
-  ],
-  [
-    if test -d ../common-files; then
-      common_filesdir="`pwd`/../common-files"
-    else
-      AC_MSG_ERROR(
-        Unable to find 'common-files' directory. Please point it using
-        '--with-common-files-dir' option or copying it to the parent directory)
-    fi
-  ]
-)
-AC_SUBST(common_filesdir)
+dnl AC_ARG_WITH(
+dnl  [common-files-dir],
+dnl  AS_HELP_STRING(
+dnl    [--with-common-files-dir=LIB_DIR],
+dnl    [force given directory as BSC Performance Tools common-files location]
+dnl  ),
+dnl  [
+dnl  if test -d $withval; then
+dnl    common_filesdir="$withval"
+dnl  else
+dnl    AC_MSG_ERROR(--with-common-files-dir expected directory name)
+dnl  fi
+dnl  ],
+dnl  [
+dnl    if test -d ../common-files; then
+dnl      common_filesdir="`pwd`/../common-files"
+dnl    else
+dnl      AC_MSG_ERROR(
+dnl        Unable to find 'common-files' directory. Please point it using
+dnl        '--with-common-files-dir' option or copying it to the parent directory)
+dnl    fi
+dnl  ]
+dnl )
+dnl AC_SUBST(common_filesdir)
 
 dnl =========================================================================
 dnl MUSTER_DIR: point the compiling system where the tools 'muster' includes
@@ -306,6 +306,7 @@ AC_SUBST(CLUSTERING_RPATH)
 AC_CONFIG_FILES([
 Makefile
 include/Makefile
+common_utilities/Makefile
 src/Makefile
 src/BasicClasses/Makefile
 src/libParaverTraceParser/Makefile

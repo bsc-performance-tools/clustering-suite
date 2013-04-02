@@ -27,10 +27,6 @@ The suite has been tested using MPICH
 
 http://www.mcs.anl.gov/research/projects/mpich2/
 
-* The SeqAn library for multiple sequence analysis
-
-http://www.seqan.de/
-
 * libMRNetApp
 
 Also available in the BSC Tools group

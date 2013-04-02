@@ -10,6 +10,15 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2013-04-02 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.3.5
+	* Removed dependencies with 'common-files'. This package is now 
+	integrated
+
+	* Solved a bug in the tree levels naming
+
+2013-03-01 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved bug 01.2013, that happened when all parameters have 0 ranges.
+
 2012-09-14 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a bug when storing 'AllBursts' read from a trace and
 	not using a SQLite3

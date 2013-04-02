@@ -242,7 +242,12 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
     }
   }
 
-  TraceDataSet->DataExtractionFinished();
+  if (!TraceDataSet->DataExtractionFinished())
+  {
+    SetError(true);
+    SetErrorMessage(TraceDataSet->GetLastError());
+    return false;
+  }
 
   /* No more burst
   if (!TraceDataSet->NoMoreBursts())

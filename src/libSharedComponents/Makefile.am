@@ -1,4 +1,4 @@
-common_filesdir = @common_filesdir@
+## common_filesdir = @common_filesdir@
 
 SUBDIRS = kalign2
 
@@ -8,7 +8,7 @@ INCLUDES = \
 	-I$(top_srcdir)/src/libANN \
 	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libParaverTraceParser \
-	-I$(common_filesdir)
+	-I$(top_srcdir)/common_utilities
 
 noinst_LTLIBRARIES = libSharedComponents.la
 
@@ -16,10 +16,12 @@ libSharedComponents_la_LIBADD =  \
 	$(top_srcdir)/src/libClustering/libClustering.la \
 	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la \
 	./kalign2/libKalign2.la
+##	$(top_srcdir)/common_utilities/libCommonUtilities.la \
+	./kalign2/libKalign2.la
 
 libSharedComponents_la_CFLAGS   = @XML2_CFLAGS@
 libSharedComponents_la_CXXFLAGS = @XML2_CFLAGS@
-libSharedComponents_la_LDFLAGS  = -static @XML2_LIBS@
+libSharedComponents_la_LDFLAGS  = @XML2_LDFLAGS@ -static @XML2_LIBS@
 
 if HAVE_MPI
 libSharedComponents_la_CXXFLAGS += @MPI_CFLAGS@

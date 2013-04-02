@@ -1334,9 +1334,12 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
     Messages << "|-> Printing merge trees" << endl;
     system_messages::information(Messages.str());
 
-    if (!PrintTree(OutputFilePrefix+".MERGE.TREE.dot", true)) /* true -> final tree */
+    if (Merges.size() > 0)
     {
-      return false;
+      if (!PrintTree(OutputFilePrefix+".MERGE.TREE.dot", true)) /* true -> final tree */
+      {
+        return false;
+      }
     }
   }
 
@@ -1664,11 +1667,13 @@ bool ClusteringRefinementAggregative::PrintTree(string TreeFileName,
   Output << endl << "{" << endl;
   Output << "node [shape=plaintext]" << endl;
 
-  for (size_t i = 0; i <= LastStep; i++)
+  for (size_t i = 0; i < NodesPerLevel.size(); i++)
   {
     ostringstream LevelName;
 
-    if (FinalTree && i == LastStep)
+    cout << "i = " << i << " Steps = " << Steps << endl;
+
+    if (FinalTree && i >= Steps)
     {
       Output << "\"SEQUENCE BASED MERGE | Global Score =";
       Output << GlobalScoresPerLevel[i]*100 << "% \"" << endl;
@@ -1682,7 +1687,7 @@ bool ClusteringRefinementAggregative::PrintTree(string TreeFileName,
       Output << LevelName.str();
     }
 
-    if (i != LastStep)
+    if (i+1 < NodesPerLevel.size())
     {
       Output << "->";
     }

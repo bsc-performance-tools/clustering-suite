@@ -20,7 +20,7 @@ DBSCANParametersApproximation_LDADD = \
 DBSCANParametersApproximation_CXXFLAGS = ${CXXFLAGS}
 DBSCANParametersApproximation_CFLAGS   = ${CFLAGS}
 DBSCANParametersApproximation_LDFLAGS  = ${LDFLAGS} -static
-DBSCANParametersApproximation_LDADD   +=  @XML2_LIBS@ ${LIBS}
+DBSCANParametersApproximation_LDADD   +=  @XML2_LDFLAGS@ @XML2_LIBS@ ${LIBS}
 
 if HAVE_MUSTER
 

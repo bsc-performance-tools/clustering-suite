@@ -3,9 +3,11 @@
 
 INCLUDES = \
     -I$(top_srcdir)/include\
-    -I@common_filesdir@
+	-I$(top_srcdir)/common_utilities
 
-SUBDIRS = include src scripts
+##    -I@common_filesdir@
+
+SUBDIRS = include common_utilities src scripts
 
 instdir = $(includedir)
 

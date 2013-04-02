@@ -56,7 +56,7 @@ AC_DEFUN([AX_LIB_SQLITE3],
             ac_sqlite3_path="$withval"
         fi
         ],
-        [WANT_SQLITE3="yes"]
+        [WANT_SQLITE3="no"]
     )
 
     SQLITE3_CFLAGS=""
