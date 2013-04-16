@@ -372,6 +372,7 @@ AC_DEFUN([AX_PROG_MPI],
          MPI_LDFLAGS="${MPI_LDFLAGS}"
          AC_SUBST(MPI_LDFLAGS)
          AC_SUBST(MPI_LIBS)
+         AC_SUBST(MPI_LIBSDIR)
       fi
 
       dnl If $MPICC is not set, check for mpicc under $MPI_HOME/bin. We don't want to mix multiple MPI installations.

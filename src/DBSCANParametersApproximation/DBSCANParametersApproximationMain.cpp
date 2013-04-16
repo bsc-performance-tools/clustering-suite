@@ -35,6 +35,9 @@
 
 #include <libTraceClustering.hpp>
 
+#include <FileNameManipulator.hpp>
+using cepba_tools::FileNameManipulator;
+
 #include <string>
 using std::string;
 
@@ -67,6 +70,8 @@ bool   InputTraceNameRead = false;
 
 string OutputFileName;             /* Data extracted from input trace */
 bool   OutputFileNameRead = false;
+
+string OutputDataFileNamePrefix;
 
 map<string, string> Parameters;
 bool   KNeighbourValuesRead = false;
@@ -288,13 +293,47 @@ void GetEventParsingParameters(char* EventParsingArgs)
   cout << endl;
 }
 
+void GenerateOutputFileNamePrefix()
+{
+  string OutputFileExtension;
+
+  OutputFileExtension = FileNameManipulator::GetExtension(InputTraceName);
+
+  if (OutputFileExtension.compare("") == 0)
+  {
+    cerr << "Unable to determine input file type. Please use .prv/.trf extensions" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  if (OutputFileExtension.compare("prv") == 0 ||
+      OutputFileExtension.compare("trf") == 0)
+  {
+    FileNameManipulator NameManipulator(InputTraceName, OutputFileExtension);
+
+    OutputDataFileNamePrefix = NameManipulator.GetChoppedFileName();
+
+    return;
+  }
+  else
+  {
+    cerr << "Unknown input file type. Please use .prv/.trf to choose the input file type" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  return;
+}
+
 int main(int argc, char *argv[])
 {
   libTraceClustering Clustering = libTraceClustering(true);
 
   ReadArgs(argc, argv);
 
-  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, PARAMETER_APPROXIMATION))
+  GenerateOutputFileNamePrefix();
+
+  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML,
+                                      OutputDataFileNamePrefix+".pcf",
+                                      PARAMETER_APPROXIMATION))
   {
     cerr << "Error seting up clustering library: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);

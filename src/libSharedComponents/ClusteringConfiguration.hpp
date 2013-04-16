@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -38,7 +38,10 @@
 #include <Error.hpp>
 using cepba_tools::Error;
 
-#include "trace_clustering_types.h"
+#include <trace_clustering_types.h>
+
+#include <UIParaverTraceConfig.h>
+using libparaver::UIParaverTraceConfig;
 
 #include <vector>
 using std::vector;
@@ -49,7 +52,7 @@ class ParameterContainer;
 class PlotDefinition;
 
 /**
- * Singleton container of all information present on the XML file needed to 
+ * Singleton container of all information present on the XML file needed to
  * execute different aspects of clustering
  */
 class ClusteringConfiguration: public Error
@@ -84,7 +87,7 @@ class ClusteringConfiguration: public Error
     vector<ParameterContainer> ClusteringParametersDefinitions;
     bool                       ClusteringParametersError;
     string                     ClusteringParametersErrorMessage;
-    
+
     /* Extrapolation Dimensions */
     vector<string>             ExtrapolationParametersNames;
     vector<ParameterContainer> ExtrapolationParametersDefinitions;
@@ -100,7 +103,7 @@ class ClusteringConfiguration: public Error
     static ClusteringConfiguration* _ClusteringConfiguration;
 
     ClusteringConfiguration(void);
-    
+
   public:
     /* Instances getters */
     /* static ClusteringConfiguration* GetInstance(string XMLFileName,
@@ -109,10 +112,11 @@ class ClusteringConfiguration: public Error
     static ClusteringConfiguration* GetInstance(void);
 
     /* Initialization */
-    bool   Initialize(string XMLFileName);
+    bool   Initialize(string XMLFileName,
+                      string PCFFileName = "");
 
     bool   IsInitialized(void) const;
-    
+
     /* Setters and Getters of general attributes */
     void       SetDistributed(bool _Distributed);
     bool       GetDistributed(void);
@@ -122,10 +126,10 @@ class ClusteringConfiguration: public Error
     INT32      GetTotalRanks(void);
     void       SetDurationFilter(duration_t DurationFilter);
     duration_t GetDurationFilter(void);
-    
+
     void         SetFilterThreshold(percentage_t FilterThreshold);
     percentage_t GetFilterThreshold(void);
-    
+
     void SetNormalizeData(bool NormalizeData);
     bool GetNormalizeData(void);
 
@@ -167,11 +171,11 @@ class ClusteringConfiguration: public Error
 
     void   SetExtrapolationParametersErrorMessage(string ExtrapolationParametersErrorMessage);
     string GetExtrapolationParametersErrorMessage(void);
-    
+
     /* Output Plots definitions getters and setters */
     void                 SetAllPlots(bool AllPlots);
     bool                 GetAllPlots(void);
-    
+
     void                     SetPlotsDefinitions(vector<PlotDefinition*>& PlotsDefinitions);
     vector<PlotDefinition*>& GetPlotsDefinitions(void);
 
@@ -180,7 +184,7 @@ class ClusteringConfiguration: public Error
 
     void   SetPlotsDefinitionsErrorMessage(string PlotsDefinitionsErrorMessage);
     string GetPlotsDefinitionsErrorMessage(void);
-    
+
     /* Checkers */
     bool CheckParameters(void);
     bool CheckClusteringAlgorithm(void);
@@ -241,7 +245,7 @@ class PlotDefinition
     double ZMax;
 
     line_t Line;
-    
+
     PlotDefinition(void)
     {
       ThreeDimensions = false;

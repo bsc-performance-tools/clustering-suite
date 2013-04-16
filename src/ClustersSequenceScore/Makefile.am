@@ -3,10 +3,11 @@
 INCLUDES =  \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common_utilities \
+	-I$(top_srcdir)/pcfparser_svn1816 \
     -I$(top_srcdir)/src/BasicClasses \
 	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libSharedComponents \
-	-I$(top_srcdir)/src/libTraceClustering
+	-I$(top_srcdir)/src/libTraceClustering 
 
 
 bin_PROGRAMS =  \

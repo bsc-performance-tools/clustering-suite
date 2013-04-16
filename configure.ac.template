@@ -222,48 +222,26 @@ dnl )
 dnl AC_SUBST(common_filesdir)
 
 dnl =========================================================================
+dnl LIBTOOLS: point the compiling system where the 'libtools' library
+dnl is installed in the system
+dnl
+dnl NOTE: temporary disabled until the integration of the new common_files
+dnl distribution. The 'pcfparser' is now embedded and requires the boost
+dnl libraries
+dnl =========================================================================
+dnl AX_LIBTOOLS()
+dnl CXXFLAGS="$CXXFLAGS $LIBTOOLS_CXXFLAGS"
+dnl CFLAGS="$CFLAGS $LIBTOOLS_CFLAGS"
+
+BOOST_REQUIRE(1.36)
+CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS"
+CFLAGS="$CFLAGS $BOOST_CPPFLAGS"
+
+dnl =========================================================================
 dnl MUSTER_DIR: point the compiling system where the tools 'muster' includes
 dnl an libs are located
 dnl =========================================================================
-AC_ARG_WITH(
-  [muster],
-  AS_HELP_STRING(
-    [--with-muster=MUSTER_DIR],
-    [sets the given directory as location of muster includes and libs (needs Boost libraries)]
-  ),
-  [
-	muster_dir="$withval"
-
-	dnl Check boost existence
-	BOOST_REQUIRE(1.36)
-
-  if test ! -d $muster_dir/include; then
-    AC_MSG_ERROR([muster include directory not found, check --with-muster])
-  fi
-	
-	if test ! -f $muster_dir/lib/libmuster.so; then
-		AC_MSG_ERROR([muster dynamic library file not found, check --with-muster])
-	fi
-
-  MUSTER_CXXFLAGS="-I$muster_dir/include $BOOST_CPPFLAGS"
-  MUSTER_CFLAGS="-I$muster_dir/include"
-  MUSTER_LDFLAGS="-L$muster_dir/lib -R$muster_dir/lib"
-  MUSTER_LIBS="-lmuster"
-  MUSTER_LIBDIR="$muster_dir/lib"
-
-  AC_SUBST(MUSTER_CXXFLAGS)
-  AC_SUBST(MUSTER_CFLAGS)
-  AC_SUBST(MUSTER_LDFLAGS)
-  AC_SUBST(MUSTER_LIBS)
-  AC_SUBST(MUSTER_LIBDIR)
-
-	muster_enabled=yes
-	AC_DEFINE(HAVE_MUSTER, 1, [Defined if MUSTER library is enabled])
-  ],
-  [
-	muster_enabled=no
-  ]
-)
+AX_MUSTER()
 AM_CONDITIONAL(HAVE_MUSTER, test "x$muster_enabled" = "xyes")
 
 CLUSTERING_DYNAMIC_PATH="${prefix}/lib"
@@ -303,10 +281,14 @@ AC_SUBST(CLUSTERING_DYNAMIC_PATH)
 AC_SUBST(CGAL_DYNAMIC_PATH)
 AC_SUBST(CLUSTERING_RPATH)
 
+dnl NOTE: the 'pcfparser_svn1816' is a temporary dependency until the new
+dnl 'common_files' package is defined
+
 AC_CONFIG_FILES([
 Makefile
 include/Makefile
 common_utilities/Makefile
+pcfparser_svn1816/Makefile
 src/Makefile
 src/BasicClasses/Makefile
 src/libParaverTraceParser/Makefile

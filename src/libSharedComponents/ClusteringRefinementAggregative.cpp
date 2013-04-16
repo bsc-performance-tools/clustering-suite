@@ -1163,7 +1163,7 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
 
     for (size_t j = 0; j < NumberOfSequences; j++)
     { /* j = number of sequence */
-      if (Sequences[j][i] != NOISE_CLUSTERID)
+      if (Sequences[j][i] > NOISE_CLUSTERID)
       {
         OccurrencesSequence[i].insert(Sequences[j][i]);
       }
@@ -1218,7 +1218,7 @@ bool ClusteringRefinementAggregative::GenerateLastPartition(const vector<CPUBurs
     }
 
     /* First check: all clusters in the set have the same number of occurrences
-       isolately */
+       isolated */
     // cout << "Set = {";
     for (set<cluster_id_t>::iterator i  = CurrentSet.begin();
                                      i != CurrentSet.end();
@@ -1670,8 +1670,6 @@ bool ClusteringRefinementAggregative::PrintTree(string TreeFileName,
   for (size_t i = 0; i < NodesPerLevel.size(); i++)
   {
     ostringstream LevelName;
-
-    cout << "i = " << i << " Steps = " << Steps << endl;
 
     if (FinalTree && i >= Steps)
     {

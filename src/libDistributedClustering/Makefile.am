@@ -12,16 +12,20 @@ INCLUDES = \
 	-I$(top_srcdir)/src/libTraceClustering \
 	-I$(top_srcdir)/src/libSharedComponents \
 	-I$(top_srcdir)/src/libParaverTraceParser \
-	-I$(top_srcdir)/common_utilities
+	-I$(top_srcdir)/common_utilities \
+	-I$(top_srcdir)/pcfparser_svn1816
 
 libDistributedClustering_la_LIBADD= \
 	$(top_srcdir)/src/BasicClasses/libBasicClasses.la \
 	$(top_srcdir)/src/libSharedComponents/libSharedComponents.la 
 
 
-libDistributedClustering_la_CXXFLAGS = @XML2_CXXFLAGS@ @CGAL_CPPFLAGS@ ${BOOST_CPPFLAGS}
-libDistributedClustering_la_LDFLAGS  = @CGAL_LDFLAGS@ ${BOOST_THREAD_LDFLAGS} @XML2_LDFLAGS@ 
-libDistributedClustering_la_LIBADD  += @XML2_LIBS@ ${BOOST_THREAD_LIBS}
+## libDistributedClustering_la_CXXFLAGS = @XML2_CXXFLAGS@ @CGAL_CPPFLAGS@ ${BOOST_CPPFLAGS}
+## libDistributedClustering_la_LDFLAGS  = @CGAL_LDFLAGS@ ${BOOST_THREAD_LDFLAGS} @XML2_LDFLAGS@ 
+## libDistributedClustering_la_LIBADD  += @XML2_LIBS@ ${BOOST_THREAD_LIBS}
+libDistributedClustering_la_CXXFLAGS = @CGAL_CPPFLAGS@ ${BOOST_CPPFLAGS}
+libDistributedClustering_la_LDFLAGS = @CGAL_LDFLAGS@ ${BOOST_THREAD_LDFLAGS}
+libDistributedClustering_la_LIBADD += ${BOOST_THREAD_LIBS}
 
 if HAVE_MUSTER
 

@@ -100,6 +100,7 @@ libTraceClusteringImplementation::libTraceClusteringImplementation(bool verbose)
  * \return True if initialization has been done properly. False otherwise
  */
 bool libTraceClusteringImplementation::InitTraceClustering(string ClusteringDefinitionXML,
+                                                           string PCFFileName,
                                                            unsigned char UseFlags)
 {
   ClusteringConfiguration *ConfigurationManager;
@@ -108,7 +109,8 @@ bool libTraceClusteringImplementation::InitTraceClustering(string ClusteringDefi
 
   ConfigurationManager = ClusteringConfiguration::GetInstance();
 
-  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML))
+  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML,
+                                        PCFFileName))
   {
     SetError(true);
     SetErrorMessage(ConfigurationManager->GetLastError());

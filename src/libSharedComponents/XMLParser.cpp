@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -34,9 +34,17 @@
 
 #include "XMLParser.hpp"
 
+#include <EventEncoding.h>
+
 #include <iostream>
 using std::cout;
 using std::endl;
+
+#include <fstream>
+using std::fstream;
+
+#include <sstream>
+using std::ostringstream;
 
 #include <string.h>
 #include <errno.h>
@@ -64,15 +72,18 @@ XMLParser::XMLParser(void)
 {
   ClusteringAlgorithmError        = false;
   ClusteringAlgorithmErrorMessage = "";
-  
+
   ClusteringParametersError        = false;
   ClusteringParametersErrorMessage = "";
-    
+
   ExtrapolationParametersError        = false;
   ExtrapolationParametersErrorMessage = "";
-    
+
   PlotsDefinitionsError        = false;
   PlotsDefinitionsErrorMessage = "";
+
+  PCFParserError               = false;
+  PCFParserPresent             = false;
 }
 
 /**
@@ -80,9 +91,9 @@ XMLParser::XMLParser(void)
  * \param XMLFileName String containing the name of the XML file
  * \param Configuration ClusteringConfiguration object where all information will be stored
  */
-bool
-XMLParser::ParseXML(string                   XMLFileName,
-                    ClusteringConfiguration* Configuration)
+bool XMLParser::ParseXML(string                   XMLFileName,
+                         string                   PCFFileName,
+                         ClusteringConfiguration* Configuration)
 {
   xmlDoc  *XMLDocument = NULL;
   xmlNode *RootElement = NULL;
@@ -91,7 +102,7 @@ XMLParser::ParseXML(string                   XMLFileName,
   string UseDurationStr, ApplyLogStr, NormalizeDataStr;
 
   ParameterContainer NewParameter;
-  
+
   bool         UseDuration;
   bool         ApplyLogToDuration;
   duration_t   DurationFilter;
@@ -99,7 +110,7 @@ XMLParser::ParseXML(string                   XMLFileName,
   bool         NormalizeData;
 
   AllPlots = false;
-  
+
   FILE* XMLFile;
 
   if ( (XMLFile = fopen(XMLFileName.c_str(), "r")) == NULL)
@@ -117,6 +128,12 @@ XMLParser::ParseXML(string                   XMLFileName,
    * library used.
    */
   LIBXML_TEST_VERSION
+
+  /*
+   * Load the (possible) PCF file that could be required if any parameter
+   * is indicated using the event label (not the event type number)
+   */
+  InitializePCFParser(PCFFileName);
 
   /* Parse the file and get the DOM */
   XMLDocument = xmlParseFile(XMLFileName.c_str());
@@ -199,7 +216,7 @@ XMLParser::ParseXML(string                   XMLFileName,
     else
       NormalizeData = true;
   }
-    
+
   /* 5. ATTR_THRESHOLD   -> Threshold Filter */
   AuxCharStr =
     (char*) xmlGetProp(RootElement, (const xmlChar *) ATTR_THRESHOLD);
@@ -232,7 +249,7 @@ XMLParser::ParseXML(string                   XMLFileName,
   double RangeMin;
   double RangeMax;
 */
-  
+
   if (UseDuration)
   {
     NewParameter.ParameterType = SingleEventParameter;
@@ -273,7 +290,7 @@ XMLParser::ParseXML(string                   XMLFileName,
       Configuration->SetClusteringAlgorithmError(true);
       Configuration->SetClusteringAlgorithmErrorMessage(ClusteringAlgorithmErrorMessage);
     }
-    
+
     if (!ClusteringParametersError)
     {
       Configuration->SetClusteringParametersError(false);
@@ -317,8 +334,79 @@ XMLParser::ParseXML(string                   XMLFileName,
   return true;
 }
 
-bool
-XMLParser::ParseXMLNodes(xmlNodePtr CurrentNode)
+/**
+ * Initialize the PCFParser, required if we used events by name instead of
+ * by value
+ *
+ * \param PCCFileName Name of the PCF file to be loaded
+ *
+ * \return True if the file exists and can be loaded or the file does not
+ *         exists. False otherwise
+ */
+bool XMLParser::InitializePCFParser(string PCFFileName)
+{
+  fstream TestOpenFile;
+
+  vector<unsigned int> AllEventTypes;
+
+  if (PCFFileName.compare("") == 0)
+  {
+    return true;
+  }
+
+  TestOpenFile.open(PCFFileName.c_str(), std::ios::in);
+  if (!TestOpenFile.good())
+  {
+    PCFParserPresent     = true;
+    PCFParserError       = true;
+    PCFParserErrorString = "error opening input PCF file '"+PCFFileName+"' ("+string(strerror(errno))+")";
+    return true;
+  }
+  TestOpenFile.close();
+
+  try
+  {
+    PCFParser.parse(PCFFileName);
+  }
+  catch (libparaver::UIParaverTraceConfig::pcf_format_error & Error)
+  {
+    vector<string> PCFErrors = Error.excps;
+
+    PCFParserPresent     = true;
+    PCFParserError       = true;
+    PCFParserErrorString = "line "+PCFErrors[1]+", column "+PCFErrors[2];
+    return true;
+  }
+
+  AllEventTypes = PCFParser.getEventTypes();
+
+  for (vector<unsigned int>::size_type i = 0; i < AllEventTypes.size(); i++)
+  {
+    string EventName;
+
+    try
+    {
+      EventName = PCFParser.getEventType(AllEventTypes[i]);
+    }
+    catch (libparaver::UIParaverTraceConfig::value_not_found & Error)
+    {
+      PCFParserPresent     = true;
+      PCFParserError       = true;
+      PCFParserErrorString = "malformed PCF file, unable to generate parameters names";
+
+      return true;
+    }
+
+    PCFEventsMap[EventName]               = AllEventTypes[i];
+    PCFEventsReverseMap[AllEventTypes[i]] = EventName;
+  }
+
+  PCFParserPresent = true;
+
+  return true;
+}
+
+bool XMLParser::ParseXMLNodes(xmlNodePtr CurrentNode)
 {
   INT32 ClusteringParametersCount;
 
@@ -378,20 +466,19 @@ XMLParser::ParseXMLNodes(xmlNodePtr CurrentNode)
       SetError(true);
       return false;
     }
-    
+
     CurrentChild = CurrentChild->next;
   }
 
   return true;
 }
 
-bool
-XMLParser::ParseXMLClusteringAlgorithm(xmlNodePtr CurrentClusteringAlgorithm)
+bool XMLParser::ParseXMLClusteringAlgorithm(xmlNodePtr CurrentClusteringAlgorithm)
 {
   xmlNodePtr CurrentAlgorithmParameter;
   string     CurrentAlgorithmParameterName;
   string     CurrentAlgorithmParameterValue;
-  
+
   char*  AuxCharStr;
   string AuxStr;
 
@@ -423,12 +510,12 @@ XMLParser::ParseXMLClusteringAlgorithm(xmlNodePtr CurrentClusteringAlgorithm)
   {
     CurrentAlgorithmParameterName = (const char*) CurrentAlgorithmParameter->name;
 
-    if (CurrentAlgorithmParameterName.compare("text") != 0 && 
+    if (CurrentAlgorithmParameterName.compare("text") != 0 &&
         CurrentAlgorithmParameterName.compare("comment") != 0)
     {
-    
+
       AuxCharStr = (char*) xmlNodeGetContent(CurrentAlgorithmParameter);
-    
+
       if (AuxCharStr != NULL)
       {
         CurrentAlgorithmParameterValue = (const char*) AuxCharStr;
@@ -452,13 +539,11 @@ XMLParser::ParseXMLClusteringAlgorithm(xmlNodePtr CurrentClusteringAlgorithm)
                                                      CurrentAlgorithmParameterValue));
     }
   }
-  
+
   return true;
 }
 
-bool
-XMLParser::ParseXMLClusteringParameters(
-  xmlNodePtr NodeClusteringParameters)
+bool XMLParser::ParseXMLClusteringParameters(xmlNodePtr NodeClusteringParameters)
 {
   xmlNodePtr CurrentNode;
   string     CurrentNodeName;
@@ -502,12 +587,48 @@ XMLParser::ParseXMLClusteringParameters(
 
 bool XMLParser::ParseXMLExtrapolationParameters(xmlNodePtr NodeExtraParameters)
 {
+  char*      AllCountersChar;
+  string     AllCountersStr;
   xmlNodePtr CurrentNode;
   string     CurrentNodeName;
   int i = 0;
 
   ReadingExtrapolationParameters = true;
-  
+
+  AllCountersChar =
+    (char*) xmlGetProp(NodeExtraParameters, ((const xmlChar *) ATTR_ALLCOUNTERS));
+
+  if (AllCountersChar != NULL)
+  {
+    AllCountersStr = AllCountersChar;
+    if (AllCountersStr.compare(STR_YES) == 0)
+    {
+      /* Generate all counters described in the PCF as extrapolation parameters */
+
+      if (PCFParserPresent)
+      {
+        if (PCFParserError)
+        {
+          ostringstream ErrorMessage;
+
+          ErrorMessage << PCFParserErrorString;
+          ErrorMessage << ". \"all_counter\" attribute in node ";
+          ErrorMessage << "'" << NODE_PR_PARAM << "' on line ";
+          ErrorMessage << NodeExtraParameters->line << " requires the PCF of";
+          ErrorMessage << " the input trace to read the available counters";
+
+          SetErrorMessage(ErrorMessage.str());
+          SetError(true);
+          return false;
+        }
+        else
+        {
+          return GenerateAllCountersExtrapolations();
+        }
+      }
+    }
+  }
+
   for (CurrentNode  = NodeExtraParameters->xmlChildrenNode;
        CurrentNode != NULL;
        CurrentNode  = CurrentNode->next)
@@ -539,16 +660,15 @@ bool XMLParser::ParseXMLExtrapolationParameters(xmlNodePtr NodeExtraParameters)
       return false;
     }
   }
-  
+
   return true;
 }
 
-bool
-XMLParser::ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent)
+bool XMLParser::ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent)
 {
-  
+
   ParameterContainer NewParameter;
-  
+
   xmlNodePtr   CurrentNode;
   string       CurrentNodeName;
 
@@ -563,7 +683,7 @@ XMLParser::ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent)
   double       Factor = 1.0;
 
   NewParameter.ParameterType = SingleEventParameter;
-  
+
   AuxCharStr =
     (char*) xmlGetProp(CurrentSingleEvent, (const xmlChar*) ATTR_NAME);
 
@@ -609,14 +729,52 @@ XMLParser::ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent)
     if (CurrentNodeName.compare(NODE_EVENTTYPE) == 0)
     {
       string EventTypeStr = (const char*) xmlNodeGetContent(CurrentNode);
-      
+
       if (EventTypeStr.compare(TEXT_DURATION) == 0)
       {
         EventType = DURATION_EVENT_TYPE;
       }
-      else
+      else if (IsNumber(string((char*) xmlNodeGetContent(CurrentNode))))
       {
         EventType  = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+      }
+      else
+      {
+        // It is label that has to be translated using the PCF parser
+        if (PCFParserPresent)
+        {
+          if (PCFParserError)
+          {
+            ostringstream ErrorMessage;
+
+            ErrorMessage << PCFParserErrorString;
+            ErrorMessage << ". The file is required to find the event type for ";
+            ErrorMessage << "label " << xmlNodeGetContent(CurrentNode);
+            ErrorMessage << " on node '" << NODE_EVENTTYPE << "' present in line ";
+            ErrorMessage << CurrentNode->line;
+
+            SetErrorMessage(ErrorMessage.str());
+            SetError(true);
+            return false;
+          }
+          else
+          {
+            EventType = FindEventTypeByName((char*) xmlNodeGetContent(CurrentNode));
+            if ( EventType == UNKNOWN_EVENT_TYPE )
+            {
+              ostringstream ErrorMessage;
+
+              ErrorMessage << "unable to find the event type for label \"";
+              ErrorMessage << xmlNodeGetContent(CurrentNode) << "\" ";
+              ErrorMessage << "on node " << NODE_EVENTTYPE << " present in line ";
+              ErrorMessage << CurrentNode->line;
+
+              SetErrorMessage(ErrorMessage.str());
+              SetError(true);
+              return false;
+            }
+          }
+        }
       }
       EventTypeRead = true;
     }
@@ -658,17 +816,42 @@ XMLParser::ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent)
 
   if (!EventTypeRead)
   {
-    string ErrorMessage;
+    if (PCFParserPresent)
+    {
+      if (PCFParserError)
+      {
+        ostringstream ErrorMessage;
 
-    ErrorMessage += "Mandatory element \"";
-    ErrorMessage += NODE_EVENTTYPE;
-    ErrorMessage += "\" not found on \"";
-    ErrorMessage += NODE_SINGLEEVT;
-    ErrorMessage += "\" node";
+        ErrorMessage << PCFParserErrorString;
+        ErrorMessage << ". The file is required to find the event type for ";
+        ErrorMessage << "label " << ParameterName;
+        ErrorMessage << " on node '" << NODE_SINGLEEVT << "' present in line ";
+        ErrorMessage << CurrentSingleEvent->line;
 
-    SetErrorMessage(ErrorMessage);
-    SetError(true);
-    return false;
+
+        SetErrorMessage(ErrorMessage.str());
+        SetError(true);
+        return false;
+      }
+      else
+      {
+        EventType = FindEventTypeByName(ParameterName);
+        if ( EventType == UNKNOWN_EVENT_TYPE )
+        {
+          ostringstream ErrorMessage;
+
+          ErrorMessage << "unable to find the event type for label \"";
+          ErrorMessage << ParameterName << "\" ";
+          ErrorMessage << "on node " << NODE_SINGLEEVT << " present in line ";
+          ErrorMessage << CurrentSingleEvent->line;
+
+          SetErrorMessage(ErrorMessage.str());
+          SetError(true);
+          return false;
+        }
+      }
+    }
+
   }
 
   NewParameter.EventType = EventType;
@@ -677,7 +860,7 @@ XMLParser::ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent)
   NewParameter.RangeMin  = RangeMin;
   NewParameter.RangeMax  = RangeMax;
   NewParameter.Line      = CurrentSingleEvent->line;
-  
+
   if (ReadingExtrapolationParameters)
   {
     ExtrapolationParametersNames.push_back(ParameterName);
@@ -691,7 +874,6 @@ XMLParser::ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent)
 
   return true;
 }
-
 
 bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
 {
@@ -713,7 +895,7 @@ bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
     (char*) xmlGetProp(CurrentMixedEvent, (const xmlChar*) ATTR_NAME);
 
   NewParameter.ParameterType = DerivedEventParameter;
-  
+
   if (AuxCharStr == NULL)
   {
     char line[15];
@@ -785,11 +967,50 @@ bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
       {
         EventTypeA = DURATION_EVENT_TYPE;
       }
+      else if (IsNumber(string((char*) xmlNodeGetContent(CurrentNode))))
+      {
+        EventTypeA  = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+      }
       else
       {
-        EventTypeA     = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+        // It is label that has to be translated using the PCF parser
+        if (PCFParserPresent)
+        {
+          if (PCFParserError)
+          {
+            ostringstream ErrorMessage;
+
+            ErrorMessage << PCFParserErrorString;
+            ErrorMessage << ". The file is required to find the event type for ";
+            ErrorMessage << "label " << xmlNodeGetContent(CurrentNode);
+            ErrorMessage << " on node '" << NODE_EVENTTYPE << "' present in line ";
+            ErrorMessage << CurrentNode->line;
+
+            SetErrorMessage(ErrorMessage.str());
+            SetError(true);
+            return false;
+          }
+          else
+          {
+            EventTypeA = FindEventTypeByName((char*) xmlNodeGetContent(CurrentNode));
+            if ( EventTypeA == UNKNOWN_EVENT_TYPE )
+            {
+              ostringstream ErrorMessage;
+
+              ErrorMessage << "unable to find the event type for label \"";
+              ErrorMessage << xmlNodeGetContent(CurrentNode) << "\" ";
+              ErrorMessage << "on node " << NODE_EVENTTYPE << " present in line ";
+              ErrorMessage << CurrentNode->line;
+
+              SetErrorMessage(ErrorMessage.str());
+              SetError(true);
+              return false;
+            }
+          }
+        }
       }
       EventTypeARead = true;
+
     }
     else if (CurrentNodeName.compare(NODE_EVENTTYPE_B) == 0)
     {
@@ -798,9 +1019,48 @@ bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
       {
         EventTypeB = DURATION_EVENT_TYPE;
       }
+      else if (IsNumber(string((char*) xmlNodeGetContent(CurrentNode))))
+      {
+        EventTypeB  = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+      }
       else
       {
-        EventTypeB     = (event_type_t) atoll((char*) xmlNodeGetContent(CurrentNode));
+        // It is label that has to be translated using the PCF parser
+        if (PCFParserPresent)
+        {
+          if (PCFParserError)
+          {
+            ostringstream ErrorMessage;
+
+            ErrorMessage << PCFParserErrorString;
+            ErrorMessage << ". The file is required to find the event type for ";
+            ErrorMessage << "label " << xmlNodeGetContent(CurrentNode);
+            ErrorMessage << " on node '" << NODE_EVENTTYPE << "' present in line ";
+            ErrorMessage << CurrentNode->line;
+
+            SetErrorMessage(ErrorMessage.str());
+            SetError(true);
+            return false;
+          }
+          else
+          {
+            EventTypeB = FindEventTypeByName((char*) xmlNodeGetContent(CurrentNode));
+
+            if ( EventTypeB == UNKNOWN_EVENT_TYPE )
+            {
+              ostringstream ErrorMessage;
+
+              ErrorMessage << "unable to find the event type for label \"";
+              ErrorMessage << xmlNodeGetContent(CurrentNode) << "\" ";
+              ErrorMessage << "on node " << NODE_EVENTTYPE << " present in line ";
+              ErrorMessage << CurrentNode->line;
+
+              SetErrorMessage(ErrorMessage.str());
+              SetError(true);
+              return false;
+            }
+          }
+        }
       }
       EventTypeBRead = true;
     }
@@ -865,7 +1125,7 @@ bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
     string ErrorMessage;
 
     sprintf(line, "%d", CurrentMixedEvent->line);
-    
+
     ErrorMessage = "Mandatory element \"";
     ErrorMessage += NODE_EVENTTYPE_B;
     ErrorMessage += "\" not found on \"";
@@ -878,7 +1138,6 @@ bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
     return false;
   }
 
-
   NewParameter.EventType  = EventTypeA;
   NewParameter.EventType2 = EventTypeB;
   NewParameter.Factor     = Factor;
@@ -887,7 +1146,7 @@ bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
   NewParameter.RangeMin   = RangeMin;
   NewParameter.RangeMax   = RangeMax;
   NewParameter.Line       = CurrentMixedEvent->line;
-  
+
   /* Set range if available */
   if (ReadingExtrapolationParameters)
   {
@@ -903,8 +1162,7 @@ bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
   return true;
 }
 
-bool
-XMLParser::ParseXMLOutputPlots(xmlNodePtr NodeOutputPlots)
+bool XMLParser::ParseXMLOutputPlots(xmlNodePtr NodeOutputPlots)
 {
   xmlNodePtr CurrentNode;
   string     CurrentNodeName;
@@ -915,19 +1173,19 @@ XMLParser::ParseXMLOutputPlots(xmlNodePtr NodeOutputPlots)
 
   AuxCharStr =
     (char*) xmlGetProp(NodeOutputPlots, (const xmlChar*) ATTR_ALLPLOTS);
-  
+
   if (AuxCharStr != NULL)
   {
     AuxStr = AuxCharStr;
     xmlFree(AuxCharStr);
-    
+
     if (AuxStr.compare(STR_YES) == 0)
     {
       AllPlots = true;
       return true;
     }
   }
-  
+
   for (CurrentNode  = NodeOutputPlots->xmlChildrenNode;
        CurrentNode != NULL;
        CurrentNode  = CurrentNode->next)
@@ -958,27 +1216,26 @@ XMLParser::ParseXMLOutputPlots(xmlNodePtr NodeOutputPlots)
   return true;
 }
 
-bool
-XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
+bool XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
 {
   xmlNodePtr      CurrentNode;
   string          CurrentNodeName;
 
   PlotDefinition* Definition = new PlotDefinition();
-  
+
   bool       XMetricPresent, YMetricPresent, ZMetricPresent, RawMetrics;
   char*      AuxCharStr;
   string     AuxStr, AllPlotsStr;
 
   XMetricPresent = YMetricPresent = ZMetricPresent = false;
   RawMetrics     = true;
-  
+
   /* Print Raw dimensions */
   AuxCharStr =
     (char*) xmlGetProp(CurrentPlotDefinition, (const xmlChar*) ATTR_RAWMETRICS);
 
   Definition->Line = CurrentPlotDefinition->line;
-  
+
   if (AuxCharStr != NULL)
   {
     AllPlotsStr = AuxCharStr;
@@ -989,7 +1246,7 @@ XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
       Definition->RawMetrics = false;
     }
   }
-  
+
   for (CurrentNode  = CurrentPlotDefinition->xmlChildrenNode;
        CurrentNode != NULL;
        CurrentNode  = CurrentNode->next)
@@ -1002,7 +1259,7 @@ XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
       {
         char   line[15];
         string ErrorMessage;
-        
+
         ErrorMessage += "double definition of plot X axis on line ";
         sprintf(line, "%d", CurrentNode->line);
         ErrorMessage += line;
@@ -1017,7 +1274,7 @@ XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
       xmlFree(AuxCharStr);
 
       XMetricPresent = true;
-      
+
       /* Get parameter "title" */
       AuxCharStr =
         (char*) xmlGetProp(CurrentNode, (const xmlChar*) ATTR_TITLE);
@@ -1058,7 +1315,7 @@ XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
       {
         char   line[15];
         string ErrorMessage;
-        
+
         ErrorMessage += "double definition of plot Y axis on line ";
         sprintf(line, "%d", CurrentNode->line);
         ErrorMessage += line;
@@ -1114,7 +1371,7 @@ XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
       {
         char   line[15];
         string ErrorMessage;
-        
+
         ErrorMessage += "double definition of plot Z axis on line ";
         sprintf(line, "%d", CurrentNode->line);
         ErrorMessage += line;
@@ -1163,7 +1420,7 @@ XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
         Definition->ZMax = atof(AuxCharStr);
         xmlFree(AuxCharStr);
       }
-      
+
       Definition->ThreeDimensions = true;
     }
     else if (CurrentNodeName.compare("text") != 0 &&
@@ -1193,8 +1450,159 @@ XMLParser::ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition)
     SetErrorMessage(ErrorMessage);
     return false;
   }
-  
+
   PlotsDefinitions.push_back(Definition);
 
   return true;
 }
+
+bool XMLParser::GenerateAllCountersExtrapolations(void)
+{
+  // vector<unsigned int> AllEventTypes;
+
+  // AllEventTypes = PCFParser.getEventTypes();
+
+  for (map<unsigned int, string>::iterator it = PCFEventsReverseMap.begin();
+       it != PCFEventsReverseMap.end();
+       ++it)
+  {
+    if (it->first >= HWC_BASE && it->first < HWC_GROUP_ID)
+    {
+      ParameterContainer NewParameter;
+      string             ParameterName;
+      unsigned           OpenParenth, CloseParenth;
+
+      OpenParenth  = it->second.find("(");
+      CloseParenth = it->second.find(")");
+
+      if (OpenParenth != std::string::npos && CloseParenth != std::string::npos)
+      {
+        ParameterName = it->second.substr(OpenParenth+1, (CloseParenth-OpenParenth)-1);
+      }
+      else
+      {
+        ParameterName = it->second;
+      }
+
+      NewParameter.ParameterType = SingleEventParameter;
+      NewParameter.EventType     = it->first;
+      NewParameter.Factor        = 1.0;
+      NewParameter.ApplyLog      = false;
+      NewParameter.RangeMin      = -1.0;
+      NewParameter.RangeMax      = -1.0;
+      NewParameter.Line          = 0;
+
+      ExtrapolationParametersNames.push_back(ParameterName);
+      ExtrapolationParametersDefinitions.push_back(NewParameter);
+    }
+  }
+
+  /*
+  for (vector<unsigned int>::size_type i = 0; i < AllEventTypes.size(); i++)
+  {
+    if (AllEventTypes[i] >= HWC_BASE && AllEventTypes[i] < HWC_GROUP_ID)
+    {
+      ParameterContainer NewParameter;
+      string             EventName, ParameterName;
+      unsigned           OpenParenth, CloseParenth;
+
+      try
+      {
+        EventName = PCFParser.getEventType(AllEventTypes[i]);
+      }
+      catch (libparaver::UIParaverTraceConfig::value_not_found & Error)
+      {
+        ostringstream ErrorMessage;
+        ErrorMessage << "malformed PCF file, unable to generate all extrapolation parameters";
+
+        SetError(true);
+        SetErrorMessage(ErrorMessage.str());
+        return false;
+      }
+
+      OpenParenth  = EventName.find("(");
+      CloseParenth = EventName.find(")");
+
+      if (OpenParenth != std::string::npos && CloseParenth != std::string::npos)
+      {
+        ParameterName = EventName.substr(OpenParenth+1, (CloseParenth-OpenParenth)-1);
+      }
+      else
+      {
+        ParameterName = EventName;
+      }
+
+      NewParameter.ParameterType = SingleEventParameter;
+      NewParameter.EventType     = AllEventTypes[i];
+      NewParameter.Factor        = 1.0;
+      NewParameter.ApplyLog      = false;
+      NewParameter.RangeMin      = -1.0;
+      NewParameter.RangeMax      = -1.0;
+      NewParameter.Line          = 0;
+
+      ExtrapolationParametersNames.push_back(ParameterName);
+      ExtrapolationParametersDefinitions.push_back(NewParameter);
+    }
+  }
+  */
+
+  return true;
+}
+
+event_type_t XMLParser::FindEventTypeByName(string EventName)
+{
+  event_type_t EventType = UNKNOWN_EVENT_TYPE;
+
+  map<string, event_type_t>::iterator MapSearch;
+
+  MapSearch = PCFEventsMap.find(EventName);
+
+  if (MapSearch != PCFEventsMap.end())
+  {
+    EventType = MapSearch->second;
+  }
+  else
+  {
+    for (MapSearch  = PCFEventsMap.begin();
+         MapSearch != PCFEventsMap.end();
+         ++MapSearch)
+    {
+      unsigned           OpenParenth, CloseParenth;
+
+      OpenParenth  = MapSearch->first.find("(");
+      CloseParenth = MapSearch->first.find(")");
+
+      if (OpenParenth != std::string::npos && CloseParenth != std::string::npos)
+      {
+        string CurrentEventName = MapSearch->first.substr(OpenParenth+1,
+                                                          (CloseParenth-OpenParenth)-1);
+        if (CurrentEventName.compare(EventName) == 0)
+        {
+          EventType = MapSearch->second;
+          break;
+        }
+      }
+
+      /*
+      if (MapSearch->first.find(EventName) != string::npos)
+      {
+        EventType = MapSearch->second;
+        break;
+      }
+      */
+    }
+  }
+
+  return EventType;
+}
+
+bool XMLParser::IsNumber(const string& String)
+{
+  std::string::const_iterator it = String.begin();
+
+  while (it != String.end() && std::isdigit(*it)) ++it;
+
+  return !String.empty() && it == String.end();
+}
+
+

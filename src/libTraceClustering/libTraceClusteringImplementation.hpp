@@ -77,6 +77,7 @@ class libTraceClusteringImplementation: public Error
     libTraceClusteringImplementation(bool verbose);
 
     bool InitTraceClustering(string        ClusteringDefinitionXML,
+                             string        PCFFileName,
                              unsigned char UseFlags);
 
     bool ExtractData(string            InputFileName,

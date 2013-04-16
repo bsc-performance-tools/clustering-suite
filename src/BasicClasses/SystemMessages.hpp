@@ -72,6 +72,12 @@ namespace cepba_tools
       static void information(const char* message,
                               FILE*       channel = stdout);
 
+      static void silent_information(string message,
+                                     FILE  *channel = stdout);
+
+      static void silent_information(const char* message,
+                                     FILE*       channel = stdout);
+
       static void die(const char* message,
                       FILE*       channel = stderr);
 

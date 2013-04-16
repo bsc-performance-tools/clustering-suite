@@ -108,6 +108,47 @@ void system_messages::information(const char* message,
   }
 }
 
+void system_messages::silent_information(string message,
+                                         FILE  *channel)
+{
+  system_messages::silent_information(message.c_str(), channel);
+}
+
+void system_messages::silent_information(const char* message,
+                                         FILE*       channel)
+{
+  if (!system_messages::verbose)
+  {
+    if (system_messages::distributed)
+    {
+      if (system_messages::messages_from_all_ranks)
+      {
+        fprintf(channel,
+                "[%s%d] %s",
+                system_messages::rank_prefix,
+                system_messages::my_rank,
+                message);
+      }
+      else
+      {
+        if (my_rank == 0)
+        {
+          fprintf(channel,
+                  "[%s%d] %s",
+                  system_messages::rank_prefix,
+                  system_messages::my_rank,
+                  message);
+        }
+      }
+    }
+    else
+    {
+      fprintf(channel, "%s", message);
+    }
+  }
+}
+
+
 void system_messages::show_progress(string message,
                                     int    current,
                                     int    total,

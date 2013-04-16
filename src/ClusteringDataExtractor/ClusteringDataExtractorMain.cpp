@@ -36,6 +36,9 @@
 #include <types.h>
 #include <libTraceClustering.hpp>
 
+#include <FileNameManipulator.hpp>
+using cepba_tools::FileNameManipulator;
+
 #include <string>
 using std::string;
 
@@ -58,8 +61,8 @@ bool   ClusteringDefinitionRead = false;
 string InputTraceName;             /* Input trace name */
 bool   InputTraceNameRead = false;
 
-string OutputFileName;             /* Data extracted from input trace */
-bool   OutputFileNameRead = false;
+string OutputDataFileNamePrefix;   /* The filename of the input trace without
+                                      extension */
 
 bool   ApplyCPIStack             = false;
 
@@ -96,9 +99,7 @@ set<unsigned int> EventsToParse;
 "  -m <eigen_matrix_file>     CSV file containing an eigenvectors matrix to\n"\
 "                             transform the original space\n"\
 "\n"\
-"  -i <input_trace>           Input trace\n"\
-"\n"\
-"  -o <output_data>           Output data file\n"
+"  -i <input_trace>           Input trace\n"
 
 
 #define ABOUT \
@@ -112,7 +113,7 @@ void GetEventParsingParameters(char* EventParsingArgs);
 void PrintUsage(char* ApplicationName)
 {
   cout << "Usage: " << ApplicationName << " -d <clustering_def.xml>";
-  cout << "[-x] [-m <eigen_matrix_file>] -i <input_trace> -o <output_data>" << endl;
+  cout << "[-x] [-m <eigen_matrix_file>] -i <input_trace>" << endl;
 }
 
 void
@@ -172,11 +173,13 @@ ReadArgs(int argc, char *argv[])
           j++;
           EigenMatrixFileName = argv[j];
           break;
+        /*
         case 'o':
           j++;
           OutputFileName     = argv[j];
           OutputFileNameRead = true;
           break;
+        */
         case 'e':
           UseParaverEventParsing = true;
           j++;
@@ -209,11 +212,13 @@ ReadArgs(int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
+  /*
   if (!OutputFileNameRead)
   {
     cerr << "Output data file file missing ( \'-o\' parameter)" << endl;
     exit (EXIT_FAILURE);
   }
+  */
 
   return;
 }
@@ -256,13 +261,47 @@ void GetEventParsingParameters(char* EventParsingArgs)
   cout << endl;
 }
 
+void GenerateOutputFileNamePrefix()
+{
+  string OutputFileExtension;
+
+  OutputFileExtension = FileNameManipulator::GetExtension(InputTraceName);
+
+  if (OutputFileExtension.compare("") == 0)
+  {
+    cerr << "Unable to determine input file type. Please use .prv/.trf extensions" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  if (OutputFileExtension.compare("prv") == 0 ||
+      OutputFileExtension.compare("trf") == 0)
+  {
+    FileNameManipulator NameManipulator(InputTraceName, OutputFileExtension);
+
+    OutputDataFileNamePrefix = NameManipulator.GetChoppedFileName();
+
+    return;
+  }
+  else
+  {
+    cerr << "Unknown input file type. Please use .prv/.trf to choose the input file type" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  return;
+}
+
 int main(int argc, char *argv[])
 {
   libTraceClustering Clustering = libTraceClustering(true);
 
   ReadArgs(argc, argv);
 
-  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, PLOTS))
+  GenerateOutputFileNamePrefix();
+
+  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML,
+                                      OutputDataFileNamePrefix+".pcf",
+                                      PLOTS))
   {
     cerr << "Error seting up clustering library: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
@@ -285,13 +324,13 @@ int main(int argc, char *argv[])
     }
   }
 
-  if (!Clustering.FlushData(OutputFileName))
+  if (!Clustering.FlushData(OutputDataFileNamePrefix))
   {
     cerr << "Error writing data points: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);
   }
 
-  if (!Clustering.PrintPlotScripts(OutputFileName))
+  if (!Clustering.PrintPlotScripts(OutputDataFileNamePrefix))
   {
     cerr << "Error printing plot scripts: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);

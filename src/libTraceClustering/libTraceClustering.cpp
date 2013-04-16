@@ -59,9 +59,12 @@ libTraceClustering::libTraceClustering(bool verbose)
  * \return True if the initialization finished properly. False otherwise
  */
 bool libTraceClustering::InitTraceClustering(string        ClusteringDefinitionXML,
+                                             string        PCFFileName,
                                              unsigned char UseFlags)
 {
-  if (!Implementation->InitTraceClustering(ClusteringDefinitionXML, UseFlags))
+  if (!Implementation->InitTraceClustering(ClusteringDefinitionXML,
+                                           PCFFileName,
+                                           UseFlags))
   {
     Error        = true;
     ErrorMessage = Implementation->GetLastError();

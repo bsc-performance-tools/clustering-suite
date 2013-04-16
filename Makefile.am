@@ -7,7 +7,9 @@ INCLUDES = \
 
 ##    -I@common_filesdir@
 
-SUBDIRS = include common_utilities src scripts
+## The 'pcfparser_svn1816' and 'common_utilities' directory will
+## be merged in the new 'common-files' package
+SUBDIRS = include pcfparser_svn1816 common_utilities src scripts
 
 instdir = $(includedir)
 

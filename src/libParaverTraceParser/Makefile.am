@@ -8,6 +8,8 @@ INCLUDES = \
 	-I$(top_srcdir)/src/SharedComponents \
 	-I$(top_srcdir)/common_utilities
 
+libParaverTraceParser_la_CXXFLAGS=@CXXFLAGS@
+
 libParaverTraceParser_la_LIBADD = \
 	$(top_srcdir)/common_utilities/libCommonUtilities.la
 

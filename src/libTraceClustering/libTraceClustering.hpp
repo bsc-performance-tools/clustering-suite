@@ -77,6 +77,7 @@ class libTraceClustering
     libTraceClustering(bool verbose);
 
     bool InitTraceClustering(string        ClusteringDefinitionXML,
+                             string        PCFFileName,
                              unsigned char Flags);
 
     bool ExtractData(string            InputFileName,

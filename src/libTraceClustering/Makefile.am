@@ -11,16 +11,18 @@ INCLUDES = \
 	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libSharedComponents \
 	-I$(top_srcdir)/src/libParaverTraceParser \
-	-I$(top_srcdir)/common_utilities
+	-I$(top_srcdir)/common_utilities \
+	-I$(top_srcdir)/pcfparser_svn1816
 
 libTraceClustering_la_LIBADD =  \
 	$(top_srcdir)/src/libClustering/libClustering.la \
-	$(top_srcdir)/src/libSharedComponents/libSharedComponents.la \
-	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la
+	$(top_srcdir)/src/libSharedComponents/libSharedComponents.la 
+
+##	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la
 
 
-libTraceClustering_la_CXXFLAGS=@XML2_CXXFLAGS@
-libTraceClustering_la_LDFLAGS=@LDFLAGS@ @XML2_LDFLAGS@ -static @XML2_LIBS@
+libTraceClustering_la_CXXFLAGS=@CXXFLAGS@ @XML2_CXXFLAGS@
+libTraceClustering_la_LDFLAGS=@LDFLAGS@ 
 libTraceClustering_la_LIBS=
 
 if HAVE_MUSTER

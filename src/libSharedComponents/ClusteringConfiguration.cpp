@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -44,6 +44,7 @@
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::istream;
 
 #include <sstream>
 using std::ostringstream;
@@ -89,7 +90,7 @@ ClusteringConfiguration* ClusteringConfiguration::GetInstance(void)
   {
     _ClusteringConfiguration = new ClusteringConfiguration();
   }
-  
+
   return ClusteringConfiguration::_ClusteringConfiguration;
 }
 
@@ -103,7 +104,7 @@ ClusteringConfiguration* ClusteringConfiguration::GetInstance(void)
  */
 ClusteringConfiguration::ClusteringConfiguration()
 {
-  Initialized = false;
+  Initialized      = false;
 }
 
 /**
@@ -114,7 +115,8 @@ ClusteringConfiguration::ClusteringConfiguration()
  *
  * \return True if XML parsing worked properly, false otherwise
  */
-bool ClusteringConfiguration::Initialize(string XMLFileName)
+bool ClusteringConfiguration::Initialize(string XMLFileName,
+                                         string PCFFileName)
 {
   FILE*     XMLFile;
   XMLParser Parser;
@@ -130,7 +132,7 @@ bool ClusteringConfiguration::Initialize(string XMLFileName)
   if ( (XMLFile = fopen(XMLFileName.c_str(), "r")) == NULL)
   {
     ostringstream ErrorMessage;
-    
+
     cerr << "Current Path is = " << cepba_tools::GetCWD() << endl;
 
     ErrorMessage << "unable to open clustering defition file '";
@@ -144,6 +146,7 @@ bool ClusteringConfiguration::Initialize(string XMLFileName)
   fclose(XMLFile);
 
   if (!Parser.ParseXML(XMLFileName,
+                       PCFFileName,
                        this))
   {
     SetErrorMessage("XML parsing error", Parser.GetLastError());
@@ -156,9 +159,10 @@ bool ClusteringConfiguration::Initialize(string XMLFileName)
   /* DEBUG
   cout << "Duration Filter = " << DurationFilter << endl;
   */
-  
+
   return true;
 }
+
 
 /**
  * Returns if the configuration has been initialized
@@ -395,7 +399,7 @@ ClusteringConfiguration::GetClusteringParametersDefinitions(void)
 
 /**
  * Sets the parsing error in the clustering metrics
- * \param ClusteringParametersError Boolean seting the possible clustering metrics parsing error 
+ * \param ClusteringParametersError Boolean seting the possible clustering metrics parsing error
  */
 void
 ClusteringConfiguration::SetClusteringParametersError(bool ClusteringParametersError)
@@ -442,7 +446,7 @@ ClusteringConfiguration::GetClusteringParametersErrorMessage(void)
  * \param ParametersNames vector of strings containing the parameter names
  * \param ParametersDefinition vector of parameters definition containers
  */
-void 
+void
 ClusteringConfiguration::SetExtrapolationParameters(vector<string>&            ParametersNames,
                                                    vector<ParameterContainer>& ParametersDefinition)
 {
@@ -472,7 +476,7 @@ ClusteringConfiguration::GetExtrapolationParametersDefinitions(void)
 
 /**
  * Sets the parsing error in the extrapolation metrics
- * \param ExtrapolationParametersError Boolean seting the possible extrapolation metrics parsing error 
+ * \param ExtrapolationParametersError Boolean seting the possible extrapolation metrics parsing error
  */
 void
 ClusteringConfiguration::SetExtrapolationParametersError(bool ExtrapolationParametersError)
@@ -559,7 +563,7 @@ ClusteringConfiguration::GetPlotsDefinitions(void)
 
 /**
  * Sets the parsing error in the plot scripts definitions
- * \param PlotsDefinitionsError Boolean seting the possible plot scripts definitions parsing error 
+ * \param PlotsDefinitionsError Boolean seting the possible plot scripts definitions parsing error
  */
 void
 ClusteringConfiguration::SetPlotsDefinitionsError(bool PlotsDefinitionsError)

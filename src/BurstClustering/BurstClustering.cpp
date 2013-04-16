@@ -69,6 +69,7 @@ string ClusteringDefinitionXML;    /* Clustering definition XML file name */
 bool   ClusteringDefinitionRead = false;
 
 string InputTraceName;             /* Input trace name */
+string InputTraceNamePrefix;
 bool   InputTraceNameRead = false;
 
 string OutputFileName;             /* Data extracted from input trace */
@@ -415,9 +416,31 @@ void GetEventParsingParameters(char* EventParsingArgs)
   cout << endl;
 }
 
-void CheckOutputFile()
+void CheckFileNames()
 {
   string OutputFileExtension;
+  string InputFileExtension;
+
+  InputFileExtension = FileNameManipulator::GetExtension(InputTraceName);
+
+  if (InputFileExtension.compare("") == 0)
+  {
+    cerr << "Unable to determine input file type. Please use .prv/.trf files" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  if (InputFileExtension.compare("prv") == 0 ||
+      InputFileExtension.compare("trf") == 0)
+  {
+    FileNameManipulator NameManipulator(InputTraceName, InputFileExtension);
+    InputTraceNamePrefix = NameManipulator.GetChoppedFileName();
+  }
+  else
+  {
+    cerr << "Unknown input file type. Please use .prv/.trf trace files" << endl;
+    exit(EXIT_FAILURE);
+  }
+
 
   OutputFileExtension = FileNameManipulator::GetExtension(OutputFileName);
 
@@ -452,6 +475,8 @@ void CheckOutputFile()
     exit(EXIT_FAILURE);
   }
 
+
+
   return;
 }
 
@@ -465,11 +490,13 @@ int main(int argc, char *argv[])
 
   system_messages::print_timers = PrintTimming;
 
-  CheckOutputFile();
+  CheckFileNames();
 
   if (ClusteringRefinement)
   {
-    if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, CLUSTERING_REFINEMENT|PLOTS))
+    if (!Clustering.InitTraceClustering(ClusteringDefinitionXML,
+                                        InputTraceNamePrefix+".pcf",
+                                        CLUSTERING_REFINEMENT|PLOTS))
     {
       cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
@@ -477,7 +504,9 @@ int main(int argc, char *argv[])
   }
   else
   {
-    if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, CLUSTERING|PLOTS))
+    if (!Clustering.InitTraceClustering(ClusteringDefinitionXML,
+                                        InputTraceNamePrefix+".pcf",
+                                        CLUSTERING|PLOTS))
     {
       cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
@@ -626,8 +655,11 @@ int main(int argc, char *argv[])
       cerr << "Error writing output trace: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
     }
+
+    system_messages::silent_information("Trace generated: "+OutputFileName+"\n");
+
     system_messages::show_timer("Trace reconstruction time:", T.end());
   }
 
-  return 0;
+  exit(EXIT_SUCCESS);
 }

@@ -817,6 +817,7 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
   }
 
   system_messages::information(ScreenPlotName.str().c_str());
+  system_messages::silent_information("Plot generated: "+OutputFileName+"\n");
 
   return true;
 }

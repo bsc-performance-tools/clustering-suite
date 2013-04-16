@@ -36,6 +36,8 @@
 #ifndef _EXTRACTION_TYPES_H_
 #define _EXTRACTION_TYPES_H_
 
+#include <limits>
+
 #include <clustering_types.h>
 
 typedef UINT64 duration_t;
@@ -63,6 +65,9 @@ typedef double percentage_t;
 
 /* Pseudo-event type for durations */
 static const event_type_t DURATION_EVENT_TYPE   = 1;
+
+/* Pseudo-event type for events not found in the PCF */
+static const event_type_t UNKNOWN_EVENT_TYPE    = std::numeric_limits<event_type_t>::max();
 
 /* Default values, should not be used */
 static const double DEFAULT_DBSCAN_EPS          = 0.01;

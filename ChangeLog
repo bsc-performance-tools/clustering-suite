@@ -10,6 +10,29 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2013-04-16 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.4.1
+	* Solved a bug in the Aggregative Refinement that produced a
+	crash when a cluster appeared aligned just with sequence gaps
+
+	* Compilation not tested in IA64/PPC/PPC64
+
+2013-04-10 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.4.0
+	* XML now can uses event labels instead of event values to define
+	the clustering parameters
+
+	* Added attribute "all_counters" to 'extrapolation_parameters'. If
+	set to yes, the application generates all extrapolation parameters
+	based on the hardware counters present on trace
+
+	* These two features requires the existence of a PCF file with
+	the same prefix of the input trace to translate the event labels
+	or check the events present on the trace. To parse the PCF we
+	use the 'pcfparser', part of the 'libtools' package. So far, the
+	code of the parser is embedded in the directory 'pcfparse_svn1816'.
+	
+	It will be part of the new BSC 'ptools-common-files' package, to
+	created soon.
+
 2013-04-02 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.3.5
 	* Removed dependencies with 'common-files'. This package is now 
 	integrated

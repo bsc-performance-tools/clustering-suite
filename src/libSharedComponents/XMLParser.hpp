@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -41,6 +41,8 @@ using cepba_tools::Error;
 
 #include <ClusteringConfiguration.hpp>
 
+#include <UIParaverTraceConfig.h>
+
 #include <map>
 using std::map;
 #include <string>
@@ -61,15 +63,17 @@ using std::string;
 #define ATTR_NORMALIZE   "normalize_data"
 #define ATTR_ACC_PARAMS  "accumulate_parameters"
 
-/* Node 'DBSCAN' */
+/* Node 'clustering_algorithm' */
 #define NODE_CLUSTERING_ALGORITHM "clustering_algorithm"
 // #define ATTR_EPS                  "epsilon"
 // #define ATTR_MINPOINTS            "min_points"
 
-
 /* Node types */
 #define NODE_CL_PARAM    "clustering_parameters"
 #define NODE_PR_PARAM    "extrapolation_parameters"
+
+/* Attribute of 'extrapolation_parameters' */
+#define ATTR_ALLCOUNTERS   "all_counters"
 
 /* Node 'single_event' */
 #define NODE_SINGLEEVT     "single_event"
@@ -108,23 +112,30 @@ class XMLParser: public Error
 {
   private:
 
+    bool                      PCFParserPresent;
+    UIParaverTraceConfig      PCFParser;
+    bool                      PCFParserError;
+    string                    PCFParserErrorString;
+    map<string, event_type_t> PCFEventsMap;
+    map<event_type_t, string> PCFEventsReverseMap;
+
     bool   ClusteringAlgorithmError;
     string ClusteringAlgorithmErrorMessage;
 
     bool   ClusteringParametersError;
     string ClusteringParametersErrorMessage;
-    
+
     bool   ExtrapolationParametersError;
     string ExtrapolationParametersErrorMessage;
-    
+
     bool   PlotsDefinitionsError;
     string PlotsDefinitionsErrorMessage;
-    
+
     bool  ReadingExtrapolationParameters;
 
     string             ClusteringAlgorithmName;
     map<string,string> ClusteringAlgorithmParameters;
-    
+
     vector<string>             ClusteringParametersNames;
     vector<ParameterContainer> ClusteringParametersDefinitions;
 
@@ -136,11 +147,15 @@ class XMLParser: public Error
 
   public:
     XMLParser(void);
-    
+
     bool ParseXML(string                   XMLFileName,
+                  string                   PCFParserFileName,
                   ClusteringConfiguration* ExtractionManager);
 
   private:
+
+    bool InitializePCFParser(string PCFFileName);
+
     bool ParseXMLNodes(xmlNodePtr CurrentNode);
 
     bool ParseXMLClusteringAlgorithm(xmlNodePtr CurrentClusteringAlgorithm);
@@ -150,10 +165,15 @@ class XMLParser: public Error
 
     bool ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent);
     bool ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent);
-    
+
     bool ParseXMLOutputPlots(xmlNodePtr NodeOutputPlots);
     bool ParseXMLPlotDefinition(xmlNodePtr CurrentPlotDefinition);
-    
+
+    bool GenerateAllCountersExtrapolations(void);
+
+    event_type_t FindEventTypeByName(string EventName);
+
+    bool IsNumber(const string& String);
 
 };
 
