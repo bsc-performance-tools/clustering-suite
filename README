@@ -1,33 +1,44 @@
-To offer full functionality, the clustering tool needs the following libraries
-to be installed on your system
+==== ClusteringSuite dependencies ====
 
-* Muster clustering library
+The core features of the ClusteringSuite tool including DBSCAN and the
+Aggregative Cluster Refinement cluster analysis of Paraver traces requires
+the following libraries installed on your system:
+
+* libxml2 ("--with-libxml2" configure option)
+
+http://www.xmlsoft.org/
+
+* Boost libraries ("--with-boost" configure option)
+
+http://www.boost.org/ 
+
+For extra features of this tool, based on third-party packages you will need
+the following libraries installed on your system:
+
+* Muster clustering library ("--with-muster" configure option)
 
 http://tgamblin.github.com/muster/main.html
 
-* Computational Geometry Algorithms Library (CGAL)
+* Computational Geometry Algorithms Library (CGAL) ("--with-cgal" configure 
+option)
 
 http://www.cgal.org/
 
-* GNU MPFR (needed by CGAL)
+* GNU MPFR (required by CGAL) ("--with-mpfr" cnfigure option)
 
 http://www.mpfr.org/
 
-* The GNU Multiple Precision Arithmetic Library (needed by CGAL)
+* The GNU Multiple Precision Arithmetic Library (required by CGAL) 
+("--with-gmp" configure option)
 
 http://www.gmplib.org
 
-* Boost headers and Boost thread libraries (needed by Muster and CGAL)
-
-http://www.boost.org/
-
-* An MPI implementation.
+* An MPI implementation ("--with-mpi" configure option)
 
 The suite has been tested using MPICH
 
 http://www.mcs.anl.gov/research/projects/mpich2/
 
-* libMRNetApp
+* libMRNetApp ("--with-mrnetapp" configure option)
 
-Also available in the BSC Tools group
-
+Not public available. Sent an e-mail to tools@bsc.es
