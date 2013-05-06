@@ -117,7 +117,8 @@ class PRVStatesDataExtractor: public DataExtractor
     PRVStatesDataExtractor(string InputTraceName);
     ~PRVStatesDataExtractor();
 
-    bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith);
+    bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith,
+                             bool               ConsecutivEvts);
 
     bool GetPartition(Partition& DataPartition) { return false; };
 

@@ -108,7 +108,8 @@ CSVDataExtractor::~CSVDataExtractor()
   // unlink(TraceDataFileName.c_str());
 }
 
-bool CSVDataExtractor::SetEventsToDealWith(set<event_type_t>& EventsToDealWith)
+bool CSVDataExtractor::SetEventsToDealWith(set<event_type_t>& EventsToDealWith,
+                                           bool               ConsecutiveEvts)
 {
   SetError(true);
   SetErrorMessage("CSV files do not permit parsing based on events");

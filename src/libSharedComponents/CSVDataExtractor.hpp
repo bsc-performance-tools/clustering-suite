@@ -71,7 +71,8 @@ class CSVDataExtractor: public DataExtractor
     CSVDataExtractor(string CSVFileName);
     ~CSVDataExtractor();
 
-    bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith);
+    bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith,
+                             bool               ConsecutiveEvts);
 
     bool ExtractData(TraceData* TraceDataSet);
 

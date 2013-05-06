@@ -70,7 +70,8 @@ ClusteredTRFGenerator::~ClusteredTRFGenerator(void)
 {
 }
 
-bool ClusteredTRFGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith)
+bool ClusteredTRFGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
+                                                 bool               ConsecutiveEvts)
 {
 
   SetError(true);

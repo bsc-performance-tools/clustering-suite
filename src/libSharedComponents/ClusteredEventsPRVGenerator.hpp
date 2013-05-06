@@ -69,6 +69,7 @@ class ClusteredEventsPRVGenerator: public ClusteredTraceGenerator
     vector<CPUBurst*> BurstsBeginTime;
 
     set<event_type_t> EventsToDealWith;
+    bool              ConsecutiveEvts;
 
   public:
     ClusteredEventsPRVGenerator (string  InputTraceName,
@@ -78,7 +79,8 @@ class ClusteredEventsPRVGenerator: public ClusteredTraceGenerator
 
     ReconstructorType GetType(void) { return PRVEvents; };
 
-    bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith);
+    bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
+                              bool               ConsecutiveEvts);
 
     bool Run (vector<CPUBurst*>&    Bursts,
               vector<cluster_id_t>& IDs,
@@ -133,7 +135,7 @@ bool ClusteredEventsPRVGenerator::Run (T                     begin,
   map<line_t, std::pair<cluster_id_t, timestamp_t> >           CompleteIDs;
   /* Iterator values:
 
-     + 'first'         : the line (not use, just for the map ordering)
+     + 'first'         : the line (not used, just for the map ordering)
 
      + 'second.first'  : the Cluster ID associated to the region (in this case
                           the parser is an events parser, not burst parser)
@@ -321,31 +323,33 @@ bool ClusteredEventsPRVGenerator::Run (T                     begin,
         {
           Event* NewEvent;
 
-            NewEvent = new Event (0, /* Line not needed */
-                                  CurrentEvent->GetTimestamp(),
-                                  CurrentEvent->GetCPU() + 1,
-                                  CurrentEvent->GetAppId() + 1,
-                                  CurrentEvent->GetTaskId() + 1,
-                                  CurrentEvent->GetThreadId() + 1);
+          NewEvent = new Event (0, /* Line not needed */
+                                CurrentEvent->GetTimestamp(),
+                                CurrentEvent->GetCPU() + 1,
+                                CurrentEvent->GetAppId() + 1,
+                                CurrentEvent->GetTaskId() + 1,
+                                CurrentEvent->GetThreadId() + 1);
 
-            NewEvent->AddTypeValue (90000001,
-                                    (INT64) (*BurstsInfo).second.first); // the ID!
+          NewEvent->AddTypeValue (90000001,
+                                  (INT64) (*BurstsInfo).second.first); // the ID!
 
-            if (!NewEvent->Flush (OutputTraceFile) )
-            {
-              SetError (true);
-              SetErrorMessage ("Error creating output trace",
-                               NewEvent->GetLastError() );
-              return false;
-            }
 
-            delete NewEvent;
 
-            /* Set the end time */
-            BurstsEnd[CurrentEvent->GetTaskId() ][CurrentEvent->GetThreadId() ] =
-              (*BurstsInfo).second.second; // the End Time!
+          if (!NewEvent->Flush (OutputTraceFile) )
+          {
+            SetError (true);
+            SetErrorMessage ("Error creating output trace",
+                             NewEvent->GetLastError() );
+            return false;
+          }
 
-            ++BurstsInfo;
+          delete NewEvent;
+
+          /* Set the end time */
+          BurstsEnd[CurrentEvent->GetTaskId() ][CurrentEvent->GetThreadId() ] =
+            (*BurstsInfo).second.second; // the End Time!
+
+          ++BurstsInfo;
         }
 
         /*
@@ -388,7 +392,7 @@ bool ClusteredEventsPRVGenerator::Run (T                     begin,
         }
         */
       }
-      else if (BurstClosingEvent (CurrentEvent) )
+      else if (BurstClosingEvent (CurrentEvent) && !ConsecutiveEvts)
       {
         if (BurstsEnd[CurrentEvent->GetTaskId() ][CurrentEvent->GetThreadId() ] == CurrentEvent->GetTimestamp()
             &&  BurstsEnd[CurrentEvent->GetTaskId() ][CurrentEvent->GetThreadId() ] != 0) // In timestamp 0 it is impossible to close a burst

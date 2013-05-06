@@ -84,9 +84,12 @@ PRVEventsDataExtractor::~PRVEventsDataExtractor()
   unlink(TraceDataFileName.c_str());
 }
 
-bool PRVEventsDataExtractor::SetEventsToDealWith (set<event_type_t>& EventsToDealWith)
+bool PRVEventsDataExtractor::SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
+                                                  bool               ConsecutiveEvts)
 {
   this->EventsToDealWith = EventsToDealWith;
+  this->ConsecutiveEvts  = ConsecutiveEvts;
+
 
   if (EventsToDealWith.size() == 0)
   {
@@ -281,36 +284,59 @@ bool PRVEventsDataExtractor::CheckEvent(Event     *CurrentEvent,
 
     if (BurstOpeningEvent(CurrentType, CurrentValue))
     {
+      // cout << "Opening event Time = " << CurrentEvent->GetTimestamp() << endl;
       if (CurrentTaskData.OngoingBurst)
       {
+        // cout << "Evt Time = " << CurrentEvent->GetTimestamp() << endl;
         if (CurrentTaskData.EndTime != 0)
         {
+          // cout << "EndTime fixed!" << endl;
           if (CurrentEvent->GetTimestamp() > CurrentTaskData.EndTime)
           { /* Burst pending to be closed */
+            // cout << "Generating Burst 1 Begin = " << CurrentTaskData.BeginTime << " End = " << CurrentTaskData.EndTime << endl;
             if (!GenerateBurst(TraceDataSet, CurrentTaskData))
             {
               return false;
             }
 
             /* New Burst opens */
-            FillDataContainer (CurrentTaskData, CurrentEvent);
+            if (ConsecutiveEvts && NextTaskData.OngoingBurst)
+            {
+              CurrentTaskData = NextTaskData;
+              CurrentTaskData.EndTime = CurrentEvent->GetTimestamp();
+              NextTaskData.Clear();
+              FillDataContainer (NextTaskData, CurrentEvent);
+            }
+            else
+            {
+              FillDataContainer (CurrentTaskData, CurrentEvent);
+            }
           }
           else if (CurrentEvent->GetTimestamp() == CurrentTaskData.EndTime)
           { /* This is a 'future burst' */
+            // cout << "Filling NextTaskData 1 Time = " << CurrentEvent->GetTimestamp() << endl;
             FillDataContainer (NextTaskData, CurrentEvent);
           }
         }
         else
         { /* Set the previous burst as finished, generate the future container
            * and push an element in the stack */
-          FillDataContainer(NextTaskData, CurrentEvent);
+          // cout << "Filling NextTaskData 2 Time = " << CurrentEvent->GetTimestamp() << endl;
 
+          // cout << "EndTime not fixed!" << endl;
+
+          if (ConsecutiveEvts)
+          {
+            CurrentTaskData.EndTime = CurrentEvent->GetTimestamp();
+          }
+
+          FillDataContainer(NextTaskData, CurrentEvent);
         }
       }
       else
       {
         EventsStack[CurrentEvent->GetTaskId()][CurrentEvent->GetThreadId()].push(CurrentType);
-        FillDataContainer (CurrentTaskData, CurrentEvent);
+        FillDataContainer(CurrentTaskData, CurrentEvent);
       }
     }
     else if (BurstClosingEvent(CurrentType, CurrentValue))
@@ -346,6 +372,7 @@ bool PRVEventsDataExtractor::CheckEvent(Event     *CurrentEvent,
               UpdateTaskData (NextTaskData, CurrentType, CurrentValue);
             }
 
+            // cout << "Generating Burst 2 Begin = " << CurrentTaskData.BeginTime << " End = " << CurrentTaskData.EndTime << endl;
             /* Create the burst */
             if (!GenerateBurst(TraceDataSet, CurrentTaskData))
             {
@@ -375,9 +402,8 @@ bool PRVEventsDataExtractor::CheckEvent(Event     *CurrentEvent,
   return true;
 }
 
-void
-PRVEventsDataExtractor::FillDataContainer(TaskDataContainer &TaskData,
-                                          Event             *CurrentEvent)
+void PRVEventsDataExtractor::FillDataContainer(TaskDataContainer &TaskData,
+                                               Event             *CurrentEvent)
 {
   TaskData.TaskId        = CurrentEvent->GetTaskId();
   TaskData.ThreadId      = CurrentEvent->GetThreadId();
@@ -423,9 +449,23 @@ bool PRVEventsDataExtractor::GenerateBurst(TraceData*         TraceDataSet,
 bool PRVEventsDataExtractor::BurstOpeningEvent(event_type_t  EventType,
                                                event_value_t EventValue)
 {
-  if (EventsToDealWith.count(EventType) == 1 && EventValue != 0)
+  if (EventsToDealWith.count(EventType) == 1)
   {
-    return true;
+    if (ConsecutiveEvts)
+    {
+      return true;
+    }
+    else
+    {
+      if (EventValue != 0)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
   }
   else
   {
@@ -436,9 +476,23 @@ bool PRVEventsDataExtractor::BurstOpeningEvent(event_type_t  EventType,
 bool PRVEventsDataExtractor::BurstClosingEvent(event_type_t  EventType,
                                                event_value_t EventValue)
 {
-  if (EventsToDealWith.count(EventType) == 1 && EventValue == 0)
+  if (EventsToDealWith.count(EventType) == 1  )
   {
-    return true;
+    if (ConsecutiveEvts)
+    {
+      return true;
+    }
+    else
+    {
+      if (EventValue == 0)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
   }
   else
   {

@@ -80,7 +80,8 @@ PRVStatesDataExtractor::~PRVStatesDataExtractor()
   unlink(TraceDataFileName.c_str());
 }
 
-bool PRVStatesDataExtractor::SetEventsToDealWith (set<event_type_t>& EventsToDealWith)
+bool PRVStatesDataExtractor::SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
+                                                  bool               ConsecutiveEvts)
 {
   SetError(true);
   SetErrorMessage("trying to use a state guided parser to an event guided parsing");
@@ -122,8 +123,9 @@ bool PRVStatesDataExtractor::ExtractData(TraceData* TraceDataSet)
 
   if (AppsDescription.size() != 1)
   {
-    /* DEBUG */
+    /* DEBUG
     cout << "Application description size is " << AppsDescription.size() << endl;
+    */
 
     SetError(true);
     SetErrorMessage("unable to apply cluster analysis on a trace with more than one application");
@@ -609,6 +611,5 @@ PRVStatesDataExtractor::FillDataContainer(TaskDataContainer &TaskData,
   TaskData.BeginTime     = CurrentState->GetBeginTime();
   TaskData.EndTime       = CurrentState->GetEndTime();
   TaskData.BurstDuration =
-    (UINT64) ((CurrentState->GetEndTime() - CurrentState->GetBeginTime()) *
-      TimeFactor);
+    (UINT64) ((CurrentState->GetEndTime() - CurrentState->GetBeginTime()) * TimeFactor);
 }

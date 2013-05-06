@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -44,30 +44,31 @@ using std::set;
 
 #include "DataExtractor.hpp"
 
-class DataExtractorFactory: public Error 
+class DataExtractorFactory: public Error
 {
   private:
 
     input_file_t FileType;
-    
+
     static DataExtractorFactory* Instance;
 
     set<event_type_t> EventsToDealWith;
-    
+
     DataExtractorFactory(void);
-    
+
     bool CheckFileType(string InputFileName);
-  
+
   public:
     static DataExtractorFactory* GetInstance(void);
 
     bool   GetExtractor(string          InputFileName,
                         DataExtractor *&DataExtractorObject,
-                        bool            EventParsing  = false,
-                        bool            Distributed   = false);
-    
+                        bool            EventParsing    = false,
+                        bool            ConsecutiveEvts = false,
+                        bool            Distributed     = false);
+
     input_file_t  GetFileType(void);
-    
+
 
 };
 

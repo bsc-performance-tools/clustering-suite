@@ -69,6 +69,7 @@ class libTraceClusteringImplementation: public Error
     bool                 ClusteringRefinementExecution;
 
     bool                 PRVEventsParsing;
+    bool                 ConsecutiveEvts;
     set<event_type_t>    EventsToDealWith;
 
     unsigned char  UseFlags;
@@ -83,7 +84,8 @@ class libTraceClusteringImplementation: public Error
     bool ExtractData(string            InputFileName,
                      bool              SampleData = false,
                      unsigned int      MaxSamples = 0,
-                     set<event_type_t> EventsToDealWith = set<event_type_t> ());
+                     set<event_type_t> EventsToDealWith = set<event_type_t> (),
+                     bool              ConsecutiveEvts  = false);
 
     bool FlushData(string OutputCSVFileNamePrefix);
 

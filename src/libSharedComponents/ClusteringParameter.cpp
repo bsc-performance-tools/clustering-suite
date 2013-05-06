@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -112,7 +112,7 @@ SingleEvent::NewData(event_type_t EventType, event_value_t EventValue)
       /* DEBUG
       cout << "Cleaning event. Type = " << this->EventType;
       cout << ". Original Value = " << EventValue; */
-      
+
       if (bogus2 >> 30 >= 1)
       { // if this is an overflow value, flip all bits
         this->EventValue = bogus2 ^ (4294967295UL); // do an XOR with 11111111111111111111111111111111  (32 1's)
@@ -148,10 +148,10 @@ SingleEvent::IsRangeFiltered(void)
   {
     if (RangeMin != -1.0 && EventValue < RangeMin)
       return true;
-    
+
     if (RangeMax != -1.0 && EventValue > RangeMax)
       return true;
-    
+
     return false;
   }
   else
@@ -235,7 +235,7 @@ MixedEvents::NewData(event_type_t EventType, event_value_t EventValue)
 
   if (EventARead && EventBRead)
   {
-    
+
     this->SetReady(true);
   }
 }
@@ -247,10 +247,10 @@ MixedEvents::IsRangeFiltered(void)
   {
     if (RangeMin != -1.0 && GetRawMetric() < RangeMin)
       return true;
-    
+
     if (RangeMax != -1.0 && GetRawMetric() > RangeMax)
       return true;
-    
+
     return false;
   }
   else
@@ -278,8 +278,7 @@ MixedEvents::Clear(void)
   this->EventValueB = 0;
 }
 
-double
-MixedEvents::GetRawMetric(void)
+double MixedEvents::GetRawMetric(void)
 {
   if (!Ready)
     return -1.0;
@@ -315,7 +314,7 @@ MixedEvents::GetMetric(void)
 
   if (!Ready)
     return -1.0;
-  
+
   if (!ApplyLog)
     return 1.0*GetRawMetric();
   else

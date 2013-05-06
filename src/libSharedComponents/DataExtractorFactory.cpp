@@ -63,6 +63,7 @@ DataExtractorFactory* DataExtractorFactory::GetInstance()
 bool DataExtractorFactory::GetExtractor(string          InputFileName,
                                         DataExtractor *&DataExtractorObject,
                                         bool            EventParsing,
+                                        bool            ConsecutiveEvts,
                                         bool            MPI)
 {
   if (!CheckFileType(InputFileName))

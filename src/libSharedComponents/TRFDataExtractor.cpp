@@ -73,7 +73,8 @@ TRFDataExtractor::~TRFDataExtractor()
   unlink(TraceDataFileName.c_str());
 }
 
-bool TRFDataExtractor::SetEventsToDealWith(set<event_type_t>& EventsToDealWith)
+bool TRFDataExtractor::SetEventsToDealWith(set<event_type_t>& EventsToDealWith,
+                                           bool               ConsecutiveEvts)
 {
   SetError(true);
   SetErrorMessage("TRF traces do not permit parsing based on events");

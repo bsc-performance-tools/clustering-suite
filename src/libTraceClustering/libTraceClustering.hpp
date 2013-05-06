@@ -81,15 +81,17 @@ class libTraceClustering
                              unsigned char Flags);
 
     bool ExtractData(string            InputFileName,
-                     bool              SampleData    = false,
-                     unsigned int      MaxSamples    = 0,
-                     set<unsigned int> EventsToParse = set<unsigned int> ());
+                     bool              SampleData      = false,
+                     unsigned int      MaxSamples      = 0,
+                     set<unsigned int> EventsToParse   = set<unsigned int> (),
+                     bool              ConsecutiveEvts = false);
 
     bool ExtractData(string            InputFileName,
                      string            OutputCSVFileName,
-                     bool              SampleData    = false,
-                     unsigned int      MaxSamples    = 0,
-                     set<unsigned int> EventsToParse = set<unsigned int> ());
+                     bool              SampleData      = false,
+                     unsigned int      MaxSamples      = 0,
+                     set<unsigned int> EventsToParse   = set<unsigned int> (),
+                     bool              ConsecutiveEvts = false);
 
     bool ClusterAnalysis (void);
 

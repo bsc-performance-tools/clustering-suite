@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -97,7 +97,7 @@ ParametersManager::ParametersManager(void)
     SetError(true);
     return;
   }
-  
+
   if (!LoadParameters(Configuration))
   {
     SetError(true);
@@ -242,7 +242,7 @@ ParametersManager::GetExtrapolationParametersPrecision (void)
 /**
  * Returns the factors associated to each clustering parameter
  * \return A vector containing if the factors of the clustering parameters
- */ 
+ */
 vector<double> ParametersManager::GetClusteringParametersFactors(void)
 {
   vector<double> Result;
@@ -291,7 +291,7 @@ ParametersManager::NewData(map<event_type_t, event_value_t>& EventsData)
   {
     event_type_t  EventType  = DataIterator->first;
     event_value_t EventValue = DataIterator->second;
-    
+
     for (INT32 i = 0; i < ClusteringParameters.size(); i++)
     {
       ClusteringParameters[i]->NewData(EventType, EventValue);
@@ -312,14 +312,13 @@ ParametersManager::NewData(map<event_type_t, event_value_t>& EventsData)
  * \param ExtrapolationData Map of extrapolation parameters captured
  * \return 'point_type_t' expressing if all data is present or if it has been filtered for any reason
  */
- 
-burst_type_t
-ParametersManager::GetData(vector<double>&      RawClusteringData,
-                           vector<double>&      ProcessedClusteringData,
-                           map<size_t, double>& ExtrapolationData)
+
+burst_type_t ParametersManager::GetData(vector<double>&      RawClusteringData,
+                                        vector<double>&      ProcessedClusteringData,
+                                        map<size_t, double>& ExtrapolationData)
 {
   burst_type_t Result = CompleteBurst;
-  
+
   for (size_t i = 0; i < ClusteringParameters.size(); i++)
   {
     if (ClusteringParameters[i]->IsReady())
@@ -362,7 +361,7 @@ ParametersManager::LoadParameters(ClusteringConfiguration* Configuration)
 {
   SingleEvent* NewSingleEvent;
   MixedEvents* NewMixedEvent;
-  
+
   vector<string>& ClusteringParametersNames =
     Configuration->GetClusteringParametersNames();
 
@@ -393,7 +392,7 @@ ParametersManager::LoadParameters(ClusteringConfiguration* Configuration)
       ErrorMessage += "clustering parameter \"";
       ErrorMessage += ClusteringParametersNames[i];
       ErrorMessage += "\" duplicated";
-      
+
       SetErrorMessage(ErrorMessage);
       return false;
     }
@@ -411,16 +410,16 @@ ParametersManager::LoadParameters(ClusteringConfiguration* Configuration)
       {
         /* Add parameter index */
         ClusteringParametersIndex[ClusteringParametersNames[i]] = ClusteringParameters.size();
-        
+
         ClusteringParameters.push_back(NewParameter);
       }
     }
   }
 
-  /* OUTDATED. Now CPI stack must be computed using prepared XMLs 
+  /* OUTDATED. Now CPI stack must be computed using prepared XMLs
   if (Configuration->GetApplyCPIStack())
   {
-    /* Warning message 
+    /* Warning message
     if (ExtrapolationParametersDefinitions.size() != 0)
     {
       SetWarning(true);
@@ -444,7 +443,7 @@ ParametersManager::LoadParameters(ClusteringConfiguration* Configuration)
         WarningMessage += "extrapolation parameter \"";
         WarningMessage += ExtrapolationParametersNames[i];
         WarningMessage += "\" duplicated";
-        
+
         SetWarningMessage(WarningMessage);
       }
       else
@@ -471,10 +470,10 @@ ParametersManager::LoadParameters(ClusteringConfiguration* Configuration)
   else
   {
     SetWarning(true);
-    SetWarningMessage("extrapolation parameters from XML not used", 
+    SetWarningMessage("extrapolation parameters from XML not used",
                       Configuration->GetExtrapolationParametersErrorMessage());
   }
-  
+
   return true;
 }
 
@@ -501,7 +500,7 @@ ParametersManager::CreateParameter(string              ParameterName,
                                        ParameterDefinition.RangeMin,
                                        ParameterDefinition.RangeMax);
       return NewSingleEvent;
-      
+
     case DerivedEventParameter:
 
       derived_event_op_t Operation;
@@ -513,7 +512,7 @@ ParametersManager::CreateParameter(string              ParameterName,
         ErrorMessage << "wrong operation for parameter \"" << ParameterName;
         ErrorMessage << "\" defined on line " << ParameterDefinition.Line;
         SetErrorMessage(ErrorMessage.str());
-        
+
         return (ClusteringParameter*) NULL;
       }
       else
@@ -535,7 +534,7 @@ ParametersManager::CreateParameter(string              ParameterName,
       ErrorMessage << "wrong parameter type \"" << ParameterName;
       ErrorMessage << "\" defined on line " << ParameterDefinition.Line;
       SetErrorMessage(ErrorMessage.str());
-      
+
       return (ClusteringParameter*) NULL;
   }
 }
@@ -570,7 +569,7 @@ void
 ParametersManager::LoadCPIStackExtrapolationParameters(void)
 {
   SingleEvent* CurrentEvent;
-  
+
   CurrentEvent = new SingleEvent(PM_CYC_NAME, 1.0, false, PM_CYC_VAL);
   ExtrapolationParameters.push_back(CurrentEvent);
 

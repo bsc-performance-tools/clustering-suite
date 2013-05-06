@@ -68,7 +68,8 @@ class ClusteredTRFGenerator: public ClusteredTraceGenerator
       this->PrintClusterBlocks = PrintClusterBlocks;
     }
 
-    bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith);
+    bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
+                              bool               ConsecutiveEvts);
 
     template <typename T>
     bool Run (T                     begin,

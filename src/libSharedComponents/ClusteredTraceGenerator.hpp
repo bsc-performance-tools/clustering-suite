@@ -75,7 +75,8 @@ class ClusteredTraceGenerator: public Error
                       set<cluster_id_t>&    DifferentIDs,
                       bool                  MinimizeInformation = false) = 0;
 
-    virtual bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith) = 0;
+    virtual bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
+                                      bool               ConsecutiveEvts) = 0;
 };
 
 

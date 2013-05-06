@@ -185,9 +185,11 @@ ClusteredEventsPRVGenerator::~ClusteredEventsPRVGenerator(void)
   delete TraceParser;
 }
 
-bool ClusteredEventsPRVGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith)
+bool ClusteredEventsPRVGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
+                                                       bool               ConsecutiveEvts)
 {
   this->EventsToDealWith = EventsToDealWith;
+  this->ConsecutiveEvts  = ConsecutiveEvts;
 
   if (EventsToDealWith.size() == 0)
   {
@@ -333,8 +335,6 @@ bool ClusteredEventsPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& Different
   return true;
 }
 
-
-
 bool ClusteredEventsPRVGenerator::BurstOpeningEvent(Event* CurrentEvent)
 {
   for (size_t i = 0; i < CurrentEvent->GetTypeValueCount(); i++)
@@ -342,10 +342,25 @@ bool ClusteredEventsPRVGenerator::BurstOpeningEvent(Event* CurrentEvent)
     event_type_t  EventType  = CurrentEvent->GetType(i);
     event_value_t EventValue = CurrentEvent->GetValue(i);
 
-    if (EventsToDealWith.count(EventType) == 1 && EventValue != 0)
+    if (EventsToDealWith.count(EventType) == 1)
     {
-      return true;
+      if (ConsecutiveEvts)
+      {
+        return true;
+      }
+      else
+      {
+        if (EventValue != 0)
+        {
+          return true;
+        }
+        else
+        {
+          return false;
+        }
+      }
     }
+
   }
   return false;
 }
@@ -357,13 +372,26 @@ bool ClusteredEventsPRVGenerator::BurstClosingEvent(Event* CurrentEvent)
     event_type_t  EventType  = CurrentEvent->GetType(i);
     event_value_t EventValue = CurrentEvent->GetValue(i);
 
-    if (EventsToDealWith.count(EventType) == 1 && EventValue == 0)
+    if (EventsToDealWith.count(EventType) == 1)
     {
-      return true;
+      if (ConsecutiveEvts)
+      {
+        return true;
+      }
+      else
+      {
+        if (EventValue == 0)
+        {
+          return true;
+        }
+        else
+        {
+          return false;
+        }
+      }
+
     }
   }
-
-  return true;
 }
 
 bool ClusteredEventsPRVGenerator::CopyROWFile(void)

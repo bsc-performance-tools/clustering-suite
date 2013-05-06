@@ -66,7 +66,8 @@ class DataExtractor: public Error
     virtual bool   ExtractData(TraceData* DataContainer) = 0;
     virtual input_file_t GetFileType(void) = 0;
 
-    virtual bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith) = 0;
+    virtual bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith,
+                                     bool               ConsecutiveEvts) = 0;
 
     virtual bool GetPartition(Partition& DataPartition) = 0;
 

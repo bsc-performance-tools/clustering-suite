@@ -60,7 +60,8 @@ using std::ostringstream;
 "EVENT_TYPE\n"\
 "9\t90000001\tCluster ID\n"\
 "VALUES\n"\
-"0\tEnd\n"
+"0\tEnd\n"\
+"1\tMissing Data\n"
 
 ClusteredStatesPRVGenerator::ClusteredStatesPRVGenerator(string  InputTraceName,
                                                          string  OutputTraceName)
@@ -182,7 +183,8 @@ ClusteredStatesPRVGenerator::~ClusteredStatesPRVGenerator(void)
   delete TraceParser;
 }
 
-bool ClusteredStatesPRVGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith)
+bool ClusteredStatesPRVGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
+                                                       bool               ConsecutiveEvts)
 {
   SetError(true);
   SetErrorMessage("trying to use a state guided parser to an event guided parsing");

@@ -235,7 +235,8 @@ bool
 libTraceClusteringImplementation::ExtractData(string            InputFileName,
                                               bool              SampleData,
                                               unsigned int      MaxSamples,
-                                              set<event_type_t> EventsToDealWith)
+                                              set<event_type_t> EventsToDealWith,
+                                              bool              ConsecutiveEvts)
 {
   DataExtractorFactory*    ExtractorFactory;
   DataExtractor*           Extractor;
@@ -249,6 +250,7 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
   if (EventsToDealWith.size() > 0)
   {
     PRVEventsParsing       = true;
+    this->ConsecutiveEvts  = ConsecutiveEvts;
     this->EventsToDealWith = EventsToDealWith;
   }
   else
@@ -259,6 +261,7 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
   if (!ExtractorFactory->GetExtractor(InputFileName,
                                       Extractor,
                                       PRVEventsParsing,
+                                      ConsecutiveEvts,
                                       USE_MPI(UseFlags)))
   {
     SetError(true);
@@ -271,7 +274,7 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
 
   if (PRVEventsParsing)
   {
-    if (!Extractor->SetEventsToDealWith(EventsToDealWith))
+    if (!Extractor->SetEventsToDealWith(EventsToDealWith, ConsecutiveEvts))
     {
       SetError(true);
       SetErrorMessage(Extractor->GetLastError());
@@ -1077,7 +1080,8 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
         TraceGenerator = new ClusteredEventsPRVGenerator (InputFileName,
                                                           OutputTraceName.str());
 
-        TraceGenerator->SetEventsToDealWith(EventsToDealWith);
+        TraceGenerator->SetEventsToDealWith(EventsToDealWith,
+                                            ConsecutiveEvts);
       }
       else
       {
@@ -1231,17 +1235,22 @@ bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceN
     case ParaverTrace:
       if (PRVEventsParsing)
       {
-        TraceReconstructor = new ClusteredEventsPRVGenerator(InputFileName, OutputTraceName);
-        TraceReconstructor->SetEventsToDealWith (EventsToDealWith);
+        TraceReconstructor = new ClusteredEventsPRVGenerator(InputFileName,
+                                                             OutputTraceName);
+
+        TraceReconstructor->SetEventsToDealWith (EventsToDealWith,
+                                                 ConsecutiveEvts);
       }
       else
       {
-        TraceReconstructor = new ClusteredStatesPRVGenerator(InputFileName, OutputTraceName);
+        TraceReconstructor = new ClusteredStatesPRVGenerator(InputFileName,
+                                                             OutputTraceName);
       }
       break;
     case DimemasTrace:
       /* TBI -> Dimemas Cluster blocks not implemented */
-      TraceReconstructor = new ClusteredTRFGenerator (InputFileName, OutputTraceName);
+      TraceReconstructor = new ClusteredTRFGenerator (InputFileName,
+                                                      OutputTraceName);
       break;
     default:
       SetErrorMessage("unable to reconstruct an input file which is not a trace");

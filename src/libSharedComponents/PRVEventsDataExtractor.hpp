@@ -103,6 +103,7 @@ class PRVEventsDataExtractor: public DataExtractor
           EndTime       = Other.EndTime;
           BurstDuration = Other.BurstDuration;
           EventsData    = Other.EventsData;
+          OngoingBurst  = Other.OngoingBurst;
         }
     };
 
@@ -115,13 +116,15 @@ class PRVEventsDataExtractor: public DataExtractor
     double                              TimeFactor;
 
     set<event_type_t> EventsToDealWith;
+    bool              ConsecutiveEvts;
 
   public:
 
     PRVEventsDataExtractor(string InputTraceName);
     ~PRVEventsDataExtractor();
 
-    bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith);
+    bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
+                              bool               ConsecutiveEvts);
 
     bool GetPartition(Partition& DataPartition) { return false; };
 

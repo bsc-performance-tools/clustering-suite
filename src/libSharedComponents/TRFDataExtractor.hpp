@@ -55,7 +55,8 @@ class TRFDataExtractor: public DataExtractor
 
     ~TRFDataExtractor();
 
-    bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith);
+    bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith,
+                             bool               ConsecutiveEvts);
 
     bool GetPartition(Partition& DataPartition) { return false; };
 

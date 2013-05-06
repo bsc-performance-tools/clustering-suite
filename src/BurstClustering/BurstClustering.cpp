@@ -99,6 +99,7 @@ string RefinementPrefixFileName = "";
 bool   PrintRefinementSteps     = false;
 
 bool              UseParaverEventParsing = false;
+bool              ConsecutiveEvts        = false;
 set<unsigned int> EventsToParse;
 
 bool   ApplyCPIStack = false;
@@ -116,9 +117,12 @@ bool   PrintTimming = false;
 "\n"\
 "  -s                          Do not show information messages (silent mode)\n"\
 "\n"\
-"  -e Type1,Type2,...          When using an input Paraver trace, use this\n"\
+"  -e[c] Type1,Type2,...       When using an input Paraver trace, use this\n"\
 "                              event types to determine the regions treated as\n"\
 "                              bursts\n"\
+"                              If 'c' option is included, every event from the\n"\
+"                              list define an entry/exit of a region (independetly)\n"\
+"                              from its value\n"\
 "\n"\
 "  -d <clustering_def_xml>     XML containing the clustering process\n"\
 "                              definition\n"\
@@ -275,6 +279,12 @@ ReadArgs(int argc, char *argv[])
         case 'e':
 
           UseParaverEventParsing = true;
+
+          if (argv[j][2] == 'c')
+          {
+            ConsecutiveEvts = true;
+          }
+
           j++;
           GetEventParsingParameters(argv[j]);
           break;
@@ -529,7 +539,8 @@ int main(int argc, char *argv[])
     if (!Clustering.ExtractData(InputTraceName,
                                 SampleData,
                                 MaxSamples,
-                                EventsToParse))
+                                EventsToParse,
+                                ConsecutiveEvts))
     {
       cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
