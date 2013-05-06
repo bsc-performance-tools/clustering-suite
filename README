@@ -8,7 +8,7 @@ the following libraries installed on your system:
 
 http://www.xmlsoft.org/
 
-* Boost libraries ("--with-boost" configure option)
+* Boost libraries ("--with-boost" configure option). Version >= 1.43
 
 http://www.boost.org/ 
 

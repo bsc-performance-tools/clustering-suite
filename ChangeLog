@@ -11,6 +11,8 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 2013-05-06 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.5.0
+	* Changed Boost version checker to search for version >= 1.43
+
 	* Added new event based parsing using the parameter '-ec <event_type>'.
 	This parsing defines as a region any portion of the application 
 	surrounded by the events with types indicated (as opposite to '-e'
