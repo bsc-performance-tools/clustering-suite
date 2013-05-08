@@ -529,6 +529,8 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
             CurrentTaskData.EventsData[CurrentEventType] = CurrentEventValue;
 
   #ifdef DEBUG_PARAVER_INPUT
+            printf("Burst BeginTime = %lld EndTime = %lld\n",
+                   CurrentTaskData.BeginTime, CurrentTaskData.EndTime);
             printf("Storing data for T%02d:Th%02d (%lld) [%d:%lld]\n",
                    CurrentEvent->GetTaskId(),
                    CurrentEvent->GetThreadId(),
@@ -554,8 +556,12 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
         }
       }
     }
-    else if (CurrentEvent->GetTimestamp() != CurrentTaskData.BeginTime)
-    { /* Events inside the burst (SAMPLING!) */
+    else if (CurrentEvent->GetTimestamp() > CurrentTaskData.BeginTime &&
+             CurrentEvent->GetTimestamp() < CurrentTaskData.EndTime)
+    { /* BUGFIX (08/05/2013): The second line of the comparison is to
+       * guarantee that we have not changed the ongoing burst! */
+
+      /* Events inside the burst (SAMPLING!) */
       for (INT32 i = 0; i < CurrentEvent->GetTypeValueCount(); i++)
       {
         INT32 CurrentEventType  = CurrentEvent->GetType(i);
@@ -571,6 +577,9 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
           CurrentTaskData.EventsData[CurrentEventType] = CurrentEventValue;
 
 #ifdef DEBUG_PARAVER_INPUT
+          printf("Burst BeginTime = %lld EndTime = %lld\n",
+                   CurrentTaskData.BeginTime, CurrentTaskData.EndTime);
+
           printf("Storing data for T%02d:Th%02d (%lld) [%d:%lld]\n",
                  CurrentEvent->GetTaskId(),
                  CurrentEvent->GetThreadId(),

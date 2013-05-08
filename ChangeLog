@@ -10,6 +10,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2013-05-08 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.5.1
+	* Solved a bug in the states parsing that provoke an initial event
+	outside a burst to be wrongly accounted into the next running burst
+
 2013-05-06 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.5.0
 	* Changed Boost version checker to search for version >= 1.43
 
