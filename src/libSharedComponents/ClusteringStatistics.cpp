@@ -607,10 +607,12 @@ bool ClusteringStatistics::Flush(ostream& str)
   /* Header */
   str << "Cluster Name";
 
-  if (HasNoise)
-  {
-    str << ",NOISE";
-  }
+  /* JGG (2013/05/27): NOISE is always printed, even when it does not group
+   * any individual */
+  // if (HasNoise)
+  // {
+  str << ",NOISE";
+  //}
 
   for (size_t i = 0; i < StatisticsPerCluster.size(); i++)
   {
@@ -636,6 +638,10 @@ bool ClusteringStatistics::Flush(ostream& str)
   {
     str << "," << NoiseStatistics.GetIndividuals();
   }
+  else
+  {
+    str << ",0";
+  }
 
   for (size_t i = 0; i < StatisticsPerCluster.size(); i++)
   {
@@ -656,6 +662,10 @@ bool ClusteringStatistics::Flush(ostream& str)
 
     str << NoiseStatistics.GetTotalDuration();
   }
+  else
+  {
+    str << ",0";
+  }
 
   for (size_t i = 0; i < StatisticsPerCluster.size(); i++)
   {
@@ -675,6 +685,10 @@ bool ClusteringStatistics::Flush(ostream& str)
   {
     str << "," << NoiseStatistics.GetDurationMean();
   }
+  else
+  {
+    str << ",0";
+  }
 
   for (size_t i = 0; i < StatisticsPerCluster.size(); i++)
   {
@@ -691,6 +705,10 @@ bool ClusteringStatistics::Flush(ostream& str)
   if (HasNoise)
   {
     str << "," << NoiseStatistics.GetTotalDuration()/TotalBurstsDuration;
+  }
+  else
+  {
+    str << ",0";
   }
 
   for (size_t i = 0; i < StatisticsPerCluster.size(); i++)
@@ -739,6 +757,10 @@ bool ClusteringStatistics::Flush(ostream& str)
     if (HasNoise)
     {
       str << "," << NoiseStatistics.GetExtrapolationMetricMean(CurrentMetric);
+    }
+    else
+    {
+      str << ",0";
     }
 
     for (size_t i = 0; i < StatisticsPerCluster.size(); i++)

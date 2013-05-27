@@ -10,6 +10,16 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2013-05-27 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.5.2
+	* Changed the metrics names in the 'DATA.csv' file. Now the raw
+	clustering metrics are preceeded by 'd_', the normalized clustering
+	metrics are preceeded by 'n_' and the extrapolation/averaged metrics
+	are preceeded by 'x_'.
+
+	* In the 'clusters_info.csv' file, noise cluster is always present
+	including when it does not contain any individual.
+	
+
 2013-05-08 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.5.1
 	* Solved a bug in the states parsing that provoke an initial event
 	outside a burst to be wrongly accounted into the next running burst

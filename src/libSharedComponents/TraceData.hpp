@@ -285,17 +285,17 @@ bool TraceData::GenericFlushPoints(ostream&             str,
 
   for (INT32 i = 0; i < ClusteringParametersNames.size(); i++)
   {
-    str << "," << ClusteringParametersNames[i];
+    str << ", d_" << ClusteringParametersNames[i];
   }
 
   for (INT32 i = 0; i < ClusteringParametersNames.size(); i++)
   {
-    str << "," << ClusteringParametersNames[i] << "_Norm";
+    str << ", n_" << ClusteringParametersNames[i];
   }
 
   for (INT32 i = 0; i < ExtrapolationParametersNames.size(); i++)
   {
-    str << "," << ExtrapolationParametersNames[i];
+    str << ", x_" << ExtrapolationParametersNames[i];
   }
 
   str << ",ClusterID" << endl;
