@@ -1,0 +1,22 @@
+To generate a python module you must:
+
+# Minotauro properties
+#module load gnu python/2.7.3
+#BOOST=/apps/BOOST/1.52.0/
+#PYTHON=/apps/PYTHON/2.7.3/
+#
+#g++ -fPIC -I${BOOST}/include -c ParaverTraceConfig.cpp UIParaverTraceConfig.cpp
+#g++ -fPIC -I${BOOST}/include -I${PYTHON}/include/python2.7 -c UIParaverTraceConfig_python.cpp
+#g++ -fPIC -o pcfparser.so -shared *.o -Wl,-rpath -Wl,${BOOST}/lib/ -Wl,-rpath -Wl,${PYTHON}/shared/lib/ -L${BOOST}/lib/ -lboost_python -L${PYTHON}/shared/lib/ -lpython2.7
+
+later you can import the so. Example:
+
+#!/usr/bin/env python
+
+import pcfparser
+
+p = pcfparser.UIParaverTraceConfig()
+p.parse("test/sampletrace.pcf", False)
+print p.getEventType_int("I/O Size")  # 40000011
+print p.getEventType_str(40000011)
+
