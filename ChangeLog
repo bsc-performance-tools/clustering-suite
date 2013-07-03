@@ -10,6 +10,11 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2013-07-03 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added 'pcfparser' to the repository
+
+	* Update of 'boost.m4' macros file from 'https://github.com/tsuna/boost.m4'
+
 2013-05-27 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.5.2
 	* Changed the metrics names in the 'DATA.csv' file. Now the raw
 	clustering metrics are preceeded by 'd_', the normalized clustering
