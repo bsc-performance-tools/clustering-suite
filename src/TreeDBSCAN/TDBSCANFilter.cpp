@@ -25,7 +25,7 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                        $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
@@ -37,29 +37,33 @@
 #include <mrnet/Packet.h>
 #include <mrnet/NetworkTopology.h>
 #include <HullModel.hpp>
-#include "ClusteringFilter.h"
+#include "TDBSCANFilter.h"
 #include "NoiseManager.h"
 #include "HullManager.h"
-#include "ClusteringTags.h"
+#include "TDBSCANTags.h"
 #include "Utils.h"
 #include "Statistics.h"
+#include "ClustersInfo.h"
 
 using namespace MRN;
 using namespace std;
 
 extern "C" {
 
-const char *filterTreeDBSCAN_format_string = "";
+const char *filterTDBSCAN_format_string = "";
 
 int  WaitForNoise = 0;
 int  WaitForHulls = 0;
 int  WaitForStats = 0;
+int  WaitForClustersInfo = 0;
 bool NeedsReset   = true;
 
 vector<const Point *> NoisePoints;
+vector<long long>     NoiseDurations;
 vector<HullModel *>   MergedHulls;
 
-Statistics *ClusteringStats = NULL;
+Statistics *NetworkStats = NULL;
+ClustersInfo *ClustersStats = NULL;
 
 
 
@@ -69,15 +73,21 @@ Statistics *ClusteringStats = NULL;
  */
 void Init(const TopologyLocalInfo & top_info)
 {
-   WaitForNoise = WaitForHulls = WaitForStats = top_info.get_NumChildren();
+   WaitForNoise = WaitForHulls = WaitForStats = WaitForClustersInfo = top_info.get_NumChildren();
 
-   if (ClusteringStats == NULL)
+   cerr << "[FILTER " << FILTER_ID(top_info) << "] NumChildren=" << top_info.get_NumChildren() << endl;
+
+   if (NetworkStats == NULL)
    {
-     ClusteringStats = new Statistics( FILTER_ID(top_info) );
+     NetworkStats = new Statistics(FILTER_ID(top_info), false);
    }
-   else ClusteringStats->Reset();
+   else NetworkStats->Reset();
+
+   if (ClustersStats != NULL) delete ClustersStats;
+   ClustersStats = new ClustersInfo();
 
    NoisePoints.clear();
+   NoiseDurations.clear();
 
 /*
    for (unsigned int i=0; i<MergedHulls.size(); i++)
@@ -91,15 +101,13 @@ void Init(const TopologyLocalInfo & top_info)
 }
 
 
-int IAmTopFilter = 0;
-
 /**
  * The clustering filter receives the noise points from all children,
  * clusters them and builds the model for the resulting new hulls, and
  * merges them with the hulls received from the children. The remaining
  * noise points and the merged hulls are sent to the next level of the tree.
  */
-void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
+void filterTDBSCAN( std::vector< PacketPtr >& packets_in,
                        std::vector< PacketPtr >& packets_out,
                        std::vector< PacketPtr >& /* packets_out_reverse */,
                        void ** /* client data */,
@@ -110,7 +118,15 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
    double Epsilon   = 0.0;
    int    MinPoints = 0;
 
-   IAmTopFilter = TOP_FILTER( top_info );
+   /* Bypass the filter in the back-ends, there's nothing to merge at this level! */
+   if (BOTTOM_FILTER(top_info))
+   {
+      for (unsigned int i=0; i<packets_in.size(); i++)
+      {
+         packets_out.push_back(packets_in[i]);
+      }
+      return;
+   }
 
    /* DEBUG - Bypass all messages
    for (unsigned int i=0; i<packets_in.size(); i++)
@@ -125,23 +141,13 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
       Init(top_info);
    }
 
-   /* Bypass the filter in the back-ends, there's nothing to merge at this level! */
-   if (BOTTOM_FILTER(top_info))
-   {
-      for (unsigned int i=0; i<packets_in.size(); i++)
-      {
-         packets_out.push_back(packets_in[i]);
-      }
-      return;
-   }
-
    /* Get filter parameters */
    params->unpack("%lf %d", &Epsilon, &MinPoints);
    unsigned int NumSiblings = top_info.get_NumSiblings() + 1;
    int WeightedMinPoints = MinPoints / NumSiblings;
    if (WeightedMinPoints < 3) WeightedMinPoints = 3;
 
-   /* DEBUG
+   /* DEBUG 
    cerr << "[FILTER " << FILTER_ID(top_info) << "] NumSiblings=" << NumSiblings << " WeightedMinPoints=" << WeightedMinPoints << endl; */
 
    /* Process the packet crossing the filter */
@@ -152,7 +158,7 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
       {
          /* Accumulate all children noise points in vector NoisePoints */
          NoiseManager Noise = NoiseManager();
-         Noise.Unpack( packets_in[0], NoisePoints );
+         Noise.Unpack( packets_in[0], NoisePoints, NoiseDurations );
          break;
       }
       case TAG_ALL_NOISE_SENT:
@@ -161,19 +167,19 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
          /* Check whether all children sent their noise points */
          if (WaitForNoise <= 0)
          {
-            ClusteringStats->IncreaseInputPoints( NoisePoints.size() );
+            NetworkStats->IncreaseInputPoints( NoisePoints.size() );
 
             NoiseManager Noise = NoiseManager(Epsilon, WeightedMinPoints);
-            /* DEBUG -- Number of noise points
+            /* DEBUG -- Number of noise points 
             cerr << "[DEBUG FILTER " << FILTER_ID(top_info) << "] NoisePoints.size()=" << NoisePoints.size() << endl; */
 
             /* Cluster all children noise points */
-            ClusteringStats->ClusteringTimeStart();
+            NetworkStats->ClusteringTimeStart();
             vector<HullModel*> NoiseModel;
             int CountRemainingNoise = 0;
-            Noise.ClusterNoise( NoisePoints, NoiseModel, CountRemainingNoise );
-            ClusteringStats->ClusteringTimeStop();
-            ClusteringStats->IncreaseOutputPoints( CountRemainingNoise );
+            Noise.ClusterNoise( NoisePoints, NoiseDurations, NoiseModel, CountRemainingNoise );
+            NetworkStats->ClusteringTimeStop();
+            NetworkStats->IncreaseOutputPoints( CountRemainingNoise );
 
             /* Send remaining noise points to the next tree level */
             Noise.Serialize(packets_in[0]->get_StreamId(), packets_out);
@@ -229,38 +235,49 @@ void filterTreeDBSCAN( std::vector< PacketPtr >& packets_in,
          /* Merge the hulls as they arrive */
          for (unsigned int i = 0; i < ChildHulls.size(); i ++)
          {
-            ClusteringStats->IntersectTimeStart();
+            NetworkStats->IntersectTimeStart();
             NewMerge(ChildHulls[i], Epsilon, WeightedMinPoints);
-            ClusteringStats->IntersectTimeStop();
+            NetworkStats->IntersectTimeStop();
          }
-         ClusteringStats->IncreaseInputHulls( ChildHulls.size() );
+         NetworkStats->IncreaseInputHulls( ChildHulls.size() );
          break;
       }
       case TAG_ALL_HULLS_SENT:
       {
          WaitForHulls --;
+         /* DEBUG -- Number of noise points 
+         cerr << "[DEBUG FILTER " << FILTER_ID(top_info) << "] WaitForHulls=" << WaitForHulls << endl; */
+
          /* Check whether all children sent their hulls */
          if (WaitForHulls <= 0)
          {
             /* Send the joint hulls */
             HullManager HM = HullManager();
             HM.SerializeAll(packets_in[0]->get_StreamId(), packets_out, MergedHulls);
-            ClusteringStats->IncreaseOutputHulls( MergedHulls.size() );
+            NetworkStats->IncreaseOutputHulls( MergedHulls.size() );
          }
          break;
       }
       case TAG_STATISTICS:
       {
         WaitForStats --;
-        ClusteringStats->Unpack(packets_in[0]);
+        NetworkStats->Unpack(packets_in[0]);
         if (WaitForStats <= 0)
         {
-          ClusteringStats->Serialize(packets_in[0]->get_StreamId(), packets_out);
+          NetworkStats->Serialize(packets_in[0]->get_StreamId(), packets_out);
           /* Reset the filter next time it triggers */
           NeedsReset = true;
         }
         break;
       }
+      case TAG_CLUSTERS_INFO:
+        WaitForClustersInfo --;
+        ClustersStats->Unpack(packets_in[0]);
+        if (WaitForClustersInfo <= 0)
+        {
+          ClustersStats->Serialize(packets_in[0]->get_StreamId(), packets_out);
+        }
+        break;
       default:
       {
         cerr << "[FILTER " << FILTER_ID(top_info) << "] WARNING: Unknown message tag '" << tag << "'" << endl;
@@ -357,7 +374,7 @@ void NewMerge(HullModel *ChildHull, double Epsilon, int MinPoints)
   while (i < MergedHulls.size())
   {
     Intersect = MaxMerge->Merge(MergedHulls[i], Epsilon, MinPoints);
-    ClusteringStats->IncreaseNumIntersects( (Intersect != NULL) );
+    NetworkStats->IncreaseNumIntersects( (Intersect != NULL) );
     if (Intersect != NULL)
     {
 //      delete MaxMerge;

@@ -286,12 +286,15 @@ int libDistributedClusteringImplementation::GetMinPoints(void)
  *                         extracted
  * \param TasksToRead      Set of TaskIDs to be read by this analysis
  * \param EventsToDealWith Events to extract (UNUSED IN THIS VERSION)
+ * \param ConsecutiveEvts  True if events any event to deal defines an entry/
+ *                         exit of a region (UNUSED IN THIS VERSION)
  *
  * \return True if the data extraction was performed correctly, false otherwise
  */
 bool libDistributedClusteringImplementation::ExtractData(string            InputFileName,
                                                          set<int>&         TasksToRead,
-                                                         set<event_type_t> EventsToDealWith)
+                                                         set<event_type_t> EventsToDealWith,
+                                                         bool              ConsecutiveEvts)
 {
   DataExtractorFactory*    ExtractorFactory;
   DataExtractor*           Extractor;
@@ -310,6 +313,7 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
   {
     PRVEventsParsing       = true;
     this->EventsToDealWith = EventsToDealWith;
+    this->ConsecutiveEvts  = ConsecutiveEvts;
   }
   else
   {
@@ -330,7 +334,7 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
 
   if (PRVEventsParsing)
   {
-    if (!Extractor->SetEventsToDealWith(EventsToDealWith))
+    if (!Extractor->SetEventsToDealWith(EventsToDealWith, ConsecutiveEvts))
     {
       SetError(true);
       SetErrorMessage(Extractor->GetLastError());
@@ -358,7 +362,8 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
  * \return True if the data extraction was performed correctly, false otherwise
  */
 bool libDistributedClusteringImplementation::ExtractData(string            InputFileName,
-                                                         set<event_type_t> EventsToDealWith)
+                                                         set<event_type_t> EventsToDealWith,
+                                                         bool              ConsecutiveEvts)
 {
   DataExtractorFactory*    ExtractorFactory;
   DataExtractor*           Extractor;
@@ -376,6 +381,7 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
   {
     PRVEventsParsing       = true;
     this->EventsToDealWith = EventsToDealWith;
+    this->ConsecutiveEvts  = ConsecutiveEvts;
   }
   else
   {
@@ -396,7 +402,7 @@ bool libDistributedClusteringImplementation::ExtractData(string            Input
 
   if (PRVEventsParsing)
   {
-    if (!Extractor->SetEventsToDealWith(EventsToDealWith))
+    if (!Extractor->SetEventsToDealWith(EventsToDealWith, ConsecutiveEvts))
     {
       SetError(true);
       SetErrorMessage(Extractor->GetLastError());
@@ -451,7 +457,6 @@ size_t libDistributedClusteringImplementation::GetNumberOfPoints(void)
 bool libDistributedClusteringImplementation::ClusterAnalysis(vector<HullModel*>& ClusterModels)
 {
   ClusteringConfiguration* ConfigurationManager;
-  ClusteringStatistics     Statistics;
   size_t                   ExtrapolationMetrics;
   ostringstream            Messages;
 
@@ -555,7 +560,10 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& Cl
 #endif
   }
 
-  GenerateStatistics(true); // true = UseClassificationPartition
+  if (!GenerateStatistics(true)) // true = UseClassificationPartition
+  {
+    return false;
+  }
 
   return true;
 }
@@ -603,6 +611,7 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
       return false;
     }
 #else
+
     if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
                                       ClassificationPartition.GetAssignmentVector()))
     {
@@ -611,7 +620,7 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
     }
 #endif
 
-    Statistics.TranslatedIDs(ClassificationPartition.GetAssignmentVector());
+    // Statistics.TranslatedIDs(ClassificationPartition.GetAssignmentVector());
   }
   else
   {
@@ -627,7 +636,7 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
       SetErrorMessage(Statistics.GetLastError());
       return false;
     }
-    Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
+    // *Statistics.TranslatedIDs(LastPartition.GetAssignmentVector());
   }
 
   /*
@@ -679,7 +688,7 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
         ClusteredEventsPRVGenerator* TraceReconstructor =
           new ClusteredEventsPRVGenerator(InputFileName, OutputTraceName);
 
-        TraceReconstructor->SetEventsToDealWith (EventsToDealWith);
+        TraceReconstructor->SetEventsToDealWith (EventsToDealWith, ConsecutiveEvts);
 
 #ifdef HAVE_SQLITE3
         if (!TraceReconstructor->Run(Data->GetAllBursts_begin(),
@@ -856,10 +865,12 @@ bool libDistributedClusteringImplementation::InitClustering(double Epsilon,
  *         otherwise
  */
 bool libDistributedClusteringImplementation::ClusterAnalysis(const vector<const Point*> &Points,
+                                                             const vector<long long>    &Durations,
                                                              vector<HullModel*>         &ClusterModels)
 {
   /* 'ClusteringCore' has been initialized in 'InitTraceClustering' method */
-  ExternalData = Points;
+  ExternalData          = Points;
+  ExternalDataDurations = Durations;
 
   if (!ClusteringCore->ExecuteClustering(ExternalData, LastPartition))
   {
@@ -882,8 +893,10 @@ bool libDistributedClusteringImplementation::ClusterAnalysis(const vector<const 
  *
  * \return True if the points were correctly returned, false otherwise
  */
-bool libDistributedClusteringImplementation::GetNoisePoints(vector<const Point*>& NoisePoints)
+bool libDistributedClusteringImplementation::GetNoisePoints(vector<const Point*>& NoisePoints, vector<long long> &NoiseDurations)
 {
+  vector<const Point*>  DataPoints;
+  vector<long long>     DataDurations;
   vector<cluster_id_t>& IDs = LastPartition.GetAssignmentVector();
 
   if (IDs.size() == 0)
@@ -897,7 +910,7 @@ bool libDistributedClusteringImplementation::GetNoisePoints(vector<const Point*>
 #endif
   }
 
-  vector<const Point*>& DataPoints = GetDataPoints();
+  GetDataPoints(DataPoints, DataDurations);
 
   NoisePoints.clear();
 
@@ -907,6 +920,165 @@ bool libDistributedClusteringImplementation::GetNoisePoints(vector<const Point*>
     if (IDs[i] == NOISE_CLUSTERID)
     {
       NoisePoints.push_back(DataPoints[i]);
+      NoiseDurations.push_back(DataDurations[i]);
+    }
+  }
+
+  return true;
+}
+
+/* Methods to be used in the ON-LINE implementation of the algorithm. In
+     * this case, the data comes from buffers present in the data extraction
+     * library. For this reason, we have to expose the data manipulation
+     * routines */
+
+/**
+ * Adds a new burst to the 'TraceData' container, extracted from external
+ * sources
+ *
+ * \param TaskId     Task identifier of the burst added
+ * \param ThreadId   Thread identifier of the burst added
+ * \param Line       Line in the tracefile UNUSED
+ * \param BeginTime  Initial time where the burst appears in the application
+ *                   execution
+ * \param EndTime    Final time of the current burst
+ * \param Duration   Duration of the burst
+ * \param EventsData Map containing the event type/value pairs related to the
+ *                   current burst
+ *
+ * \return True if the burst was correctly added to the Data container, false
+ *         otherwise
+ */
+bool libDistributedClusteringImplementation::NewBurst(task_id_t                         TaskId,
+                                                      thread_id_t                       ThreadId,
+                                                      line_t                            Line,
+                                                      timestamp_t                       BeginTime,
+                                                      timestamp_t                       EndTime,
+                                                      duration_t                        BurstDuration,
+                                                      map<event_type_t, event_value_t>& EventsData)
+{
+  /* Get the container */
+  Data = TraceData::GetInstance();
+
+  /* Set the subset to read */
+  Data->SetMaster(Root);
+
+  if (!Data->NewBurst(TaskId,
+                      ThreadId,
+                      Line,
+                      BeginTime,
+                      EndTime,
+                      BurstDuration,
+                      EventsData))
+  {
+    SetError(true);
+    SetErrorMessage("error storing burst data",
+                    Data->GetLastError());
+    return false;
+  }
+  return true;
+}
+
+
+/**
+ * Returns the ranges of the clustering parameters observed in the current
+ * instance of the library
+ *
+ * \param MinValues Output vector containing the minimum values observed in
+ *                  the clustering parameters of the current instance
+ * \param MaxValues Output vector containing the maximum values observed in
+ *                  the clustering parameters of the current instance
+ *
+ */
+void libDistributedClusteringImplementation::GetParameterRanges(vector<double>& MinValues,
+                                                                vector<double>& MaxValues)
+{
+  MinValues = Data->GetMinValues();
+  MaxValues = Data->GetMaxValues();
+
+  return;
+}
+
+/**
+ * Normalize clustering dimension of the data bursts stored in the current
+ * instance of the library using the ranges provided
+ *
+ * \param MinValues Minimum values of the clustering parameters
+ * \param MaxValues Maximum values of the clustering parameters
+ *
+ */
+void libDistributedClusteringImplementation::NormalizeData(vector<double>& MinValues,
+                                                           vector<double>& MaxValues)
+{
+  Data->SetMinValues(MinValues);
+  Data->SetMaxValues(MaxValues);
+
+  Data->Normalize();
+
+  return;
+}
+
+/**
+ * Returns all the average statistics accumulated on each cluster obtained
+ * after classifying the data (the final partition), so as to aggregate the
+ * results with the values of all workers
+ *
+ * \param Statistics I/O vector containing the ClusterStatistics objects that
+ *                   aggregate the average statistics
+ *
+ * \return True on success, false otherwise
+ */
+bool libDistributedClusteringImplementation::GetClusterStatistics(vector<ClusterStatistics*>& ExternalStatistics)
+{
+  ParametersManager* Parameters = ParametersManager::GetInstance();;
+
+  vector<string> ExtrapolationParametersNames = Parameters->GetExtrapolationParametersNames();
+
+  set<cluster_id_t> IDs = ClassificationPartition.GetIDs();
+
+  if (IDs.size() == 0)
+  {
+    SetErrorMessage("unable to retrieve statistics (empty classification partition)");
+    SetError(true);
+    return false;
+  }
+
+  ExternalStatistics.clear();
+
+  for (set<cluster_id_t>::iterator IDsIt  = IDs.begin();
+                                   IDsIt != IDs.end();
+                                   ++IDsIt)
+  {
+    StatisticsContainer CurrentClusterStatistics;
+    ClusterStatistics*  NewClusterStatistics;
+
+    if (!Statistics.GetClusterStatistics(*IDsIt, CurrentClusterStatistics))
+    {
+      ostringstream Message;
+      Message << "unable to retrieve statistics from current partition (ID : ";
+      Message << *IDsIt << ")";
+
+      SetErrorMessage(Message.str());
+      SetError(true);
+      return false;
+    }
+
+    NewClusterStatistics = new ClusterStatistics(*IDsIt,
+                                                 CurrentClusterStatistics.GetIndividuals(),
+                                                 CurrentClusterStatistics.GetTotalDuration(),
+                                                 CurrentClusterStatistics.GetDurationMean(),
+                                                 CurrentClusterStatistics.GetDurationStdDev_2());
+
+    ExternalStatistics.push_back(NewClusterStatistics);
+
+    for (vector<string>::size_type i = 0;
+         i < ExtrapolationParametersNames.size();
+         i++)
+    {
+      NewClusterStatistics->AddMetric(ExtrapolationParametersNames[i],
+                                      CurrentClusterStatistics.GetExtrapolationMetricIndividuals(i),
+                                      CurrentClusterStatistics.GetExtrapolationMetricMean(i),
+                                      CurrentClusterStatistics.GetExtrapolationMetricStdDev_2(i));
     }
   }
 
@@ -928,8 +1100,12 @@ bool libDistributedClusteringImplementation::GetNoisePoints(vector<const Point*>
  * \return True, if the information was succesfully retrieved, false otherwise
  */
 bool libDistributedClusteringImplementation::GetFullBurstsInformation(vector<Point*>&       Points,
+/*
                                                                       vector<task_id_t>&    TaskIDs,
                                                                       vector<thread_id_t>&  ThreadIDs,
+*/
+                                                                      vector<timestamp_t>&  BeginTimes,
+                                                                      vector<timestamp_t>&  EndTimes,
                                                                       vector<cluster_id_t>& ClusterIDs)
 {
   vector<CPUBurst*>&    Bursts = Data->GetClusteringBursts();
@@ -959,8 +1135,12 @@ bool libDistributedClusteringImplementation::GetFullBurstsInformation(vector<Poi
   }
 
   Points.clear();
+/*
   TaskIDs.clear();
   ThreadIDs.clear();
+*/
+  BeginTimes.clear();
+  EndTimes.clear();
   ClusterIDs.clear();
 
   Dimensions = Data->GetClusteringDimensionsCount();
@@ -970,8 +1150,12 @@ bool libDistributedClusteringImplementation::GetFullBurstsInformation(vector<Poi
     Point* NewPoint = new Point(Bursts[i]->GetRawDimensions());
 
     Points.push_back(NewPoint);
+/*
     TaskIDs.push_back(Bursts[i]->GetTaskId());
     ThreadIDs.push_back(Bursts[i]->GetThreadId());
+*/
+    BeginTimes.push_back(Bursts[i]->GetBeginTime());
+    EndTimes.push_back(Bursts[i]->GetEndTime());
     ClusterIDs.push_back(IDs[i]);
   }
 
@@ -1023,7 +1207,7 @@ bool libDistributedClusteringImplementation::GetClusterIDs(vector<cluster_id_t> 
  * \param DataFileName          Name of the file where the data will be stored
  * \param ScriptsFileNamePrefix Base name to be used in the different GNUplot
  *                              scripts
- * \param LocalPartition        Boolean to indicate if the data to be printed
+ * \param UseLocalPartition        Boolean to indicate if the data to be printed
  *                              is the global partition or just the local
  *                              analysis
  *
@@ -1032,14 +1216,15 @@ bool libDistributedClusteringImplementation::GetClusterIDs(vector<cluster_id_t> 
  */
 bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileName,
                                                               string ScriptsFileNamePrefix,
-                                                              bool   LocalPartition)
+                                                              bool   UseLocalPartition)
 {
   PlottingManager *Plots;
   string Prefix;
+  ostringstream PlotTitle;
 
   Plots = PlottingManager::GetInstance();
 
-  Partition& UsedPartition = (LocalPartition ? LastPartition : ClassificationPartition);
+  Partition& UsedPartition = (UseLocalPartition ? LastPartition : ClassificationPartition);
 
   if (ScriptsFileNamePrefix.compare("") == 0)
   {
@@ -1051,15 +1236,26 @@ bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileNam
     Prefix = ScriptsFileNamePrefix;
   }
 
-  if (!FlushData(DataFileName, LocalPartition))
+  if (!FlushData(DataFileName, UseLocalPartition))
   {
     SetError(true);
     return false;
   }
 
+  PlotTitle << ClusteringCore->GetClusteringAlgorithmName() << "\\n";
+
+  if (UseLocalPartition)
+  {
+    PlotTitle << "LOCAL CLUSTERING WORKER " << system_messages::my_rank;
+  }
+  else
+  {
+    PlotTitle << "GLOBAL CLUSTERING WORKER " << system_messages::my_rank;
+  }
+
   if (!Plots->PrintPlots(DataFileName,
                          Prefix,
-                         ClusteringCore->GetClusteringAlgorithmName(),
+                         PlotTitle.str(),
                          UsedPartition.GetIDs()))
   {
     SetError(true);
@@ -1069,6 +1265,56 @@ bool libDistributedClusteringImplementation::PrintPlotScripts(string DataFileNam
 
   return true;
 
+}
+
+/**
+ * Generates the scripts that print the scatters plots merging all the local
+ * partitions of the backends
+ *
+ * \param DataFileName          String with the filenames where the data is
+ *                              stored
+ * \param ScriptsFileNamePrefix Base name to be used in the different GNUplot
+ *                              scripts
+ * \param ClustersCounts        Number of different clusters detected by
+ *                              the cluster algorithm
+ * \param PrintingModels        True when printing cluster models instead of
+ *                              data points
+ *
+ * \return True if the plots scripts and data files were written correctly,
+ *         false otherwise
+ */
+bool libDistributedClusteringImplementation::PrintGlobalPlotScripts(string       DataFileName,
+                                                                    string       ScriptsFileNamePrefix,
+                                                                    unsigned int ClustersCount,
+                                                                    bool         PrintingModels)
+{
+  PlottingManager *Plots;
+  ostringstream PlotTitle;
+
+  Plots = PlottingManager::GetInstance();
+
+  set<cluster_id_t> IDsUsed;
+
+  PlotTitle << ClusteringCore->GetClusteringAlgorithmName() << "\\n";
+  PlotTitle << "GLOBAL CLUSTERING";
+
+  for (size_t i = 0; i <= ClustersCount; i++)
+  {
+    IDsUsed.insert(i);
+  }
+
+  if (!Plots->PrintPlots(DataFileName,
+                         ScriptsFileNamePrefix,
+                         PlotTitle.str(),
+                         IDsUsed,
+                         PrintingModels))
+  {
+    SetError(true);
+    SetErrorMessage(Plots->GetLastError());
+    return false;
+  }
+
+  return true;
 }
 
 /**
@@ -1246,8 +1492,21 @@ bool libDistributedClusteringImplementation::GenerateClusterModels(vector<HullMo
   vector<cluster_id_t>& AssignmentVector = LastPartition.GetAssignmentVector();
 
   vector<const Point*>& ClusteringPoints = ( UsingExternalData ? ExternalData : Data->GetClusteringPoints() ) ;
+  vector<long long>     BurstsDurations;
 
   vector<vector<const Point*> > PointsPerCluster (LastPartition.NumberOfClusters ());
+  vector<long long>             DurationPerCluster (LastPartition.NumberOfClusters (), 0);
+
+  if (!UsingExternalData)
+  {
+    vector<CPUBurst*>& ClusteringBursts = Data->GetClusteringBursts();
+    for (size_t i = 0; i < ClusteringBursts.size(); i++)
+    {
+      BurstsDurations.push_back(ClusteringBursts[i]->GetDuration());
+    }
+  }
+
+  vector<long long>& PointsDurations = ( UsingExternalData ? ExternalDataDurations : BurstsDurations );
 
   /* DEBUG
   ostringstream Messages;
@@ -1262,6 +1521,8 @@ bool libDistributedClusteringImplementation::GenerateClusterModels(vector<HullMo
   system_messages::information(Messages.str().c_str()); */
 
   unsigned int ClusterPointsSize = ( UsingExternalData ? ExternalData.size() : Data->GetClusteringBurstsSize() );
+  // unsigned int ClusterPointsSize = ClusteringBursts.size();
+
   if (AssignmentVector.size() != ClusterPointsSize)
   {
     SetError(true);
@@ -1272,11 +1533,12 @@ bool libDistributedClusteringImplementation::GenerateClusterModels(vector<HullMo
   for (size_t i = 0; i < ClusteringPoints.size(); i++)
   {
     PointsPerCluster[AssignmentVector[i]].push_back(ClusteringPoints[i]);
+    DurationPerCluster[AssignmentVector[i]] += PointsDurations[i];
   }
 
   for (size_t i = NOISE_CLUSTERID+1; i < PointsPerCluster.size(); i++)
   {
-    HullModel *NewHull = new HullModel(new ConvexHullModel(PointsPerCluster[i]));
+    HullModel *NewHull = new HullModel(new ConvexHullModel(PointsPerCluster[i], DurationPerCluster[i]));
 
     Models.push_back(NewHull);
 
@@ -1305,15 +1567,22 @@ bool libDistributedClusteringImplementation::GenerateClusterModels(vector<HullMo
  *
  * \return A reference to the vector that contains the actual data;
  */
-vector<const Point*>& libDistributedClusteringImplementation::GetDataPoints(void)
+void libDistributedClusteringImplementation::GetDataPoints(vector<const Point *>&Points, vector<long long>&Durations)
 {
   if (UsingExternalData)
   {
-    return ExternalData;
+    Points    = ExternalData;
+    Durations = ExternalDataDurations;
   }
   else
   {
-    return Data->GetClusteringPoints();
+    vector<CPUBurst *>& Bursts = Data->GetClusteringBursts();
+
+    Points = Data->GetClusteringPoints();
+    for (int i=0; i<Bursts.size(); i++)
+    {
+      Durations.push_back( Bursts[i]->GetDuration() );
+    }
   }
 }
 

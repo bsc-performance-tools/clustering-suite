@@ -18,95 +18,110 @@ CLUSTERING_LIBS = \
 #########################################################
 
 lib_LTLIBRARIES = \
-  libfilterTreeDBSCAN.la \
+  libfilterTDBSCAN.la \
   libfilterXchangeDimensions.la \
-  libfrontendTreeDBSCAN.la \
-  libbackendTreeDBSCANOffline.la \
-  libbackendTreeDBSCANOnline.la
+  libfilterSupport.la \
+  libTDBSCAN-fe.la \
+  libTDBSCAN-be-offline.la \
+  libTDBSCAN-be-online.la
 
-libfilterTreeDBSCAN_la_SOURCES  = \
-  ClusteringFilter.cpp \
-  ClusteringFilter.h \
+libfilterTDBSCAN_la_SOURCES  = \
+  TDBSCANFilter.cpp \
+  TDBSCANFilter.h \
   NoiseManager.cpp \
   NoiseManager.h \
   HullManager.cpp \
   HullManager.h \
   Statistics.cpp \
   Statistics.h \
-  ClusteringTags.h \
+  ClustersInfo.cpp \
+  ClustersInfo.h \
+  TDBSCANTags.h \
   Utils.h
-libfilterTreeDBSCAN_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags` @CGAL_CPPFLAGS@
-libfilterTreeDBSCAN_la_LDFLAGS  =  @CGAL_LDFLAGS@ @CLUSTERING_RPATH@
-libfilterTreeDBSCAN_la_LIBADD   = $(CLUSTERING_LIBS) 
+libfilterTDBSCAN_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags` @CGAL_CPPFLAGS@
+libfilterTDBSCAN_la_LDFLAGS  =  @CGAL_LDFLAGS@ @CLUSTERING_RPATH@
+libfilterTDBSCAN_la_LIBADD   = $(CLUSTERING_LIBS) 
 
 libfilterXchangeDimensions_la_SOURCES = \
   XchangeDimensionsFilter.cpp \
-  ClusteringTags.h \
+  TDBSCANTags.h \
   Utils.h
 libfilterXchangeDimensions_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags`
 
+libfilterSupport_la_SOURCES = \
+  SupportFilter.cpp \
+  Support.cpp \
+  Support.h   \
+  RTree.h 
+libfilterSupport_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags`
+
 PROTOCOL_COMMON_SRCS = \
-  ClusteringCore.cpp \
-  ClusteringCore.h \
+  TDBSCANCore.cpp \
+  TDBSCANCore.h \
   NoiseManager.cpp \
   NoiseManager.h \
   HullManager.cpp \
   HullManager.h \
   Statistics.cpp \
   Statistics.h \
-  ClusteringTags.h \
+  ClustersInfo.cpp \
+  ClustersInfo.h \
+  Support.cpp \
+  Support.h \
+  RTree.h \
+  TDBSCANTags.h \
   Utils.h
 
-libfrontendTreeDBSCAN_la_SOURCES  = \
+libTDBSCAN_fe_la_SOURCES  = \
   $(PROTOCOL_COMMON_SRCS) \
-  ClusteringFrontEnd.cpp \
-  ClusteringFrontEnd.h
-libfrontendTreeDBSCAN_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --fe-cflags` @CGAL_CPPFLAGS@
-libfrontendTreeDBSCAN_la_LDFLAGS  = @CGAL_LDFLAGS@ @CLUSTERING_RPATH@ `@MRNETAPP_CONFIG@ --fe-libs` -static
-libfrontendTreeDBSCAN_la_LIBADD   = $(CLUSTERING_LIBS) 
+  TDBSCANRoot.cpp \
+  TDBSCANRoot.h
+libTDBSCAN_fe_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --fe-cflags` @CGAL_CPPFLAGS@
+libTDBSCAN_fe_la_LDFLAGS  = @CGAL_LDFLAGS@ @CLUSTERING_RPATH@ `@MRNETAPP_CONFIG@ --fe-libs` 
+libTDBSCAN_fe_la_LIBADD   = $(CLUSTERING_LIBS) 
 
-libbackendTreeDBSCANOffline_la_SOURCES  = \
+libTDBSCAN_be_offline_la_SOURCES  = \
   $(PROTOCOL_COMMON_SRCS) \
-  ClusteringBackEnd.cpp \
-  ClusteringBackEnd.h \
-  ClusteringBackEndOffline.cpp \
-  ClusteringBackEndOffline.h
-libbackendTreeDBSCANOffline_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
-libbackendTreeDBSCANOffline_la_LDFLAGS  = @CGAL_LDFLAGS@ @CLUSTERING_RPATH@ `@MRNETAPP_CONFIG@ --be-libs` -static
-libbackendTreeDBSCANOffline_la_LIBADD   = $(CLUSTERING_LIBS)
+  TDBSCANWorker.cpp \
+  TDBSCANWorker.h \
+  TDBSCANWorkerOffline.cpp \
+  TDBSCANWorkerOffline.h
+libTDBSCAN_be_offline_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
+libTDBSCAN_be_offline_la_LDFLAGS  = @CGAL_LDFLAGS@ @CLUSTERING_RPATH@ `@MRNETAPP_CONFIG@ --be-libs` 
+libTDBSCAN_be_offline_la_LIBADD   = $(CLUSTERING_LIBS)
 
-libbackendTreeDBSCANOnline_la_SOURCES   = \
+libTDBSCAN_be_online_la_SOURCES   = \
   $(PROTOCOL_COMMON_SRCS) \
-  ClusteringBackEnd.cpp \
-  ClusteringBackEnd.h \
-  ClusteringBackEndOnline.cpp \
-  ClusteringBackEndOnline.h
-libbackendTreeDBSCANOnline_la_CXXFLAGS  = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
-libbackendTreeDBSCANOnline_la_LDFLAGS   = @CGAL_LDFLAGS@ @CLUSTERING_RPATH@ `@MRNETAPP_CONFIG@ --be-libs` -static
-libbackendTreeDBSCANOnline_la_LIBADD    = $(CLUSTERING_LIBS)
+  TDBSCANWorker.cpp \
+  TDBSCANWorker.h \
+  TDBSCANWorkerOnline.cpp \
+  TDBSCANWorkerOnline.h
+libTDBSCAN_be_online_la_CXXFLAGS  = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
+libTDBSCAN_be_online_la_LDFLAGS   = @CGAL_LDFLAGS@ @CLUSTERING_RPATH@ `@MRNETAPP_CONFIG@ --be-libs` 
+libTDBSCAN_be_online_la_LIBADD    = $(CLUSTERING_LIBS)
 
 #########################################################
 #                       Headers                         #
 #########################################################
 
-include_HEADERS = ClusteringCore.h ClusteringFrontEnd.h ClusteringBackEnd.h ClusteringBackEndOnline.h ClusteringBackEndOffline.h ClusteringTags.h
+include_HEADERS = TDBSCANCore.h TDBSCANRoot.h TDBSCANWorker.h TDBSCANWorkerOnline.h TDBSCANWorkerOffline.h TDBSCANTags.h Statistics.h ClustersInfo.h Support.h
 
 #########################################################
 #         Interactive front-end and back-ends           #
 #########################################################
 
-bin_PROGRAMS = Tree_DBSCAN_FE.bin Tree_DBSCAN_BE.bin
+bin_PROGRAMS = TDBSCAN_FE.bin TDBSCAN_BE.bin
 
-Tree_DBSCAN_FE_bin_SOURCES  = \
-  Tree_DBSCAN_FE.cpp \
-  Tree_DBSCAN_FE.h
-Tree_DBSCAN_FE_bin_CXXFLAGS = `@MRNETAPP_CONFIG@ --fe-cflags` @CGAL_CPPFLAGS@
-Tree_DBSCAN_FE_bin_LDFLAGS  = -static 
-Tree_DBSCAN_FE_bin_LDADD    = libfrontendTreeDBSCAN.la
+TDBSCAN_FE_bin_SOURCES  = \
+  TDBSCAN_FE.cpp \
+  TDBSCAN_FE.h
+TDBSCAN_FE_bin_CXXFLAGS = `@MRNETAPP_CONFIG@ --fe-cflags` @CGAL_CPPFLAGS@
+TDBSCAN_FE_bin_LDFLAGS  = -static 
+TDBSCAN_FE_bin_LDADD    = libTDBSCAN-fe.la
 
-Tree_DBSCAN_BE_bin_SOURCES  = \
-  Tree_DBSCAN_BE.cpp
-Tree_DBSCAN_BE_bin_CXXFLAGS = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
-Tree_DBSCAN_BE_bin_LDFLAGS  = -static 
-Tree_DBSCAN_BE_bin_LDADD    = libbackendTreeDBSCANOffline.la
+TDBSCAN_BE_bin_SOURCES  = \
+  TDBSCAN_BE.cpp
+TDBSCAN_BE_bin_CXXFLAGS = `@MRNETAPP_CONFIG@ --be-cflags` @CGAL_CPPFLAGS@
+TDBSCAN_BE_bin_LDFLAGS  = -static 
+TDBSCAN_BE_bin_LDADD    = libTDBSCAN-be-offline.la
 

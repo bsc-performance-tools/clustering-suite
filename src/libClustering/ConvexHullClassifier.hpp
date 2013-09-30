@@ -96,7 +96,7 @@ bool ConvexHullClassifier::Classify(T          begin,
 
   cluster_id_t          CurrentClusterId;
   vector<cluster_id_t>& AssignmentVector = DataPartition.GetAssignmentVector();
-  set<cluster_id_t>&    DifferentIDs     = DataPartition.GetIDs();
+  set<cluster_id_t>     DifferentIDs;
 
   ostringstream Message;
 
@@ -118,12 +118,26 @@ bool ConvexHullClassifier::Classify(T          begin,
     system_messages::information(Message.str()); */
   }
 
+  DataPartition.SetIDs(DifferentIDs);
+
   // DataPartition.NumberOfClusters(HullModels.size()+1);
   // DataPartition.HasNoise(true);
 
   /* DEBUG
   Message.str("");
-  Message << "Classification Partition Size = " << DataPartition.NumberOfClusters() << endl;
+  Message << "IDs in use { ";
+  set<cluster_id_t>::iterator IDsIt;
+  for (IDsIt  = DifferentIDs.begin();
+       IDsIt != DifferentIDs.end();
+       ++IDsIt)
+  {
+    Message << *IDsIt << " ";
+  }
+  Message << "}" << endl;
+
+
+  // Message << "Classification Partition Size = " << DataPartition.NumberOfClusters() << " ";
+  // Message << "Has noise? " << DataPartition.HasNoise() << endl;
   system_messages::information(Message.str().c_str());
   */
 

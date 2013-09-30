@@ -25,31 +25,33 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                       $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef __CLUSTERING_BACKEND_OFFLINE_H__
-#define __CLUSTERING_BACKEND_OFFLINE_H__
-
-#include "ClusteringBackEnd.h"
+#include <BackEnd.h>
+#include "TDBSCANWorkerOffline.h"
 
 /**
- * This class implements an specific back-end protocol that
- * extracts data from a Paraver trace.
- */
-class ClusteringBackEndOffline: public ClusteringBackEnd
+ * The back-end application loads the TDBSCAN protocol and waits for 
+ * the front-end to start the analysis.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments.
+ * @return 0 on success; -1 otherwise.
+ */ 
+int main(int argc, char *argv[])
 {
-   public:
-      bool InitLibrary();
-      bool ExtractData();
-      bool AnalyzeData();
-      bool ProcessResults();
-};
+   BackEnd *BE = new BackEnd();
+   BE->Init(argc, argv);
 
-#endif /* __CLUSTERING_BACKEND_OFFLINE_H__ */
+   BackProtocol *protClustering = new TDBSCANWorkerOffline();
+   BE->LoadProtocol( protClustering );
 
+   BE->Loop();
+
+   return 0;
+}
 

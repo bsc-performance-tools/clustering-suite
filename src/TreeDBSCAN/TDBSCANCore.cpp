@@ -25,41 +25,75 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                        $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef __CLUSTERING_BACKEND_ONLINE_H__
-#define __CLUSTERING_BACKEND_ONLINE_H__
+#include "TDBSCANCore.h"
+#include "TDBSCANTags.h"
+#include "Utils.h"
 
-#include "ClusteringBackEnd.h"
 
 /**
- * This class implements an specific back-end protocol that
- * extracts data from an on-line tracing system.
+ * Constructor sets default configuration values.
  */
-class ClusteringBackEndOnline: public ClusteringBackEnd
+TDBSCANCore::TDBSCANCore()
 {
-   public:
-      typedef int (*CallbackType)(vector<Point*> &ClusteringInput,
-                                  vector<double> &MinDimensions,
-                                  vector<double> &MaxDimensions);
+  Epsilon                 = 0.015;
+  MinPoints               = 10;
+  ClusteringDefinitionXML = "";
+  InputTraceName          = "";
+  OutputFileName          = "OUTPUT.prv";
+  Verbose                 = false;
+  ReconstructTrace        = false;
+  stClustering            = NULL;
+  stXchangeDims           = NULL;
+  stSupport               = NULL;
+  GlobalModel.clear();
+}
 
-      ClusteringBackEndOnline(CallbackType DataExtractCallback);
 
-      bool InitLibrary();
-      bool ExtractData();
-      bool AnalyzeData();
-      bool ProcessResults();
+/**
+ * Front-end call to send the clustering parameters to the back-ends.
+ */
+void TDBSCANCore::Send_Configuration (void)
+{
+  stClustering->send (TAG_CLUSTERING_CONFIG, "%lf %d %s %s %s %d %d",
+                      Epsilon,
+                      MinPoints,
+                      ClusteringDefinitionXML.c_str(),
+                      InputTraceName.c_str(),
+                      OutputFileName.c_str(),
+                      ( (int) Verbose),
+                      ( (int) ReconstructTrace) );
+}
 
-   private:
-      CallbackType DataExtractCallback;
-      vector<Point*> ExternalPoints;
 
-      void Normalize(double *MinGlobalDimensions, double *MaxGlobalDimensions);
-};
+/**
+ * Back-end call to receive the clustering parameters from the front-end.
+ */
+void TDBSCANCore::Recv_Configuration (void)
+{
+  char *XML, *Input, *Output;
+  int tag, Verb, Reconstruct;
+  PACKET_new (p);
 
-#endif /* __CLUSTERING_BACKEND_ONLINE_H__ */
+  /* Receive clustering configuration from the front-end */
+  STREAM_recv (stClustering, &tag, p, TAG_CLUSTERING_CONFIG);
+  PACKET_unpack (p, "%lf %d %s %s %s %d %d", &Epsilon, &MinPoints, &XML, &Input, &Output, &Verb, &Reconstruct);
+  PACKET_delete (p);
+
+  MinPoints               = 3;
+  ClusteringDefinitionXML = string (XML);
+  InputTraceName          = string (Input);
+  OutputFileName          = string (Output);
+  Verbose                 = (Verb == 1);
+  ReconstructTrace        = (Reconstruct == 1);
+  xfree (XML);
+  xfree (Input);
+  xfree (Output);
+}
+

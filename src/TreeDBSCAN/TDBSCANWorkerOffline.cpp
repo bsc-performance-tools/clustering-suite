@@ -25,7 +25,7 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                       $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
@@ -45,23 +45,23 @@ using cepba_tools::Timer;
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 
-#include "ClusteringBackEndOffline.h"
-#include "ClusteringTags.h"
+#include "TDBSCANWorkerOffline.h"
+#include "TDBSCANTags.h"
 
 /**
  * Initializes the clustering library for interactive use.
  * @param libClustering Instance of the clustering library.
  */
-bool ClusteringBackEndOffline::InitLibrary (void)
+bool TDBSCANWorkerOffline::InitLibrary (void)
 {
 
   /* Initialize the clustering library */
   if (!libClustering->InitClustering (ClusteringDefinitionXML,
                                       Epsilon,
                                       MinPoints,
-                                      (Protocol::WhoAmI() == 0),
+                                      (Protocol::WhoAmI() == 0), // true == Root task
                                       Protocol::WhoAmI(),
-                                      Protocol::NumBackEnds())) // true == Root Task
+                                      Protocol::NumBackEnds())) 
   {
     ostringstream Messages;
     Messages << "Error setting up clustering library: " << libClustering->GetErrorMessage() << endl;
@@ -81,7 +81,7 @@ bool ClusteringBackEndOffline::InitLibrary (void)
  * @param libClustering Instance of the clustering library.
  * @return true on success; false otherwise.
  */
-bool ClusteringBackEndOffline::ExtractData (void)
+bool TDBSCANWorkerOffline::ExtractData (void)
 {
   ostringstream Messages;
 
@@ -116,7 +116,7 @@ bool ClusteringBackEndOffline::ExtractData (void)
  * Analyzes the data extracted from the Paraver trace.
  * @return true on success; false otherwise.
  */
-bool ClusteringBackEndOffline::AnalyzeData (void)
+bool TDBSCANWorkerOffline::AnalyzeData (void)
 {
   cepba_tools::Timer t;
   t.begin();
@@ -138,7 +138,7 @@ bool ClusteringBackEndOffline::AnalyzeData (void)
  * Prints the output plots and reconstructs the trace if necessary.
  * @return true on success; false otherwise.
  */
-bool ClusteringBackEndOffline::ProcessResults (void)
+bool TDBSCANWorkerOffline::ProcessResults (Support &GlobalSupport)
 {
   /* Print the local model */
   ostringstream ModelTitle, Messages;
@@ -185,7 +185,7 @@ bool ClusteringBackEndOffline::ProcessResults (void)
     /* Print the data plots */
     system_messages::information ("Printing global data plot script\n");
 
-    if (!libClustering->PrintPlotScripts (OutputDataFileName, "", false) ) // false = Global Classification
+    if (!libClustering->PrintPlotScripts (FinalClusteringFileName, "", false) ) // false = Global Classification
     {
       Messages.str ("");
       Messages << "Error printing global data plot scripts: " << libClustering->GetErrorMessage() << endl;
@@ -211,7 +211,7 @@ bool ClusteringBackEndOffline::ProcessResults (void)
       system_messages::show_timer ("Trace reconstruction time", t.end() );
     }
 
-    if (!libClustering->FlushClustersInformation (ClustersInformationFileName) )
+    if (!libClustering->FlushClustersInformation (FinalClustersInformationFileName) )
     {
       Messages.str ("");
       Messages << "Error writing clusters information file: " << libClustering->GetErrorMessage() << endl;

@@ -32,8 +32,8 @@
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef __TREE_DBSCAN_FE_H__
-#define __TREE_DBSCAN_FE_H__
+#ifndef __TDBSCAN_FE_H__
+#define __TDBSCAN_FE_H__
 
 #define HELP                                                                        \
    "\n"                                                                             \
@@ -73,4 +73,4 @@
 void ReadArgs  (int argc, char *argv[]);
 void PrintUsage(char* ApplicationName);
 
-#endif /* __TREE_DBSCAN_FE_H__ */
+#endif /* __TDBSCAN_FE_H__ */

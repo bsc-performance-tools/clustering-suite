@@ -25,33 +25,42 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                        $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#include <BackEnd.h>
-#include "ClusteringBackEndOffline.h"
+#ifndef __TDBSCAN_FILTER_H__
+#define __TDBSCAN_FILTER_H__
 
-/**
- * The back-end application loads the TreeDBSCAN protocol and waits for 
- * the front-end to start the analysis.
- * @param argc Number of arguments.
- * @param argv Array of arguments.
- * @return 0 on success; -1 otherwise.
- */ 
-int main(int argc, char *argv[])
-{
-   BackEnd *BE = new BackEnd();
-   BE->Init(argc, argv);
+#include <mrnet/NetworkTopology.h>
+#include <HullModel.hpp>
 
-   BackProtocol *protClustering = new ClusteringBackEndOffline();
-   BE->LoadProtocol( protClustering );
+#include <vector>
+using std::vector;
 
-   BE->Loop();
+using namespace MRN;
 
-   return 0;
+
+#define TOP_FILTER(top_info)    (top_info.get_NumSiblings() == 0)
+#define BOTTOM_FILTER(top_info) (top_info.get_NumChildren() == 0)
+#define FILTER_ID(top_info)     (top_info.get_Rank())
+
+extern "C" {
+
+void Init(const TopologyLocalInfo &top_info);
+
+/*
+void MergeAlltoAll(vector<HullModel*> &ClustersHulls,
+                   vector<HullModel*> &MergedModel,
+                   double              Epsilon,
+                   int                 MinPoints);
+*/
+
+void NewMerge(HullModel *ChildHull, double Epsilon, int MinPoints);
+
 }
 
+#endif /* __TDBSCAN_FILTER_H__ */

@@ -54,6 +54,7 @@ class HullModel
     HullModel(ConvexHullModel* Model);
 
     HullModel(long long  Density,
+              long long  TotalTime,
               int        NumPoints,
               int        NumDimensions,
               long long *Instances,
@@ -63,6 +64,7 @@ class HullModel
     ~HullModel(void);
 
     void Serialize(long long  &Density,
+                   long long  &TotalTime,
                    int        &NumPoints,
                    int        &NumDimensions,
                    long long *&Instances,
@@ -73,7 +75,8 @@ class HullModel
 
     ConvexHullModel* const Model(void);
 
-    int  Density(void);
+    long long Density(void);
+    long long TotalTime();
 
     int  Size(void);
 
@@ -81,6 +84,14 @@ class HullModel
 
     bool Flush(ostream&     str,
                cluster_id_t id);
+};
+
+struct SortHullsByTime
+{
+    bool operator()(HullModel * const & a, HullModel * const & b) const
+    {
+        return a->TotalTime() > b->TotalTime();
+    }
 };
 
 #endif

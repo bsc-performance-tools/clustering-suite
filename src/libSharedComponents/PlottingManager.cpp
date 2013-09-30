@@ -151,6 +151,11 @@ bool PlottingManager::PrintPlots(string             PlotsDataFileName,
 
   this->PrintingModels = PrintingModels;
 
+  /* DEBUG
+  cout << "Printing Plot scripts. Prefix: " << PlotsFileNamePrefix << endl;
+  cout << "PrintingModels = " << this->PrintingModels << endl;
+  */
+
   /* Check the paths */
   string DataFileName(basename((char*) PlotsDataFileName.c_str()));
 
@@ -584,8 +589,11 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
 
   if (!OutputStream)
   {
+    ostringstream ErrorMessageStr;
+    ErrorMessageStr << "unable to open script file (" << OutputFileName << ")";
+
     SetError(true);
-    SetErrorMessage("unable to open script file", strerror(errno));
+    SetErrorMessage(ErrorMessageStr.str().c_str(), strerror(errno));
     return false;
   }
 
@@ -603,6 +611,10 @@ bool PlottingManager::PrintSinglePlot(string             FileNamePrefix,
   { /* CHECK THIS!! */
     OutputStream << "\"" << Title << "\"" << endl;
   }
+
+  /* DEBUG
+  cout << "PrintSinglePlot. Title = " << Title << ". PrintingModels = " << PrintingModels << endl;
+  */
 
   OutputStream << "set xlabel \"" << Definition->XMetricTitle << "\"" << endl;
   OutputStream << "set ylabel \"" << Definition->YMetricTitle << "\"" << endl;
@@ -835,6 +847,10 @@ PlottingManager::Write2D_Definition(ostream& str,
                                     string   ClusterName,
                                     string   DataFileName)
 {
+  /* DEBUG
+  cout << "Write2D_Definition. PrintingModels = " << PrintingModels << endl;
+  */
+
   if (!PrintingModels)
   {
     str << "\'" << DataFileName << "\' using ";

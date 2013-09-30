@@ -25,29 +25,58 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                       $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef __CLUSTERING_TAGS_H__
-#define __CLUSTERING_TAGS_H__
+#ifndef __TDBSCAN_WORKER_H__
+#define __TDBSCAN_WORKER_H__
 
-#include <MRNet_tags.h>
+#include <vector>
+#include <libDistributedClustering.hpp>
+#include <BackProtocol.h>
+#include "TDBSCANCore.h"
+#include "Support.h"
 
-/* Define here all message tags used during the TreeDBSCAN protocol */
-enum 
+/**
+ * This class implements the back-end side of the TDBSCAN protocol.
+ */
+class TDBSCANWorker : public TDBSCANCore, public BackProtocol
 {
-   TAG_CLUSTERING_CONFIG=FirstProtocolTag,
-   TAG_HULL,
-   TAG_ALL_HULLS,
-   TAG_ALL_HULLS_SENT,
-   TAG_NOISE,
-   TAG_ALL_NOISE_SENT,
-   TAG_XCHANGE_DIMENSIONS,
-   TAG_STATISTICS
+   public:
+      TDBSCANWorker();
+
+      string ID() { return "TDBSCAN"; }
+      void   Setup(void);
+      int    Run  (void);
+
+      virtual bool InitLibrary(void) = 0;
+      virtual bool ExtractData(void) = 0;
+      virtual bool AnalyzeData(void) = 0;
+      virtual bool ProcessResults(Support &GlobalSupport) { return true; };
+
+   protected:
+      libDistributedClustering *libClustering;
+      vector<HullModel*> LocalModel;
+
+      /* Names of the output scripts and plots */
+      string GlobalModelDataFileName;
+      string GlobalModelPlotFileNamePrefix;
+
+      string LocalModelDataFileName;
+      string LocalModelPlotFileNamePrefix;
+
+      string OutputLocalClusteringFileName;
+      string OutputGlobalClusteringFileName;
+
+      string FinalClusteringFileName;
+      string FinalClustersInformationFileName;
+
+   private:
+      void CheckOutputFile();
 };
 
-#endif /* __CLUSTERING_TAGS_H__ */
+#endif /* __TDBSCAN_WORKER_H__ */

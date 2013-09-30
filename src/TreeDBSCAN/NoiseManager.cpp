@@ -36,7 +36,7 @@
 #include <vector>
 #include <stdlib.h>
 #include "NoiseManager.h"
-#include "ClusteringTags.h"
+#include "TDBSCANTags.h"
 #include "Utils.h"
 
 using std::vector;
@@ -45,7 +45,6 @@ using std::cout;
 using std::endl;
 
 
-#if defined(FRONTEND) || defined(FILTER)
 /*****************************************************************\
  *                  FRONT-END & FILTER INTERFACE                 *
 \*****************************************************************/
@@ -86,13 +85,15 @@ NoiseManager::NoiseManager(double Epsilon, int MinPoints)
  */
 void NoiseManager::Serialize(int StreamID, std::vector< PacketPtr >& OutputPackets)
 {
-   int          DimensionsCount   = 0;
-   double      *SerialPoints      = NULL;
-   unsigned int SerialPointsCount = 0;
+   int          NoiseCount           = 0;
+   int          DimensionsCount      = 0;
+   double      *SerialPoints         = NULL;
+   unsigned int SerialPointsCount    = 0;
+   long long   *SerialNoiseDurations = NULL;
 
-   Serialize(DimensionsCount, SerialPoints, SerialPointsCount);
+   Serialize(NoiseCount, DimensionsCount, SerialPoints, SerialPointsCount, SerialNoiseDurations);
 
-   PacketPtr new_packet1( new Packet( StreamID, TAG_NOISE, "%d %alf", DimensionsCount, SerialPoints, SerialPointsCount) );
+   PacketPtr new_packet1( new Packet( StreamID, TAG_NOISE, "%d %alf %ald", DimensionsCount, SerialPoints, SerialPointsCount, SerialNoiseDurations, NoiseCount) );
    if (SerialPoints != NULL)
    {
       new_packet1->set_DestroyData(true);
@@ -111,13 +112,15 @@ void NoiseManager::Serialize(int StreamID, std::vector< PacketPtr >& OutputPacke
  * @param CountRemainingNoise The number of remaining noise points after clustering.
  * @return true on success; false otherwise.
  */
-bool NoiseManager::ClusterNoise(vector<const Point*>& Points, vector<HullModel*>& NoiseModel, int &CountRemainingNoise)
+
+bool NoiseManager::ClusterNoise(vector<const Point*>& Points, vector<long long>& Durations, vector<HullModel*>& NoiseModel, int &CountRemainingNoise)
 {
-   int rc = libClustering->ClusterAnalysis(Points, NoiseModel);
+   int rc = libClustering->ClusterAnalysis(Points, Durations, NoiseModel);
 
    CountRemainingNoise = 0;
    vector<const Point*> RemainingNoisePoints;
-   if (libClustering->GetNoisePoints(RemainingNoisePoints))
+   vector<long long>    RemainingNoiseDurations;
+   if (libClustering->GetNoisePoints(RemainingNoisePoints, RemainingNoiseDurations))
    {
       CountRemainingNoise = RemainingNoisePoints.size();
    }
@@ -132,14 +135,15 @@ bool NoiseManager::ClusterNoise(vector<const Point*>& Points, vector<HullModel*>
  * @param NoisePoints Array where the points are stored.
  * @return the number of noise points unpacked.
  */
-int NoiseManager::Unpack(PACKET_PTR in_packet, vector<const Point *> &NoisePoints)
+int NoiseManager::Unpack(PACKET_PTR in_packet, vector<const Point *> &NoisePoints, vector<long long> &NoiseDurations)
 {
-   int     dimsCount  = 0, dimsValuesCount = 0, countPoints = 0;
-   double *dimsValues = NULL;
+   int        dimsCount      = 0, dimsValuesCount = 0, countPoints = 0, noiseCount = 0;
+   double    *dimsValues     = NULL;
+   long long *noiseDurations = NULL;
 
    if (in_packet == NULL) return 0;
 
-   PACKET_unpack(in_packet, "%d %alf", &dimsCount, &dimsValues, &dimsValuesCount);
+   PACKET_unpack(in_packet, "%d %alf %ald", &dimsCount, &dimsValues, &dimsValuesCount, &noiseDurations, &noiseCount);
 
    /* Build clustering points from the dimensions values */
    for (unsigned int i=0; i<dimsValuesCount; i+=dimsCount)
@@ -154,15 +158,15 @@ int NoiseManager::Unpack(PACKET_PTR in_packet, vector<const Point *> &NoisePoint
       const Point *childPoint = new Point( PointDimensions );
       /* Accumulate this noise point in a vector */
       NoisePoints.push_back( childPoint );
+      NoiseDurations.push_back( noiseDurations[countPoints - 1] );
    }
+
    xfree( dimsValues );
+   xfree( noiseDurations );
    return countPoints;
 }
 
-#endif /* FRONTEND || FILTER */
 
-
-#if defined(BACKEND)
 /*****************************************************************\
  *                       BACK-END INTERFACE                      *
 \*****************************************************************/
@@ -189,18 +193,18 @@ NoiseManager::NoiseManager(libDistributedClustering *libClustering)
  */
 void NoiseManager::Serialize(Stream *OutputStream)
 {
-   int          DimensionsCount   = 0;
-   double      *SerialPoints      = NULL;
-   unsigned int SerialPointsCount = 0;
+   int          NoiseCount           = 0;
+   int          DimensionsCount      = 0;
+   double      *SerialPoints         = NULL;
+   unsigned int SerialPointsCount    = 0;
+   long long   *SerialNoiseDurations = NULL;
 
-   Serialize(DimensionsCount, SerialPoints, SerialPointsCount);
+   Serialize(NoiseCount, DimensionsCount, SerialPoints, SerialPointsCount, SerialNoiseDurations);
 
-   STREAM_send(OutputStream, TAG_NOISE, "%d %alf", DimensionsCount, SerialPoints, SerialPointsCount);
+   STREAM_send(OutputStream, TAG_NOISE, "%d %alf %ald", DimensionsCount, SerialPoints, SerialPointsCount, SerialNoiseDurations, NoiseCount);
    xfree(SerialPoints);
    STREAM_send(OutputStream, TAG_ALL_NOISE_SENT, "");
 }
-
-#endif /* BACKEND */
 
 
 /*****************************************************************\
@@ -216,19 +220,21 @@ void NoiseManager::Serialize(Stream *OutputStream)
  * @param SerialPointsCount Size of the points dimensions array.
  * @return the above 3 parameters by reference.
  */
-void NoiseManager::Serialize(int &DimensionsCount, double *&SerialPoints, unsigned int &SerialPointsCount)
+void NoiseManager::Serialize(int &NoiseCount, int &DimensionsCount, double *&SerialPoints, unsigned int &SerialPointsCount, long long *&SerialNoiseDurations)
 {
    vector<const Point*> NoisePoints;
+   vector<long long>    NoiseDurations;
 
    DimensionsCount   = 0;
    SerialPoints      = NULL;
    SerialPointsCount = 0;
 
    /* Retrieve the remaining noise points */
-   if (!libClustering->GetNoisePoints(NoisePoints))
+   if (!libClustering->GetNoisePoints(NoisePoints, NoiseDurations))
    {
       cerr << "ERROR: NoiseManager::Serialize: Error retrieving noise points: " << libClustering->GetErrorMessage() << endl;
       NoisePoints.clear();
+      NoiseDurations.clear();
    }
 
    /* DEBUG -- Fill with fake points
@@ -242,26 +248,28 @@ void NoiseManager::Serialize(int &DimensionsCount, double *&SerialPoints, unsign
    NoisePoints.push_back( pt1 );
    NoisePoints.push_back( pt2 ); */
 
-   unsigned int NoisePointsCount = NoisePoints.size();
-   if (NoisePointsCount > 0)
+   NoiseCount = NoisePoints.size();
+   if (NoiseCount > 0)
    {
-      DimensionsCount   = NoisePoints[0]->size();
-      SerialPointsCount = DimensionsCount * NoisePointsCount;
-      SerialPoints      = (double *)malloc(SerialPointsCount * sizeof(double));
+      DimensionsCount      = NoisePoints[0]->size();
+      SerialPointsCount    = DimensionsCount * NoiseCount;
+      SerialPoints         = (double *)malloc(SerialPointsCount * sizeof(double));
+      SerialNoiseDurations = (long long *)malloc(NoiseCount * sizeof(long long));
 
       if (SerialPoints == NULL)
       {
-         cerr << "ERROR: NoiseManager::Serialize: Not enough memory to serialize " << NoisePointsCount << " noise points" << endl;
+         cerr << "ERROR: NoiseManager::Serialize: Not enough memory to serialize " << NoiseCount << " noise points" << endl;
          exit(EXIT_FAILURE);
       }
 
       /* Store the points dimensions in a linear array */
-      for (unsigned int i=0; i<NoisePointsCount; i++)
+      for (unsigned int i=0; i<NoiseCount; i++)
       {
          for (unsigned int j=0; j<DimensionsCount; j++)
          {
             SerialPoints[ (i*DimensionsCount)+j ] = (*(NoisePoints[i]))[j];
          }
+         SerialNoiseDurations[i] = NoiseDurations[i];
       }
    }
 }

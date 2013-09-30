@@ -341,9 +341,11 @@ bool libDistributedClustering::InitClustering(double Epsilon,
  *         otherwise
  */
 bool libDistributedClustering::ClusterAnalysis(const vector<const Point*> &Points,
+                                               const vector<long long>    &Durations,
                                                vector<HullModel*>         &ClusterModels)
 {
   if (!Implementation->ClusterAnalysis(Points,
+                                       Durations,
                                        ClusterModels))
   {
     Error        = true;
@@ -367,9 +369,9 @@ bool libDistributedClustering::ClusterAnalysis(const vector<const Point*> &Point
  *
  * \return True if the points were correctly returned, false otherwise
  */
-bool libDistributedClustering::GetNoisePoints(vector<const Point*>& NoisePoints)
+bool libDistributedClustering::GetNoisePoints(vector<const Point*>& NoisePoints, vector<long long>& NoiseDurations)
 {
-  if (!Implementation->GetNoisePoints(NoisePoints))
+  if (!Implementation->GetNoisePoints(NoisePoints, NoiseDurations))
   {
     Error        = true;
     ErrorMessage = Implementation->GetLastError();
@@ -380,6 +382,103 @@ bool libDistributedClustering::GetNoisePoints(vector<const Point*>& NoisePoints)
   {
     Warning = true;
     WarningMessage = Implementation->GetLastWarning();
+  }
+
+  return true;
+}
+
+/**
+ * Adds a new burst to the 'TraceData' container, extracted from external
+ * sources
+ *
+ * \param TaskId     Task identifier of the burst added
+ * \param ThreadId   Thread identifier of the burst added
+ * \param Line       Line in the tracefile UNUSED
+ * \param BeginTime  Initial time where the burst appears in the application
+ *                   execution
+ * \param EndTime    Final time of the current burst
+ * \param Duration   Duration of the burst
+ * \param EventsData Map containing the event type/value pairs related to the
+ *                   current burst
+ *
+ * \return True if the burst was correctly added to the Data container, false
+ *         otherwise
+ */
+bool libDistributedClustering::NewBurst(task_id_t                         TaskId,
+                                        thread_id_t                       ThreadId,
+                                        line_t                            Line,
+                                        timestamp_t                       BeginTime,
+                                        timestamp_t                       EndTime,
+                                        duration_t                        BurstDuration,
+                                        map<event_type_t, event_value_t>& EventsData)
+{
+  if (!Implementation->NewBurst(TaskId,
+                                ThreadId,
+                                Line,
+                                BeginTime,
+                                EndTime,
+                                BurstDuration,
+                                EventsData))
+  {
+    Error    = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Returns the ranges of the clustering parameters observed in the current
+ * instance of the library
+ *
+ * \param MinValues Output vector containing the minimum values observed in
+ *                  the clustering parameters of the current instance
+ * \param MaxValues Output vector containing the maximum values observed in
+ *                  the clustering parameters of the current instance
+ *
+ */
+void libDistributedClustering::GetParameterRanges(vector<double>& MinValues,
+                                                  vector<double>& MaxValues)
+{
+  Implementation->GetParameterRanges(MinValues, MaxValues);
+
+  return;
+}
+
+/**
+ * Normalize clustering dimension of the data bursts stored in the current
+ * instance of the library using the ranges provided
+ *
+ * \param MinValues Minimum values of the clustering parameters
+ * \param MaxValues Maximum values of the clustering parameters
+ *
+ */
+void libDistributedClustering::NormalizeData(vector<double>& MinValues,
+                                             vector<double>& MaxValues)
+{
+  Implementation->NormalizeData(MinValues, MaxValues);
+
+  return;
+}
+
+/**
+ * Returns all the average statistics accumulated on each cluster obtained
+ * after classifying the data (the final partition), so as to aggregate the
+ * results with the values of all workers
+ *
+ * \param Statistics I/O vector containing the ClusterStatistics objects that
+ *                   aggregate the average statistics
+ *
+ * \return True on success, false otherwise
+ */
+bool libDistributedClustering::GetClusterStatistics(vector<ClusterStatistics*>& Statistics)
+{
+  if (!Implementation->GetClusterStatistics(Statistics))
+  {
+    Error    = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
   }
 
   return true;
@@ -400,11 +499,15 @@ bool libDistributedClustering::GetNoisePoints(vector<const Point*>& NoisePoints)
  * \return True, if the information was succesfully retrieved, false otherwise
  */
 bool libDistributedClustering::GetFullBurstsInformation(vector<Point*>       &Points,
+/*
                                                         vector<task_id_t>    &TaskIDs,
                                                         vector<thread_id_t>  &ThreadIDs,
+*/
+                                                        vector<timestamp_t>  &BeginTimes,
+                                                        vector<timestamp_t>  &EndTimes,
                                                         vector<cluster_id_t> &ClusterIDs)
 {
-  if (!Implementation->GetFullBurstsInformation(Points, TaskIDs, ThreadIDs, ClusterIDs))
+  if (!Implementation->GetFullBurstsInformation(Points, /* TaskIDs, ThreadIDs, */ BeginTimes, EndTimes, ClusterIDs))
   {
     Error        = true;
     ErrorMessage = Implementation->GetLastError();
@@ -467,6 +570,40 @@ bool libDistributedClustering::PrintPlotScripts(string DataFileName,
   if (!Implementation->PrintPlotScripts (DataFileName,
                                          ScriptsFileNamePrefix,
                                          LocalPartition))
+  {
+    Error = true;
+    ErrorMessage = Implementation->GetLastError();
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Generates the scripts that print the scatters plots merging all the local
+ * partitions of the backends
+ *
+ * \param DataFileName          String with the filenames where the data is
+ *                              stored
+ * \param ScriptsFileNamePrefix Base name to be used in the different GNUplot
+ *                              scripts
+ * \param ClustersCounts        Number of different clusters detected by
+ *                              the cluster algorithm
+ * \param PrintingModels        True when printing cluster models instead of
+ *                              data points
+ *
+ * \return True if the plots scripts and data files were written correctly,
+ *         false otherwise
+ */
+bool libDistributedClustering::PrintGlobalPlotScripts(string       DataFileName,
+                                                      string       ScriptsFileNamePrefix,
+                                                      unsigned int ClustersCount,
+                                                      bool         PrintingModels)
+{
+  if (!Implementation->PrintGlobalPlotScripts (DataFileName,
+                                               ScriptsFileNamePrefix,
+                                               ClustersCount,
+                                               PrintingModels))
   {
     Error = true;
     ErrorMessage = Implementation->GetLastError();

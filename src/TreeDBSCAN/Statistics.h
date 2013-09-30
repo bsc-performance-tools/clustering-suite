@@ -13,7 +13,7 @@
 using std::vector;
 using std::set;
 using std::map;
-using std::ofstream;
+using std::ostream;
 using std::string;
 using std::pair;
 using cepba_tools::Timer;
@@ -21,7 +21,7 @@ using cepba_tools::Timer;
 class Statistics
 {
   public:
-    Statistics(int ID);
+    Statistics(int ID, bool node_is_backend);
 
     void IncreaseInputHulls   (int num_hulls);
     void IncreaseOutputHulls  (int num_hulls);
@@ -38,12 +38,13 @@ class Statistics
     void Serialize(int StreamID, vector<PacketPtr> &OutputPackets);
 	void Unpack(PACKET_PTR InputPacket);
 
-    void DumpAllStats(ofstream &Output);
+    void DumpAllStats(ostream &Output);
 
     void Reset(void);
 
   private:
-    int CurrentNodeID;
+    int  CurrentNodeID;
+    bool CurrentNodeIsBackend;
 
     int NumInputHulls;
     int NumOutputHulls;

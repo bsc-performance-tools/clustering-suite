@@ -25,57 +25,38 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                       $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef __CLUSTERING_BACKEND_H__
-#define __CLUSTERING_BACKEND_H__
+#ifndef __TDBSCAN_WORKER_ONLINE_H__
+#define __TDBSCAN_WORKER_ONLINE_H__
 
-#include <vector>
-#include <libDistributedClustering.hpp>
-#include <BackProtocol.h>
-#include "ClusteringCore.h"
+#include "TDBSCANWorker.h"
 
 /**
- * This class implements the back-end side of the TreeDBSCAN protocol.
+ * This class implements an specific back-end protocol that
+ * extracts data from an on-line tracing system.
  */
-class ClusteringBackEnd : public ClusteringCore, public BackProtocol
+class TDBSCANWorkerOnline: public TDBSCANWorker
 {
    public:
-      ClusteringBackEnd();
+      typedef void (*FetchCallback)(libDistributedClustering *libClustering);
+      typedef void (*FeedCallback) (vector<timestamp_t> &BeginTimes, vector<timestamp_t> &EndTimes, vector<cluster_id_t> &ClusterIDs, vector<int> &BurstsSupport);
 
-      string ID() { return "CLUSTERING"; }
-      void   Setup(void);
-      int    Run  (void);
+      TDBSCANWorkerOnline(FetchCallback DataExtractCallback, FeedCallback DataFeedCallback);
 
-      virtual bool InitLibrary(void) = 0;
-      virtual bool ExtractData(void) = 0;
-      virtual bool AnalyzeData(void) = 0;
-      virtual bool ProcessResults(void) { };
-
-   protected:
-      libDistributedClustering *libClustering;
-      vector<HullModel*> LocalModel;
-
-      /* Names of the output scripts and plots */
-      string GlobalModelDataFileName;
-      // string GlobalModelPlotFileName;
-      string GlobalModelPlotFileNamePrefix;
-
-      string LocalModelDataFileName;
-      // string LocalModelPlotFileName;
-      string LocalModelPlotFileNamePrefix;
-
-      string OutputDataFileName;
-      string OutputLocalClusteringFileName;
-      string ClustersInformationFileName;
+      bool InitLibrary();
+      bool ExtractData();
+      bool AnalyzeData();
+      bool ProcessResults(Support &GlobalSupport);
 
    private:
-      void CheckOutputFile();
+      FetchCallback DataExtractCallback;
+      FeedCallback  DataFeedCallback;
 };
 
-#endif /* __CLUSTERING_BACKEND_H__ */
+#endif /* __TDBSCAN_WORKER_ONLINE_H__ */

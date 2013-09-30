@@ -25,42 +25,52 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                    $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef __CLUSTERING_FILTER_H__
-#define __CLUSTERING_FILTER_H__
-
-#include <mrnet/NetworkTopology.h>
-#include <HullModel.hpp>
+#ifndef __TDBSCAN_ROOT_H__
+#define __TDBSCAN_ROOT_H__
 
 #include <vector>
-using std::vector;
+#include <FrontProtocol.h>
+#include "TDBSCANCore.h"
+#include "Statistics.h"
+#include "ClustersInfo.h"
 
-using namespace MRN;
+/**
+ * This class implements the front-end side of the TDBSCAN protocol,
+ * which is the same both for the on-line and off-line back-ends.
+ */
+class TDBSCANRoot : public TDBSCANCore, public FrontProtocol
+{
+  private:
+//    libDistributedClustering *libClustering;
 
+  public:
+    TDBSCANRoot (double Eps,
+                 int    MinPts,
+                 string ClusteringDefinitionXML,
+                 string InputTraceName,
+                 string OutputFileName,
+                 bool   Verbose,
+                 bool   ReconstructTrace);
 
-#define TOP_FILTER(top_info)    (top_info.get_NumSiblings() == 0)
-#define BOTTOM_FILTER(top_info) (top_info.get_NumChildren() == 0)
-#define FILTER_ID(top_info)     (top_info.get_Rank())
+    TDBSCANRoot (string ClusteringDefinitionXML,
+                 bool   Verbose);
 
-extern "C" {
+    string ID()
+    {
+      return "TDBSCAN";
+    }
+    void Setup (void);
+    int  Run  (void);
 
-void Init(const TopologyLocalInfo &top_info);
+    void PrintGraphStats (Statistics &ClusteringStats);
+};
 
-/*
-void MergeAlltoAll(vector<HullModel*> &ClustersHulls,
-                   vector<HullModel*> &MergedModel,
-                   double              Epsilon,
-                   int                 MinPoints);
-*/
+#endif /* __TDBSCAN_ROOT_H__ */
 
-void NewMerge(HullModel *ChildHull, double Epsilon, int MinPoints);
-
-}
-
-#endif /* __CLUSTERING_FILTER_H__ */

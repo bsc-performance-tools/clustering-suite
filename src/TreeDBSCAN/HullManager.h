@@ -67,6 +67,7 @@ class HullManager
       vector<HullModel*> &HullsList, 
       int                &NumberOfHulls,
       long long         *&DensityArray,
+      long long         *&TotalTimeArray,
       int               *&NumberOfPointsArray,
       int               *&NumberOfDimensionsArray,
       int                &TotalNumberOfPoints,

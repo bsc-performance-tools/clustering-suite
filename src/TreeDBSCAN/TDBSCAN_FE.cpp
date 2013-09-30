@@ -25,7 +25,7 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                       $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
@@ -35,8 +35,8 @@
 #include <FrontEnd.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "Tree_DBSCAN_FE.h"
-#include "ClusteringFrontEnd.h"
+#include "TDBSCAN_FE.h"
+#include "TDBSCANRoot.h"
 
 #include <iostream>
 using std::cout;
@@ -55,18 +55,20 @@ string InputTraceName;           /* Input trace name */
 string OutputFileName;           /* Data extracted from input trace */
 bool   Verbose          = true;
 bool   ReconstructTrace = false;
-string TREE_DBSCAN_HOME;
+string TDBSCAN_HOME;
 
 
 /**
  * The front-end application parses the configuration parameters,
- * loads the TreeDBSCAN protocol and starts the analysis right away.
+ * loads the TDBSCAN protocol and starts the analysis right away.
  * @param argc Number of arguments.
  * @param argv Array of arguments.
  * @return 0 on success; -1 otherwise.
  */
 int main (int argc, char *argv[])
 {
+  int status;
+
   /* Parse input argumens */
   ReadArgs (argc, argv);
 
@@ -74,18 +76,18 @@ int main (int argc, char *argv[])
   FrontEnd *FE = new FrontEnd();
   const char **BE_argv = (const char **) (& (argv[1]) );
 
-  if (FE->Init (string (TREE_DBSCAN_HOME + "/bin/Tree_DBSCAN_BE").c_str(), BE_argv) == -1)
+  if (FE->Init (string (TDBSCAN_HOME + "/bin/TDBSCAN_BE").c_str(), BE_argv) == -1)
   {
     cerr << "MRNet front-end could not be initialized due to previous errors." << endl;
     exit (EXIT_FAILURE);
   }
 
   /* Load the clustering protocol */
-  FrontProtocol *protClustering = new ClusteringFrontEnd (Epsilon, MinPoints, ClusteringDefinitionXML, InputTraceName, OutputFileName, Verbose, ReconstructTrace);
+  FrontProtocol *protClustering = new TDBSCANRoot (Epsilon, MinPoints, ClusteringDefinitionXML, InputTraceName, OutputFileName, Verbose, ReconstructTrace);
   FE->LoadProtocol ( protClustering );
 
   /* Tell the back-ends to run the clustering protocol */
-  FE->Dispatch ("CLUSTERING");
+  FE->Dispatch ("TDBSCAN", status);
 
   /* Shutdown the network */
   FE->Shutdown();
@@ -101,7 +103,7 @@ int main (int argc, char *argv[])
  */
 void ReadArgs (int argc, char *argv[])
 {
-  char *env_TREE_DBSCAN_HOME     = NULL;
+  char *env_TDBSCAN_HOME     = NULL;
   bool  ClusteringDefinitionRead = false;
   bool  InputTraceNameRead       = false;
   bool  OutputFileNameRead       = false;
@@ -201,16 +203,16 @@ void ReadArgs (int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  env_TREE_DBSCAN_HOME = getenv ("TREE_DBSCAN_HOME");
+  env_TDBSCAN_HOME = getenv ("TDBSCAN_HOME");
 
-  if (env_TREE_DBSCAN_HOME == NULL)
+  if (env_TDBSCAN_HOME == NULL)
   {
-    cerr << "ERROR: Missing environment variable 'TREE_DBSCAN_HOME'" << endl;
-    cerr << "Run 'source etc/sourceme.sh' in the Tree-DBSCAN installation directory and try again." << endl;
+    cerr << "ERROR: Missing environment variable 'TDBSCAN_HOME'" << endl;
+    cerr << "Run 'source etc/sourceme.sh' in the TDBSCAN installation directory and try again." << endl;
     exit (EXIT_FAILURE);
   }
 
-  TREE_DBSCAN_HOME = string (env_TREE_DBSCAN_HOME);
+  TDBSCAN_HOME = string (env_TDBSCAN_HOME);
 
   /* Convert relative to absolute paths */
   string CWD = get_current_dir_name();

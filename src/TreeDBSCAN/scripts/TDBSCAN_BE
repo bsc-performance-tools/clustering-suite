@@ -2,6 +2,6 @@
 
 ulimit -c unlimited
 
-source @sub_PREFIX@/etc/Tree_DBSCAN_env.sh
+source @sub_PREFIX@/etc/TDBSCAN_env.sh
 
 $0.bin $@

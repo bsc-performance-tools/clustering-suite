@@ -118,6 +118,8 @@ class StatisticsContainer
 
     double       GetClusteringParameterMean(size_t i);
     double       GetExtrapolationMetricMean(size_t i);
+    size_t       GetExtrapolationMetricIndividuals(size_t i);
+    double       GetExtrapolationMetricStdDev_2(size_t i);
 
     bool operator<(const StatisticsContainer& other) const;
 
@@ -180,6 +182,8 @@ class ClusteringStatistics: public Error
     map<cluster_id_t, double>       GetDurationSums(void);
     map<cluster_id_t, size_t>       GetIndividuals(void);
     map<cluster_id_t, cluster_id_t> GetTranslationMap(void) { return TranslationMap; };
+
+    bool GetClusterStatistics(cluster_id_t ID, StatisticsContainer& Statistics);
 
 
     bool Flush(ostream& str);

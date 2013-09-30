@@ -51,7 +51,8 @@ instdir = $(includedir)
 
 inst_HEADERS = \
 	libDistributedClustering.hpp \
-	HullModel.hpp
+	HullModel.hpp \
+	ClusterStatistics.hpp
 
 libDistributedClustering_la_SOURCES = \
 	libDistributedClustering.hpp \
@@ -59,6 +60,8 @@ libDistributedClustering_la_SOURCES = \
 	libDistributedClusteringImplementation.hpp \
 	libDistributedClusteringImplementation.cpp \
 	HullModel.hpp \
-	HullModel.cpp 
+	HullModel.cpp \
+	ClusterStatistics.hpp \
+	ClusterStatistics.cpp
 
 

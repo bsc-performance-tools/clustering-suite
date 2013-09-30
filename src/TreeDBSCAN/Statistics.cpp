@@ -1,4 +1,4 @@
-#include "ClusteringTags.h"
+#include "TDBSCANTags.h"
 #include "Statistics.h"
 
 #include <iostream>
@@ -14,9 +14,10 @@ using std::endl;
 
 const char *StatisticsFormatString = "%ad %as %as";
 
-Statistics::Statistics(int ID)
+Statistics::Statistics(int ID, bool node_is_backend)
 {
-  CurrentNodeID = ID;
+  CurrentNodeID        = ID;
+  CurrentNodeIsBackend = node_is_backend;
   Reset();
 }
 
@@ -69,50 +70,46 @@ void Statistics::ClusteringTimeStop()
   ElapsedTimeClustering += ClusteringTimer.end();
 }
 
-#if defined(BACKEND)
 void Statistics::to_str(string &InStats, string &OutStats)
 {
   ostringstream Stats;
 
-  InStats = "";
+  InStats  = "";
   OutStats = "";
 
-  Stats.str("");
-  Stats << "Clustering points=" << NumInputPoints << "\\n"
-        << "Clustering time=" << ElapsedTimeClustering;
-  InStats = Stats.str();
+  if (CurrentNodeIsBackend)
+  {
+    Stats.str("");
+    Stats << "Clustering points=" << NumInputPoints << "\\n"
+          << "Clustering time=" << ElapsedTimeClustering;
+    InStats = Stats.str();
 
-  Stats.str("");
-  Stats << "Hulls=" << NumOutputHulls << "\\n"
-        << "Noise=" << NumOutputPoints;
-  OutStats = Stats.str();
-}
-#else
-void Statistics::to_str(string &InStats, string &OutStats)
-{
-  ostringstream Stats;
-
-  InStats = "";
-  OutStats = "";
-
-  Stats.str("");
-  Stats << "Sum hulls=" << NumInputHulls << "\\n"
-        << "Noise points=" << NumInputPoints << "\\n"
-        << "Noise time=" << ElapsedTimeClustering << "\\n"
-        << "Intersections=" << NumValidIntersects << "/" << NumTotalIntersects << " (" << (NumValidIntersects*100)/NumTotalIntersects << "%)";
+    Stats.str("");
+    Stats << "Hulls=" << NumOutputHulls << "\\n"
+          << "Noise=" << NumOutputPoints;
+    OutStats = Stats.str();
+  }
+  else
+  {
+    Stats.str("");
+    Stats << "Sum hulls=" << NumInputHulls << "\\n"
+          << "Noise points=" << NumInputPoints << "\\n"
+          << "Noise time=" << ElapsedTimeClustering << "\\n"
+          << "Intersections=" << NumValidIntersects << "/" << NumTotalIntersects << " (" << (NumValidIntersects*100)/NumTotalIntersects << "%)";
     if (NumValidIntersects > 0)
     {
       Stats << "\\nIntersection time=" << ElapsedTimeIntersecting << " (Avg=" << ElapsedTimeIntersecting/NumTotalIntersects << ")";
     }
-  InStats = Stats.str();
+    InStats = Stats.str();
 
-  Stats.str("");
-  Stats << "Hulls=" << NumOutputHulls << "\\n"
-        << "Noise=" << NumOutputPoints;
-  OutStats = Stats.str();
+    Stats.str("");
+    Stats << "Hulls=" << NumOutputHulls << "\\n"
+          << "Noise=" << NumOutputPoints;
+    OutStats = Stats.str();
+  }
 }
-#endif
 
+/* Common for backends and filters */
 void Statistics::Serialize(
   int    &NumberOfNodes,
   int   *&IDsArray,
@@ -145,7 +142,7 @@ void Statistics::Serialize(
     i ++;
   }
 
-  /* DEBUG
+  /* DEBUG 
   cerr << "NumberOfNodes=" << NumberOfNodes << endl;
   cerr << "IDsArray = [ ";
   for (i=0; i<NumberOfNodes; i++)
@@ -167,6 +164,7 @@ void Statistics::Serialize(
   cerr << "]" << endl; */
 }
 
+/* Backend */
 void Statistics::Serialize(STREAM *OutputStream)
 {
   int    NumberOfNodes   = 0;
@@ -191,6 +189,7 @@ void Statistics::Serialize(STREAM *OutputStream)
   free(OutStatsArray);
 }
 
+/* Filter */
 void Statistics::Serialize(int StreamID, vector<PacketPtr> &OutputPackets)
 {
   int    NumberOfNodes   = 0;
@@ -236,7 +235,8 @@ void Statistics::Unpack(PACKET_PTR InputPacket)
   free(OutStatsArray);
 }
 
-void Statistics::DumpAllStats(ofstream &Output)
+/* Frontend */
+void Statistics::DumpAllStats(ostream &Output)
 {
   map< int, pair<string, string> >::iterator it;
   for (it=NodeStats.begin(); it!=NodeStats.end(); ++it)

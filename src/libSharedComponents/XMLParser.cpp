@@ -612,7 +612,7 @@ bool XMLParser::ParseXMLExtrapolationParameters(xmlNodePtr NodeExtraParameters)
           ostringstream ErrorMessage;
 
           ErrorMessage << PCFParserErrorString;
-          ErrorMessage << ". \"all_counter\" attribute in node ";
+          ErrorMessage << ". \"all_counters\" attribute in node ";
           ErrorMessage << "'" << NODE_PR_PARAM << "' on line ";
           ErrorMessage << NodeExtraParameters->line << " requires the PCF of";
           ErrorMessage << " the input trace to read the available counters";

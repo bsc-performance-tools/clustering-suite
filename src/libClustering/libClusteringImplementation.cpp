@@ -127,7 +127,7 @@ bool libClusteringImplementation::ExecuteClustering(const vector<const Point*>& 
  * \return True if the classification was correctly applied, false otherwise
  */
 bool libClusteringImplementation::ClassifyData(const vector<const Point*> &Data,
-                                 Partition                  &DataPartition)
+                                               Partition                  &DataPartition)
 {
   if (Algorithm == NULL)
   {

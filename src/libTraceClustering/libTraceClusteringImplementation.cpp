@@ -36,6 +36,7 @@
 #include "libTraceClustering.hpp"
 
 #include <DBSCAN.hpp>
+#include <asa136.hpp>
 
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
@@ -620,6 +621,8 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   DBSCANCore.ComputeNeighbourhood(Data->GetClusteringPoints(), MinPoints, Distances);
   system_messages::verbose = verbose_state;
 
+  // exit(EXIT_SUCCESS);
+
   /* 10 different epsilons 1% to 10% "NOISE"
   for (size_t i = 0; i < Distances.size(); i++)
   {
@@ -803,6 +806,64 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   // cout << "Candidate MinEpsilon: idx = " << MaxIndex << " Value = " << Distances[MaxIndex] << endl;
 
   MinEpsilon        = Distances[MaxIndex];
+
+    /* 2013/05/30: EXPERIMENTAL -> Eps generation using K-Means! */
+  double* DistancesVect = new double[MaxIndex];
+  double* Centroids     = new double[23];
+  int*    Assignment    = new int[MaxIndex];
+  int*    Densities     = new int[23];
+  double* SquareSum     = new double[23];
+  int     KMeansResult;
+
+  for (int i = 0; i < MaxIndex; i++)
+  {
+    DistancesVect[i] = Distances[i];
+  }
+
+  for (int i = 0; i < 23; i++)
+  {
+    int index = (i+1)*(1.0/24.0) * (MaxIndex);
+
+    cout << "[" << i  << "] ";
+    cout << "index =" << index << " ";
+
+    if ( index < MaxIndex )
+    {
+      Centroids[i] = DistancesVect[index];
+    }
+    else
+    {
+      Centroids[i] = Distances[MaxIndex];
+    }
+
+    cout << "Centroid = " << Centroids[i] << endl;
+  }
+
+  cout << "Bigger K-Neigh = " << DistancesVect[0];
+  cout << " Smaller K-Neigh = " << DistancesVect[MaxIndex/4] << endl;
+  cout << "DataSize = " << MaxIndex << endl;
+
+  Messages.str("");
+  Messages << "|-> Computing Epsilon candidates using K-Means" << endl;
+  system_messages::information(Messages.str());
+
+  // void kmns ( double a[], int m, int n, double c[], int k, int ic1[], int nc[],
+  // int iter, double wss[], int *ifault )
+
+  kmns(DistancesVect, MaxIndex, 1, Centroids, 23, Assignment, Densities, 50, SquareSum, &KMeansResult);
+
+  Messages.str("");
+  Messages << "|-> Centroids = [ ";
+  for (int i = 0; i < 20; i++)
+  {
+    Epsilons.push_back(Centroids[i+3]);
+    Messages << Centroids[i+3] << " ";
+  }
+  Messages << "]" << endl;
+  system_messages::information(Messages.str());
+
+#ifdef OLD_EPSILON SEARCH
+
   size_t IndexRange = MaxIndex - MinX;
 
   if (IndexRange < 10)
@@ -831,6 +892,7 @@ bool libTraceClusteringImplementation::ClusterRefinementAnalysis(bool   Divisive
   /* DEBUG!
   Epsilons = NewCandidates;
   */
+#endif
 
   if (Divisive)
   {

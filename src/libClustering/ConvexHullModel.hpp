@@ -57,7 +57,7 @@ typedef  CGAL::Lazy_exact_nt< CGAL::Quotient<CGAL::MP_Float> > ET; */
 
 /* Try using this data type in case it fails  */
 #include <CGAL/Gmpq.h>
-typedef CGAL::Lazy_exact_nt<CGAL::Gmpq> ET; 
+typedef CGAL::Lazy_exact_nt<CGAL::Gmpq> ET;
 
 
 typedef MyKernel<ET>                      K;
@@ -71,6 +71,7 @@ class ConvexHullModel
 
     int               Dimensions;
     long long         Density;
+    long long         TotalTime;
     vector<MyPoint_2> HullPoints;
 
   public:
@@ -79,11 +80,12 @@ class ConvexHullModel
 
     ConvexHullModel(void);
 
-    ConvexHullModel ( vector< const Point* > );
+    ConvexHullModel ( vector< const Point* >, long long TotalTime );
 
-    ConvexHullModel(vector<MyPoint_2> HullPoints, long long Density);
+    ConvexHullModel(vector<MyPoint_2> HullPoints, long long Density, long long TotalTime);
     /* ConvexHullModel ( Polygon_2 P, Polygon_2 Q ); */
     ConvexHullModel(long long  Density,
+                    long long  TotalTime,
                     int        NumPoints,
                     int        NumDimensions,
                     long long *Instances,
@@ -92,8 +94,10 @@ class ConvexHullModel
 
     int size(void);
     long long GetDensity(void);
+    long long GetTotalTime(void);
 
     void Serialize(long long  &Density,
+                   long long  &TotalTime,
                    int        &NumPoints,
                    int        &NumDimensions,
                    long long *&Instances,
@@ -119,6 +123,7 @@ class ConvexHullModel
   private:
 
     void   Assemble(long long  Density,
+                    long long  TotalTime,
                     int        NumPoints,
                     int        NumDimensions,
                     long long *Instances,

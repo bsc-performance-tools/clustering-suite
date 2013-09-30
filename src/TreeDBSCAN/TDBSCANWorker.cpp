@@ -25,7 +25,7 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                       $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
@@ -46,18 +46,19 @@ using cepba_tools::system_messages;
 #include <FileNameManipulator.hpp>
 using cepba_tools::FileNameManipulator;
 
-#include "ClusteringBackEnd.h"
+#include "TDBSCANWorker.h"
 #include "NoiseManager.h"
 #include "HullManager.h"
-#include "ClusteringTags.h"
+#include "TDBSCANTags.h"
 #include "Utils.h"
 #include "Statistics.h"
+#include "Support.h"
 
 
 /**
- * TreeDBSCAN back-end protocol constructor.
+ * TDBSCAN back-end protocol constructor.
  */
-ClusteringBackEnd::ClusteringBackEnd()
+TDBSCANWorker::TDBSCANWorker()
 {
   libClustering = NULL;
 }
@@ -66,18 +67,19 @@ ClusteringBackEnd::ClusteringBackEnd()
 /**
  * Register the streams used in this protocol.
  */
-void ClusteringBackEnd::Setup()
+void TDBSCANWorker::Setup()
 {
   Register_Stream (stClustering);
   Register_Stream (stXchangeDims);
+  Register_Stream (stSupport);
 }
 
 
 /**
- * Implements the back-end side of the TreeDBSCAN clustering algorithm.
+ * Implements the back-end side of the TDBSCAN clustering algorithm.
  * @return 0 on success; -1 otherwise.
  */
-int ClusteringBackEnd::Run()
+int TDBSCANWorker::Run()
 {
   ostringstream Messages;
 
@@ -85,10 +87,7 @@ int ClusteringBackEnd::Run()
   PACKET_new (p);
   vector<HullModel*>::iterator it;
   cepba_tools::Timer t;
-
-
-  Statistics ClusteringStats (WhoAmI() );
-
+  Statistics ClusteringStats (WhoAmI(true), true);
 
   /* Delete any previous clustering */
   if (libClustering != NULL)
@@ -100,6 +99,7 @@ int ClusteringBackEnd::Run()
 
   /* Receive clustering configuration from the front-end */
   Recv_Configuration();
+
   /* Prepare all outputs file names */
   CheckOutputFile();
 
@@ -109,8 +109,6 @@ int ClusteringBackEnd::Run()
     system_messages::information (Messages.str(), stderr);
     exit (EXIT_FAILURE);
   }
-
-  system_messages::information ("EXTRACTING DATA\n");
 
   t.begin();
 
@@ -140,17 +138,16 @@ int ClusteringBackEnd::Run()
 
 #if defined(PROCESS_NOISE)
   vector<const Point *> NoisePoints;
-  libClustering->GetNoisePoints (NoisePoints);
+  vector<long long>     NoiseDurations;
+  libClustering->GetNoisePoints (NoisePoints, NoiseDurations );
   ClusteringStats.IncreaseOutputPoints ( NoisePoints.size() );
 
-  /* DEBUG -- count remaining noise points
-  if (Verbose) cerr << "[BE " << WhoAmI() << "] Number of noise points = " << NoisePoints.size() << endl; */
+  /* DEBUG -- count remaining noise points */
+  if (Verbose) cerr << "[BE " << WhoAmI() << "] Number of noise points = " << NoisePoints.size() << endl; 
 
   NoiseManager Noise = NoiseManager (libClustering);
   Noise.Serialize (stClustering);
 #endif
-
-
 
   /* Send the local hulls */
   Messages.str ("");
@@ -223,8 +220,16 @@ int ClusteringBackEnd::Run()
 
   system_messages::show_timer ("Clustering time", t.end() );
 
+  Support BackendSupport(libClustering, 50);
+  BackendSupport.Serialize(stSupport);
+
+  Support GlobalSupport(BackendSupport);
+  MRN_STREAM_RECV (stSupport, &tag, p, TAG_SUPPORT);
+  GlobalSupport.Unpack(p);
+
   /* Process the results and generate the output files */
-  if (!ProcessResults() )
+
+  if (!ProcessResults(GlobalSupport) )
   {
     exit (EXIT_FAILURE);
   }
@@ -237,31 +242,40 @@ int ClusteringBackEnd::Run()
 /**
  * Prepares the outputs files names.
  */
-void ClusteringBackEnd::CheckOutputFile()
+void TDBSCANWorker::CheckOutputFile()
 {
+  string OutputPrefix;
   string OutputFileExtension;
   ostringstream ModelExtension;
 
+  if (OutputFileName == "") OutputFileName = "TDBSCAN";
+
   OutputFileExtension = FileNameManipulator::GetExtension (OutputFileName);
-
   FileNameManipulator NameManipulator (OutputFileName, OutputFileExtension);
+  OutputPrefix = NameManipulator.GetChoppedFileName();
 
+  /* Names for the global model data and plot */
+  GlobalModelDataFileName       = NameManipulator.AppendStringAndExtension ("GLOBAL_MODEL", "csv");
+  GlobalModelPlotFileNamePrefix = OutputPrefix + ".GLOBAL_MODEL";
+
+  /* Names for the local models data and plots */
   ModelExtension.str ("");
   ModelExtension << "LOCAL_MODEL_" << WhoAmI();
+  LocalModelDataFileName       = NameManipulator.AppendStringAndExtension (ModelExtension.str(), "csv");
+  LocalModelPlotFileNamePrefix = OutputPrefix + "." + ModelExtension.str();
 
-  LocalModelDataFileName = NameManipulator.AppendStringAndExtension (ModelExtension.str(), "csv");
-  // LocalModelPlotFileName = NameManipulator.AppendStringAndExtension (ModelExtension.str(), "gnuplot");
-  LocalModelPlotFileNamePrefix = NameManipulator.AppendString (ModelExtension.str());
-
+  /* Names for the local clustering on each back-end */
   ModelExtension.str ("");
   ModelExtension << "LOCAL_CLUSTERING_" << WhoAmI();
-
   OutputLocalClusteringFileName = NameManipulator.AppendStringAndExtension (ModelExtension.str(), "csv");
 
-  GlobalModelDataFileName     = NameManipulator.AppendStringAndExtension ("JOINT_MODEL.DATA", "csv");
-  // GlobalModelPlotFileName     = NameManipulator.AppendStringAndExtension ("JOINT_MODEL", "gnuplot");
-  GlobalModelPlotFileNamePrefix     = NameManipulator.AppendString ("JOINT_MODEL");
-  OutputDataFileName          = NameManipulator.AppendStringAndExtension ("DATA", "csv");
-  ClustersInformationFileName = NameManipulator.AppendStringAndExtension ("clusters_info", "csv");
+  /* Names for the global clustering on each back-end (classification using the global model) */
+  ModelExtension.str ("");
+  ModelExtension << "GLOBAL_CLUSTERING_" << WhoAmI();
+  OutputGlobalClusteringFileName = NameManipulator.AppendStringAndExtension (ModelExtension.str(), "csv");
+
+  /* Names for the final global clustering (all back-ends data merged) */
+  FinalClusteringFileName          = NameManipulator.AppendStringAndExtension ("DATA", "csv");
+  FinalClustersInformationFileName = NameManipulator.AppendStringAndExtension ("clusters_info", "csv");
 }
 

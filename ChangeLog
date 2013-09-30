@@ -10,6 +10,12 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2013-09-30 German Llort <german.llort@bsc.es>
+	* Latest advances in 'TreeDBSCAN'
+
+2013-09-30 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Latest advances in 'libDistributedClustering'. Pretty unstable :D
+
 2013-07-03 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Added 'pcfparser' to the repository
 

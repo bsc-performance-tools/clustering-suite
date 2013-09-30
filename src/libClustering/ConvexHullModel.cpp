@@ -46,12 +46,13 @@ int ConvexHullModel::MIN_HULL_POINTS = 3;
 
 ConvexHullModel::ConvexHullModel(void)
 {
-  Dimensions = 0;
-  Density    = 0;
+  Dimensions     = 0;
+  Density        = 0;
+  TotalTime      = 0;
   HullPoints.clear();
 }
 
-ConvexHullModel::ConvexHullModel( vector<const Point*> cluster_points )
+ConvexHullModel::ConvexHullModel( vector<const Point*> cluster_points, long long TotalTime )
 {
   vector<MyPoint_2> InternalPoints;
 
@@ -65,7 +66,9 @@ ConvexHullModel::ConvexHullModel( vector<const Point*> cluster_points )
     InternalPoints.push_back(NewPoint);
   }
 
-  Density = cluster_points.size();
+  this->Density = cluster_points.size();
+  this->TotalTime = TotalTime;
+
   /* To compute a hull we need at least three points */
   if (Density >= ConvexHullModel::MIN_HULL_POINTS)
   {
@@ -80,9 +83,10 @@ ConvexHullModel::ConvexHullModel( vector<const Point*> cluster_points )
   }
 }
 
-ConvexHullModel::ConvexHullModel(vector<MyPoint_2> HullPoints, long long Density)
+ConvexHullModel::ConvexHullModel(vector<MyPoint_2> HullPoints, long long Density, long long TotalTime)
 {
   this->Density    = Density;
+  this->TotalTime  = TotalTime;
   this->Dimensions = 2;
 
   if (HullPoints.size() >= 3)
@@ -119,6 +123,7 @@ ConvexHullModel::ConvexHullModel( Polygon_2 P, Polygon_2 Q )
 */
 
 ConvexHullModel::ConvexHullModel(long long  Density,
+                                 long long  TotalTime,
                                  int        NumPoints,
                                  int        NumDimensions,
                                  long long *Instances,
@@ -126,6 +131,7 @@ ConvexHullModel::ConvexHullModel(long long  Density,
                                  double    *DimValues)
 {
   Assemble(Density,
+           TotalTime,
            NumPoints,
            NumDimensions,
            Instances,
@@ -141,6 +147,11 @@ int ConvexHullModel::size()
 long long ConvexHullModel::GetDensity()
 {
   return this->Density;
+}
+
+long long ConvexHullModel::GetTotalTime()
+{
+  return this->TotalTime;
 }
 
 void ConvexHullModel::Flush( )
@@ -164,6 +175,7 @@ string ConvexHullModel::GetPlotLine(string DataFileName, cluster_id_t ID)
 }
 
 void ConvexHullModel::Serialize(long long  &Density,
+                                long long  &TotalTime,
                                 int        &NumPoints,
                                 int        &NumDimensions,
                                 long long *&Instances,
@@ -173,6 +185,7 @@ void ConvexHullModel::Serialize(long long  &Density,
   vector<MyPoint_2>::iterator it;
 
   Density            = this->Density;
+  TotalTime          = this->TotalTime;
   NumPoints          = HullPoints.size();
   NumDimensions      = Dimensions;
   Instances          = (long long*) malloc (sizeof(long long)*(NumPoints));
@@ -212,6 +225,7 @@ bool ConvexHullModel::Flush(ostream& str, cluster_id_t id)
        HullPointsIterator != HullPoints.end();
        HullPointsIterator++)
   {
+    str.precision(9);
     str << (*HullPointsIterator).x() << ", " << (*HullPointsIterator).y() << ", " << id << endl;
   }
 
@@ -310,7 +324,8 @@ ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsil
   bool              doMerge = false;
   vector<MyPoint_2> Hull2Points, JointPoints;
   ConvexHullModel  *JointHull;
-  int               TotalDensity = this->GetDensity() + CHull2->GetDensity();
+  long long         JointDensity   = this->GetDensity() + CHull2->GetDensity();
+  long long         JointTotalTime = this->GetTotalTime() + CHull2->GetTotalTime();               
 
   Hull2Points = CHull2->getHullPoints();
 
@@ -323,7 +338,7 @@ ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsil
   {
     /* Check if the points in the hulls are close enough */
     doMerge = this->IsNear(CHull2, Epsilon, MinPoints);
-  }  
+  }
   else
   {
     for (size_t i = 0; i < HullPoints.size(); i++)
@@ -336,7 +351,7 @@ ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsil
       Q.push_back(Hull2Points[i]);
     }
 
-    /* DEBUG 
+    /* DEBUG
     std::cout << "Polygon P characteristics: ";
     std::cout << "Is " <<
     (P.is_simple() ? "" : "not ") << "simple. ";
@@ -344,21 +359,21 @@ ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsil
     (P.is_convex() ? "" : "not ") << "convex." << std::endl;
     */
 
-    /* DEBUG 
+    /* DEBUG
     std::cout << "Polygon Q characteristics: ";
     std::cout << "Is " <<
     (Q.is_simple() ? "" : "not ") << "simple. ";
     std::cout << "Is " <<
     (Q.is_convex() ? "" : "not ") << "convex." << std::endl; */
-  
+
     /* Check polygon intersection */
-   
-    /* DEBUG 
-    if (P.size() < 3) 
+
+    /* DEBUG
+    if (P.size() < 3)
     {
       std::cerr << "[DEBUG] P.size()=" << P.size() << endl;
     }
-    if (Q.size() < 3) 
+    if (Q.size() < 3)
     {
       std::cerr << "[DEBUG] Q.size()=" << Q.size() << endl;
     }
@@ -396,7 +411,7 @@ ConvexHullModel * ConvexHullModel::Merge( ConvexHullModel * CHull2, double Epsil
       JointPoints.push_back(Hull2Points[i]);
     }
 
-    JointHull = new ConvexHullModel( JointPoints, TotalDensity );
+    JointHull = new ConvexHullModel( JointPoints, JointDensity, JointTotalTime );
     /* DEBUG
     std::cout << "The two hulls are merged." << std::endl;
     JointHull->Print(); */
@@ -444,6 +459,7 @@ bool ConvexHullModel::IsNear (ConvexHullModel *Hull2, double Epsilon, int MinPoi
 
 
 void ConvexHullModel::Assemble(long long  Density,
+                               long long  TotalTime,
                                int        NumPoints,
                                int        NumDimensions,
                                long long *Instances,
@@ -451,8 +467,9 @@ void ConvexHullModel::Assemble(long long  Density,
                                double    *DimValues)
 {
   /* 2D */
-  this->Density = Density;
-  Dimensions    = NumDimensions;
+  this->Density   = Density;
+  this->TotalTime = TotalTime;
+  Dimensions      = NumDimensions;
 
   for (size_t i = 0; i < NumPoints; i++)
   {

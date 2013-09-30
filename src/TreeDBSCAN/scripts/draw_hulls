@@ -13,6 +13,7 @@ PLOT="$(mktemp)"
 
 echo "set datafile separator \",\"" >> $PLOT
 echo "set key right outside" >> $PLOT
+echo "set yrange [0:1]" >> $PLOT
 echo -n "plot " >> $PLOT
 for i in `seq $FIRST_ID $LAST_ID`;
 do

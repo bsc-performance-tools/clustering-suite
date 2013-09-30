@@ -57,6 +57,7 @@ class libDistributedClusteringImplementation: public Error
 
     bool                 UsingExternalData;
     vector<const Point*> ExternalData;
+    vector<long long>    ExternalDataDurations;
 
     string         InputFileName;
     input_file_t   InputFileType;
@@ -66,6 +67,7 @@ class libDistributedClusteringImplementation: public Error
 
     bool              PRVEventsParsing;
     set<event_type_t> EventsToDealWith;
+    bool              ConsecutiveEvts;
 
     ClusteringStatistics     Statistics;
 
@@ -100,10 +102,12 @@ class libDistributedClusteringImplementation: public Error
 
     bool ExtractData(string            InputFileName,
                      set<int>&         TasksToRead,
-                     set<event_type_t> EventsToDealWith = set<event_type_t> ());
+                     set<event_type_t> EventsToDealWith = set<event_type_t> (),
+                     bool              ConsecutiveEvts = false);
 
     bool ExtractData(string            InputFileName,
-                     set<event_type_t> EventsToDealWith = set<event_type_t> ());
+                     set<event_type_t> EventsToDealWith = set<event_type_t> (),
+                     bool              ConsecutiveEvts = false);
 
     size_t GetNumberOfPoints(void);
 
@@ -124,16 +128,42 @@ class libDistributedClusteringImplementation: public Error
                         int    MinPoints);
 
     bool ClusterAnalysis(const vector<const Point*> &Points,
+                         const vector<long long>    &Durations,
                          vector<HullModel*>         &ClusterModels);
 
-    bool GetNoisePoints(vector<const Point*>& NoisePoints);
+    bool GetNoisePoints(vector<const Point*>& NoisePoints, vector<long long>& NoiseDurations);
+
+    /* Methods to be used in the ON-LINE implementation of the algorithm. In
+     * this case, the data comes from buffers present in the data extraction
+     * library. For this reason, we have to expose the data manipulation
+     * routines */
+
+    bool NewBurst(task_id_t                         TaskId,
+                  thread_id_t                       ThreadId,
+                  line_t                            Line,
+                  timestamp_t                       BeginTime,
+                  timestamp_t                       EndTime,
+                  duration_t                        BurstDuration,
+                  map<event_type_t, event_value_t>& EventsData);
+
+    void GetParameterRanges(vector<double>& MinValues,
+                            vector<double>& MaxValues);
+
+    void NormalizeData(vector<double>& MinValues,
+                       vector<double>& MaxValues);
+
+    bool GetClusterStatistics(vector<ClusterStatistics*>& ExternalStatistics);
 
     /* A method to retrieve all information to perform the cross-process
      * analysis */
 
     bool GetFullBurstsInformation(vector<Point*>&       Points,
+/*
                                   vector<task_id_t>&    TaskIDs,
                                   vector<thread_id_t>&  ThreadIDs,
+*/
+                                  vector<timestamp_t>&  BeginTimes,
+                                  vector<timestamp_t>&  EndTimes,
                                   vector<cluster_id_t>& ClusterIDs);
 
     bool GetClusterIDs(vector<cluster_id_t> &ClusterIDs);
@@ -146,10 +176,18 @@ class libDistributedClusteringImplementation: public Error
                           string ScriptsFileNamePrefix = "",
                           bool   LocalPartition = false);
 
+    bool PrintGlobalPlotScripts(string       DataFileName,
+                                string       ScriptsFileNamePrefix,
+                                unsigned int ClustersCount,
+                                bool         PrintingModels = false);
+
     bool PrintModels(vector<HullModel*>& ClusterModels,
                      string              ModelsFileName,
                      string              ScriptsFileNamePrefix = "",
                      string              Title                 = "");
+
+
+
 
     /* Error/Warning retrieveng methods */
 
@@ -168,7 +206,7 @@ private:
 
   bool GenerateClusterModels(vector<HullModel*> &Models);
 
-  vector<const Point*>& GetDataPoints(void);
+  void GetDataPoints(vector<const Point *>&Points, vector<long long>&Durations);
 
   bool FlushData(string DataFileName, bool LocalPartition);
 

@@ -108,6 +108,28 @@ void system_messages::information(const char* message,
   }
 }
 
+void system_messages::error(string message)
+{
+  system_messages::error(message.c_str());
+  fflush(stderr);
+}
+
+void system_messages::error(const char* message)
+{
+  if (system_messages::distributed)
+  {
+    fprintf(stderr,
+            "[%s%d] %s",
+            system_messages::rank_prefix,
+            system_messages::my_rank,
+            message);
+  }
+  else
+  {
+    fprintf(stderr, "%s", message);
+  }
+}
+
 void system_messages::silent_information(string message,
                                          FILE  *channel)
 {

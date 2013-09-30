@@ -90,12 +90,12 @@ class Point
 
     size_t size(void) const;
 
-    double&      operator [] (int i);
-    const double operator [] (int i) const;
-    Point        operator +  (const Point& other);
-    Point        operator /  (const size_t scalar);
-    bool         operator != (const Point& other) const;
-    Point&       operator =  (const Point& other);
+    double& operator [] (int i);
+    double  operator [] (int i) const;
+    Point   operator +  (const Point& other);
+    Point   operator /  (const size_t scalar);
+    bool    operator != (const Point& other) const;
+    Point&  operator =  (const Point& other);
 
     void check_const(void) { Normalized = true;};
 

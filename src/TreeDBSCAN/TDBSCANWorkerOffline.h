@@ -25,45 +25,31 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                       $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef __CLUSTERING_FRONTEND_H__
-#define __CLUSTERING_FRONTEND_H__
+#ifndef __TDBSCAN_WORKER_OFFLINE_H__
+#define __TDBSCAN_WORKER_OFFLINE_H__
 
-#include <vector>
-#include <FrontProtocol.h>
-#include "ClusteringCore.h"
-#include "Statistics.h"
+#include "TDBSCANWorker.h"
 
 /**
- * This class implements the front-end side of the TreeDBSCAN protocol,
- * which is the same both for the on-line and off-line back-ends.
+ * This class implements an specific back-end protocol that
+ * extracts data from a Paraver trace.
  */
-class ClusteringFrontEnd : public ClusteringCore, public FrontProtocol
+class TDBSCANWorkerOffline: public TDBSCANWorker
 {
-  public:
-    ClusteringFrontEnd (double Eps,
-                        int    MinPts,
-                        string ClusteringDefinitionXML,
-                        string InputTraceName,
-                        string OutputFileName,
-                        bool   Verbose,
-                        bool   ReconstructTrace);
-
-    string ID()
-    {
-      return "CLUSTERING";
-    }
-    void   Setup (void);
-    int    Run  (void);
-
-    void PrintGraphStats (Statistics &ClusteringStats);
+   public:
+      bool InitLibrary();
+      bool ExtractData();
+      bool AnalyzeData();
+      bool ProcessResults(Support &GlobalSupport);
 };
 
-#endif /* __CLUSTERING_FRONTEND_H__ */
+#endif /* __TDBSCAN_WORKER_OFFLINE_H__ */
+
 

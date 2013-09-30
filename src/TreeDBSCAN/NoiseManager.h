@@ -50,30 +50,26 @@ using MRN::PacketPtr;
 class NoiseManager
 {
    public:
-#if defined(FRONTEND) || defined(FILTER)
       /* Front-end/Filter interface */
       NoiseManager();
       NoiseManager(double Epsilon, int MinPoints);
 
-      bool ClusterNoise(vector<const Point*>& Points, vector<HullModel*>& NoiseModel, int &CountRemainingNoise);
+      bool ClusterNoise(vector<const Point*>& Points, vector<long long>& Durations, vector<HullModel*>& NoiseModel, int &CountRemainingNoise);
 
       void Serialize(int StreamID, std::vector< PacketPtr >& OutputPackets);
 
-      int  Unpack(PACKET_PTR in_packet, vector<const Point *> &NoisePoints);
+      int  Unpack(PACKET_PTR in_packet, vector<const Point *> &NoisePoints, vector<long long> &NoiseDurations);
 
-#endif /* FRONTEND or FILTER */
 
-#if defined(BACKEND)
       /* Back-end interface */
       NoiseManager(libDistributedClustering *libClustering);
 
       void Serialize(Stream *OutputStream);
-#endif /* BACKEND */
 
    private:
       libDistributedClustering *libClustering;
 
-      void Serialize(int &DimensionsCount, double *&SerialPoints, unsigned int &SerialPointsCount);
+      void Serialize(int &NoiseCount, int &DimensionsCount, double *&SerialPoints, unsigned int &SerialPointsCount, long long *&SerialNoiseDurations);
 };
 
 #endif /* __NOISE_MANAGER_H__ */

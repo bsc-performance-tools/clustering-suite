@@ -33,6 +33,8 @@
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include "ClusteringStatistics.hpp"
+#include "SystemMessages.hpp"
+using cepba_tools::system_messages;
 
 #include <sstream>
 using std::ostringstream;
@@ -280,6 +282,57 @@ double StatisticsContainer::GetExtrapolationMetricMean(size_t i)
 }
 
 /**
+ * Returns the number of individuals (observations) of the i-th extrapolation
+ * metric, if it exists
+ *
+ * \param i Position of the extrapolation metric to retrieve
+ *
+ * \return The number of individuals used to compute of the i-th extrapolation
+ *         mean metric, 0 otherwise
+ *
+ */
+size_t StatisticsContainer::GetExtrapolationMetricIndividuals(size_t i)
+{
+  if (i >= 0 && i < ExtrapolationMetrics.size())
+  {
+    return ExtrapolationMetrics[i].GetIndividuals();
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+/**
+ * Returns the variance of the i-th extrapolation metric, if it exists
+ *
+ * \param i Position of the extrapolation metric to retrieve
+ *
+ * \return The variance of the i-th extrapolation metric, NaN otherwise
+ *
+ */
+double StatisticsContainer::GetExtrapolationMetricStdDev_2(size_t i)
+{
+  if (i >= 0 && i < ExtrapolationMetrics.size())
+  {
+    if (ExtrapolationMetrics[i].GetIndividuals() != 0)
+    {
+      return ExtrapolationMetrics[i].GetStdDev_2();
+    }
+    else
+    {
+      return numeric_limits<float>::quiet_NaN();
+    }
+  }
+  else
+  {
+    return numeric_limits<float>::quiet_NaN();
+  }
+}
+
+
+
+/**
  * Sorting operator between statistics container. If one of them represent the
  * NOISE cluster, it comes always first, otherwise, we take into account the
  * total duration
@@ -379,7 +432,7 @@ void ClusteringStatistics::InitStatistics(set<cluster_id_t> &IDs,
       NoiseStatistics = StatisticsContainer (NOISE_CLUSTERID,
                                              ClusteringParameters,
                                              ExtrapolationMetrics);
-      HasNoise = true;
+      this->HasNoise = true;
     }
     else
     {
@@ -592,6 +645,39 @@ map<cluster_id_t, size_t> ClusteringStatistics::GetIndividuals(void)
   return Result;
 }
 
+/**
+ * Returnts the StatisticsContainer object that aggregates the different
+ * statistics of the cluster with the ID provided
+ *
+ * \param ID Identifier of the cluster whose statistics we want to retrieve
+ *
+ * \param Statistics I/O Statistics container with the desired information,
+ *                   if the ID is present in the statistics set
+ *
+ * \return True if the ID is present on the statistics set, false otherwise
+ */
+bool ClusteringStatistics::GetClusterStatistics(cluster_id_t         ID,
+                                                StatisticsContainer& Statistics)
+{
+  if ( (ID != NOISE_CLUSTERID && IDsPosition.count(ID) == 0) ||
+       (ID == NOISE_CLUSTERID && !HasNoise) )
+  {
+    return false;
+  }
+  else
+  {
+    if (ID == NOISE_CLUSTERID)
+    {
+      Statistics = NoiseStatistics;
+    }
+    else
+    {
+      Statistics = StatisticsPerCluster[IDsPosition[ID]];
+    }
+
+    return true;
+  }
+}
 
 /**
  * Flush the statistics in the indicated stream

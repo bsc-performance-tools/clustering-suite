@@ -33,13 +33,13 @@
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include "HullManager.h"
-#include "ClusteringTags.h"
+#include "TDBSCANTags.h"
 #include "Utils.h"
 
 #include <cstring>
 
-const char *HullFormatString     = "%ld %d %d %ald %ald %alf";
-const char *AllHullsFormatString = "%ald %ad %ad %ald %ald %alf";
+const char *HullFormatString     = "%ld %ld %d %d %ald %ald %alf";
+const char *AllHullsFormatString = "%ald %ald %ad %ad %ald %ald %alf";
 const char *AllSentFormatString  = "";
 
 HullManager::HullManager(void) { }
@@ -49,13 +49,13 @@ HullManager::HullManager(void) { }
  */
 HullModel* HullManager::Unpack(PACKET_PTR InputPacket)
 {
-  long long  Density=0;
+  long long  Density=0, TotalTime=0;
   int        NumberOfPoints=0, NumberOfDimensions=0, DimensionsValuesSize=0;
   long long *Instances=NULL, *NeighbourhoodSizes=NULL;
   double    *DimensionsValues=NULL;
 
   PACKET_unpack(InputPacket, HullFormatString,
-    &Density,
+    &Density, &TotalTime,
     &NumberOfPoints,
     &NumberOfDimensions,
     &Instances, &NumberOfPoints,
@@ -63,6 +63,7 @@ HullModel* HullManager::Unpack(PACKET_PTR InputPacket)
     &DimensionsValues, &DimensionsValuesSize);
 
   HullModel *Hull = new HullModel(Density,
+                                  TotalTime,
                                   NumberOfPoints,
                                   NumberOfDimensions,
                                   Instances,
@@ -85,7 +86,7 @@ HullModel* HullManager::Unpack(PACKET_PTR InputPacket)
 void HullManager::Unpack(PACKET_PTR InputPacket, vector<HullModel *> &HullsList)
 {
   int        NumberOfHulls=0;
-  long long *DensityArray=NULL;
+  long long *DensityArray=NULL, *TotalTimeArray=NULL;
   int       *NumberOfPointsArray=NULL, *NumberOfDimensionsArray=NULL;
   long long *InstancesArray=NULL, *NeighbourhoodSizesArray=NULL;
   double    *DimensionsValuesArray=NULL;
@@ -94,6 +95,7 @@ void HullManager::Unpack(PACKET_PTR InputPacket, vector<HullModel *> &HullsList)
 
   PACKET_unpack(InputPacket, AllHullsFormatString,
     &DensityArray, &NumberOfHulls,
+    &TotalTimeArray, &NumberOfHulls,
     &NumberOfPointsArray, &NumberOfHulls,
     &NumberOfDimensionsArray, &NumberOfHulls,
     &InstancesArray, &TotalNumberOfPoints,
@@ -105,6 +107,7 @@ void HullManager::Unpack(PACKET_PTR InputPacket, vector<HullModel *> &HullsList)
   for (int i=0; i<NumberOfHulls; i++)
   {
     HullModel *Hull = new HullModel(DensityArray[i],
+                                    TotalTimeArray[i],
                                     NumberOfPointsArray[i],
                                     NumberOfDimensionsArray[i],
                                     &InstancesArray[idx1],
@@ -142,6 +145,7 @@ void HullManager::SerializeAll(STREAM *OutputStream, vector<HullModel*> &HullsLi
 {
   int        NumberOfHulls           = 0;
   long long *DensityArray            = NULL;
+  long long *TotalTimeArray          = NULL;
   int       *NumberOfPointsArray     = NULL;
   int       *NumberOfDimensionsArray = NULL;
   int        TotalNumberOfPoints     = 0;
@@ -153,6 +157,7 @@ void HullManager::SerializeAll(STREAM *OutputStream, vector<HullModel*> &HullsLi
   SerializeAll(HullsList,
                NumberOfHulls,
                DensityArray,
+               TotalTimeArray,
                NumberOfPointsArray,
                NumberOfDimensionsArray,
                TotalNumberOfPoints,
@@ -163,6 +168,7 @@ void HullManager::SerializeAll(STREAM *OutputStream, vector<HullModel*> &HullsLi
 
   STREAM_send(OutputStream, TAG_ALL_HULLS, AllHullsFormatString,
     DensityArray,            NumberOfHulls,
+    TotalTimeArray,          NumberOfHulls,
     NumberOfPointsArray,     NumberOfHulls,
     NumberOfDimensionsArray, NumberOfHulls,
     InstancesArray,          TotalNumberOfPoints,
@@ -170,6 +176,7 @@ void HullManager::SerializeAll(STREAM *OutputStream, vector<HullModel*> &HullsLi
     DimensionsValuesArray,   TotalDimensionsValues);
 
   xfree(DensityArray);
+  xfree(TotalTimeArray);
   xfree(NumberOfPointsArray);
   xfree(NumberOfDimensionsArray);
   xfree(InstancesArray);
@@ -187,13 +194,14 @@ void HullManager::SerializeAll(STREAM *OutputStream, vector<HullModel*> &HullsLi
  */
 void HullManager::SerializeOne(STREAM *OutputStream, HullModel *Hull)
 {
-  long long  Density=0;
+  long long  Density=0, TotalTime=0;
   int        NumberOfPoints=0, NumberOfDimensions=0;
   long long *Instances=NULL, *NeighbourhoodSizes=NULL;
   double    *DimensionsValues=NULL;
 
   /* Serialize the hull object into basic data types that can be sent through the MRNet */
   Hull->Serialize(Density,
+                  TotalTime,
                   NumberOfPoints,
                   NumberOfDimensions,
                   Instances,
@@ -202,6 +210,7 @@ void HullManager::SerializeOne(STREAM *OutputStream, HullModel *Hull)
 
   STREAM_send(OutputStream, TAG_HULL, HullFormatString,
     Density,
+    TotalTime,
     NumberOfPoints,
     NumberOfDimensions,
     Instances, NumberOfPoints,
@@ -249,6 +258,7 @@ void HullManager::SerializeAll(int StreamID, vector<PacketPtr> &OutputPackets, v
 {
   int        NumberOfHulls           = 0;
   long long *DensityArray            = NULL;
+  long long *TotalTimeArray     = NULL;
   int       *NumberOfPointsArray     = NULL;
   int       *NumberOfDimensionsArray = NULL;
   int        TotalNumberOfPoints     = 0;
@@ -260,6 +270,7 @@ void HullManager::SerializeAll(int StreamID, vector<PacketPtr> &OutputPackets, v
   SerializeAll(HullsList,
                NumberOfHulls,
                DensityArray,
+               TotalTimeArray,
                NumberOfPointsArray,
                NumberOfDimensionsArray,
                TotalNumberOfPoints,
@@ -270,6 +281,7 @@ void HullManager::SerializeAll(int StreamID, vector<PacketPtr> &OutputPackets, v
 
   PacketPtr new_packet( new Packet( StreamID, TAG_ALL_HULLS, AllHullsFormatString,
                                     DensityArray,            NumberOfHulls,
+                                    TotalTimeArray,          NumberOfHulls,
                                     NumberOfPointsArray,     NumberOfHulls,
                                     NumberOfDimensionsArray, NumberOfHulls,
                                     InstancesArray,          TotalNumberOfPoints,
@@ -290,13 +302,14 @@ void HullManager::SerializeAll(int StreamID, vector<PacketPtr> &OutputPackets, v
  */
 void HullManager::SerializeOne(int StreamID, vector<PacketPtr> &OutputPackets, HullModel *Hull)
 {
-  long long  Density=0;
+  long long  Density=0, TotalTime=0;
   int        NumberOfPoints=0, NumberOfDimensions=0;
   long long *Instances=NULL, *NeighbourhoodSizes=NULL;
   double    *DimensionsValues=NULL;
 
   /* Serialize the hull object into basic data types that can be sent through the MRNet */
   Hull->Serialize(Density,
+                  TotalTime,
                   NumberOfPoints,
                   NumberOfDimensions,
                   Instances,
@@ -304,7 +317,7 @@ void HullManager::SerializeOne(int StreamID, vector<PacketPtr> &OutputPackets, H
                   DimensionsValues);
 
   PacketPtr new_packet( new Packet( StreamID, TAG_HULL, HullFormatString,
-                                    Density,
+                                    Density, TotalTime,
                                     NumberOfPoints,
                                     NumberOfDimensions,
                                     Instances, NumberOfPoints,
@@ -331,6 +344,7 @@ void HullManager::SerializeAll(
   vector<HullModel*> &HullsList,
   int                &NumberOfHulls,
   long long         *&DensityArray,
+  long long         *&TotalTimeArray,
   int               *&NumberOfPointsArray,
   int               *&NumberOfDimensionsArray,
   int                &TotalNumberOfPoints,
@@ -342,12 +356,14 @@ void HullManager::SerializeAll(
   NumberOfHulls = HullsList.size();
 
   DensityArray            = (long long *)malloc(NumberOfHulls * sizeof(long long));
+  TotalTimeArray          = (long long *)malloc(NumberOfHulls * sizeof(long long));
   NumberOfPointsArray     =       (int *)malloc(NumberOfHulls * sizeof(int));
   NumberOfDimensionsArray =       (int *)malloc(NumberOfHulls * sizeof(int));
 
   for (unsigned int i=0; i<NumberOfHulls; i++)
   {
     long long  Density=0;
+    long long  TotalTime=0;
     int        NumberOfPoints=0;
     int        NumberOfDimensions=0;
     long long *Instances=NULL;
@@ -356,6 +372,7 @@ void HullManager::SerializeAll(
     int        idx=0;
 
     HullsList[i]->Serialize(Density,
+                            TotalTime,
                             NumberOfPoints,
                             NumberOfDimensions,
                             Instances,
@@ -363,6 +380,7 @@ void HullManager::SerializeAll(
                             DimensionsValues);
 
     DensityArray[i]            = Density;
+    TotalTimeArray[i]          = TotalTime;
     NumberOfPointsArray[i]     = NumberOfPoints;
     NumberOfDimensionsArray[i] = NumberOfDimensions;
 

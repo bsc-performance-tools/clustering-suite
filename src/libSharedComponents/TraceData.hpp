@@ -109,8 +109,8 @@ class TraceData: public Error
     bool Normalized;
 
     bool     Master;
-    INT32     MyRank;
-    INT32     TotalRanks;
+    INT32    MyRank;
+    INT32    TotalRanks;
     bool     ReadAllTasks;
     set<int> TasksToRead;
 
@@ -206,8 +206,13 @@ class TraceData: public Error
     size_t         GetClusteringDimensionsCount(void)    { return ClusteringDimensions; };
     size_t         GetExtrapolationDimensionsCount(void) { return ExtrapolationDimensions; };
 
+    /* Methods required when the ranges of the data cannot be computed locally */
+
     vector<double>& GetMinValues(void) { return MinValues; };
     vector<double>& GetMaxValues(void) { return MaxValues; };
+
+    void SetMinValues(vector<double>& MinValues) { this->MinValues = MinValues; };
+    void SetMaxValues(vector<double>& MaxValues) { this->MaxValues = MaxValues; };
 
     // bool ComputeClusterStatistics(vector<cluster_id_t>& Cluster_IDs, );
 

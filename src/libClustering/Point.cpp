@@ -175,8 +175,7 @@ double& Point::operator[](int i)
   return Dimensions[i];
 }
 
-const double
-Point::operator[](int i) const
+double Point::operator[](int i) const
 {
   assert(i >= 0 && i < Dimensions.size());
 

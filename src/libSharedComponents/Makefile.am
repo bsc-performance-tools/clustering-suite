@@ -90,7 +90,9 @@ libSharedComponents_la_SOURCES = \
     ClusteringRefinementAggregative.hpp \
     ClusteringRefinementAggregative.cpp \
     SequenceScore.hpp \
-    SequenceScore.cpp
+    SequenceScore.cpp \
+    asa136.hpp \
+    asa136.cpp
 
 if HAVE_SQLITE3
 libSharedComponents_la_CXXFLAGS += @SQLITE3_CFLAGS@

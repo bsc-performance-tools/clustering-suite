@@ -114,6 +114,7 @@
 		<Unit filename="src/DBSCANParametersApproximation/DBSCANParametersApproximationMain.cpp">
 			<Option target="Compile" />
 		</Unit>
+		<Unit filename="src/GUI/ClusterAnalysis.py" />
 		<Unit filename="src/MusterDistributedClustering/MusterDistributedClustering.cpp">
 			<Option target="Compile" />
 		</Unit>
@@ -390,6 +391,8 @@
 		<Unit filename="src/libSharedComponents/TraceData.hpp" />
 		<Unit filename="src/libSharedComponents/XMLParser.cpp" />
 		<Unit filename="src/libSharedComponents/XMLParser.hpp" />
+		<Unit filename="src/libSharedComponents/asa136.cpp" />
+		<Unit filename="src/libSharedComponents/asa136.hpp" />
 		<Unit filename="src/libSharedComponents/kalign2/kalign2.h" />
 		<Unit filename="src/libSharedComponents/kalign2/kalign2_advanced_gaps.c">
 			<Option compilerVar="CC" />

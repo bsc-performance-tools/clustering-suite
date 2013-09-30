@@ -25,15 +25,15 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
+  $Id::                                        $:  Id
   $Rev::                                          $:  Revision of last commit
   $Author::                                       $:  Author of last commit
   $Date::                                         $:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef __CLUSTERING_CORE_H__
-#define __CLUSTERING_CORE_H__
+#ifndef __TDBSCAN_CORE_H__
+#define __TDBSCAN_CORE_H__
 
 #include <MRNet_wrappers.h>
 #include "libDistributedClustering.hpp"
@@ -43,14 +43,15 @@
  * It stores common configuration attributes and data structures
  * that have to be present in both sides of the MRNet.
  */
-class ClusteringCore
+class TDBSCANCore
 {
    public:
-      ClusteringCore();
+      TDBSCANCore();
 
    protected:
       STREAM                 *stClustering;
       STREAM                 *stXchangeDims;
+      STREAM                 *stSupport;
       std::vector<HullModel*> GlobalModel;
 
       double Epsilon;
@@ -65,5 +66,5 @@ class ClusteringCore
       void Recv_Configuration(void);
 };
 
-#endif /* __CLUSTERING_CORE_H__ */
+#endif /* __TDBSCAN_CORE_H__ */
 

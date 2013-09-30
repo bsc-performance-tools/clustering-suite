@@ -563,6 +563,7 @@ bool ClusteringRefinementAggregative::GenerateCandidatesAndBurstSubset(
   }
   */
 
+
   if (NodesSubset.size() == 0)
   {
     return false;

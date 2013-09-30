@@ -46,6 +46,7 @@ HullModel::HullModel(ConvexHullModel* Model)
 }
 
 HullModel::HullModel(long long  Density,
+                     long long  TotalTime,
                      int        NumPoints,
                      int        NumDimensions,
                      long long *Instances,
@@ -53,6 +54,7 @@ HullModel::HullModel(long long  Density,
                      double    *DimValues)
 {
   _Model = new ConvexHullModel(Density,
+                               TotalTime,
                                NumPoints,
                                NumDimensions,
                                Instances,
@@ -69,6 +71,7 @@ HullModel::~HullModel(void)
 }
 
 void HullModel::Serialize(long long  &Density,
+                          long long  &TotalTime,
                           int        &NumPoints,
                           int        &NumDimensions,
                           long long *&Instances,
@@ -78,6 +81,7 @@ void HullModel::Serialize(long long  &Density,
   if (_Model != NULL)
   {
     _Model->Serialize(Density,
+                      TotalTime,
                       NumPoints,
                       NumDimensions,
                       Instances,
@@ -121,12 +125,20 @@ int  HullModel::Size(void)
     return _Model->size();
 }
 
-int  HullModel::Density(void)
+long long HullModel::Density(void)
 {
   if (_Model == NULL)
     return -1;
   else
     return _Model->GetDensity();
+}
+
+long long HullModel::TotalTime(void)
+{
+  if (_Model == NULL)
+    return -1;
+  else
+    return _Model->GetTotalTime();
 }
 
 void HullModel::Flush(void)
