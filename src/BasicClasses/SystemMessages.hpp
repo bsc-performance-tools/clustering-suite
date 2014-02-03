@@ -51,6 +51,8 @@ namespace cepba_tools
 
       static bool verbose;
 
+      static bool paraver_verbosity;
+
       static bool distributed;
 
       static int   my_rank;
@@ -116,6 +118,12 @@ namespace cepba_tools
 
       static void show_percentage_end(const char* message,
                                       FILE*       channel = stdout);
+
+      static void show_percentage_progress_error(string message,
+                                                 FILE*  channel = stdout);
+
+      static void show_percentage_progress_error(const char* message,
+                                                 FILE*  channel = stdout);
 
       static void show_timer(string           message,
                              Timer::diff_type Time,

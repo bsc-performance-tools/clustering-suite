@@ -2,7 +2,7 @@
 
 SUBDIRS = kalign2
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/BasicClasses \
 	-I$(top_srcdir)/src/libANN \
@@ -60,6 +60,10 @@ libSharedComponents_la_SOURCES = \
 	PRVStatesDataExtractor.hpp \
 	PRVEventsDataExtractor.cpp \
 	PRVEventsDataExtractor.hpp \
+	PRVSemanticGuidedDataExtractor.cpp \
+	PRVSemanticGuidedDataExtractor.hpp \
+	SemanticGuidedPRVGenerator.cpp \
+	SemanticGuidedPRVGenerator.hpp \
 	TRFDataExtractor.cpp \
 	TRFDataExtractor.hpp \
 	CSVDataExtractor.cpp \

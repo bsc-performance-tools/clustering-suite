@@ -3,7 +3,7 @@ SUBDIRS = gmeans
 
 lib_LTLIBRARIES = libClustering.la
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/BasicClasses \
 	-I$(top_srcdir)/src/libANN \

@@ -154,8 +154,7 @@ ParametersManager::GetClusteringParameterPosition(string ClusteringParameterName
  * Looks for a extrapolation parameter position based on the parameter name
  * \return Position of the clustering parameter if found. NOT_FOUND otherwise
  */
-size_t
-ParametersManager::GetExtrapolationParameterPosition(string ExtrapolationParameterName)
+size_t ParametersManager::GetExtrapolationParameterPosition(string ExtrapolationParameterName)
 {
   map<string, INT32>::iterator Finder;
 
@@ -175,8 +174,7 @@ ParametersManager::GetExtrapolationParameterPosition(string ExtrapolationParamet
  * Returns a vector with the names of all clustering parameterrs
  * \return A vector containig the clustering parameters names
  */
-vector<string>
-ParametersManager::GetClusteringParametersNames(void)
+vector<string> ParametersManager::GetClusteringParametersNames(void)
 {
   vector<string> Result;
 
@@ -192,8 +190,7 @@ ParametersManager::GetClusteringParametersNames(void)
  * Returns a vector with the names of all extrapolation paramters
  * \return A vector containig the extrapolation parameters names
  */
-vector<string>
-ParametersManager::GetExtrapolationParametersNames (void)
+vector<string> ParametersManager::GetExtrapolationParametersNames (void)
 {
   vector<string> Result;
 
@@ -209,8 +206,7 @@ ParametersManager::GetExtrapolationParametersNames (void)
  * Returns the precision of the clustering parameters
  * \return A vector containing if the clustering parameters are high precision or not
  */
-vector<bool>
-ParametersManager::GetClusteringParametersPrecision (void)
+vector<bool> ParametersManager::GetClusteringParametersPrecision (void)
 {
   vector<bool> Result;
 
@@ -226,8 +222,7 @@ ParametersManager::GetClusteringParametersPrecision (void)
  * Returns the precision of the extrapolation parameters
  * \return A vector containing if the extrapolation parameters are high precision or not
  */
-vector<bool>
-ParametersManager::GetExtrapolationParametersPrecision (void)
+vector<bool> ParametersManager::GetExtrapolationParametersPrecision (void)
 {
   vector<bool> Result;
 
@@ -262,8 +257,7 @@ vector<double> ParametersManager::GetClusteringParametersFactors(void)
 /**
  * Clear the contents of all parameters
  */
-void
-ParametersManager::Clear(void)
+void ParametersManager::Clear(void)
 {
   for (INT32 i = 0; i < ClusteringParameters.size(); i++)
   {
@@ -280,14 +274,35 @@ ParametersManager::Clear(void)
  * Fills parameters with data from current burst
  * \param EventsData Map containing 'type/value' pairs read from a trace
  */
-void
-ParametersManager::NewData(map<event_type_t, event_value_t>& EventsData)
+void ParametersManager::NewData(map<event_type_t, event_value_t>& EventsData,
+                                set<event_type_t>&                BurstEndEvents)
 {
   map<event_type_t, event_value_t>::iterator DataIterator;
 
+  if (BurstEndEvents.size() != 0)
+  { /* Use only those events that also appear at the end of the burst */
+
+    for (DataIterator  = EventsData.begin();
+         DataIterator != EventsData.end();)
+    {
+      event_type_t EventType = DataIterator->first;
+
+      if (EventType != DURATION_EVT_TYPE &&
+          EventType != SEMANTIC_VALUE_EVT_TYPE &&
+          BurstEndEvents.count(EventType) == 0)
+      {
+        EventsData.erase(DataIterator++);
+      }
+      else
+      {
+        ++DataIterator;
+      }
+    }
+  }
+
   for (DataIterator  = EventsData.begin();
        DataIterator != EventsData.end();
-       DataIterator++)
+       ++DataIterator)
   {
     event_type_t  EventType  = DataIterator->first;
     event_value_t EventValue = DataIterator->second;
@@ -304,6 +319,7 @@ ParametersManager::NewData(map<event_type_t, event_value_t>& EventsData)
   }
   return;
 }
+
 
 /**
  * Gathers all data collected and returns it in different containers.

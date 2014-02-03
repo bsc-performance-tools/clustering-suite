@@ -233,7 +233,8 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
                                       TaskData[i][j].BeginTime,
                                       TaskData[i][j].EndTime,
                                       TaskData[i][j].BurstDuration,
-                                      TaskData[i][j].EventsData))
+                                      TaskData[i][j].EventsData,
+                                      TaskData[i][j].BurstEndEvents)) /* DEBUG (2013/10/23): To be changed to correct the parsing */
           {
             SetError(true);
             SetErrorMessage("error storing burst data",
@@ -264,6 +265,19 @@ bool PRVEventsDataExtractor::ExtractData(TraceData* TraceDataSet)
 #ifdef DEBUG_PARAVER_INPUT
   // cout << "Data Size = " << TraceDataSet->GetDataSetSize() << endl;
 #endif
+
+  if (TraceDataSet->GetClusteringBurstsSize() == 0)
+  {
+    SetError(true);
+    SetErrorMessage("No bursts extracted, cluster analysis cannot proceed");
+    return false;
+  }
+  else
+  {
+    ostringstream Message;
+    Message << "Points to analyse " << TraceDataSet->GetClusteringBurstsSize() << endl;
+    system_messages::silent_information(Message.str());
+  }
 
   return true;
 }
@@ -369,7 +383,10 @@ bool PRVEventsDataExtractor::CheckEvent(Event     *CurrentEvent,
           { /* Add the information to the 'future burst', if it exists */
             if (NextTaskData.OngoingBurst)
             {
-              UpdateTaskData (NextTaskData, CurrentType, CurrentValue);
+              UpdateTaskData (NextTaskData,
+                              CurrentType,
+                              CurrentValue,
+                              CurrentEvent->GetTimestamp());
             }
 
             // cout << "Generating Burst 2 Begin = " << CurrentTaskData.BeginTime << " End = " << CurrentTaskData.EndTime << endl;
@@ -385,14 +402,20 @@ bool PRVEventsDataExtractor::CheckEvent(Event     *CurrentEvent,
           }
           else
           {
-            UpdateTaskData (CurrentTaskData, CurrentType, CurrentValue);
+            UpdateTaskData (CurrentTaskData,
+                            CurrentType,
+                            CurrentValue,
+                            CurrentEvent->GetTimestamp());
           }
         }
         else
         { /* The end of the current burst hasn't bet set, add the information */
           if (CurrentTaskData.BeginTime != CurrentEvent->GetTimestamp())
           {
-            UpdateTaskData (CurrentTaskData, CurrentType, CurrentValue);
+            UpdateTaskData (CurrentTaskData,
+                            CurrentType,
+                            CurrentValue,
+                            CurrentEvent->GetTimestamp());
           }
         }
       }
@@ -421,6 +444,16 @@ bool PRVEventsDataExtractor::GenerateBurst(TraceData*         TraceDataSet,
   /* DEBUG
   cout << "Calling 'GenerateBurst'. Duration = " << Data.BurstDuration << endl; */
 
+  set<event_type_t>::iterator it;
+
+  for (it  = Data.NotCommonEvents.begin();
+       it != Data.NotCommonEvents.end();
+       ++it)
+  {
+    Data.EventsData.erase((*it));
+  }
+
+
   /* Add it to the Trace Data Set */
   if (!TraceDataSet->NewBurst(Data.TaskId,
                               Data.ThreadId,
@@ -428,7 +461,8 @@ bool PRVEventsDataExtractor::GenerateBurst(TraceData*         TraceDataSet,
                               Data.BeginTime,
                               Data.EndTime,
                               Data.BurstDuration,
-                              Data.EventsData))
+                              Data.EventsData,
+                              Data.BurstEndEvents)) /* DEBUG (2013/10/23): To be changed to correct the parsing */
   {
 
     SetError(true);
@@ -502,19 +536,51 @@ bool PRVEventsDataExtractor::BurstClosingEvent(event_type_t  EventType,
 
 bool PRVEventsDataExtractor::UpdateTaskData(TaskDataContainer& DataContainer,
                                             event_type_t       EventType,
-                                            event_value_t      EventValue)
+                                            event_value_t      EventValue,
+                                            timestamp_t        EventTime)
 {
    map<event_type_t, event_value_t>::iterator EventsDataIterator;
 
   EventsDataIterator = DataContainer.EventsData.find(EventType);
 
+  /* Check if there is a HWC change. */
+  if (EventType == HWC_GROUP_CHANGE_TYPE)
+  {
+    if (EventTime > DataContainer.BeginTime &&
+        (DataContainer.EndTime == 0 ||
+        (DataContainer.EndTime != 0 && EventTime < DataContainer.EndTime)))
+    {
+      DataContainer.IntermediateHWChange = true;
+    }
+  }
+
   if (EventsDataIterator == DataContainer.EventsData.end())
   { /* Add this event to 'EventsData' map */
-    DataContainer.EventsData[EventType] = EventValue;
+    if (DataContainer.IntermediateHWChange)
+    { /* As the HWC group changed, this is a type of event that never
+         appear previously, so it is not common to all the burst so
+         it won't be taken in consideration */
+      DataContainer.NotCommonEvents.insert(EventType);
+    }
+    else
+    { /* As the HWC did not change, we can store the event and value
+       * normally */
+      DataContainer.EventsData[EventType] = EventValue;
+
+      if (DataContainer.EndTime != 0 && EventTime == DataContainer.EndTime)
+      { /* Annotate that current burst has events at his end time */
+        DataContainer.BurstEndEvents.insert(EventType);
+      }
+    }
   }
   else
   { /* This event was already stored in the map. If necessary, sum values */
     DataContainer.EventsData[EventType] += EventValue;
+
+    if (EventTime == DataContainer.EndTime)
+    { /* Annotate that current burst has events at his end time */
+      DataContainer.BurstEndEvents.insert(EventType);
+    }
   }
 
   return true;

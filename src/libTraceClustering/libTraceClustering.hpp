@@ -74,24 +74,41 @@ class libTraceClustering
   public:
 
 
-    libTraceClustering(bool verbose);
+    libTraceClustering(bool verbose,
+                       bool paraver_verbosity = false);
 
     bool InitTraceClustering(string        ClusteringDefinitionXML,
                              string        PCFFileName,
+                             bool          UseSemanticValue,
+                             bool          ApplyLogToSemanticValue,
                              unsigned char Flags);
+
+    bool SetDBSCANParameters(double Eps, int MinPoints);
 
     bool ExtractData(string            InputFileName,
                      bool              SampleData      = false,
                      unsigned int      MaxSamples      = 0,
                      set<unsigned int> EventsToParse   = set<unsigned int> (),
-                     bool              ConsecutiveEvts = false);
+                     bool              ConsecutiveEvts = false,
+                     string            InputSemanticCSV = "");
+
+    bool ExtractData(string            InputFileName,
+                     bool              SampleData       = false,
+                     unsigned int      MaxSamples       = 0,
+                     string            InputSemanticCSV = "");
+
+    bool ExtractData(string            InputFileName,
+                     set<unsigned int> EventsToParse,
+                     bool              ConsecutiveEvts,
+                     string            InputSemanticCSV = "");
 
     bool ExtractData(string            InputFileName,
                      string            OutputCSVFileName,
                      bool              SampleData      = false,
                      unsigned int      MaxSamples      = 0,
                      set<unsigned int> EventsToParse   = set<unsigned int> (),
-                     bool              ConsecutiveEvts = false);
+                     bool              ConsecutiveEvts = false,
+                     string            InputSemanticCSV = "");
 
     bool ClusterAnalysis (void);
 

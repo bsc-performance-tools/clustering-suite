@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -45,7 +45,8 @@ using cepba_tools::Error;
 using std::string;
 #include <vector>
 using std::vector;
-
+#include <list>
+using std::list;
 
 
 #define MICROSECONDS 0
@@ -55,32 +56,32 @@ class ParaverHeader: public Error
 {
   private:
     char*  ASCIIHeader;
-  
+
     UINT64 FinalTime;
     INT32  TimeUnits;
-    
+
     INT32         ResourceNumber;
     bool          ResourceDescriptionPresent;
     vector<INT32> ResourceDescription;
-  
+
     INT32  AppNumber;
     vector<ApplicationDescription_t> AppsDescription;
-  
+
   public:
     ParaverHeader(char* ASCIIHeader, INT32 HeaderLength);
-  
+
     vector<ApplicationDescription*> GetAppsDescription(void)
     {
       return AppsDescription;
     };
-    
+
     UINT64 GetFinalTime(void) { return FinalTime; };
     INT32  GetTimeUnits(void) { return TimeUnits; };
-    
+
     bool Flush(FILE* OutputFile);
-  
+
   private:
-    
+
     bool ProcessFinalTime       (char* ASCIIFinalTime);
     bool ProcessResourceList    (char* ASCIIRsrcList);
     bool ProcessApplicationList (char* ASCIIAppList);

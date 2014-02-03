@@ -2,7 +2,7 @@ noinst_LTLIBRARIES=libParaverTraceParser.la
 
 ## common_filesdir = @common_filesdir@
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/BasicClasses \
 	-I$(top_srcdir)/src/SharedComponents \
@@ -23,7 +23,9 @@ libParaverTraceParser_la_SOURCES=\
 	ParaverRecord.cpp \
 	ParaverRecord.hpp \
 	ParaverTraceParser.cpp \
-	ParaverTraceParser.hpp 
+	ParaverTraceParser.hpp \
+	ParaverMetadataManager.cpp \
+	ParaverMetadataManager.hpp
 
 #nodist_libParaverTraceParser_la_SOURCES=\
 #	$(common_filesdir)/Dimemas_Generation.c \

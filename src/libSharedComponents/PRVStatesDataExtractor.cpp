@@ -50,8 +50,46 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+#include <sstream>
+using std::ostringstream;
+
 // #define DEBUG_PARAVER_INPUT 1
 
+/******************************************************************************
+ * Class 'TaskDataContainer'
+ ******************************************************************************/
+string PRVStatesDataExtractor::TaskDataContainer::toString(void)
+{
+    ostringstream Result;
+
+  Result << "[" << TaskId << "|" << ThreadId << "] (" << Line << ") ";
+  Result << "Begin: " << BeginTime << " End: " << EndTime << " (Dur:";
+  Result << BurstDuration << ")" << endl;
+
+  Result << "*** EventsData *** " << endl;
+  for (map<event_type_t, event_value_t>::iterator it  = EventsData.begin();
+                                                  it != EventsData.end();
+                                                ++it)
+  {
+    Result << "[ " << it->first << " ] = " << it->second << endl;
+  }
+
+  Result << "*** BurstEndEvents ***" << endl;
+  Result << "[ ";
+  for (set<event_type_t>::iterator it  = BurstEndEvents.begin();
+                                   it != BurstEndEvents.end();
+                                 ++it)
+  {
+    Result << (*it) <<  " ";
+  }
+  Result << "]";
+
+  return Result.str();
+}
+
+/******************************************************************************
+ * Class 'PRVStatesDataExtractor'
+ ******************************************************************************/
 PRVStatesDataExtractor::PRVStatesDataExtractor(string InputTraceName)
 :DataExtractor(InputTraceName)
 {
@@ -231,13 +269,20 @@ bool PRVStatesDataExtractor::ExtractData(TraceData* TraceDataSet)
       {
         if (TaskData[i][j].OngoingBurst)
         { /* There is an ongoing burst.  */
+
+#ifdef DEBUG_PARAVER_INPUT
+          cout << "*** CALLING TraceDataSet->NewBurst ***" << endl;
+          cout << TaskData[i][j].toString() << endl;
+#endif
+
           if (!TraceDataSet->NewBurst(TaskData[i][j].TaskId,
                                       TaskData[i][j].ThreadId,
                                       TaskData[i][j].Line,
                                       TaskData[i][j].BeginTime,
                                       TaskData[i][j].EndTime,
                                       TaskData[i][j].BurstDuration,
-                                      TaskData[i][j].EventsData))
+                                      TaskData[i][j].EventsData,
+                                      TaskData[i][j].BurstEndEvents))  /* DEBUG (2013/10/23): To be changed to correct the parsing */
           {
             SetError(true);
             SetErrorMessage("error storing burst data",
@@ -269,6 +314,19 @@ bool PRVStatesDataExtractor::ExtractData(TraceData* TraceDataSet)
   // cout << "Data Size = " << TraceDataSet->GetDataSetSize() << endl;
 #endif
 
+  if (TraceDataSet->GetClusteringBurstsSize() == 0)
+  {
+    SetError(true);
+    SetErrorMessage("No bursts extracted, cluster analysis cannot proceed");
+    return false;
+  }
+  else
+  {
+    ostringstream Message;
+    Message << "Points to analyse " << TraceDataSet->GetClusteringBurstsSize() << endl;
+    system_messages::silent_information(Message.str());
+  }
+
   return true;
 }
 
@@ -281,6 +339,8 @@ bool PRVStatesDataExtractor::CheckState(State     *CurrentState,
 
   TaskDataContainer &NextTaskData =
     FutureTaskData[CurrentState->GetTaskId()][CurrentState->GetThreadId()];
+
+
 
   /* Check if this new state is a running state */
   if (CurrentState->GetStateValue() == RUNNING_STATE)
@@ -304,11 +364,15 @@ bool PRVStatesDataExtractor::CheckState(State     *CurrentState,
       { /* There is an ongoing burst.  */
 
 #ifdef DEBUG_PARAVER_INPUT
+        /*
         printf("Flushing BURST for T%02d:Th%02d (%lld - %lld) - NEW STATE\n",
                CurrentTaskData.TaskId,
                CurrentTaskData.ThreadId,
                CurrentTaskData.BeginTime,
                CurrentTaskData.EndTime);
+        */
+        cout << "*** CALLING TraceDataSet->NewBurst ***" << endl;
+        cout << CurrentTaskData.toString() << endl;
 #endif
 
         if (!TraceDataSet->NewBurst(CurrentTaskData.TaskId,
@@ -317,7 +381,8 @@ bool PRVStatesDataExtractor::CheckState(State     *CurrentState,
                                     CurrentTaskData.BeginTime,
                                     CurrentTaskData.EndTime,
                                     CurrentTaskData.BurstDuration,
-                                    CurrentTaskData.EventsData))
+                                    CurrentTaskData.EventsData,
+                                    CurrentTaskData.BurstEndEvents)) /* DEBUG (2013/10/23): To be changed to correct the parsing */
         {
           SetError(true);
           SetErrorMessage("error storing burst data",
@@ -411,12 +476,16 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
     { /* Events not related to the ongoing burst. It must be flushed */
 
 #ifdef DEBUG_PARAVER_INPUT
+      /*
       printf("Flushing BURST for T%02d:Th%02d (%lld - %lld) - FUTURE EVENT (%lld)\n",
              CurrentTaskData.TaskId,
              CurrentTaskData.ThreadId,
              CurrentTaskData.BeginTime,
              CurrentTaskData.EndTime,
              CurrentEvent->GetTimestamp());
+      */
+      cout << "*** CALLING TraceDataSet->NewBurst ***" << endl;
+      cout << CurrentTaskData.toString() << endl;
 #endif
 
       if (!TraceDataSet->NewBurst(CurrentTaskData.TaskId,
@@ -425,7 +494,8 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
                                   CurrentTaskData.BeginTime,
                                   CurrentTaskData.EndTime,
                                   CurrentTaskData.BurstDuration,
-                                  CurrentTaskData.EventsData))
+                                  CurrentTaskData.EventsData,
+                                  CurrentTaskData.BurstEndEvents)) /* DEBUG (2013/10/23): To be changed to correct the parsing */
       {
         SetError(true);
         SetErrorMessage("error storing burst data",
@@ -473,11 +543,15 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
         { /* Hardware counters change. Future events are not eligible */
 
 #ifdef DEBUG_PARAVER_INPUT
+          /*
           printf("Flushing BURST for T%02d:Th%02d (%lld - %lld) - HWC CHANGE\n",
                  CurrentTaskData.TaskId,
                  CurrentTaskData.ThreadId,
                  CurrentTaskData.BeginTime,
                  CurrentTaskData.EndTime);
+          */
+          cout << "*** CALLING TraceDataSet->NewBurst ***" << endl;
+          cout << CurrentTaskData.toString() << endl;
 #endif
 
           if (!TraceDataSet->NewBurst(CurrentTaskData.TaskId,
@@ -486,7 +560,8 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
                                       CurrentTaskData.BeginTime,
                                       CurrentTaskData.EndTime,
                                       CurrentTaskData.BurstDuration,
-                                      CurrentTaskData.EventsData))
+                                      CurrentTaskData.EventsData,
+                                      CurrentTaskData.BurstEndEvents)) /* DEBUG (2013/10/23): To be changed to correct the parsing */
           {
             SetError(true);
             SetErrorMessage("error storing burst data",
@@ -520,8 +595,10 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
         }
         else
         {
-          /* Avoid repeating events with same type */
+          /* Burst end events */
+          CurrentTaskData.BurstEndEvents.insert(CurrentEventType);
 
+          /* Avoid repeating events with same type */
           EventsDataIterator = CurrentTaskData.EventsData.find(CurrentEventType);
 
           if (EventsDataIterator == CurrentTaskData.EventsData.end())
@@ -529,6 +606,7 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
             CurrentTaskData.EventsData[CurrentEventType] = CurrentEventValue;
 
   #ifdef DEBUG_PARAVER_INPUT
+            /*
             printf("Burst BeginTime = %lld EndTime = %lld\n",
                    CurrentTaskData.BeginTime, CurrentTaskData.EndTime);
             printf("Storing data for T%02d:Th%02d (%lld) [%d:%lld]\n",
@@ -537,6 +615,7 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
                    CurrentEvent->GetTimestamp(),
                    CurrentEventType,
                    CurrentEventValue);
+            */
   #endif
           }
           else
@@ -545,12 +624,14 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
             CurrentTaskData.EventsData[CurrentEventType] += CurrentEventValue;
 
   #ifdef DEBUG_PARAVER_INPUT
+            /*
             printf("Adding data for T%02d:Th%02d (%lld )[%d:%lld]\n",
                    CurrentEvent->GetTaskId(),
                    CurrentEvent->GetThreadId(),
                    CurrentEvent->GetTimestamp(),
                    CurrentEventType,
                    CurrentTaskData.EventsData[CurrentEventType]);
+            */
   #endif
           }
         }

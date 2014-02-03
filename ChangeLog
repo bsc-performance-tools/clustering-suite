@@ -10,6 +10,12 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-02-03 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Commit of the 2.6.0 release
+
+2013-09-04 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* First commit adding the 'PRVSemanticGuidedDataExtractor' files
+
 2013-09-30 German Llort <german.llort@bsc.es>
 	* Latest advances in 'TreeDBSCAN'
 

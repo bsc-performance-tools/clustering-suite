@@ -63,9 +63,10 @@ class DataExtractorFactory: public Error
 
     bool   GetExtractor(string          InputFileName,
                         DataExtractor *&DataExtractorObject,
-                        bool            EventParsing    = false,
-                        bool            ConsecutiveEvts = false,
-                        bool            Distributed     = false);
+                        bool            EventParsing     = false,
+                        bool            ConsecutiveEvts  = false,
+                        bool            Distributed      = false,
+                        string          InputSemanticCSV = "");
 
     input_file_t  GetFileType(void);
 

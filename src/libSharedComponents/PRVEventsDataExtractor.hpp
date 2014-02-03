@@ -71,39 +71,51 @@ class PRVEventsDataExtractor: public DataExtractor
         timestamp_t                      EndTime;
         duration_t                       BurstDuration;
         map<event_type_t, event_value_t> EventsData;
+        bool                             IntermediateHWChange;
+        set<event_type_t>                NotCommonEvents;
+        set<event_type_t>                BurstEndEvents;
 
         TaskDataContainer() {
-          TaskId        = 0;
-          ThreadId      = 0;
-          Line          = 0;
-          BeginTime     = 0;
-          EndTime       = 0;
-          BurstDuration = 0;
+          OngoingBurst         = false;
+          TaskId               = 0;
+          ThreadId             = 0;
+          Line                 = 0;
+          BeginTime            = 0;
+          EndTime              = 0;
+          BurstDuration        = 0;
           EventsData.clear();
-          OngoingBurst  = false;
+          IntermediateHWChange = false;
+          NotCommonEvents.clear();
+          BurstEndEvents.clear();
         };
 
         void Clear() {
-          TaskId        = 0;
-          ThreadId      = 0;
-          Line          = 0;
-          BeginTime     = 0;
-          EndTime       = 0;
-          BurstDuration = 0;
+          OngoingBurst          = false;
+          TaskId                = 0;
+          ThreadId              = 0;
+          Line                  = 0;
+          BeginTime             = 0;
+          EndTime               = 0;
+          BurstDuration         = 0;
           EventsData.clear();
-          OngoingBurst  = false;
+          IntermediateHWChange  = false;
+          NotCommonEvents.clear();
+          BurstEndEvents.clear();
         }
 
         TaskDataContainer& operator= (const TaskDataContainer& Other)
         {
-          TaskId        = Other.TaskId;
-          ThreadId      = Other.ThreadId;
-          Line          = Other.Line;
-          BeginTime     = Other.BeginTime;
-          EndTime       = Other.EndTime;
-          BurstDuration = Other.BurstDuration;
-          EventsData    = Other.EventsData;
-          OngoingBurst  = Other.OngoingBurst;
+          OngoingBurst         = Other.OngoingBurst;
+          TaskId               = Other.TaskId;
+          ThreadId             = Other.ThreadId;
+          Line                 = Other.Line;
+          BeginTime            = Other.BeginTime;
+          EndTime              = Other.EndTime;
+          BurstDuration        = Other.BurstDuration;
+          EventsData           = Other.EventsData;
+          IntermediateHWChange = Other.IntermediateHWChange;
+          NotCommonEvents      = Other.NotCommonEvents;
+          BurstEndEvents       = Other.BurstEndEvents;
         }
     };
 
@@ -150,7 +162,8 @@ class PRVEventsDataExtractor: public DataExtractor
 
     bool UpdateTaskData(TaskDataContainer& DataContainer,
                         event_type_t       EventType,
-                        event_value_t      EventValue);
+                        event_value_t      EventValue,
+                        timestamp_t        EventTime);
 };
 
 #endif /* PRVSTATESDATAEXTRACTOR_H */

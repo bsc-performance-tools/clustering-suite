@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -54,18 +54,18 @@ ParaverHeader::ParaverHeader(char* ASCIIHeader, INT32 HeaderLength)
   char  FinalTimeStr[25];   /* Can produce an overflow! */
   char* RsrcList = (char*) calloc((size_t) HeaderLength, sizeof(char));
   char* AppList  = (char*) calloc((size_t) HeaderLength, sizeof(char));
-  
+
   /* Initialization of object ASCII header */
   this->ASCIIHeader = (char*) calloc((size_t) HeaderLength+1, sizeof(char));
   strncpy(this->ASCIIHeader, ASCIIHeader, HeaderLength);
-  
+
   /* Internal copy of ASCII header */
   InternalHeader[HeaderLength] = '\0';
   strncpy(InternalHeader, ASCIIHeader, HeaderLength);
-  
-  
+
+
   /* strtok(InternalHeader, ')'); */
-  
+
   matches = sscanf(ASCIIHeader,
                    "#Paraver (%[^)]):%[^:]:%[^:]:%d:%s\n",
                    TraceCreationDate,
@@ -73,29 +73,29 @@ ParaverHeader::ParaverHeader(char* ASCIIHeader, INT32 HeaderLength)
                    RsrcList,
                    &AppNumber,
                    AppList);
-  
+
   if (matches != 5)
   {
     SetError(true);
     SetErrorMessage ("Unknown trace format", "header not readable");
     return;
   }
-  
+
   /*
   cout << "Creation date: " << TraceCreationDate << endl;
   */
-  
+
   if (!ProcessFinalTime(FinalTimeStr))
   {
     SetError(true);
     SetErrorMessage ("Paraver trace header error", "final time not readable");
     return;
   }
-  
+
   /*
   cout << "Final Time: " << FinalTime << " (" << TimeUnits << ")" << endl;
   */
-  
+
   ResourceDescriptionPresent = false;
   RsrcList[strlen(RsrcList)] = '\0';
   if (!ProcessResourceList(RsrcList))
@@ -103,18 +103,18 @@ ParaverHeader::ParaverHeader(char* ASCIIHeader, INT32 HeaderLength)
     SetError(true);
     return;
   }
-  
+
   /*
   cout << "Resources: " << ResourceNumber;
   cout << " (" << ResourceDescription.size() << ")" << endl;
   */
-  
+
   if (!ProcessApplicationList(AppList))
   {
     SetError(true);
     return;
   }
-  
+
   /* DEBUG
   cout << "Number of applications: " << AppNumber;
   cout << " (" << AppsDescription.size() << ")" << endl;
@@ -126,23 +126,24 @@ ParaverHeader::ParaverHeader(char* ASCIIHeader, INT32 HeaderLength)
   */
 }
 
-bool
-ParaverHeader::Flush(FILE* OutputFile)
+bool ParaverHeader::Flush(FILE* OutputFile)
 {
   if (OutputFile == NULL)
   {
     SetError(true);
-    SetErrorMessage("output file not available"); 
+    SetErrorMessage("output file not available");
     return false;
   }
-  
+
   if (fprintf(OutputFile, "%s\n", ASCIIHeader) < 0)
   {
     SetError(true);
     SetErrorMessage("unable to print Paraver header", strerror(errno));
     return false;
   }
-  
+
+
+
   return true;
 }
 
@@ -164,7 +165,7 @@ ParaverHeader::ProcessFinalTime(char* ASCIIFinalTime)
     FinalTime = strtoull(ASCIIFinalTime, NULL, 0);
     TimeUnits = MICROSECONDS;
   }
-  
+
   return true;
 }
 
@@ -174,10 +175,10 @@ ParaverHeader::ProcessResourceList (char* ASCIIRsrcList)
   char* CurrentCPUNum;
   char* ResourceInfoStr = (char*) calloc(strlen(ASCIIRsrcList)+1,
                                           sizeof(char));
-  
+
   if (ResourceInfoStr == NULL)
     return false;
-  
+
   if (sscanf(ASCIIRsrcList,
              "%d(%[^)])",
              &ResourceNumber,
@@ -185,14 +186,14 @@ ParaverHeader::ProcessResourceList (char* ASCIIRsrcList)
   {
     /* ResourceInforStr parsing */
     ResourceDescriptionPresent = true;
-    
+
     CurrentCPUNum = strtok(ResourceInfoStr, ",");
     while (CurrentCPUNum != NULL)
     {
       ResourceDescription.push_back((INT32) atoi(CurrentCPUNum));
       CurrentCPUNum = strtok(NULL, ",");
     }
-    
+
     return true;
   }
   else  if (sscanf(ASCIIRsrcList, "%d", &ResourceNumber) == 1)
@@ -215,10 +216,10 @@ ParaverHeader::ProcessApplicationList (char* ASCIIAppList)
   char *OtherApps = (char*) calloc(strlen(ASCIIAppList)+1, sizeof(char));
   char *CurrentAppStr;
 
-  
+
   INT32 AppCount, CurrentTaskId, TaskCount, CommunicatorCount;
   INT32 ThreadCount, Node;
-  
+
   AppCount = 0;
   CurrentAppStr = ASCIIAppList;
   while (!end)
@@ -282,7 +283,7 @@ ParaverHeader::ProcessApplicationList (char* ASCIIAppList)
     else
     {
       char ErrorMessage[128];
-      
+
       sprintf(ErrorMessage, "Error parsing pplication %d", AppCount);
       SetErrorMessage(ErrorMessage);
       return false;
@@ -294,6 +295,6 @@ ParaverHeader::ProcessApplicationList (char* ASCIIAppList)
 
   if (AppCount != AppNumber)
     return false;
-  
+
   return true;
 }

@@ -259,7 +259,7 @@ bool ClusteredEventsPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& Different
             break;
           }
           if (fprintf(OutputPCFFile,
-                      "%d\t{%d,%d,%d}\n",
+                      "%lu\t{%d,%d,%d}\n",
                       i,
                       ParaverDefaultPalette[i].RGB[0],
                       ParaverDefaultPalette[i].RGB[1],

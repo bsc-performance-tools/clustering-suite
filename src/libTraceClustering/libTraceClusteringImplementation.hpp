@@ -55,8 +55,8 @@ class libTraceClusteringImplementation: public Error
 
   private:
 
-    TraceData           *Data;
-    libClustering       *ClusteringCore;
+    TraceData           *Data           = NULL;
+    libClustering       *ClusteringCore = NULL;
     Partition            LastPartition, ClassificationPartition;
     ClusteringStatistics Statistics;
 
@@ -75,17 +75,23 @@ class libTraceClusteringImplementation: public Error
     unsigned char  UseFlags;
 
   public:
-    libTraceClusteringImplementation(bool verbose);
+    libTraceClusteringImplementation(bool verbose,
+                                     bool paraver_verbosity = false);
 
     bool InitTraceClustering(string        ClusteringDefinitionXML,
                              string        PCFFileName,
-                             unsigned char UseFlags);
+                             bool          UseSemanticValue,
+                             bool          ApplyLogToSemanticValue,
+                             unsigned char Flags);
+
+    bool SetDBSCANParameters(double Eps, int MinPoints);
 
     bool ExtractData(string            InputFileName,
                      bool              SampleData = false,
                      unsigned int      MaxSamples = 0,
                      set<event_type_t> EventsToDealWith = set<event_type_t> (),
-                     bool              ConsecutiveEvts  = false);
+                     bool              ConsecutiveEvts  = false,
+                     string            InputSemanticCSV = "");
 
     bool FlushData(string OutputCSVFileNamePrefix);
 

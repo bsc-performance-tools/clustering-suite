@@ -48,7 +48,7 @@ typedef enum { UndefinedParameter, SingleEventParameter, DerivedEventParameter} 
 
 typedef enum { UndefinedOperation, Add, Substract, Multiply, Divide} derived_event_op_t;
 
-typedef enum { UndefinedInputFile, ParaverTrace, DimemasTrace, ClusteringCSV } input_file_t;
+typedef enum { UndefinedInputFile, ParaverTrace, DimemasTrace, ClusteringCSV, SematicGuided } input_file_t;
 
 typedef enum { CompleteBurst = 0, MissingDataBurst, DurationFilteredBurst, RangeFilteredBurst } burst_type_t;
 
@@ -64,7 +64,10 @@ typedef size_t line_t;
 typedef double percentage_t;
 
 /* Pseudo-event type for durations */
-static const event_type_t DURATION_EVENT_TYPE   = 1;
+static const event_type_t DURATION_EVT_TYPE      = 1;
+
+/* Pseudo-event type for semantic values extracted from Paraver semantic CSV file */
+static const event_type_t SEMANTIC_VALUE_EVT_TYPE = 2;
 
 /* Pseudo-event type for events not found in the PCF */
 static const event_type_t UNKNOWN_EVENT_TYPE    = std::numeric_limits<event_type_t>::max();

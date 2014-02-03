@@ -25,100 +25,78 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
-  $Rev::                                          $:  Revision of last commit
-  $Author::                                       $:  Author of last commit
-  $Date::                                         $:  Date of last commit
+  $Id:: PRVStatesDataExtractor.hpp 85 2013-05-06 #$:  Id
+  $Rev:: 85                                       $:  Revision of last commit
+  $Author:: jgonzale                              $:  Author of last commit
+  $Date:: 2013-05-06 15:35:11 +0200 (lun, 06 may #$:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef PRVSTATESDATAEXTRACTOR_H
-#define PRVSTATESDATAEXTRACTOR_H
+#ifndef PRVSEMANTICGUIDEDDATAEXTRACTOR_H
+#define PRVSEMANTICGUIDEDDATAEXTRACTOR_H
 
 #include <trace_clustering_types.h>
 
 #include "DataExtractor.hpp"
+#include "ParaverTraceParser.hpp"
 
 #include <math.h>
 #include <string>
 
+#include <vector>
+using std::vector;
+
 #include <map>
 using std::map;
 
-/* Forward declarations */
-class ParaverTraceParser;
-class State;
-class Event;
+#include <list>
+using std::list;
+
+#include <fstream>
+using std::ifstream;
 
 /* Common semantic of Paraver */
 #define RUNNING_STATE 1
 #define HWC_GROUP_CHANGE_TYPE 42009999
 
+/* Semantic CSV fields */
+#define SEMANTIC_CSV_FIELDS        4
 
-class PRVStatesDataExtractor: public DataExtractor
+class PRVSemanticGuidedDataExtractor: public DataExtractor
 {
   public:
-    class TaskDataContainer
+    class BurstContainer
     {
       public:
-        bool                             OngoingBurst;
         task_id_t                        TaskId;
         thread_id_t                      ThreadId;
         line_t                           Line;
         timestamp_t                      BeginTime;
         timestamp_t                      EndTime;
-        duration_t                       BurstDuration;
+        duration_t                       Duration;
         map<event_type_t, event_value_t> EventsData;
+        bool                             IntermediateHWChange;
+        set<event_type_t>                NotCommonEvents;
         set<event_type_t>                BurstEndEvents;
-
-        TaskDataContainer() {
-          TaskId        = 0;
-          ThreadId      = 0;
-          Line          = 0;
-          BeginTime     = 0;
-          EndTime       = 0;
-          BurstDuration = 0;
-          EventsData.clear();
-          OngoingBurst  = false;
-        };
-
-        void Clear() {
-          TaskId        = 0;
-          ThreadId      = 0;
-          Line          = 0;
-          BeginTime     = 0;
-          EndTime       = 0;
-          BurstDuration = 0;
-          EventsData.clear();
-          OngoingBurst  = false;
-        }
-
-        TaskDataContainer& operator= (const TaskDataContainer& Other)
-        {
-          TaskId        = Other.TaskId;
-          ThreadId      = Other.ThreadId;
-          Line          = Other.Line;
-          BeginTime     = Other.BeginTime;
-          EndTime       = Other.EndTime;
-          BurstDuration = Other.BurstDuration;
-          EventsData    = Other.EventsData;
-        }
 
         string toString(void);
     };
 
   private:
-    ParaverTraceParser                 *TraceParser;
-    vector< vector<TaskDataContainer> > TaskData;
-    vector< vector<TaskDataContainer> > FutureTaskData;
-    double                              TimeFactor;
+    string              InputSemanticCSV;
+    ifstream            SemanticCSVStream;
+    ParaverTraceParser *TraceParser;
+    double              TimeFactor;
 
-    set<event_type_t> EventsToDealWith;
+    bool                OneThreadPerTask;
+
+    // vector<BurstContainer*> BurstsToLoad;
+    map<string, list<BurstContainer*> > BurstsToLoad;
 
   public:
 
-    PRVStatesDataExtractor(string InputTraceName);
-    ~PRVStatesDataExtractor();
+    PRVSemanticGuidedDataExtractor(string InputTraceName, string InputSemanticCSV);
+    ~PRVSemanticGuidedDataExtractor();
 
     bool SetEventsToDealWith(set<event_type_t>& EventsToDealWith,
                              bool               ConsecutivEvts);
@@ -127,18 +105,21 @@ class PRVStatesDataExtractor: public DataExtractor
 
     bool ExtractData(TraceData* TraceDataSet);
 
-    input_file_t GetFileType(void) { return ParaverTrace; };
+    input_file_t GetFileType(void) { return SematicGuided; };
 
   private:
 
-    bool NormalizeData(void);
+    bool ProcessSemanticCSV(timestamp_t CutOffset);
 
-    bool CheckState(State* CurrentState, TraceData* TraceDataSet);
+    void PopulateRecord(vector<string> &Record,
+                        const string   &Line,
+                        char            Delimiter);
 
-    bool CheckEvent(Event* CurrentEvent, TraceData* TraceDataSet);
+    bool PartialBurstFill(vector<string> &Record,
+                          timestamp_t     Offset,
+                          UINT32          CurrentLine);
 
-    void FillDataContainer(TaskDataContainer &DataContainer,
-                           State             *CurrentState);
+    bool ProcessEvent(Event* CurrentEvent, TraceData* TraceDataSet);
 };
 
 #endif /* PRVSTATESDATAEXTRACTOR_H */

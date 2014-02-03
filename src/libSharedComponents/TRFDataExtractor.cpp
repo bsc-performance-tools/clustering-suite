@@ -98,8 +98,9 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
   duration_t    LastBurstDuration;
   line_t        CurrentLine, LastBurstLine;
 
-  map<event_type_t, event_value_t> EventsData;
+  map<event_type_t, event_value_t>           EventsData;
   map<event_type_t, event_value_t>::iterator EventsDataIterator;
+  set<event_type_t>                          BurstEndEvents;
 
 
 
@@ -170,7 +171,8 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
                                     0,
                                     0,
                                     LastBurstDuration,
-                                    EventsData))
+                                    EventsData,
+                                    BurstEndEvents)) /* DEBUG (2013/10/23): To be changed to correct the parsing */
         {
           SetError(true);
           SetErrorMessage("error storing burst data",
@@ -215,7 +217,7 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
     if (OngoingBurst)
     {
       if (sscanf(Buffer,
-                 "\"user event\" { %d, %d, %d, %lld };;\n",
+                 "\"user event\" { %d, %d, %d, %lu };;\n",
                  &TaskId,
                  &ThreadId,
                  &CurrentEventType,
@@ -244,7 +246,8 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
                                     0,
                                     0,
                                     LastBurstDuration,
-                                    EventsData))
+                                    EventsData,
+                                    BurstEndEvents)) /* DEBUG (2013/10/23): To be changed to correct the parsing */
         {
           SetError(true);
           SetErrorMessage("error storing burst data",
@@ -298,7 +301,8 @@ TRFDataExtractor::ExtractData(TraceData* TraceDataSet)
                                   0,
                                   0,
                                   LastBurstDuration,
-                                  EventsData))
+                                  EventsData,
+                                  BurstEndEvents)) /* DEBUG (2013/10/23): To be changed to correct the parsing */
       {
         SetError(true);
         SetErrorMessage("error storing burst data", TraceDataSet->GetLastError());

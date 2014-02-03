@@ -69,6 +69,9 @@ class ClusteringConfiguration: public Error
     percentage_t    FilterThreshold; ///< Threshold filter for small clusters
     bool            NormalizeData;   ///< Apply range data normalization
 
+    bool            UseSemanticValue; ///< Use the semantic value present in the Semantic CSV file
+    bool            ApplyLogToSemanticValue; ///< Apply logarithmic normalization to the semantic value
+
     sampling_type_t Sampling;           ///< Apply Sampling over the data
     percentage_t    SamplingPercentage; ///< Percentage of data points for sampling
 
@@ -113,7 +116,9 @@ class ClusteringConfiguration: public Error
 
     /* Initialization */
     bool   Initialize(string XMLFileName,
-                      string PCFFileName = "");
+                      string PCFFileName,
+                      bool   UseSemanticvalue,
+                      bool   ApplyLogToSemanticValue);
 
     bool   IsInitialized(void) const;
 

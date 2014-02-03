@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -44,18 +44,22 @@ using cepba_tools::Error;
 #include <vector>
 using std::vector;
 
+#include <set>
+using std::set;
+
 /**
  * Singleton container of clustering and extrapolation parameters. Used to
  * extract data from traces, and also apply the basic normalizations and
  * transformations
  */
-class ParametersManager: public Error 
+class ParametersManager: public Error
 {
   public:
     typedef map<string, INT32 >::iterator       ParametersPositionIterator;
     typedef map<string, INT32 >::const_iterator ParametersPositionConstIterator;
 
   private:
+
     static ParametersManager* _Parameters;
 
     ParametersManager(void);
@@ -65,7 +69,7 @@ class ParametersManager: public Error
 
     map<string, INT32>           ExtrapolationParametersIndex;
     vector<ClusteringParameter*> ExtrapolationParameters;
-    
+
   public:
     static ParametersManager* GetInstance(void);
 
@@ -82,10 +86,11 @@ class ParametersManager: public Error
     vector<bool> GetExtrapolationParametersPrecision (void);
 
     vector<double> GetClusteringParametersFactors(void);
-    
+
     void Clear(void);
-    
-    void NewData(map<event_type_t, event_value_t>& EventsData);
+
+    void NewData(map<event_type_t, event_value_t>& EventsData,
+                 set<event_type_t>&                BurstEndEvents);
 
     burst_type_t GetData(vector<double>&      ClusteringRawData,
                          vector<double>&      ClusteringProcessedData,

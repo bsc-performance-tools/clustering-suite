@@ -35,6 +35,7 @@
 #include "DataExtractorFactory.hpp"
 #include "PRVStatesDataExtractor.hpp"
 #include "PRVEventsDataExtractor.hpp"
+#include "PRVSemanticGuidedDataExtractor.hpp"
 #include "TRFDataExtractor.hpp"
 
 #include <sstream>
@@ -64,7 +65,8 @@ bool DataExtractorFactory::GetExtractor(string          InputFileName,
                                         DataExtractor *&DataExtractorObject,
                                         bool            EventParsing,
                                         bool            ConsecutiveEvts,
-                                        bool            MPI)
+                                        bool            MPI,
+                                        string          InputSemanticCSV)
 {
   if (!CheckFileType(InputFileName))
   {
@@ -83,7 +85,12 @@ bool DataExtractorFactory::GetExtractor(string          InputFileName,
   switch(FileType)
   {
     case ParaverTrace:
-      if (EventParsing)
+      if (InputSemanticCSV.compare("") != 0)
+      {
+        DataExtractorObject = new PRVSemanticGuidedDataExtractor(InputFileName,
+                                                                 InputSemanticCSV);
+      }
+      else if (EventParsing)
       {
         DataExtractorObject = new PRVEventsDataExtractor(InputFileName);
       }

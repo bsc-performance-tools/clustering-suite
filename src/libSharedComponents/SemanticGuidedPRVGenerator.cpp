@@ -25,17 +25,17 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
-  $Rev::                                          $:  Revision of last commit
-  $Author::                                       $:  Author of last commit
-  $Date::                                         $:  Date of last commit
+  $Id:: ClusteredEventsPRVGenerator.cpp 85 2013-0#$:  Id
+  $Rev:: 85                                       $:  Revision of last commit
+  $Author:: jgonzale                              $:  Author of last commit
+  $Date:: 2013-05-06 15:35:11 +0200 (lun, 06 may #$:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 
-#include "ClusteredStatesPRVGenerator.hpp"
+#include "SemanticGuidedPRVGenerator.hpp"
 #include <ParaverColors.h>
 
 #include <unistd.h>
@@ -62,7 +62,7 @@ using std::ostringstream;
 "VALUES\n"\
 "0\tEnd\n"
 
-ClusteredStatesPRVGenerator::ClusteredStatesPRVGenerator(string  InputTraceName,
+SemanticGuidedPRVGenerator::SemanticGuidedPRVGenerator(string  InputTraceName,
                                                        string  OutputTraceName)
 :ClusteredTraceGenerator(InputTraceName, OutputTraceName)
 {
@@ -174,7 +174,7 @@ ClusteredStatesPRVGenerator::ClusteredStatesPRVGenerator(string  InputTraceName,
   return;
 }
 
-ClusteredStatesPRVGenerator::~ClusteredStatesPRVGenerator(void)
+SemanticGuidedPRVGenerator::~SemanticGuidedPRVGenerator(void)
 {
   if ( InputPCFFile != NULL)
     fclose(InputPCFFile);
@@ -185,7 +185,7 @@ ClusteredStatesPRVGenerator::~ClusteredStatesPRVGenerator(void)
   delete TraceParser;
 }
 
-bool ClusteredStatesPRVGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
+bool SemanticGuidedPRVGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
                                                        bool               ConsecutiveEvts)
 {
   SetError(true);
@@ -195,7 +195,7 @@ bool ClusteredStatesPRVGenerator::SetEventsToDealWith (set<event_type_t>& Events
 }
 
 
-bool ClusteredStatesPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
+bool SemanticGuidedPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
                                       vector<cluster_id_t>& IDs,
                                       set<cluster_id_t>&    DifferentIDs,
                                       bool                  MinimizeInformation)
@@ -207,7 +207,7 @@ bool ClusteredStatesPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
   return Run(Bursts.begin(), Bursts.end(), IDs, DifferentIDs, MinimizeInformation);
 }
 
-bool ClusteredStatesPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& DifferentIDs)
+bool SemanticGuidedPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& DifferentIDs)
 {
   char   Buffer[256], AuxBuffer[256];
   size_t BufferSize = sizeof(Buffer);
@@ -327,7 +327,7 @@ bool ClusteredStatesPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& Different
   return true;
 }
 
-bool ClusteredStatesPRVGenerator::BurstCloseAndOpenRecord(ParaverRecord* CurrentRecord,
+bool SemanticGuidedPRVGenerator::BurstCloseAndOpenRecord(ParaverRecord* CurrentRecord,
                                                          cluster_id_t&  ID)
 {
   ostringstream Object;
@@ -370,7 +370,7 @@ bool ClusteredStatesPRVGenerator::BurstCloseAndOpenRecord(ParaverRecord* Current
   return false;
 }
 
-bool ClusteredStatesPRVGenerator::BurstOpeningRecord(ParaverRecord* CurrentRecord, cluster_id_t& ID)
+bool SemanticGuidedPRVGenerator::BurstOpeningRecord(ParaverRecord* CurrentRecord, cluster_id_t& ID)
 {
   ostringstream Object;
 
@@ -395,7 +395,7 @@ bool ClusteredStatesPRVGenerator::BurstOpeningRecord(ParaverRecord* CurrentRecor
   return false;
 }
 
-bool ClusteredStatesPRVGenerator::BurstClosingRecord(ParaverRecord* CurrentRecord)
+bool SemanticGuidedPRVGenerator::BurstClosingRecord(ParaverRecord* CurrentRecord)
 {
   ostringstream Object;
 
@@ -423,7 +423,7 @@ bool ClusteredStatesPRVGenerator::BurstClosingRecord(ParaverRecord* CurrentRecor
   return false;
 }
 
-bool ClusteredStatesPRVGenerator::CopyROWFile(void)
+bool SemanticGuidedPRVGenerator::CopyROWFile(void)
 {
   ifstream InputROW(InputROWName.c_str(), std::ios::binary);
   if (!InputROW)
@@ -451,7 +451,7 @@ bool ClusteredStatesPRVGenerator::CopyROWFile(void)
   return true;
 }
 
-void ClusteredStatesPRVGenerator::PrepareClusterIDsVector(vector<cluster_id_t>& ClusterIDs,
+void SemanticGuidedPRVGenerator::PrepareClusterIDsVector(vector<cluster_id_t>& ClusterIDs,
                                                           set<cluster_id_t>&    DifferentIDs,
                                                           cluster_id_t&         MaxIDUsed)
 {
@@ -501,7 +501,7 @@ void ClusteredStatesPRVGenerator::PrepareClusterIDsVector(vector<cluster_id_t>& 
  *
  * \return The name of the cluster, taking into account the special cluster ids
  */
-string ClusteredStatesPRVGenerator::GetClusterName(cluster_id_t ID)
+string SemanticGuidedPRVGenerator::GetClusterName(cluster_id_t ID)
 {
   ostringstream ClusterName;
 

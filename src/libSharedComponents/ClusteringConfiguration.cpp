@@ -110,16 +110,28 @@ ClusteringConfiguration::ClusteringConfiguration()
 /**
  * Initialization of the class. Starts the XML parser to set up all attributes
  *
- * \param XMLFileName Name of the XML clustering configuration file
- * \param ApplyCPIStack  Boolean which sets if CPI stack extrapolation metrics should be used
+ * \param XMLFileName      Name of the XML clustering configuration file
+ *
+ * \param PCFFileName      Name of the PCF file (if exists) where information
+ *                         about extrapolation parameters should be read
+ *
+ * \param UseSemanticValue True if the possible semantic values that appear in
+ *                         a the supplied Paraver Semantic CSV should be used
+ *
+ * \param ApplyLogToSemanticValue True if we should apply a logarithmic
+ *                                normalization to the semantic values read from
+ *                                a Paraver CSV file
  *
  * \return True if XML parsing worked properly, false otherwise
  */
 bool ClusteringConfiguration::Initialize(string XMLFileName,
-                                         string PCFFileName)
+                                         string PCFFileName,
+                                         bool   UseSemanticvalue,
+                                         bool   ApplyLogToSemanticValue)
 {
   FILE*     XMLFile;
   XMLParser Parser;
+
 
   Distributed     = false;
   DurationFilter  = 0.0;
@@ -128,6 +140,9 @@ bool ClusteringConfiguration::Initialize(string XMLFileName,
 
   Sampling           = NoSampling;
   SamplingPercentage = 0.0;
+
+  this->UseSemanticValue        = UseSemanticvalue;
+  this->ApplyLogToSemanticValue = ApplyLogToSemanticValue;
 
   if ( (XMLFile = fopen(XMLFileName.c_str(), "r")) == NULL)
   {
@@ -292,9 +307,8 @@ ClusteringConfiguration::GetNormalizeData(void)
  * \param ClusteringAlgorithm String containing the name of the algorithm
  * \param ClusteringAlgorithmParameters Parameters to tune the clustering algorithm, not the dimensions
  */
-void
-ClusteringConfiguration::SetClusteringAlgorithm(string                ClusteringAlgorithmName,
-                                                map<string, string>   ClusteringAlgorithmParameters)
+void ClusteringConfiguration::SetClusteringAlgorithm(string                ClusteringAlgorithmName,
+                                                     map<string, string>   ClusteringAlgorithmParameters)
 {
   this->ClusteringAlgorithmName       = ClusteringAlgorithmName;
   this->ClusteringAlgorithmParameters = ClusteringAlgorithmParameters;
@@ -369,20 +383,49 @@ ClusteringConfiguration::GetClusteringAlgorithmErrorMessage(void)
  * \param ParametersNames vector of strings containing the parameter names
  * \param ParametersDefinition vector of parameters definition containers
  */
-void
-ClusteringConfiguration::SetClusteringParameters(vector<string>&             ParametersNames,
-                                                 vector<ParameterContainer>& ParametersDefinition)
+void ClusteringConfiguration::SetClusteringParameters(vector<string>&             ParametersNames,
+                                                      vector<ParameterContainer>& ParametersDefinition)
 {
-  this->ClusteringParametersNames       = ParametersNames;
-  this->ClusteringParametersDefinitions = ParametersDefinition;
+
+  if (UseSemanticValue)
+  {
+    /* Create a 'pseudo-event' to store the semantic value read from the Paraver
+     * Semenatic CSV file */
+    ParameterContainer NewParameter;
+
+    NewParameter.ParameterType = SingleEventParameter;
+    NewParameter.EventType     = SEMANTIC_VALUE_EVT_TYPE;
+    NewParameter.ApplyLog      = ApplyLogToSemanticValue;
+
+    ClusteringParametersNames.reserve(ParametersNames.size()+1);
+    ClusteringParametersDefinitions.reserve(ParametersDefinition.size()+1);
+
+    ClusteringParametersNames.insert(ClusteringParametersNames.end(),
+                                     string("Semantic_Value"));
+
+    ClusteringParametersDefinitions.insert(ClusteringParametersDefinitions.end(),
+                                           NewParameter);
+  }
+  else
+  {
+    ClusteringParametersNames.reserve(ParametersNames.size());
+    ClusteringParametersDefinitions.reserve(ParametersDefinition.size());
+  }
+
+  ClusteringParametersNames.insert(ClusteringParametersNames.end(),
+                                   ParametersNames.begin(),
+                                   ParametersNames.end());
+
+  ClusteringParametersDefinitions.insert(ClusteringParametersDefinitions.end(),
+                                         ParametersDefinition.begin(),
+                                         ParametersDefinition.end());
 }
 
 /**
  * Returns the clustering metrics names
  * \return Vector containing names of each clustering metric
  */
-vector<string>&
-ClusteringConfiguration::GetClusteringParametersNames(void)
+vector<string>& ClusteringConfiguration::GetClusteringParametersNames(void)
 {
   return this->ClusteringParametersNames;
 }
@@ -391,8 +434,7 @@ ClusteringConfiguration::GetClusteringParametersNames(void)
  * Returns the clustering metrics definitions
  * \return Vector containing the definition of each clustering metric
  */
-vector<ParameterContainer>&
-ClusteringConfiguration::GetClusteringParametersDefinitions(void)
+vector<ParameterContainer>& ClusteringConfiguration::GetClusteringParametersDefinitions(void)
 {
   return this->ClusteringParametersDefinitions;
 }

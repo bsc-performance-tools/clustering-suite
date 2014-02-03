@@ -84,8 +84,7 @@ PlottingManager* PlottingManager::_PlottingManager = NULL;
  * \param  Boolean indicating if data to plot is clustered or just extracted from a file
  * \return The plotting manager singleton instance
  */
-PlottingManager*
-PlottingManager::GetInstance(bool DataExtraction)
+PlottingManager* PlottingManager::GetInstance(bool DataExtraction)
 {
   /* DEBUG
   cout << "GETTING A PLOT INSTANCE WITH DataExtraction SET TO " << DataExtraction << endl; */
@@ -104,8 +103,7 @@ PlottingManager::GetInstance(bool DataExtraction)
  * \return Plotting manager if it exists. NULL otherwise.
  *
  */
-PlottingManager*
-PlottingManager::GetInstance(void)
+PlottingManager *PlottingManager::GetInstance(void)
 {
   return PlottingManager::_PlottingManager;
 }

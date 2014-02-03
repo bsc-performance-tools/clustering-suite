@@ -141,6 +141,7 @@ class TraceData: public Error
                   timestamp_t                       EndTime,
                   duration_t                        BurstDuration,
                   map<event_type_t, event_value_t>& EventsData,
+                  set<event_type_t>&                BurstEndEvents,
                   bool                              toCluster = true);
 
     bool NewBurst(instance_t           Instance,
@@ -185,7 +186,7 @@ class TraceData: public Error
 #endif
 
     /* Clustering points modifiers */
-    void  Normalize(void);
+    bool  Normalize(void);
     void  ScalePoints(void);
     void  MeanAdjust(void);
     void  BaseChange(vector< vector<double> >& BaseChangeMatrix);
@@ -228,6 +229,9 @@ class TraceData: public Error
   private:
 
     bool SampleSingleTask(vector<CPUBurst*>& TaskBursts, size_t NumSamples);
+
+    bool CheckBurstEndEvents(map<event_type_t, event_value_t>& EventsData,
+                             set<event_type_t>&                BurstEndEvents);
 
     void SetTasksToRead();
 

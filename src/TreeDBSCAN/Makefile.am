@@ -1,7 +1,7 @@
 
 SUBDIRS = scripts
 
-INCLUDES = \
+AM_CPPFLAGS = \
     -I$(top_srcdir)/include \
     -I$(top_srcdir)/common_utilities \
     -I$(top_srcdir)/src/BasicClasses \

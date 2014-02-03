@@ -126,6 +126,7 @@ bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
 
   Messages << "****** STEP 1 (Eps = " << EpsilonPerLevel[0] << ") ******" << endl;
   system_messages::information(Messages.str());
+  system_messages::silent_information(Messages.str());
 
   IntermediatePartitions.clear();
   IntermediatePartitions.push_back(Partition());
@@ -157,6 +158,7 @@ bool ClusteringRefinementAggregative::Run(const vector<CPUBurst*>& Bursts,
     Messages << " (Eps = " << EpsilonPerLevel[CurrentStep];;
     Messages << ") ******" << endl;
     system_messages::information(Messages.str());
+    system_messages::silent_information(Messages.str());
 
     if (!RunStep(CurrentStep,
                  Bursts,

@@ -25,15 +25,15 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- *\
 
-  $Id::                                           $:  Id
-  $Rev::                                          $:  Revision of last commit
-  $Author::                                       $:  Author of last commit
-  $Date::                                         $:  Date of last commit
+  $Id:: ClusteredEventsPRVGenerator.hpp 85 2013-0#$:  Id
+  $Rev:: 85                                       $:  Revision of last commit
+  $Author:: jgonzale                              $:  Author of last commit
+  $Date:: 2013-05-06 15:35:11 +0200 (lun, 06 may #$:  Date of last commit
 
 \* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-#ifndef _ClusteredStatesPRVGenerator_HPP_
-#define _ClusteredStatesPRVGenerator_HPP_
+#ifndef _SEMANTICGUIDEDPRVGENERATOR_HPP_
+#define _SEMANTICGUIDEDPRVGENERATOR_HPP_
 
 
 #include <ParaverTraceParser.hpp>
@@ -55,7 +55,7 @@ using std::ostringstream;
 class ParaverTraceParser;
 class Event;
 
-class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
+class SemanticGuidedPRVGenerator: public ClusteredTraceGenerator
 {
   public:
     struct BurstInfo
@@ -81,10 +81,10 @@ class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
     map<string, list<BurstInfo*> > BurstsToPrint;
 
   public:
-    ClusteredStatesPRVGenerator (string  InputTraceName,
+    SemanticGuidedPRVGenerator (string  InputTraceName,
                                 string  OutputTraceName);
 
-    ~ClusteredStatesPRVGenerator (void);
+    ~SemanticGuidedPRVGenerator (void);
 
     ReconstructorType GetType(void) { return SemanticGuidedPRV; };
 
@@ -122,11 +122,11 @@ class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
 };
 
 template <typename T>
-bool ClusteredStatesPRVGenerator::Run (T                     begin,
-                                       T                     end,
-                                       vector<cluster_id_t>& IDs,
-                                       set<cluster_id_t>&    DifferentIDs,
-                                       bool                  MinimizeInformation)
+bool SemanticGuidedPRVGenerator::Run (T                     begin,
+                                      T                     end,
+                                      vector<cluster_id_t>& IDs,
+                                      set<cluster_id_t>&    DifferentIDs,
+                                      bool                  MinimizeInformation)
 {
   ParaverHeader*                  Header;
   vector<ApplicationDescription*> AppsDescription;

@@ -4,7 +4,7 @@ lib_LTLIBRARIES = libDistributedClustering.la
 
 ## common_filesdir = @common_filesdir@
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/BasicClasses \
 	-I$(top_srcdir)/src/libANN \

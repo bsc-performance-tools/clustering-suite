@@ -47,7 +47,7 @@ using std::set;
 class ClusteredTraceGenerator: public Error
 {
   protected:
-    enum   ReconstructorType { PRVStates, PRVEvents, TRF };
+    enum   ReconstructorType { PRVStates, PRVEvents, SemanticGuidedPRV, TRF };
 
     string InputTraceName;
     FILE*  InputTraceFile;

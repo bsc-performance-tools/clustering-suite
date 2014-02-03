@@ -63,7 +63,7 @@ using std::make_pair;
 #include <mpi.h>
 #endif
 
-
+// #define DEBUG_PARAVER_INPUT 1
 
 /******************************************************************************
 /* Singleton management
@@ -158,6 +158,7 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
                          timestamp_t                       EndTime,
                          duration_t                        BurstDuration,
                          map<event_type_t, event_value_t>& EventsData,
+                         set<event_type_t>&                BurstEndEvents,
                          bool                              toCluster)
 {
   CPUBurst* Burst;
@@ -205,12 +206,12 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
 #endif
 
   /* Add duration to events data */
-  EventsData.insert(make_pair(DURATION_EVENT_TYPE,
+  EventsData.insert(make_pair(DURATION_EVT_TYPE,
                               (event_value_t) BurstDuration));
 
   /* Add data to parameters manager */
   Parameters->Clear();
-  Parameters->NewData(EventsData);
+  Parameters->NewData(EventsData, BurstEndEvents);
 
   /* Retrieve data from parameters manager */
   BurstType = Parameters->GetData(ClusteringRawData,
@@ -308,6 +309,11 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
     }
 #endif
   }
+
+  /* DEBUG
+  cout << "ClusteringBursts.size = " << ClusteringBursts.size() << endl;
+  cout << "BurstType = " << BurstType << endl;
+  */
 
   return true;
 }
@@ -439,14 +445,16 @@ bool TraceData::DataExtractionFinished(void)
 
 #endif
 
-  Normalize();
+  return (Normalize());
 
+  /*
   if (!Normalized)
   {
     return false;
   }
 
   return true;
+  */
 }
 
 
@@ -511,7 +519,7 @@ bool TraceData::Sampling(size_t MaxSamples)
   return true;
 }
 
-void TraceData::Normalize(void)
+bool TraceData::Normalize(void)
 {
   bool EmptyRanges = true;
 
@@ -624,9 +632,9 @@ void TraceData::Normalize(void)
     if (EmptyRanges)
     {
       SetError(true);
-      SetErrorMessage("All clustering parameters have empty ranges");
+      SetErrorMessage("all clustering parameters have empty ranges");
       Normalized = false;
-      return;
+      return false;
     }
 
 #ifdef HAVE_SQLITE3
@@ -697,6 +705,8 @@ void TraceData::Normalize(void)
 
     Normalized = true;
   }
+
+  return true;
 }
 
 void TraceData::ScalePoints(void)
@@ -1051,6 +1061,14 @@ bool TraceData::SampleSingleTask(vector<CPUBurst*>& TaskBursts,
 
   return true;
 }
+
+bool CheckBurstEndEvents(map<event_type_t, event_value_t>& EventsData,
+                         set<event_type_t>&                BurstEndEvents)
+{
+
+  return true;
+}
+
 
 void TraceData::SetTasksToRead()
 {

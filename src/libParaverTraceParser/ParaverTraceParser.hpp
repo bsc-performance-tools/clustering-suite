@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -39,6 +39,7 @@
 
 #include "ParaverRecord.hpp"
 #include "ParaverHeader.hpp"
+#include "ParaverMetadataManager.hpp"
 #include "Error.hpp"
 using cepba_tools::Error;
 
@@ -60,41 +61,53 @@ using std::vector;
 class ParaverTraceParser: public Error
 {
   private:
-  
+
     string ParaverTraceName;
     FILE*  ParaverTraceFile;
     off_t  TraceSize;
+
     off_t  FirstCommunicatorOffset; /* Offset of first communicator */
-    off_t  FirstRecordOffset;       /* Offset of first record (without header
-                                     * and communicators) */
-    
-    bool   ParsingInitialized;
-  
-    UINT64 CurrentLine;
+    UINT64 FirstCommunicatorLine;
+
+    off_t  FirstMetadataOffset;     /* Offset of metadarecords */
+    UINT64 FirstMetadataLine;
+
+    off_t  FirstRecordOffset;       /* Offset of first record */
     UINT64 FirstRecordLine;
-  
-    ParaverHeader_t Header;
+
+    bool   ParsingInitialized;
+
+    ParaverHeader_t         Header;
+    ParaverMetadataManager* MetadataManager;
+
+    list<char*>       TraceComments;
+    vector<UINT64>    CutTimeOffsets;
+
+    UINT64 CurrentLine;
 
   public:
     ParaverTraceParser(){ ParsingInitialized = false; };
 
     ParaverTraceParser(string ParaverTraceName,
                        FILE*  ParaverTraceFile = NULL);
-    
+
     UINT32 GetCurrentLine(void) { return CurrentLine; };
-    
+
     bool InitTraceParsing(void);
-    
+
     vector<ApplicationDescription*> GetApplicationsDescription(void);
-    ParaverHeader_t GetHeader(void);
-    
+    ParaverHeader_t         GetHeader  (void);
+    ParaverMetadataManager* GetMetadata(void);
+
     INT32 GetTimeUnits(void);
-      
+
+    vector<UINT64>& GetCutTimeOffsets(void) { return CutTimeOffsets; };
+
     ParaverRecord_t GetNextRecord(void);
 
     ParaverRecord_t GetNextRecord(UINT32         RecordTypeMask);
     ParaverRecord_t GetNextRecord(UINT32         RecordTypeMask, set<INT32> TaskIds);
-    
+
     ParaverRecord_t GetNextTaskRecord(INT32      TaskId);
     ParaverRecord_t GetNextTaskRecord(set<INT32> TaskIds);
 
@@ -102,21 +115,23 @@ class ParaverTraceParser: public Error
     Event_t         GetNextEvent(void);
     Communication_t GetNextCommunication(void);
     GlobalOp_t      GetNextGlobalOp(void);
-    
+
     INT32           GetFilePercentage(void);
-  
+
+    bool FlushComments(FILE* OutputFile);
+
     bool Reload(void);
 
   private:
-    
+
     ParaverRecord_t NextTraceRecord(UINT32 RecordType);
-  
+
     bool   GetAppCommunicators(ApplicationDescription_t AppDescription);
-  
+
     INT32  GetLongLine(char** Line);
-  
+
     bool   GetTraceLine(char* Line, int LineSize);
-  
+
     State_t         ParseState(char* ASCIIState);
     Event_t         ParseEvent(char* ASCIIEvent);
     Communication_t ParseCommunication(char* ASCIICommunication);

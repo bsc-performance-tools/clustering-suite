@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/BasicClasses 
+AM_CPPFLAGS = -I$(top_srcdir)/src/BasicClasses 
 
 noinst_LTLIBRARIES = libKalign2.la
 

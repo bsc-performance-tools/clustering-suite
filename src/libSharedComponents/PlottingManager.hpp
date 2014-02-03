@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -46,7 +46,7 @@ using std::set;
 
 class PlotDefinition;
 
-class PlottingManager: public Error 
+class PlottingManager: public Error
 {
   private:
     bool                    DataExtraction;
@@ -57,11 +57,11 @@ class PlottingManager: public Error
     vector<string> PlotsWarnings;
 
     INT32  ClusterIdPosition;
-    
+
     static PlottingManager* _PlottingManager;
-    
+
     bool   PrintingModels;
-    
+
   public:
     static PlottingManager* GetInstance(bool DataExtraction);
 
@@ -69,19 +69,19 @@ class PlottingManager: public Error
 
     vector<bool>   GetCorrectPlots(void);
     vector<string> GetPlotsWarning(void);
-    
+
     bool   PrintPlots(string             PlotsDataFileName,
                       string             PlotsFileNamePrefix,
                       string             Title,
                       set<cluster_id_t>& DifferentIDs,
                       bool               PrintingModels = false);
-    
+
 
   private:
     PlottingManager(bool DataExtraction);
 
     void GenerateAllPlots(ParametersManager* Parameters);
-    
+
     void  LoadSinglePlot(PlotDefinition*    CurrentPlot,
                          ParametersManager* Parameters);
 
@@ -111,7 +111,7 @@ class PlottingManager: public Error
                              string   DataFileName);
 
     string RGBStateColor(INT32 StateValue);
-    
+
     string GetClusterName(cluster_id_t ID);
 };
 

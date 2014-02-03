@@ -253,7 +253,7 @@ bool XMLParser::ParseXML(string                   XMLFileName,
   if (UseDuration)
   {
     NewParameter.ParameterType = SingleEventParameter;
-    NewParameter.EventType     = DURATION_EVENT_TYPE;
+    NewParameter.EventType     = DURATION_EVT_TYPE;
     NewParameter.ApplyLog      = ApplyLogToDuration;
 
     ClusteringParametersNames.push_back("Duration");
@@ -732,7 +732,7 @@ bool XMLParser::ParseXMLSingleEvent(xmlNodePtr CurrentSingleEvent)
 
       if (EventTypeStr.compare(TEXT_DURATION) == 0)
       {
-        EventType = DURATION_EVENT_TYPE;
+        EventType = DURATION_EVT_TYPE;
       }
       else if (IsNumber(string((char*) xmlNodeGetContent(CurrentNode))))
       {
@@ -965,7 +965,7 @@ bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
       string EventTypeStr = (const char*) xmlNodeGetContent(CurrentNode);
       if (EventTypeStr.compare(TEXT_DURATION) == 0)
       {
-        EventTypeA = DURATION_EVENT_TYPE;
+        EventTypeA = DURATION_EVT_TYPE;
       }
       else if (IsNumber(string((char*) xmlNodeGetContent(CurrentNode))))
       {
@@ -1017,7 +1017,7 @@ bool XMLParser::ParseXMLMixedEvents(xmlNodePtr CurrentMixedEvent)
       string EventTypeStr = (const char*) xmlNodeGetContent(CurrentNode);
       if (EventTypeStr.compare(TEXT_DURATION) == 0)
       {
-        EventTypeB = DURATION_EVENT_TYPE;
+        EventTypeB = DURATION_EVT_TYPE;
       }
       else if (IsNumber(string((char*) xmlNodeGetContent(CurrentNode))))
       {

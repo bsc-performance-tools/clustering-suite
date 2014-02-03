@@ -63,19 +63,26 @@ using std::vector;
 #include <set>
 using std::set;
 
-bool   Verbose = true;
+bool   Verbose          = true;
+bool   ParaverVerbosity = false;
 
 string ClusteringDefinitionXML;    /* Clustering definition XML file name */
 bool   ClusteringDefinitionRead = false;
 
 string InputTraceName;             /* Input trace name */
+string InputSemanticCSV;           /* Special case to integrate with Paraver */
 string InputTraceNamePrefix;
-bool   InputTraceNameRead = false;
+bool   InputTraceNameRead   = false;
+bool   InputSemanticCSVRead = false;
 
 string OutputFileName;             /* Data extracted from input trace */
 bool   OutputFileNameRead = false;
 
 string OutputDataFileNamePrefix;   /* File where the burst data is stored */
+
+bool              UseParaverEventParsing = false;
+bool              ConsecutiveEvts        = false;
+set<unsigned int> EventsToParse;
 
 bool   SampleData;
 size_t MaxSamples  = 20000;
@@ -86,7 +93,9 @@ bool   GenerateClusterSequences = false;
 bool   ClusteringRefinement = false;
 bool   DivisiveRefinement   = true;
 bool   AutomaticRefinement  = false;
+bool   OverrideDBSCAN       = false;
 
+double Eps;
 double MaxEps, MinEps;
 int    MinPoints, Steps;
 
@@ -98,34 +107,33 @@ bool   FASTASequences = false;
 string RefinementPrefixFileName = "";
 bool   PrintRefinementSteps     = false;
 
-bool              UseParaverEventParsing = false;
-bool              ConsecutiveEvts        = false;
-set<unsigned int> EventsToParse;
+bool   PrintTiming = false;
 
-bool   ApplyCPIStack = false;
-
-bool   PrintTimming = false;
+bool   UseSemanticValue        = false;
+bool   ApplyLogToSemanticValue = false;
 
 #define HELP \
+"%s v%s (%s %s)\n"\
+"(c) BSC Tools - Barcelona Supercomputing Center\n"\
 "\n"\
 "Usage:\n"\
-"  %s -d <clustering_def.xml> [OPTIONS] -i <input_trace> [<output_trace>]\n"\
+"  %s -d <clustering_def.xml> [OPTIONS] -i <input_trace> -o <output_trace>\n"\
 "\n"\
 "  -v |--version               Information about the tool\n"\
 "\n"\
 "  -h                          This help\n"\
 "\n"\
-"  -s                          Do not show information messages (silent mode)\n"\
+"  -s                          Shows minimum information (silent mode)\n"\
+"\n"\
+"  -d <clustering_def_xml>     XML containing the clustering process\n"\
+"                              definition\n"\
 "\n"\
 "  -e[c] Type1,Type2,...       When using an input Paraver trace, use this\n"\
 "                              event types to determine the regions treated as\n"\
 "                              bursts\n"\
 "                              If 'c' option is included, every event from the\n"\
-"                              list define an entry/exit of a region (independetly)\n"\
+"                              list define an entry/exit of a region (independently)\n"\
 "                              from its value\n"\
-"\n"\
-"  -d <clustering_def_xml>     XML containing the clustering process\n"\
-"                              definition\n"\
 "\n"\
 "  -m <max_number_bursts>      Sample the data set up to the maximum number of\n"\
 "                              bursts (default: 20000) \n"\
@@ -133,52 +141,72 @@ bool   PrintTimming = false;
 "  -a[f]                       Generate a file containing the cluster sequences\n"\
 "                              (using 'f' generates a FASTA aminoacid sequences)\n"\
 "\n"\
-"  -r<d|a>[p] <min_points>,<max_eps>,<min_eps>,<steps>\n"\
+"  -r<d|a>[p] [<min_points>,<max_eps>,<min_eps>,<steps>]\n"\
 "\n"\
-"                              Applies a clustering refinement (d = divisve,\n"\
-"                              a = aggregative) based on DBSCAN using min_points\n"\
-"                              the epsilon range introduced\n"\
-"                              Ignores the cluster algorithm used in the XML\n"\
-"                              If 'p' option is included, plots traces and trees\n"\
-"                              of each step are printed\n"\
+"                              Applies a the Aggregative (a) or Divisive (d)\n"\
+"                              Clustering Refinement algorithm.\n"\
+"                              If 'p' option is included plot scripts,\n"\
+"                              intermediate traces and refinement trees of each\n"\
+"                              step are printed.\n"\
+"                              If the set of parameters is not provided, the\n"\
+"                              algorithm automatically tunes \"MinPoints\"\n"\
+"                              and \"Eps\" values.\n"\
+"                              When using this option, the cluster algorithm\n"\
+"                              defined in the XML is ignored\n"\
+"\n"\
+"  -dbscan <epsilon>,<min_points>\n"\
+"\n"\
+"                              Override the clustering algorithm defined in the\n"\
+"                              configuration XML, to apply DBSCAN with the\n"\
+"                              parameters supplied\n"\
 "\n"\
 "  -t                          Print accurate timming of the analysis steps\n"\
 "\n"\
+"  -c[l]                       Use the semantic value of the regions when using\n"\
+"                              a Paraver semantic CSV file a Paraver trace\n"\
+"                              inputs (using 'l', the algorithm apply a\n"\
+"                              logarithmic normalization to the samantic value).\n"\
 "\n"\
-"  -i <input_file>             Input CSV / Dimemas trace / Paraver trace\n"\
+"  -i <input_file | semantic_timeline.csv,tracefile.prv >\n"\
 "\n"\
-"  -o <output_file>            Output CSV file / Dimemas trace / Paraver trace\n"\
-"                              clustering process or output data file if\n"\
-"                              parameters '-x' or '-r' are used\n"\
+"                              Input trace where the information is going to\n"\
+"                              be extracted. It could be a Paraver trace or\n"\
+"                              a combination of a semantic timeline CSV file\n"\
+"                              generated by Paraver and its corresponding trace\n"\
+"\n"\
+"  -o <output_file>            Output Paraver trace of the clustering process\n"\
 "\n"
 
 
 #define ABOUT \
-"%s v%s (%s)\n"\
-"(c) CEPBA-Tools - Barcelona Supercomputing Center\n"\
+"%s v%s (%s %s)\n"\
+"(c) BSC Tools - Barcelona Supercomputing Center\n"\
 "Automatic clustering analysis of Paraver/Dimemas traces and CSV files\n"
 
 void GetRefinementParameters(char*);
+void GetDBSCANParameters(char*);
 void GetEventParsingParameters(char*);
 
 void PrintUsage(char* ApplicationName)
 {
   cout << "Usage: " << ApplicationName << " [-s] -d <clustering_def.xml> ";
-  cout << "-m [max_number_bursts] -a[f] -r<d|a>[p] [<min_points>,<max_eps>,<min_eps>,<steps> ";
-  cout << "-t -i <input_file> -o <output_file>" << endl;
+  cout << "[-m [max_number_bursts]] [-a[f]] [-r<d|a>[p] [<min_points>,<max_eps>,<min_eps>,<steps>]";
+  cout << "[-t] [-c[l]] -i <input_file> -o <output_file>" << endl;
 }
 
-void
-ReadArgs(int argc, char *argv[])
+void ReadArgs(int argc, char *argv[])
 {
-  INT32 j = 1;
+  INT32 j                  = 1;
   INT32 ParametersRequired = 1;
+
+  string InputFiles;
+  size_t Comma;
 
   if ( ( argc == 1) ||
        ((argc == 2) &&
        (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)))
   {
-    fprintf(stdout, HELP, argv[0]);
+    fprintf(stdout, HELP, argv[0], VERSION, __DATE__, __TIME__, argv[0]);
     exit(EXIT_SUCCESS);
   }
 
@@ -186,7 +214,7 @@ ReadArgs(int argc, char *argv[])
       ((argc == 2) &&
       ((strcmp(argv[1], "-v") == 0 || (strcmp(argv[1], "--version") == 0)))))
   {
-    fprintf(stdout, ABOUT, argv[0], VERSION, __DATE__);
+    fprintf(stdout, ABOUT, argv[0], VERSION, __DATE__, __TIME__);
     exit(EXIT_SUCCESS);
   }
 
@@ -197,20 +225,45 @@ ReadArgs(int argc, char *argv[])
       switch (argv[j][1])
       {
         case 'd':
-          j++;
-          ClusteringDefinitionXML  = argv[j];
-          ClusteringDefinitionRead = true;
+          if (strcmp(argv[j], "-dbscan") == 0)
+          {
+            j++;
+            GetDBSCANParameters(argv[j]);
+            OverrideDBSCAN = true;
+          }
+          else
+          {
+            j++;
+            ClusteringDefinitionXML  = argv[j];
+            ClusteringDefinitionRead = true;
+          }
           break;
+
         case 'i':
           j++;
-          InputTraceName     = argv[j];
+          InputFiles = argv[j];
+          Comma      = InputFiles.find(',');
+
+          if (Comma != string::npos)
+          {
+            InputSemanticCSV      = InputFiles.substr(0, Comma);
+            InputTraceName        = InputFiles.substr(Comma+1);
+            InputSemanticCSVRead  = true;
+          }
+          else
+          {
+            InputTraceName     = InputFiles;
+          }
+
           InputTraceNameRead = true;
           break;
+
         case 'o':
           j++;
           OutputFileName     = argv[j];
           OutputFileNameRead = true;
           break;
+
         case 'm':
           SampleData = true;
 
@@ -291,11 +344,20 @@ ReadArgs(int argc, char *argv[])
         case 's':
           Verbose = false;
           break;
+        case 'p':
+          ParaverVerbosity = true;
+          break;
         case 't':
-          PrintTimming = true;
+          PrintTiming = true;
           break;
         case 'c':
-          ApplyCPIStack = true;
+          UseSemanticValue = true;
+
+          if (argv[j][2] == 'n')
+          {
+            ApplyLogToSemanticValue = true;
+          }
+
           break;
         default:
           cerr << "**** INVALID PARAMETER " << argv[j][1] << " **** " << endl << endl;
@@ -322,6 +384,13 @@ ReadArgs(int argc, char *argv[])
   {
     cerr << "Output data file file missing ( \'-o\' parameter)" << endl;
     exit (EXIT_FAILURE);
+  }
+
+  if (UseSemanticValue && !InputSemanticCSVRead)
+  {
+    system_messages::information("You can't use the semantic value as dimension if no Semantic CSV is given");
+    system_messages::information("Ignoring parameter");
+    UseSemanticValue = false;
   }
 
   return;
@@ -386,6 +455,45 @@ void GetRefinementParameters(char* RefinementArgs)
     cerr << "(" << Args[3] << ")" << endl;
     exit (EXIT_FAILURE);
   }
+}
+
+void GetDBSCANParameters(char* DBSCANArgs)
+{
+  char          *err;
+  string         ArgsString (DBSCANArgs);
+  stringstream   ArgsStream (ArgsString);
+  string         Buffer;
+  vector<string> Args;
+
+  while(std::getline(ArgsStream, Buffer, ','))
+  {
+    Args.push_back(Buffer);
+  }
+
+  if (Args.size() != 2)
+  {
+    cerr << "DBSCAN parameters (\'-dbscan\') not correctly defined (";
+    cerr << DBSCANArgs << ")" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  Eps = strtod(Args[0].c_str(), &err);
+  if (*err)
+  {
+    cerr << "Error on DBSCAN parameters (\'-dbscan\'): Incorrect Epsilon value";
+    cerr << "(" << Args[0] << ")" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  MinPoints = strtol(Args[1].c_str(), &err, 0);
+  if (*err)
+  {
+    cerr << "Error on DBSCAN parameters (\'-dbscan\'): Incorrect value of MinPoints ";
+    cerr << "(" << Args[1] << ")" << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  return;
 }
 
 void GetEventParsingParameters(char* EventParsingArgs)
@@ -496,9 +604,9 @@ int main(int argc, char *argv[])
 
   ReadArgs(argc, argv);
 
-  libTraceClustering Clustering = libTraceClustering(Verbose);
+  libTraceClustering Clustering = libTraceClustering(Verbose, ParaverVerbosity);
 
-  system_messages::print_timers = PrintTimming;
+  system_messages::print_timers = PrintTiming;
 
   CheckFileNames();
 
@@ -506,6 +614,8 @@ int main(int argc, char *argv[])
   {
     if (!Clustering.InitTraceClustering(ClusteringDefinitionXML,
                                         InputTraceNamePrefix+".pcf",
+                                        UseSemanticValue,
+                                        ApplyLogToSemanticValue,
                                         CLUSTERING_REFINEMENT|PLOTS))
     {
       cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
@@ -516,6 +626,8 @@ int main(int argc, char *argv[])
   {
     if (!Clustering.InitTraceClustering(ClusteringDefinitionXML,
                                         InputTraceNamePrefix+".pcf",
+                                        UseSemanticValue,
+                                        ApplyLogToSemanticValue,
                                         CLUSTERING|PLOTS))
     {
       cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
@@ -540,7 +652,8 @@ int main(int argc, char *argv[])
                                 SampleData,
                                 MaxSamples,
                                 EventsToParse,
-                                ConsecutiveEvts))
+                                ConsecutiveEvts,
+                                InputSemanticCSV))
     {
       cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
@@ -550,7 +663,8 @@ int main(int argc, char *argv[])
   {
     if (!Clustering.ExtractData(InputTraceName,
                                 SampleData,
-                                MaxSamples))
+                                MaxSamples,
+                                InputSemanticCSV))
     {
       cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
@@ -601,6 +715,13 @@ int main(int argc, char *argv[])
     system_messages::information("** CLUSTER ANALYSIS **\n");
 
     T.begin();
+
+    /* Now, we only override the clustering algorithm with DBSCAN */
+    if (OverrideDBSCAN)
+    {
+      Clustering.SetDBSCANParameters(Eps, MinPoints);
+    }
+
     if (!Clustering.ClusterAnalysis())
     {
       cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;

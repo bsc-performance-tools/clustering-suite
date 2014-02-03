@@ -66,7 +66,10 @@ string ClusteringDefinitionXML;    /* Clustering definition XML file name */
 bool   ClusteringDefinitionRead = false;
 
 string InputTraceName;             /* Input trace name */
-bool   InputTraceNameRead = false;
+string InputSemanticCSV;           /* Special case to integrate with Paraver */
+string InputTraceNamePrefix;
+bool   InputTraceNameRead   = false;
+bool   InputSemanticCSVRead = false;
 
 string OutputFileName;             /* Data extracted from input trace */
 bool   OutputFileNameRead = false;
@@ -77,11 +80,15 @@ map<string, string> Parameters;
 bool   KNeighbourValuesRead = false;
 
 bool              UseParaverEventParsing = false;
+bool              ConsecutiveEvts        = false;
 set<unsigned int> EventsToParse;
 
 void GetEventParsingParameters(char* EventParsingArgs);
 
 #define HELP \
+"%s v%s (%s %s)\n"\
+"(c) BSC Tools - Barcelona Supercomputing Center\n"\
+"\n"\
 "Usage:\n"\
 "  %s -d <clustering_def.xml> -p  -i <input_trace> -o <output_data>\n"\
 "\n"\
@@ -108,8 +115,9 @@ void GetEventParsingParameters(char* EventParsingArgs);
 
 #define ABOUT \
 "\n"\
-"%s v%s (%s)\n"\
-"(c) CEPBA Tools - Barcelona Supercomputing Center\n"\
+"%s v%s (%s %s)\n"\
+"(c) BSC Tools - Barcelona Supercomputing Center\n"\
+"Utility to generate the k-neighbour distance graph\n"\
 "\n"
 
 void PrintUsage(char* ApplicationName)
@@ -165,16 +173,18 @@ ReadKValues(char* argument)
   return;
 }
 
-void
-ReadArgs(int argc, char *argv[])
+void ReadArgs(int argc, char *argv[])
 {
   INT32 j = 1;
+
+  string InputFiles;
+  size_t Comma;
 
   if (argc == 1 ||
       argc == 2 &&
       ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)))
   {
-    fprintf(stdout, HELP, argv[0]);
+    fprintf(stdout, HELP, argv[0], VERSION, __DATE__, __TIME__, argv[0]);
     exit(EXIT_SUCCESS);
   }
 
@@ -182,7 +192,7 @@ ReadArgs(int argc, char *argv[])
       argc == 2 &&
       ((strcmp(argv[1], "-a") == 0)))
   {
-    fprintf(stdout, ABOUT, argv[0], VERSION, __DATE__);
+    fprintf(stdout, ABOUT, argv[0], VERSION, __DATE__, __TIME__);
     exit(EXIT_SUCCESS);
   }
 
@@ -202,12 +212,35 @@ ReadArgs(int argc, char *argv[])
           break;
         case 'e':
           UseParaverEventParsing = true;
+
+          if (argv[j][2] == 'c')
+          {
+            ConsecutiveEvts = true;
+          }
+
           j++;
           GetEventParsingParameters(argv[j]);
           break;
         case 'i':
           j++;
-          InputTraceName     = argv[j];
+          InputFiles = argv[j];
+          Comma      = InputFiles.find(',');
+
+          if (Comma != string::npos)
+          {
+            InputSemanticCSV      = InputFiles.substr(0, Comma);
+            InputTraceName        = InputFiles.substr(Comma+1);
+            InputSemanticCSVRead  = true;
+
+            /* DEBUG */
+            cout << "InputSemanticCSV = " << InputSemanticCSV << endl;
+            cout << "InputTraceName = " << InputTraceName << endl;
+          }
+          else
+          {
+            InputTraceName     = InputFiles;
+          }
+
           InputTraceNameRead = true;
           break;
         case 'p':
@@ -333,6 +366,8 @@ int main(int argc, char *argv[])
 
   if (!Clustering.InitTraceClustering(ClusteringDefinitionXML,
                                       OutputDataFileNamePrefix+".pcf",
+                                      false, // IMPORTANTE: NEED TO BE CHECKED
+                                      false, // IMPORTANTE: NEED TO BE CHECKED
                                       PARAMETER_APPROXIMATION))
   {
     cerr << "Error seting up clustering library: " << Clustering.GetErrorMessage() << endl;
@@ -349,7 +384,10 @@ int main(int argc, char *argv[])
   }
   else
   {
-    if (!Clustering.ExtractData(InputTraceName))
+    if (!Clustering.ExtractData(InputTraceName,
+                                EventsToParse,
+                                ConsecutiveEvts,
+                                InputSemanticCSV))
     {
       cerr << "Error extracting data: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);

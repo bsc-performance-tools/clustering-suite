@@ -330,6 +330,8 @@
 		<Unit filename="src/libParaverTraceParser/ParaverHeader.hpp">
 			<Option target="Compile" />
 		</Unit>
+		<Unit filename="src/libParaverTraceParser/ParaverMetadataManager.cpp" />
+		<Unit filename="src/libParaverTraceParser/ParaverMetadataManager.hpp" />
 		<Unit filename="src/libParaverTraceParser/ParaverRecord.cpp">
 			<Option target="Compile" />
 		</Unit>
@@ -375,12 +377,16 @@
 		<Unit filename="src/libSharedComponents/DataExtractorFactory.hpp" />
 		<Unit filename="src/libSharedComponents/PRVEventsDataExtractor.cpp" />
 		<Unit filename="src/libSharedComponents/PRVEventsDataExtractor.hpp" />
+		<Unit filename="src/libSharedComponents/PRVSemanticGuidedDataExtractor.cpp" />
+		<Unit filename="src/libSharedComponents/PRVSemanticGuidedDataExtractor.hpp" />
 		<Unit filename="src/libSharedComponents/PRVStatesDataExtractor.cpp" />
 		<Unit filename="src/libSharedComponents/PRVStatesDataExtractor.hpp" />
 		<Unit filename="src/libSharedComponents/ParametersManager.cpp" />
 		<Unit filename="src/libSharedComponents/ParametersManager.hpp" />
 		<Unit filename="src/libSharedComponents/PlottingManager.cpp" />
 		<Unit filename="src/libSharedComponents/PlottingManager.hpp" />
+		<Unit filename="src/libSharedComponents/SemanticGuidedPRVGenerator.cpp" />
+		<Unit filename="src/libSharedComponents/SemanticGuidedPRVGenerator.hpp" />
 		<Unit filename="src/libSharedComponents/SequenceScore.cpp" />
 		<Unit filename="src/libSharedComponents/SequenceScore.hpp" />
 		<Unit filename="src/libSharedComponents/State.cpp" />

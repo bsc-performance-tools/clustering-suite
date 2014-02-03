@@ -43,6 +43,7 @@
 #include "ClusteredStatesPRVGenerator.hpp"
 #include "ClusteredEventsPRVGenerator.hpp"
 #include "ClusteredTRFGenerator.hpp"
+#include "SemanticGuidedPRVGenerator.hpp"
 #include "PlottingManager.hpp"
 
 #include "ConvexHullModel.hpp"
@@ -763,6 +764,21 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
         return false;
       }
 #endif
+      break;
+    }
+    case SematicGuided:
+    {
+      SemanticGuidedPRVGenerator* TraceReconstructor =
+        new SemanticGuidedPRVGenerator(InputFileName, OutputTraceName);
+
+      if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
+                                   Data->GetAllBursts().end(),
+                                   ClassificationPartition.GetAssignmentVector(),
+                                   ClassificationPartition.GetIDs()))
+      {
+        SetErrorMessage(TraceReconstructor->GetLastError());
+        return false;
+      }
       break;
     }
     default:

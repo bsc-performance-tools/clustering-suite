@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## Created by Anjuta
 
-INCLUDES = \
+AM_CPPFLAGS = $(AM_CPPFLAGS) \
     -I$(top_srcdir)/include\
 	-I$(top_srcdir)/common_utilities
 
