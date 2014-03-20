@@ -10,6 +10,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-03-20 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added the original K-means implementation source files 'asa136.*'
+
 2014-02-03 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Commit of the 2.6.0 release
 
