@@ -86,7 +86,8 @@ const string libTraceClusteringImplementation::SampledDataFilePostFix = ("SAMPLE
  * Empty constructor
  */
 libTraceClusteringImplementation::libTraceClusteringImplementation(bool verbose,
-                                                                   bool paraver_verbosity)
+                                                                   bool paraver_verbosity):
+Data(NULL), ClusteringCore(NULL)
 {
   system_messages::verbose           = verbose;
   if (system_messages::paraver_verbosity = paraver_verbosity)

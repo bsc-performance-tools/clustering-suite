@@ -102,6 +102,8 @@ class PRVStatesDataExtractor: public DataExtractor
           EndTime       = Other.EndTime;
           BurstDuration = Other.BurstDuration;
           EventsData    = Other.EventsData;
+
+          return *this;
         }
 
         string toString(void);

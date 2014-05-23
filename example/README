@@ -1,0 +1,91 @@
+--------------------------------------------------------------------------------
+Clustering suite example
+--------------------------------------------------------------------------------
+
+In this directory you can find an example to execute the cluster analysis.
+
+1 Contents
+==========
+
+The contents of the current example are five files:
+
+- cluster_explained.xml: cluster analysis XML configuration file with a brief
+  description of the different nodes / attributes
+                         
+- cluster.xml:  same XML configuration file without the descriptions
+
+- su3.lat256_2it.16tasks.[prv|pcf|row]: example Paraver trace
+
+The XML configuration files provided use Completed Instructions (PAPI_TOT_INS)
+and IPC (PAPI_TOT_INS/PAPI_TOT_CYC) counters as clustering parameters. It
+sets a duration filter of 1000us and a Completed Instructions filter of 3*10^8.
+It configures the extrapolation of all the counters present in the input
+trace and defines a single output plot combining the two clustering metrics,
+depicting the raw values.
+
+The input trace provided is a two iteration chop from an execution with 16 tasks
+of SU3_AHiggs, a lattice quantum chromodynamics code, part of the PRACE
+benchmark suite, obtained from:
+
+http://www.prace-ri.eu/ueabs#QCD || QCD - KernelB
+
+
+2 Executing the cluster analysis
+================================
+
+You can execute the cluster analysis with the provided XMLs without modification
+running the following command:
+
+> BurstClustering -d cluster.xml -i su3.lat256_2it.16tasks.prv -o su3.lat256_2it.16tasks.clustered.prv
+
+As a result of this executiong, the 'BurstClustering' tool will detect 14
+clusters in the input data. 
+
+2.1 'BurstClustering' outputs
+=============================
+
+The 'BurstClustering' tool will generate the following outputs:
+
+- su3.lat256_2it.16tasks.clustered.[prv|pcf|row]: a Paraver trace with clusters
+  information. You can load this trace in Paraver, and use the 'clustering' 
+  configuration files to analyse the clusters behaviour with the time context.
+  In the default distribution of Paraver, these configuration files are
+  installed in the directory ${PARAVER_HOME}/cfgs/clustering.
+
+- su3.lat256_2it.16tasks.clustered.clusters_info.csv: a CSV file with clusters
+  statistics, including the aggregated duration of each cluster, the average
+  duration of the bursts of each cluster, and the average values of the
+  cluster parameters and the extrapolation parameters. You can import this
+  file to a regular spreadsheet application to analyse the clusters behaviour
+  as a group.
+
+- su3.lat256_2it.16tasks.clustered.IPC.PAPI_TOT_INS.gnuplot: a GNUPlot script
+  to observe the resulting clusters in a 2D scatter plot. To visualize it, 
+  execute:
+  
+  > gnuplot su3.lat256_2it.16tasks.clustered.IPC.PAPI_TOT_INS.gnuplot
+
+- su3.lat256_2it.16tasks.clustered.DATA.csv: a CSV file with the
+  characterization of each burst read from the input trace, including its
+  clustering and extrapolation parameters value, as well as the timestamps and
+  cluster id assigned. This file is used by the GNUPlot script, but you can
+  also load it in a spreadsheet or any other software to analyse the different
+  CPU burst instances that took part in the cluster analysis process.
+  
+2.1 Further experimentation
+===========================
+
+As mentioned above, using the default parameters of the XML configuration file
+provided the clustering tool will detect 14 clusters. If you observe the 
+resulting trace, you will appreciate that these clusters clearly represent
+different SPMD regions in the application.
+
+You can explore other cluster results by modifying the value of Epsilon 
+(XML configuration file, 'clustering_algorithm' -> 'epsilon'). For example, if
+you increase the value of this parameter you will obtain less clusters, that
+include a larger number of points (CPU bursts), with more dispersion, thus
+aggregating multiple SPMD regions. On the other hand, if you reduce the value
+of Epsilon, you will obtain more clusters and more noise points, but these
+clusters will be more compact. These smaller clusters will represent 
+computation structures in the application below the SPMD level.
+

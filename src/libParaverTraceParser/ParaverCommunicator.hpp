@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -49,7 +49,7 @@ using cepba_tools::Error;
 class Communicator: public Error
 {
   protected:
-  
+
     INT32       CommunicatorId;
     INT32       ApplicationId;
     set<INT32>  CommunicatorTasks;
@@ -59,7 +59,7 @@ class Communicator: public Error
   public:
     Communicator(char* ASCIICommunicator);
     Communicator(const Communicator& Comm);
-    
+
     INT32 GetCommunicatorId(void) { return CommunicatorId; };
     INT32 GetApplictionId(void)   { return ApplicationId; };
     INT32 GetCommunicatorSize(void)
@@ -67,19 +67,19 @@ class Communicator: public Error
       return (INT32) CommunicatorTasks.size();
     };
     set<INT32> GetCommunicatorTasks(void) { return CommunicatorTasks; };
-    
+
     /* INT32 GetTaskId(UINT32 Index) { return CommunicatorTasks[Index]; }; */
-    
-    bool IsCOMM_SELF(void)  { return COMM_SELF; };
-    bool IsCOMM_WORLD(void) { return COMM_WORLD; };
-    bool SetCOMM_WORLD(bool COMM_WORLD) { this->COMM_WORLD = COMM_WORLD; };
-    
+
+    bool IsCOMM_SELF(void)              { return COMM_SELF; };
+    bool IsCOMM_WORLD(void)             { return COMM_WORLD; };
+    bool SetCOMM_WORLD(bool COMM_WORLD) { return (this->COMM_WORLD = COMM_WORLD); };
+
     void AddTask(INT32 TaskId);
-    
+
     bool IsTaskIncluded(INT32 TaskId);
-  
+
     bool Flush(FILE* OutputFile);
-  
+
     void Write ( ostream& os) const;
 
   private:

@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -46,7 +46,7 @@ using std::endl;
 
 ParaverRecord::ParaverRecord(UINT64 Line,
                              UINT64 Timestamp,
-                             INT32  CPU, 
+                             INT32  CPU,
                              INT32  AppId,
                              INT32  TaskId,
                              INT32  ThreadId)
@@ -64,7 +64,7 @@ bool ParaverRecord::Flush(FILE* OutputFile)
   /* Print common fields on each record */
   if (!FlushRecordType(OutputFile))
     return false;
-  
+
   if (fprintf(OutputFile,
               ":%d:%d:%d:%d:%llu",
               CPU+1,
@@ -78,19 +78,19 @@ bool ParaverRecord::Flush(FILE* OutputFile)
                     strerror(errno));
     return false;
   }
-  
+
   if (!FlushSpecificFields(OutputFile))
   {
     return false;
   }
-  
+
   if (fprintf(OutputFile, "\n") < 0)
   {
     SetError(true);
     SetErrorMessage("unable to print communicator record", strerror(errno));
     return false;
   }
-  
+
   return true;
 }
 
@@ -105,7 +105,7 @@ ostream& operator<< (ostream& os, const ParaverRecord& Rec)
  ****************************************************************************/
 State::State(UINT64 Line,
              INT32  CPU, INT32  AppId, INT32  TaskId, INT32  ThreadId,
-             UINT64 BeginTime, 
+             UINT64 BeginTime,
              UINT64 EndTime,
              INT32  StateValue)
 :ParaverRecord(Line, BeginTime, CPU, AppId, TaskId, ThreadId)
@@ -152,7 +152,7 @@ State::Write(ostream& os) const
   os.width(2);
   os.fill('0');
   os << ThreadId << "]";
-  
+
   os << Timestamp << " T:" << TimestampEnd << " State: " << StateValue;
   os << endl;
 }
@@ -178,30 +178,28 @@ EventTypeValue::IsDimemasBlockBegin(void)
   {
     return false;
   }
-  
+
   if (MPIEventEncoding_Is_BlockBegin( Value ))
     return true;
-  
+
   return false;
 }
 
-bool
-EventTypeValue::IsDimemasBlockEnd(void)
+bool EventTypeValue::IsDimemasBlockEnd(void)
 {
   if (!MPIEventEncoding_Is_MPIBlock( (INT64) Type ) &&
       !MPIEventEncoding_Is_UserBlock( (INT64) Type ))
   {
     return false;
   }
-  
+
   if (!MPIEventEncoding_Is_BlockBegin( Value ))
     return true;
-  
+
   return false;
 }
 
-bool
-EventTypeValue::IsCaller(void)
+bool EventTypeValue::IsCaller(void)
 {
   if (Type >= MPI_CALLER_EV && Type <= MPI_CALLER_EV_END)
     return true;
@@ -209,8 +207,7 @@ EventTypeValue::IsCaller(void)
   return false;
 }
 
-bool
-EventTypeValue::IsCallerLine(void)
+bool EventTypeValue::IsCallerLine(void)
 {
   if (Type >= MPI_CALLER_LINE_EV && Type <= MPI_CALLER_LINE_EV_END)
     return true;
@@ -218,14 +215,12 @@ EventTypeValue::IsCallerLine(void)
   return false;
 }
 
-INT64
-EventTypeValue::NewTraceOrder(void)
+INT64 EventTypeValue::NewTraceOrder(void)
 {
   return CurrentTraceOrder++;
 }
 
-bool
-EventTypeValue::FlushSpecificFields(FILE* OutputFile)
+bool EventTypeValue::FlushSpecificFields(FILE* OutputFile)
 {
   if (fprintf(OutputFile, ":%d:%lld", Type, Value) < 0)
   {
@@ -390,13 +385,13 @@ Event::Write(ostream& os) const
   os << ThreadId << "] ";
 
   os << "T:" << Timestamp;
-  
+
   for (UINT32 i = 0; i < Content.size(); i++)
   {
     os << " [" << Content[i]->GetTraceOrder() << "]: ";
     os << Content[i]->GetType() << ":" << Content[i]->GetValue();
   }
-  
+
   os << endl;
 }
 
@@ -423,7 +418,7 @@ Communication::Communication(UINT64 Line,
                              INT32  Tag)
 {
   this->Line   = Line;
-  
+
   CPU          = SrcCPU-1;
   AppId        = SrcAppId-1;
   TaskId       = SrcTaskId-1;
@@ -432,16 +427,16 @@ Communication::Communication(UINT64 Line,
   DestAppId    = DstAppId-1;
   DestTaskId   = DstTaskId-1;
   DestThreadId = DstThreadId-1;
-  
+
   Timestamp    = LogSend; /* Timestamp attribute corresponds to Logical Send*/
   PhysicalSend = PhySend;
   LogicalRecv  = LogRecv;
   PhysicalRecv = PhyRecv;
-  
+
   this->Size = Size;
   this->Tag  = Tag;
   TraceOrder = Communication::NewTraceOrder();
-  
+
 }
 
 bool
@@ -495,9 +490,9 @@ Communication::Write(ostream& os) const
   os << ThreadId << "]";
 
   os << " LogSend: " << Timestamp << " PhySend: " << PhysicalSend << endl;
-  
+
   os << "Recvr: [";
-  
+
   os.width(3);
   os.fill('0');
   os << DestTaskId << ":";
@@ -507,7 +502,7 @@ Communication::Write(ostream& os) const
   os << DestThreadId << "]";
 
   os << " LogRecv: " << LogicalRecv << " PhyRecv: " << PhysicalRecv << endl;
-  
+
   os << "Size: " << Size << " Tag: " << Tag << endl;
 }
 
@@ -543,7 +538,7 @@ GlobalOp::GlobalOp(UINT64 Line,
   this->RecvSize       = RecvSize;
   this->GlobalOpId     = GlobalOpId;
   this->RootTaskId     = RootTaskId; /* RootTaskIds are in range 0..(n-1) */
-  
+
   if (this->RootTaskId == this->TaskId)
     this->Root = true;
   else
@@ -564,7 +559,7 @@ GlobalOp::GlobalOp(UINT64 Line,
   this->RecvSize       = RecvSize;
   this->GlobalOpId     = GlobalOpId;
   this->Root           = Root;
-  
+
   if (this->Root)
     this->RootTaskId = TaskId;
   else
@@ -607,7 +602,7 @@ void
 GlobalOp::Write( ostream& os) const
 {
   os << "GlobalOP [";
-  
+
   os.width(3);
   os.fill('0');
   os << TaskId << ":";
@@ -615,9 +610,9 @@ GlobalOp::Write( ostream& os) const
   os.width(2);
   os.fill('0');
   os << ThreadId << "] ";
-  
+
   os << "T: " << Timestamp << " CommId " << CommunicatorId;
-  
+
   os << " GlobOpId: " << GlobalOpId << " RootTask: " << RootTaskId << endl;
 }
 

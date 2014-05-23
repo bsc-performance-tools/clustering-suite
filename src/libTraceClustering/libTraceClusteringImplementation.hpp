@@ -55,8 +55,8 @@ class libTraceClusteringImplementation: public Error
 
   private:
 
-    TraceData           *Data           = NULL;
-    libClustering       *ClusteringCore = NULL;
+    TraceData           *Data;
+    libClustering       *ClusteringCore;
     Partition            LastPartition, ClassificationPartition;
     ClusteringStatistics Statistics;
 

@@ -1,0 +1,37 @@
+<clustering_definition use_duration="no" apply_log="yes" normalize_data="yes" duration_filter="1000" threshold_filter="0">
+
+  <clustering_algorithm name="DBSCAN">
+    <epsilon>.010</epsilon>
+    <min_points>10</min_points>
+  </clustering_algorithm>
+
+  <clustering_parameters>
+    
+    <single_event apply_log="yes" name="PAPI_TOT_INS">
+      <event_type>42000050</event_type>
+      <range_min>3e8</range_min> 
+<!--      <range_max>1e10</range_max> -->
+      <factor>1.0</factor>
+    </single_event>
+
+    <mixed_events apply_log="no" name="IPC" operation="/">
+      <event_type_a>42000050</event_type_a>
+      <event_type_b>42000059</event_type_b>
+<!--      <range_min>0.7</range_min> -->
+      <factor>1.0</factor>
+    </mixed_events>
+    
+  </clustering_parameters>
+  
+  <extrapolation_parameters all_counters="yes"/>
+
+  <output_plots all_plots="no">
+ 
+    <plot_definition raw_metrics="yes"> 
+      <x_metric title="IPC">IPC</x_metric>
+      <y_metric title="Instructions Completed">PAPI_TOT_INS</y_metric>
+    </plot_definition>
+
+  </output_plots>
+
+</clustering_definition>

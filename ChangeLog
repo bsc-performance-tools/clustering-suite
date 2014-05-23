@@ -10,6 +10,14 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-05-23 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.1
+	* Added 'example' and 'doc' folders and contens (example traces and
+	XMLs and documentation sources)
+
+	* In the different PRV trace generators .cpp files, added the Missing
+	Data entry to the CLUSTERS_EVENTS_TXT define (that shouldn't be too
+	replicated as it is now)	
+
 2014-03-20 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Added the original K-means implementation source files 'asa136.*'
 

@@ -51,8 +51,9 @@ libfilterXchangeDimensions_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags`
 libfilterSupport_la_SOURCES = \
   SupportFilter.cpp \
   Support.cpp \
-  Support.h   \
-  RTree.h 
+  Support.h   
+#  JGG 'RTree.h' not available. Ask German!
+
 libfilterSupport_la_CXXFLAGS = `@MRNETAPP_CONFIG@ --cp-cflags`
 
 PROTOCOL_COMMON_SRCS = \
@@ -68,9 +69,9 @@ PROTOCOL_COMMON_SRCS = \
   ClustersInfo.h \
   Support.cpp \
   Support.h \
-  RTree.h \
   TDBSCANTags.h \
   Utils.h
+#  JGG 'RTree.h' not available. Ask German!
 
 libTDBSCAN_fe_la_SOURCES  = \
   $(PROTOCOL_COMMON_SRCS) \

@@ -1,0 +1,94 @@
+<!-- Must we use the duration as a cluster dimension the tracing? 
+     Should we apply a logarithmic normalization to the duration?
+     Will be the data normalize (between 0 and 1, after the logarithmic
+     normalization)?
+     Which is the minimum burst size to be taken into account (us)?
+     Which is the minimum aggregated time of a cluster to be considerar a
+     cluster? (The ones that not pass this filter will be marked as 'Threshold
+     Filtered') -->
+<clustering_definition use_duration="no" apply_log="yes" normalize_data="yes" duration_filter="1000" threshold_filter="0">
+
+<!-- For regular use, the clustering algorithm is DBSCAN. Epsilon (double) and
+     MinPoints are the parameters. Refer to the documentation or paper [1] 
+     to for further information -->
+  <clustering_algorithm name="DBSCAN">
+    <epsilon>.010</epsilon>
+    <min_points>10</min_points>
+  </clustering_algorithm>
+
+<!-- Parameters to be used in the clustering process -->
+  <clustering_parameters>
+    
+    <!-- Parameter directly read from an event present on the input trace 
+         Should be apply a logarithmic normalization to this event values?
+         What would be the internal parameter name? -->
+    <single_event apply_log="yes" name="PAPI_TOT_INS">
+      <!-- The event type codification in the Paraver trace (see the PCF).
+           If we want to use the bursts duration we should use the word
+           'duration' as event type
+           -->
+      <event_type>42000050</event_type>
+      <!-- Optional tags to filter the input data (double) 
+      <range_min>3e8</range_min> 
+      <range_max>1e10</range_max>
+      -->
+      <!-- Optional tag to re-scale the values, to add more weight to the
+          desired events 
+      <factor>1.0</factor>
+      -->
+    </single_event>
+
+    <!-- Parameter derived from to events present on the input trace
+         Which operation will be apply to the pair of events? (Possible 
+         values: +, -, *, /)
+         Should be apply a logarithmic normalization to the parameter values,
+         after the operation?
+         What would be the internal parameter name? -->
+    <mixed_events operation="/" apply_log="no" name="IPC">
+      <!-- The event type codification in the Paraver trace of the first 
+           event involved. If we want to use the bursts duration we should use
+           the word 'duration' as event type -->
+      <event_type_a>42000050</event_type_a>
+      <!-- The event type codification in the Paraver trace of the second
+           event involved. If we want to use the bursts duration we should use
+           the word 'duration' as event type -->
+      <event_type_b>42000059</event_type_b>
+      <!-- Equivalent tags of filtering and weight as in a 'single_event' 
+           node 
+      <range_min>0.1</range_min>
+      <range_max>4.0</range_max>
+      <factor>1.0</factor>
+      -->
+    </mixed_events>
+    
+  </clustering_parameters>
+  
+<!-- Parameters to be used in the extrapolation process, to characterize
+     the resulting clusters (will appear in the '.clusters_info.csv' output
+     file).
+     
+     Shall we use all counters present on the input trace? (Requires the .PCF
+     file) -->
+  <extrapolation_parameters all_counters="yes">
+    <!-- Parameters to be used in the extrapolation process, to characterize
+         the resulting clusters. -->
+  </extrapolation_parameters>
+
+<!-- Definition of the output plots (in GNUPlot format)
+     Shall we use all combination of metrics? -->
+  <output_plots all_plots="no">
+    
+    <!-- Definition of a single plot. Should it present raw or normalized 
+         metrics? -->
+    <plot_definition raw_metrics="yes"> 
+      <!-- X/Y/Z axis metrics. 'title' variable will be used in the plot. The
+           content of the tag should refer to a clustering or extrapolation
+           parameter previously defined  -->
+      <x_metric title="IPC">IPC</x_metric>
+      <y_metric title="Instructions Completed">PAPI_TOT_INS</y_metric>
+      <!-- <z_metric title="Instructions Completed">PAPI_TOT_INS</z_metric> -->
+    </plot_definition>
+
+  </output_plots>
+
+</clustering_definition>

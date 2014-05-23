@@ -1,0 +1,157 @@
+% \long\def\greybox#1{%
+%     \newbox\contentbox%
+%     \newbox\bkgdbox%
+%     \setbox\contentbox\hbox to \hsize{%
+%         \vtop{
+%             \kern\columnsep
+%             \hbox to \hsize{%
+%                 \kern\columnsep%
+%                 \advance\hsize by -2\columnsep%
+%                 \setlength{\textwidth}{\hsize}%
+%                 \vbox{
+%                     \parskip=\baselineskip
+%                     \parindent=0bp
+%                     #1
+%                 }%
+%                 \kern\columnsep%
+%             }%
+%             \kern\columnsep%
+%         }%
+%     }%
+%     \setbox\bkgdbox\vbox{
+%         \pdfliteral{0.85 0.85 0.85 rg}
+%         \hrule width  \wd\contentbox %
+%                height \ht\contentbox %
+%                depth  \dp\contentbox
+%         \pdfliteral{0 0 0 rg}
+%     }%
+%     \wd\bkgdbox=0bp%
+%     \vbox{
+%       \hbox to \hsize{
+%         \box
+%         \bkgdbox
+%         \box
+%         \contentbox
+%       }
+%     }%
+%     \vskip\baselineskip%
+% }
+
+\definecolor{shade}{HTML}{D4D7FE}
+% \definecolor{figureshade}{HTML}{D4D7FE}
+% \definecolor{figureshade}{gray}{0.80}
+\definecolor{figureshade}{gray}{.7}
+
+\long\def\innercite#1
+{
+  \vspace{10pt}
+  \noindent
+  \begin{tikzpicture}
+    \node [fill=shade,rounded corners=5pt]
+    {
+      \begin{tabular}{p{.03\columnwidth}p{.89\columnwidth}}
+        ~\cite{#1} & ~\bibentry{#1}
+      \end{tabular}
+    };
+  \end{tikzpicture}
+  \vspace{-10pt}
+}
+% \long\def\innercite#1
+% {
+% \begin{tabular}{p{.03\columnwidth}p{.89\columnwidth}}
+% ~\cite{#1} & ~\bibentry{#1}
+% \end{tabular}
+% }
+
+% \newcommand{\floatbox}[1]
+% {
+% {
+%   \vspace{10pt}
+%   \noindent
+%   \begin{tikzpicture}
+%     \node [fill=figureshade,rounded corners=5pt]
+%     {
+%       #1
+%     };
+%   \end{tikzpicture}
+%   \vspace{-10pt}
+% }
+% }
+
+% ROTATED COLUMN HEADER
+\newcommand\rotcolhead[1]{\begin{sideways}\textbf{\makecell[l]{#1}}\end{sideways}} 
+
+% REGULAR COLUMN HEADER WITH BREAKLINES
+\newcommand\colhead[1]{\textbf{\makecell[r]{#1}}} 
+
+
+\newcommand\myVSpace[1][10pt]{\rule[\normalbaselineskip]{0pt}{#1}}
+
+\def\verbatimboxed#1
+{
+  \begingroup
+  \def\verbatim@processline
+  {
+    {
+      \setbox0=\hbox{\the\verbatim@line}
+      \hsize=\wd0
+      \the\verbatim@line\par
+    }
+  }
+  
+  \setbox0=\vbox{
+    \parskip=0pt\topsep=0pt\partopsep=0pt\verbatiminput{#1}
+  }%
+  
+  \begin{center}\fbox{\box0}\end{center}%
+  \endgroup
+}
+
+\newcolumntype{d}[1]{D{.}{\cdot}{#1}}
+
+\newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}}
+
+\newcolumntype{*}{>{\global\let\currentrowstyle\relax}}
+\newcolumntype{^}{>{\currentrowstyle}}
+\newcommand{\rowstyle}[1]{\gdef\currentrowstyle{#1}%
+  #1\ignorespaces
+}
+
+\colorlet{tableheadcolor}{gray!25} % Table header colour = 25% gray
+\newcommand{\headcol}{\rowcolor{tableheadcolor}} 
+
+\newcommand{\rowcol}{\rowcolor{tablerowcolor}} %
+    % Command \topline consists of a (slightly modified) \toprule followed by a \heavyrule rule of colour tableheadcolor (hence, 2 separate rules)
+\newcommand{\topline}{\arrayrulecolor{black}\specialrule{0.1em}{\abovetopsep}{0pt}%
+            \arrayrulecolor{tableheadcolor}\specialrule{\belowrulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}}
+    % Command \midline consists of 3 rules (top colour tableheadcolor, middle colour black, bottom colour white)
+\newcommand{\midline}{\arrayrulecolor{tableheadcolor}\specialrule{\aboverulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}\specialrule{\lightrulewidth}{0pt}{0pt}%
+            \arrayrulecolor{white}\specialrule{\belowrulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}}
+    % Command \rowmidlinecw consists of 3 rules (top colour tablerowcolor, middle colour black, bottom colour white)
+\newcommand{\rowmidlinecw}{\arrayrulecolor{tablerowcolor}\specialrule{\aboverulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}\specialrule{\lightrulewidth}{0pt}{0pt}%
+            \arrayrulecolor{white}\specialrule{\belowrulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}}
+    % Command \rowmidlinewc consists of 3 rules (top colour white, middle colour black, bottom colour tablerowcolor)
+\newcommand{\rowmidlinewc}{\arrayrulecolor{white}\specialrule{\aboverulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}\specialrule{\lightrulewidth}{0pt}{0pt}%
+            \arrayrulecolor{tablerowcolor}\specialrule{\belowrulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}}
+    % Command \rowmidlinew consists of 1 white rule
+\newcommand{\rowmidlinew}{\arrayrulecolor{white}\specialrule{\aboverulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}}
+    % Command \rowmidlinec consists of 1 tablerowcolor rule
+\newcommand{\rowmidlinec}{\arrayrulecolor{tablerowcolor}\specialrule{\aboverulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}}
+    % Command \bottomline consists of 2 rules (top colour
+\newcommand{\bottomline}{\arrayrulecolor{white}\specialrule{\aboverulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}\specialrule{\heavyrulewidth}{0pt}{\belowbottomsep}}%
+\newcommand{\bottomlinec}{\arrayrulecolor{tablerowcolor}\specialrule{\aboverulesep}{0pt}{0pt}%
+            \arrayrulecolor{black}\specialrule{\heavyrulewidth}{0pt}{\belowbottomsep}}%
+
+\newcommand{\mypow}[2]{\textnormal{#1}\ensuremath{\times\textrm{10}^\textrm{{#2}}}}
+\newcommand{\sps}[1]{\ensuremath{^{\textrm{#1}}}}
+\newcommand{\sbs}[1]{\ensuremath{_{\textrm{#1}}}}

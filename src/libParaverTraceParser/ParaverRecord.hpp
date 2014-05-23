@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -64,20 +64,20 @@ class ParaverRecord: public Error
     UINT64 Line;
     UINT64 Timestamp;
     INT32  CPU, AppId, TaskId, ThreadId;
-  
+
   public:
-    
+
     ParaverRecord(void){};
-    
+
     ParaverRecord(UINT64 Line,
                   UINT64 Timestamp,
-                  INT32  CPU, 
+                  INT32  CPU,
                   INT32  AppId,
                   INT32  TaskId,
                   INT32  ThreadId);
-    
+
     virtual ~ParaverRecord(void){};
-      
+
     virtual bool operator<  (const ParaverRecord& T1)
     {
       return this->Timestamp < T1.Timestamp;
@@ -116,13 +116,13 @@ class ParaverRecord: public Error
     virtual INT32  GetAppId(void)     { return AppId; };
     virtual INT32  GetTaskId(void)    { return TaskId; };
     virtual INT32  GetThreadId(void)  { return ThreadId; };
-  
+
     virtual INT32  GetRecordType(void) = 0;
-    
+
     bool Flush(FILE* OutputFile);
-  
+
     virtual void Write(ostream& os) const {};
-  
+
   private:
     virtual bool FlushRecordType(FILE* OutputFile) = 0;
     virtual bool FlushSpecificFields(FILE* OutputFile) = 0;
@@ -151,18 +151,18 @@ class State: public ParaverRecord
     State() {};
     State(UINT64 Line,
           INT32  CPU, INT32  AppId, INT32  TaskId, INT32  ThreadId,
-          UINT64 BeginTime, 
+          UINT64 BeginTime,
           UINT64 EndTime,
           INT32  StateValue);
-  
+
     INT32  GetRecordType(void) { return PARAVER_STATE; };
-  
+
     UINT64 GetBeginTime(void)  { return Timestamp; };
     UINT64 GetEndTime(void)    { return TimestampEnd; };
     INT32  GetStateValue(void) { return StateValue; };
-  
+
     void Write(ostream& os) const;
-  
+
   private:
     bool FlushRecordType(FILE* OutputFile);
     bool FlushSpecificFields(FILE* OutputFile);
@@ -180,12 +180,12 @@ typedef State* State_t;
 class EventTypeValue: public Error
 {
   friend class Event;
-  
+
   private:
     INT32 Type;
     INT64 Value;
     INT64 TraceOrder;
-  
+
     static INT64 CurrentTraceOrder;
   public:
     EventTypeValue(){};
@@ -195,20 +195,20 @@ class EventTypeValue: public Error
       this->Value      = Value;
       this->TraceOrder = EventTypeValue::NewTraceOrder();
     }
-    
+
     INT32 GetType(void)       { return Type; };
     INT64 GetValue(void)      { return Value; };
     INT64 GetTraceOrder(void) { return TraceOrder; };
-    
+
     bool ToDimemas(FILE* DimemasTrace, INT32 TaskId, INT32 ThreadId);
-    
+
     bool IsMPIEvent(void)
     {
 
 #ifndef TRUE
   #define TRUE 1
 #endif
-      
+
 #ifndef FALSE
   #define FALSE !TRUE
 #endif
@@ -218,14 +218,14 @@ class EventTypeValue: public Error
       else
         return false;
     }
-    
+
     bool   IsDimemasBlockBegin(void);
     bool   IsDimemasBlockEnd  (void);
     bool   IsCaller(void);
     bool   IsCallerLine(void);
-    
+
     static INT64 NewTraceOrder(void);
-  
+
   private:
     bool   FlushSpecificFields(FILE* OutputFile);
 };
@@ -244,30 +244,30 @@ class Event: public ParaverRecord
     Event(UINT64 Line,
           UINT64 Timestamp,
           INT32 CPU, INT32 AppId, INT32 TaskId, INT32 ThreadId);
-  
+
     INT32 GetRecordType(void) { return PARAVER_EVENT; };
-  
+
     void AddTypeValue(INT32 Type, INT64 Value);
-    
+
     UINT32 GetTypeValueCount(void);
-    
+
     INT32 GetFirstType(void);
     INT32 GetType(UINT32 Index);
-    
+
     INT64 GetFirstValue(void);
     INT64 GetValue(UINT32 Index);
-    
+
     INT64 GetFirstTraceOrder(void);
     INT64 GetTraceOrder(UINT32 Index);
-    
+
     bool IsDimemasBlockBegin(void);
     bool IsDimemasBlockEnd(void);
-  
+
     bool IsCaller(void);
     bool IsCallerLine(void);
-  
+
     void Write(ostream& os) const;
-  
+
   private:
     bool FlushRecordType(FILE* OutputFile);
     bool FlushSpecificFields(FILE* OutputFile);
@@ -287,7 +287,7 @@ class Communication: public ParaverRecord
     INT32  Size;
     INT32  Tag;
     INT64  TraceOrder;
-  
+
     static INT64 CurrentTraceOrder;
   public:
     Communication(UINT64 Line,
@@ -299,14 +299,14 @@ class Communication: public ParaverRecord
                   INT32  DstTaskId, INT32 DstThreadId,
                   INT32  Size,
                   INT32  Tag);
-  
+
     INT32  GetRecordType(void) { return PARAVER_COMMUNICATION; };
-  
+
     UINT64 GetLogicalSend(void)  { return Timestamp; };
     UINT64 GetPhysicalSend(void) { return PhysicalSend; };
     UINT64 GetLogicalRecv(void)  { return LogicalRecv; };
     UINT64 GetPhysicalRecv(void) { return PhysicalRecv; };
-  
+
     INT32  GetSrcCPU(void)       { return CPU; };
     INT32  GetSrcAppId(void)     { return AppId; };
     INT32  GetSrcTaskId(void)    { return TaskId; };
@@ -318,11 +318,11 @@ class Communication: public ParaverRecord
     INT32  GetSize(void)         { return Size; };
     INT32  GetTag(void)          { return Tag; };
     INT64  GetTraceOrder(void)   { return TraceOrder; };
-    
+
     static INT64 NewTraceOrder(void);
-  
+
     void Write(ostream& os) const;
-  
+
   private:
     bool FlushRecordType(FILE* OutputFile);
     bool FlushSpecificFields(FILE* OutputFile);
@@ -354,7 +354,7 @@ class GlobalOp: public ParaverRecord
              INT32  SendSize, INT32 RecvSize,
              INT32  GlobalOpId,
              INT32  RootTaskId);
-  
+
     GlobalOp(UINT64 Line,
              UINT64 Timestamp,
              INT32  CPU, INT32 AppId, INT32 TaskId, INT32 ThreadId,
@@ -362,11 +362,11 @@ class GlobalOp: public ParaverRecord
              INT32  SendSize, INT32 RecvSize,
              INT32  GlobalOpId,
              bool   IsRoot);
-    
+
     ~GlobalOp(void){};
-  
+
     INT32  GetRecordType(void) { return PARAVER_GLOBALOP; };
-  
+
     void  SetCommunicatorId(INT32 CommunicatorId)
     {
       this->CommunicatorId = CommunicatorId;
@@ -385,14 +385,14 @@ class GlobalOp: public ParaverRecord
     };
     INT32 GetRecvSize(void)       { return RecvSize; };
 
-    void SetGlobaOpId(INT32 GlobaOpId)
+    void SetGlobalOpId(INT32 GlobalOpId)
     {
       this->GlobalOpId = GlobalOpId;
     }
     INT32 GetGlobalOpId(void)     { return GlobalOpId; };
 
-    void SetRootTaskId(INT32 RootTaskId) 
-    { 
+    void SetRootTaskId(INT32 RootTaskId)
+    {
       this->RootTaskId = RootTaskId;
     };
     INT32 GetRootTaksId(void)     { return RootTaskId; };
@@ -402,9 +402,9 @@ class GlobalOp: public ParaverRecord
       this->Root = Root;
     };
     bool  GetIsRoot(void)         { return Root; };
-    
+
     void Write(ostream& os) const;
-  
+
   private:
     bool FlushRecordType(FILE* OutputFile);
     bool FlushSpecificFields(FILE* OutputFile);

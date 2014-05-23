@@ -181,6 +181,16 @@ fi
 AC_SUBST(Operating_System)
 
 dnl =========================================================================
+dnl Check for Latex packages to generate the documentation
+dnl =========================================================================
+
+AC_CHECK_PROGS(pdflatex,[pdflatex],no)
+
+AM_CONDITIONAL(BUILD_DOCS_PDF, test "${pdflatex}" != "no")
+dnl AM_CONDITIONAL(BUILD_DOCS_PDF, test "${latex}" != "no" -a "${dvipdf}" != "no")
+dnl AM_CONDITIONAL(BUILD_HTML_DOCS, test "${latex}" != "no" -a "${latex2html}" != "no")
+
+dnl =========================================================================
 dnl Check for libxml
 dnl =========================================================================
 
@@ -234,7 +244,7 @@ dnl AX_LIBTOOLS()
 dnl CXXFLAGS="$CXXFLAGS $LIBTOOLS_CXXFLAGS"
 dnl CFLAGS="$CFLAGS $LIBTOOLS_CFLAGS"
 
-BOOST_REQUIRE(1.43)
+BOOST_REQUIRE(1.36)
 CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS"
 CFLAGS="$CFLAGS $BOOST_CPPFLAGS"
 
@@ -309,6 +319,7 @@ src/MusterDistributedClustering/Makefile
 src/libDistributedClustering/Makefile
 src/TreeDBSCAN/Makefile
 src/TreeDBSCAN/scripts/Makefile
+doc/Makefile
 ])
 
 CFLAGS="-DCLUSTERING_SUITE $CFLAGS"

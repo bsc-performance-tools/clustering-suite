@@ -116,6 +116,8 @@ class PRVEventsDataExtractor: public DataExtractor
           IntermediateHWChange = Other.IntermediateHWChange;
           NotCommonEvents      = Other.NotCommonEvents;
           BurstEndEvents       = Other.BurstEndEvents;
+
+          return *this;
         }
     };
 

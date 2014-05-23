@@ -1,0 +1,930 @@
+\documentclass[a4paper, 12pt]{article}
+% \documentclass[a4paper, twoside=semi, BCOR=5mm, 12pt]{scrbook}
+% \usepackage{cleveref}
+% \DeclareMathSizes{12}{20}{14}{10}
+
+% \usepackage[toc]{glossaries}
+% \renewcommand*{\glsgroupskip}{}
+% \renewcommand*{\glsseeformat}[3][\seename]{(\xmakefirstuc{#1}\glsseelist{#2}.)}
+
+% \titlehead{
+% {\Large Unseen University \hfill SS~2002\\}
+%  Higher Analytical Institute\\
+%  Mythological Rd\\
+%  34567 Etherworld
+% }
+
+\usepackage[utf8x]{inputenc}
+
+\usepackage[british]{babel}
+
+% \parindent 1cm
+% \parskip 0.2cm
+% \topmargin 0.2cm
+% \oddsidemargin 1cm
+% \evensidemargin 0.5cm
+% \textwidth 15cm
+% \textheight 21cm
+
+% ******************************************************************************
+% B5 book boxing
+% ******************************************************************************
+
+% \addtolength{\oddsidemargin}{-0.2345679in} % magic number = 1 - 1/0.81 
+% \addtolength{\oddsidemargin}{−0,19047619in} % magic number = 1 - 1/0.81 
+% \addtolength{\evensidemargin}{−0,19047619in} % magic number = 1 - 1/0.81 
+% \addtolength{\evensidemargin}{-0.2345679in}% see documentation scale package 
+% \addtolength{\topmargin}{-0.2345679in} % for explanation 
+% \mag=840 % basic TeX command for 81% scaling 
+% \usepackage[b5paper]{geometry}
+% \usepackage[pdflatex,cam,a4,center,frame]{crop}
+
+% \usepackage[pdflatex, b5, center, frame]{crop}
+% % \usepackage{showframe}  
+
+\usepackage{setspace}
+% \onehalfspace
+\singlespace
+
+% \usepackage[scaled]{helvet}
+% \usepackage{sectsty}
+% \usepackage{amsmath,amssymb,amsfonts}
+
+% \usepackage[OT1]{fontenc}
+% \usepackage{iwona}
+% \usepackage{tgpagella}
+% \usepackage{pandora}
+
+% \usepackage[T1]{fontenc}
+% \usepackage{efont,mathesf}
+% \renewcommand*\oldstylenums[1]{{\fontfamily{esfod}\selectfont#1}}
+
+
+\usepackage[T1]{fontenc}
+\usepackage{libertine}
+% \usepackage[seriftt]{lucidabr}
+\usepackage[scaled=0.8]{beramono}
+
+
+\usepackage{graphicx}
+\usepackage{lettrine}
+
+\usepackage[unicode=false,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,
+ breaklinks=true, backref=false, colorlinks=false]
+ {hyperref}
+\hypersetup{
+    unicode=true,          % non-Latin characters in Acrobat’s bookmarks
+    pdftoolbar=true,        % show Acrobat’s toolbar?
+    pdfmenubar=true,        % show Acrobat’s menu?
+    pdffitwindow=false,     % window fit to page when opened
+    pdfstartview={FitV},    % fits the width of the page to the window
+    pdfsubject={Parallel performance analysis},   % subject of the document
+%     pdfcreator={Creator},   % creator of the document
+%     pdfproducer={Producer}, % producer of the document    
+    pdfnewwindow=true,      % links in new window
+    pdftitle={Application of clustering analysis and sequence analysis on the performance analysis of parallel applications},    % title
+    pdfauthor={Juan Gonzalez Garcia},     % author
+    pdfkeywords={high performance computing, parallel applications, performance analysis, automatic analysis,cluster analysis, sequence analysis, data mining}, % list of keywords
+}
+
+\usepackage[numbers]{natbib}
+\usepackage{bibentry}
+
+% \newcommand{\ignore}[1]{}
+% \newcommand{\nobibentry}[1]{{\let\nocite\ignore\bibentry{#1}}}
+% % apsrev entries in the text need definitions of these commands
+% \newcommand{\bibfnamefont}[1]{#1}
+% \newcommand{\bibnamefont}[1]{#1}
+
+% \usepackage{floatrow}
+\usepackage{subfig}
+% \usepackage{subcaption}
+% \usepackage{subfigure}
+
+% \usepackage{boxedminipage}
+\usepackage{tikz}
+% \usepackage{caption}
+
+% \usepackage{xcolor}
+% \usepackage{fancybox}
+
+\usepackage{lipsum}
+\usepackage{multicol}
+
+% \usepackage{multirow}
+% \usepackage{colortbl}
+
+% \usepackage{makecell}
+
+% \newcommand{\goodgap}{%
+% \hspace{\subfigtopskip}%
+% \hspace{\subfigbottomskip}}
+
+% \usepackage[stretch=10]{microtype}
+
+% \usepackage{float}
+
+\usepackage{amsmath}
+
+\usepackage{algorithmic}
+\usepackage{algorithm2e}
+
+% \usepackage{afterpage}
+% \usepackage{pdflscape}
+\usepackage{rotating}
+
+% \usepackage{graphicx}
+\usepackage{array}
+
+\usepackage{booktabs}
+\usepackage{arydshln}
+\usepackage{xcolor}   % http://ctan.org/pkg/xcolor
+\usepackage{colortbl} % http://ctan.org/pkg/colortbl
+% \usepackage{dcolumn}
+
+\usepackage{fancyvrb}
+\usepackage{threeparttable}
+
+% \usepackage{varwidth}
+
+\usepackage[toc,page,header]{appendix}
+\usepackage{minitoc}
+
+\usepackage{floatrow}
+
+\usepackage{pdfpages}
+
+\include{extra_commands}
+
+\begin{document}
+
+\graphicspath{{figures/}}
+
+\title{The \texttt{ClusteringSuite} package}
+
+\maketitle
+
+The \texttt{ClusteringSuite} is the piece of code that implements all
+the cluster analysis techniques developed at the Barcelona Supercomputing Center
+Tools Team. Basically, it is composed by two main libraries,
+\texttt{libClustering} and \texttt{libTrace\-Clustering}, and a set of binaries
+that use these libraries to offer the different features. All this collection of 
+software follows an object-oriented design and is implemented in C++, with
+limited features implemented in C.
+
+\section{Software engineering}
+
+% It is not the aim of this appendix to precisely describe all the engineering
+% process of the software package. A software package that relies and
+% implements research ideas usually suffers from a poor engineering, because in
+% the development process there is no room to perform a pure requirement
+% analysis, even more when the requirements constantly change.
+
+In this section we present the a coarse-grain description of the software
+engineering behind the \texttt{ClusteringSuite} package. This package 
+represents the third version of the software package that aggregates a set of
+features that became stable as the development of the thesis advanced.
+
+The features of the package are divided in two main parts: first, a core 
+cluster analysis library, \texttt{libClustering}, that includes the 
+abstraction of the information containers and the clustering algorithms; 
+second, the \texttt{libTrace\-Clustering} that offers the features of extracting
+the required information from application traces, prepare the information to 
+perform to use the \texttt{libClustering} and generate the different outputs.
+Both libraries offer a clean façade class to access the different features
+they implement that is used by the different binaries. In the following 
+points we detail the classes that compose each library and the interaction 
+among them.
+
+\subsection{libClustering}
+
+Figure~\ref{fig:libclustering_uml} contains a basic UML class model of 
+the \texttt{libClustering}. It contains the four main classes required to
+perform a cluster analysis. First, a \textit{Point}, the abstraction of 
+n-dimensional point including basic operation such as the Euclidean distance
+to another Point. A set of points is aggregated over a \textit{DataSet},
+useful to manipulate data ranges or to build indexes to ease the access
+to each individual point. Next, the hierarchy where the top class is
+\textit{ClusteringAlgorithm} acts as an interface to the actual
+implementations of multiple algorithms. The ClusteringAlgorithm objects
+process a DataSet and generate a \textit{Partition}, a class that relates 
+the Points in a DataSet to the cluster they belong. In this Figure we just
+depict three of the possible cluster algorithms this library offers.
+
+\begin{figure}
+  \centering
+  \includegraphics[scale=.7]{uml_design/libclustering_uml.pdf}
+  \caption{UML class model of the \texttt{libClustering} library}
+  \label{fig:libclustering_uml}
+\end{figure}
+
+
+\subsection{libTrace\-Clustering}
+
+\texttt{libTrace\-Clustering} is the library that includes all the logic
+required to extract the information from an application trace (a Paraver
+trace or a Dimemas trace) and then process it to execute a cluster analysis
+using the \texttt{libClustering} library. As can be seen in the UML
+class model of this library, Figure \ref{fig:libtraceclustering_uml}, the
+interaction between these two libraries relies on a hierarchy inheritance,
+where \textit{TraceDataSet} and \textit{CPUBurst} are specializations
+of \textit{DataSet} and \textit{Point} respectively defined in the
+\texttt{libClustering} library.
+
+\textit{ClusteringDefinition} class contains the information to set up all
+the model. First, it defines which of the cluster algorithms from the
+\texttt{libClustering} will be used (and the possible values for its
+parameters). Second, it defines the different \textit{ClusteringParameter}
+objects. Each ClusteringParameter represents one of the dimensions that 
+describe a Point (specialized as CPUBurst at this level) used by the 
+ClusteringAlgorithm to discover the different clusters.
+
+Using the ClusteringParameter's, a \textit{DataExtractor} object will read 
+the contents of a \textit{Trace} filling the TraceDataSet with the CPUBursts
+found.
+
+Then the particular ClusteringAlgorithm is executed and creates the 
+corresponding \textit{Partition} object (also part of the \texttt{libClustering}
+library). This Partition object will be used first by a \textit{ClusteringStatistics} 
+object to compute statistics and by \textit{PlotManager}
+(also defined by the ClusteringDefinition object) to generate output plots
+of the clusters found. Then \textit{TraceReconstructor} will create an output
+trace with the same information of the original and the information 
+(events) to identify to which cluster each CPU bursts belongs.
+
+In case of using the Aggregative Cluster Refinement algorithm, the
+library behaves differently than using a regular cluster algorithm. 
+Basically, it will make use of DBSCAN (to clarify the drawing, in 
+Figure \ref{fig:libtraceclustering_uml} it is represented as it uses any 
+ClusteringAlgorithm) on each refinement step as well as a \textit{ClusterSequenceScore}
+object to evaluate the quality of the intermediate clusters (the different
+Partitions). AggregativeClusterRefinement produces a final Partition of the 
+data, but the library can keep track of intermediate ones to also produce 
+intermediate traces and plots useful to evaluate the hierarchical generation
+of the final clusters.
+
+\begin{figure}
+  \centering
+  \includegraphics[scale=.7]{uml_design/libtraceclustering_uml.pdf}
+  \caption{UML class model of the \texttt{libTrace\-Clustering} library}
+  \label{fig:libtraceclustering_uml}
+\end{figure}
+
+\section{Libraries and tools}
+
+The tools offered in the \texttt{ClusteringSuite} package are
+\texttt{BurstClustering}, \texttt{Clustering\-DataExtractor} and
+\texttt{DBSCANParametersApproximation}.
+
+\begin{description}
+  
+  \item[\texttt{BurstClustering}] The main tool that includes the cluster
+  analysis based on a application trace. The user provides an XML file (used
+  by all three tools) to configure the analysis (a \textit{ClusteringDefinition}
+  class in the model) and a trace file. Using the \texttt{libTrace\-Clustering}
+  it processes the provided trace, run the cluster algorithm (both the ones
+  implemented in the \texttt{libClusterig} or the Aggregative Cluster 
+  Refinement) and generates the output trace and the cluster statistics and
+  plots.
+  
+  \item[\texttt{Clustering\-DataExtractor}] A tool that only offers the data
+  extraction from the input trace and the plot generation, but not the
+  cluster analysis. It is useful to performn preliminary observations about
+  the data distribution so as to adapt the parameters used by the cluster
+  analysis, for example to filter the individuals.
+  
+  \item[\texttt{DBSCANParametersApproximation}] This tool is useful when 
+  using the DBSCAN algorithm to help the user to tune the algorithm 
+  parameters.
+%   to obtain the best results available.
+  
+\end{description}
+
+\section{\texttt{ClusteringSuite} tools usage}
+
+This section is intended as a brief manual of regular use of the three tools 
+included in the \texttt{ClusteringSuite} software\footnote{All the guidelines
+presented in this section are applicable to the \texttt{ClusteringSuite v2.XX} }.
+As mentioned before, the tools offered in the software package use an input
+trace where the information is extracted. Even it could be a Paraver or
+Dimemas trace, it almost all cases, the input trace is a Paraver trace. The
+second input file these tools require is the configuration file XML. This file
+is key to define which the parameters of the clustering process.
+
+In brief, the cluster analysis process its composed by 6 steps. First four
+steps are required to generate the XML configuration file, while the
+last two are the execution of the \texttt{BurstClustering} tool itself and
+the observation and analysis of the results.
+
+\begin{enumerate}
+  \item Select of the clustering/extrapolation parameters.
+  \item Define the filters and normalization applied to the input data
+  \item Select the cluster algorithm and its parameters
+  \item Define the output plots
+  \item Execute the cluster analysis
+  \item Observe the different outputs
+\end{enumerate}
+
+The actual definition of the different records in the XML file are described
+in the following section (\ref{sec:xml_definition}), while this one include
+the guidelines to detect the information it will contain.
+
+\subsubsection*{1. Select the clustering parameters}
+
+The first decision to take when performing a cluster analysis is which
+of the data present in the input trace will be used to describe each
+CPU burst, in the \texttt{ClusteringSuite} terminology, we call them simply
+the \textit{parameters}.
+
+Using the Paraver vocabulary, a CPU burst is expressed in a trace
+as a \textit{State Record} of value 1 (\textit{Running State}). The
+parameters available to characterize a CPU burst are those events that appear
+at the end time of the given Running State. As a Paraver event is a pair 
+event/value, in the XML file we use the event type to indicate events we 
+whose values will be stored in the different bursts. We can also use
+Running State duration (difference between end time and begin time) as 
+a CPU burst parameter.
+
+In the XML we will express those parameters that will be used by the cluster
+algorithm, the \textit{clustering parameters}, and those that will be used
+in the extrapolation process, the \textit{extrapolation parameters}. The
+parameters can be defined as single event reads (\textit{single events}) 
+or combinations of pair of events (\textit{mixed events}). In case we use
+the CPU burst duration, it will always be used as a clustering parameter.
+
+It could be obvious, but to define the different parameters it is essential
+to know first which ones we want to use and which are the event type
+codification present in the trace. To do that we need to go through to the 
+Paraver Configutarion File (\textit{.pcf} file generated by \texttt{Extrae}) 
+and check which events appear in the trace and their event type encoding.
+Almost in all analyses we use the Performance Hardware Counters events,
+being Completed Instructions and IPC the usual metrics combinations used by
+the cluster algorithm.
+
+\subsubsection*{2. Define the filters and normalizations}
+
+Once knowing which are the clustering parameters, we have to decide the
+possible filters we want to apply. The filters prevent the cluster algorithm
+of analysing CPU bursts that can bias the result or do not add any valuable
+information. We found two different filters: a duration filter to discard
+those burst whose duration is shorter than a given value, and a range filter
+that can be defined to each parameter and eliminates those bursts than are
+out of the boundaries.
+
+To tune the duration filter we use the \texttt{stats} tools provided by the
+CEPBA-Tools package. Using the \texttt{-bursts\_histo} parameter this tool
+computes a plot as the one presented in Figure~\ref{fig:stats_plot} for
+a given Paraver trace. This plot is an histogram where the $x$ axis is the 
+duration of the CPU bursts and quantifies both the aggregated time of the 
+CPU bursts, the green bars, and the number of bursts, the red line. Observing
+this plot we can select the duration that eliminates de maximum number of 
+bursts (red line at left of the select duration), while maintaining a high 
+value of aggregated time (green bars at right of the selected point).
+For example, in the Figure~\ref{fig:stats_plot}, a reasonable duration filter 
+will be 10 miliseconds.
+
+\begin{figure}
+  \includegraphics[width=1\columnwidth]{stats_plot/stats_plot.pdf}
+  \caption{Bursts histogram produced by \texttt{stats} tool}
+  \label{fig:stats_plot}
+\end{figure}
+
+With respect to the normalizations, we provide the possibility of applying
+first a logarithmic normalization, useful when the parameter range is wide
+and can bias the results of the cluster analysis. The logarithmic 
+normalization can be applied to each parameter independently. The second 
+normalization is a pure range normalization to set the parameter values 
+in range $[0,1]$, following the formula  range 
+($\forall a_{i}\in A,a_{i}\leftarrow(a_{i}-min(A))/(max(A)-min(A))$).
+When using the range normalization, it will be applied to each parameter used,
+so as to guarantee that all of them have the same weight in the analysis. If
+we to add more weight one of the parameters used in the cluster analysis, we
+can apply a multiplicative factor.
+
+To clarify how the different normalizations and filters work, this is the 
+order as they are applied: when a CPU burst is read, its duration is checked
+and then the different parameters that have range filters defined; to those
+bursts that pass the filters its performed the logarithmic normalization of 
+each parameter that requires it and afterwards the range normalization. 
+Finally, the scaling factor is applied.
+
+\subsubsection*{3. Select the output plots}
+
+We can combine the parameters defined previous to generate GNUplot scripts
+of 2D and 3D scatter-plots. The plots can print both the normalized data or
+the raw data (before normalizations). The user can tune tune the ranges to 
+print and also the axis-labels of the plots. In addition, users can let the
+library to produce all 2D plots obtained combining all metrics defined.
+
+Once having the parameters, filters and plots, we can run the application
+\texttt{Clustering\-DataExtractor} to extract the data and produce the plots 
+described before runing the cluster algorithm. The resulting plots will 
+show all the data available, distinguishing between the duration filtered 
+bursts, the range filtered bursts and the ones that will take part in the 
+cluster analyses. These plots are an useful aid to fine tune the parameter 
+filters and normalizations.
+
+\subsubsection*{4. Select the cluster algorithm}
+
+Even though the Aggregative Cluster Refinement and DBSCAN are the two basic
+algorithms offered by the \texttt{ClusteringSuite} package, there is a few
+more clustering algorithms offered to the user. Table~\ref{tab:cluster_algorithms}
+contains the list of these algorithms and their parameters. It is interesting
+to note that the Aggregative Cluster Refinement is the only algorithm that
+does not require any parameter and it not have to be expressed in the
+XML configuration file.
+
+\begin{table}
+  \centering
+  
+  \caption{Cluster algorithms included in the \texttt{libClustering} and their
+  parameters}
+  \label{tab:cluster_algorithms}
+  
+  \begin{tikzpicture}
+  \node [fill=figureshade,rounded corners=5pt]
+  {
+  
+  \vspace{10pt}
+  
+  \ra{1.3}
+  
+  \begin{threeparttable}[b]
+  
+  \begin{tabular}{@{}*>{\tt}l>{\tt}^l@{}}
+  \toprule
+  \bf Cluster Algorithm Name  & \bf Parameters \\
+  \midrule
+  DBSCAN                  & epsilon, min\_points \\
+  GMEANS                  & critical\_value, max\_clusters \\
+  CAPEK\tnote{1}          & k \\
+  MUSTER\_PAM\tnote{1}    & max\_clusters \\
+  MUSTER\_XCLARA\tnote{1} & max\_clusters \\
+  
+  \bottomrule
+
+  \end{tabular}
+  
+  \begin{tablenotes}
+    \item[1] \texttt{libClustering} includes a common interface to this
+    algorithms offered by the MUSTER library (\url{http://tgamblin.github.com/muster/main.html}
+  \end{tablenotes}
+  
+  \end{threeparttable}
+  
+  };
+  \end{tikzpicture}
+  
+\end{table}
+
+For further information about the different algorithms included in the
+package, we point to the following papers: \cite{Ester:KDD96} for DBSCAN 
+algorithm, \cite{Foina:Multicore2010} for GMEANS and \cite{Gamblin:ICS10} for
+CAPEK, PAM and XCLARA.
+
+In case of DBSCAN we provide the application \texttt{DBSCANParametersApproximation}
+to help the paremeter selection, according to the technique described
+in~\cite{Ester:KDD96}.
+
+\begin{table}
+  \centering
+  
+  \caption{\texttt{BurstClustering} tool parameters}
+  \label{tab:burstclustering_params}
+  
+  \begin{tikzpicture}
+  \node [fill=figureshade,rounded corners=5pt]
+  {
+  
+  \vspace{10pt}
+  
+  \ra{1.3}
+  \footnotesize
+  
+  \begin{tabular}{>{\tt}lp{5cm}}
+  \toprule
+  \bf Parameter                   & \bf Description \\
+  \midrule
+  \multicolumn{1}{r}{\textit{Required parameters}} \\[1ex]
+  -d <clustering\_definition.xml>  & Clustering definition XML to be used \\
+  -i <input\_trace.prv>            & Input (Paraver) trace to be used \\
+  -o <output\_trace.prv>           & Output (Paraver) trace with cluster information added \\
+  \hdashline[1pt/1pt]
+  \multicolumn{1}{r}{\textit{Optional parameters}} \\[1ex]
+  -h                              & Show help message and exit \\
+  -s                              & Performs a silent execution, without informative messages \\  
+  -m <number\_of\_samples>        & Performs a cluster analysis using the number of burst indicated and classifying the rest \\
+  -a[f]                           & Generates an output file with the aligned sequences (in FASTA format when using '\texttt{-af}') \\
+  -ra[p]                          & Executes the Aggregative Cluster Refinement instead of 
+                                    the cluster algorithm indicated in the XML. When using
+                                    '\texttt{-rap}' generates plots and outputs from
+                                    intermediate steps \\
+  -t                              & Print accurate timings (in $\mu seconds$) of different algorithm parts \\
+  -e EvtType1, EvtType2,...       & Changes the Paraver trace processing, to capture information by the events defined instead of CPU bursts \\
+  \bottomrule
+
+  \end{tabular}
+  
+  };
+  \end{tikzpicture}
+  
+\end{table}
+
+\subsubsection*{5. Execute the cluster analysis}
+
+Once defined the different elements necessary to perform the analysis, we
+need to execute the \texttt{BurstClustering} tool. The different parameters 
+of this tool and a short description of them are listed in 
+Table~\ref{tab:burstclustering_params}. Basically, to perform a regular 
+analysis using the cluster algorithm defined in the XML file we need to 
+execute the command:
+
+\begin{figure}[!h]
+  
+\begin{tikzpicture}
+\node [fill=figureshade,rounded corners=5pt]
+{
+
+\begin{minipage}{.95\textwidth}
+
+\fontsize{9}{10}
+\begin{verbatim}
+BurstClustering -d <clustering_definition.xml> -i <input_trace> -o <output_trace>
+\end{verbatim}
+\end{minipage}
+};
+\end{tikzpicture}
+
+\end{figure}
+
+The tool will process the information provided in the configuration file,
+extract the data from the input trace, execute the cluster algorithm and then
+generate the required output plots, extrapolation files and the output trace.
+These files will be explained in the further step.
+
+In case we want to execute the Aggregative Cluster Refinement algorithm, the
+command varies slightly:
+
+\begin{figure}[!h]
+  
+\begin{tikzpicture}
+\node [fill=figureshade,rounded corners=5pt]
+{
+
+\begin{minipage}{.95\textwidth}
+
+\fontsize{9}{10}
+\begin{verbatim}
+BurstClustering -d <clustering_def.xml> -ra[p] -i <input_trace> -o <output_trace>
+\end{verbatim}
+\end{minipage}
+};
+\end{tikzpicture}
+
+\end{figure}
+
+By adding the \texttt{-ra} parameter, the tool discards the algorithm
+indicated in the clustering definition XML file and then applies this
+different algorithm. In case we use the parameter \texttt{-rap}, the tool
+will produce, apart from the regular outputs, the traces and plots of 
+intermediate steps of the Aggregative Cluster Refinement algorithm.
+
+\subsubsection*{6. \texttt{BurstClustering} tool outputs}
+
+The \texttt{BurstClustering} offers three main outputs: scatter-plots of
+the different metrics, a cluster statistics file (including the extrapolation)
+and a reconstructed Paraver trace. In addition, it also generates the
+refinement tree, when using the Aggregative Cluster Refinement. Optionally,
+it can produce the a file with the sequence alignment and a file containing
+the Cluster Sequence Score values. Here we will describe briefly all of them.
+
+The \textbf{scatter-plots} are simply GNUplot scripts that can be load using
+this plotting tool. As seen in previous steps, they can be 2 or 3 dimensional
+combinations of different metrics used to characterize the CPU bursts. In any
+case, the points in the scatter plots are coloured to distinguish the
+different clusters found. These plots are useful to observe, qualitatively,
+variations in the clusters with respect to the metrics used. In 
+Figure~\ref{fig:plots_example} we show 4 different plots combining 8 different
+hardware counters. First plot, \ref{subfig:plot_inst_ipc}, show the metrics
+used by the cluster algorithm. In the rest of combinations we can observe that 
+the clusters represent clear isolated clouds, with a minor exception of
+the plot comparing Main Memory Accesses vs. L2 Data Cache Accesses,
+\ref{subfig:plot_mainmem_l2}, where Cluster 4 (in red) appear in two different
+clouds.
+
+The plot scripts are named using the output trace prefix plus a trailing
+string expressing the combination of metrics used. They have the extension
+\texttt{.gnuplot}. All of them use a file ended in \texttt{.DATA.csv} that
+contain on each line the different parameters described in the XML file plus 
+the cluster identifier assigned for each CPU burst analysed.
+
+\begin{figure}
+  \centering
+  \begin{tabular}{|c|c|}
+  
+  \subfloat[Instructions vs. IPC]
+  {
+    \includegraphics[width=.45\columnwidth]{plots_example/inst_vs_ipc_plot.png}
+    \label{subfig:plot_inst_ipc}
+  }
+  &
+  \subfloat[Stores vs. Loads]
+  {
+    \includegraphics[width=.45\columnwidth]{plots_example/stores_vs_loads_plot.png} 
+  }
+  \\
+  \subfloat[Main memory accesses vs. L2 data cache acessess]
+  {
+    \includegraphics[width=.45\columnwidth]{plots_example/mainmem_vs_l2_plot.png}
+    \label{subfig:plot_mainmem_l2}
+  }
+  &
+  \subfloat[Integer instructions vs. Floating point instructions]
+  {
+    \includegraphics[width=.45\columnwidth]{plots_example/int_vs_fop_plot.png}
+  }
+  \\
+  \end{tabular}
+  
+  \caption{Output plots produced by \texttt{BurstClustering} tool combining
+  different metrics}
+  \label{fig:plots_example}
+  
+\end{figure}
+
+The \textbf{clustering statistics} file is a CSV file that contains the number
+of individuals, the aggregated duration and the average duration per CPU 
+burst, and the average values of extrapolation parameters defined in XML,
+for each cluster found. This file is really useful to analysed quantitatively
+the behaviour of the different clusters found. The clusters statistics file 
+is named using the prefix of the input trace, but ending in 
+\texttt{.clusters\_info.csv}.
+
+% As an example, we provide a spreadsheet where
+% we can import the statistics from a set of native performance counters of
+% the Power PC 970 processor, ant it will compute a really useful CPU 
+% breakdown model for each cluster.
+
+Next output that is always produced is the \textbf{output trace}. Basically,
+this is exactly the same input trace where all the CPU burst have been
+surrounded using a certain events to identify them. Thanks to these events, we
+can take advantage of the vast analysis power of Paraver and Dimemas to 
+perform further analyses and correlate the clusters with all the information
+present on the trace. For example, we can observe the time-line distribution 
+of the different computation regions detected. An example of Paraver 
+time-line and its corresponding duration profile can be seen in 
+Figure~\ref{fig:paraver_clustering}. We provide a set of Paraver configuration
+files with pre-defined views and histograms related to cluster events.
+
+\begin{figure}
+  \centering
+  \subfloat[Time-line distribution of discovered clusters]
+  {
+    \includegraphics[width=1\columnwidth]{paraver_example/paraver_clusters_timeline.png}
+  }
+  
+  \subfloat[Duration histogram of the clusters per application task]
+  {
+    \includegraphics[width=.8\columnwidth]{paraver_example/paraver_clusters_profile.png}
+  }
+  
+  \caption{A Paraver time-line and profile showing information related
+  to a cluster analysis}
+  \label{fig:paraver_clustering}
+\end{figure}
+
+In case we executed the Aggregative Cluster Refinement algorithm, the tool
+will also produce a \textbf{refinement tree} file. This file has the same 
+prefix as the output trace and the extension \texttt{TREE.dot}. It is a
+text file that describes the refinement tree using the DOT language. To
+visualize it we require the GraphViz\footnote{\url{http://www.graphviz.org/}}
+software package. We also recommend using of the interactive tool 
+\texttt{xdot}\footnote{\url{http://code.google.com/p/jrfonseca/wiki/XDot}}
+to navigate through the refinement tree output. An example of a refinement
+tree can be seen in Figure~\ref{fig:refinement_tree}.
+
+\begin{sidewaysfigure}[!htp]
+  
+  \centering
+  \includegraphics[width=1\columnwidth]{refinement_tree/refinement_tree.pdf}
+  \caption{Example of a refinement tree produced by \texttt{BurstClustering} tool}
+  \label{fig:refinement_tree}
+
+\end{sidewaysfigure}
+
+Finally, using the parameter \texttt{-a}, the tool will produce a CSV file
+containing the sequences obtained after applying the Cluster Sequence Score.
+This file, named as the output trace with the extension \texttt{.seq}, contains
+the sequence of the cluster identifiers (numbers) and gaps (marked as hyphens)
+introduced by the alignment algorithm for each task and thread present on
+the input trace. If use the parameter \texttt{-af}, the file will be generated
+in the FASTA format, transforming the first 21 clusters in an amino-acid 
+identifier. The FASTA file can be load in any alignment software, such
+as ClustalX\footnote{\url{http://www.clustal.org/}} for its visualization. In
+Figure \ref{fig:clustalx_example} we can see a ClustalX window with a set of
+aligned sequences.
+
+If we use any of these two last parameters, the tool will also produce a file
+with the extension \texttt{SCORES.csv}, that contains the numerical results of
+the Cluster Sequence Score. 
+
+\begin{figure}
+  \centering
+  
+  \includegraphics[width=1\columnwidth]{sequences_example/sequences_clustalx.png}
+ 
+  \caption{ClustalX sequence alignment window}
+  \label{fig:clustalx_example}
+\end{figure}
+
+
+When using the Aggregative Cluster Refinement with the parameter \texttt{-rap}
+the tool will produce the plots, traces, refinement trees, sequence files
+and score files for each refinement step. The intermediate statistics files
+will not be generated and these intermediate trace files will only contain
+cluster events, to check the intermediate cluster distribution, but not to
+correlate them with other information. The intermediate files will have an
+inter-fix \texttt{STEPX} in their file name, to distinguish at which step
+(iteration) of refinement were produced.
+
+Finally, it is interesting to note that we guarantee the colour coherence
+in all those outputs generated by the \texttt{BurstClustering} that use colour 
+information to distinguish the cluster identifiers. In case of ClustalX we 
+provide a modified version of software package with the required amino-acid
+colouring.
+
+
+\section{Creating the clustering definition XML}
+\label{sec:xml_definition}
+
+In brief, the clustering definition XML file contains the description of four
+elements of the clustering process: the parameters associated to each CPU burst
+in the trace used by cluster analysis and the extrapolation process; the
+filtering ranges and normalizations applied to this data; the cluster 
+algorithm to be used; and finally, the description of the different output
+plots, generated as GNUplot scripts. We can see how these different parts are
+distributed in the XML file in Figure \ref{fig:xml_structure}.
+
+Following the current description of the file it could be easily generated
+using a regular text editor or a XML editor.
+
+% In the current
+% \texttt{ClusteringSuite} package, there is no an specific application to 
+% generate it, but it is planned for future versions.
+
+
+\begin{figure}
+  \centering
+  
+  \begin{tikzpicture}
+  \node [fill=figureshade,rounded corners=5pt]
+  {
+    \includegraphics[width=1\columnwidth]{clustering_xml/xml_structure.pdf}
+  };
+  \end{tikzpicture}
+  
+  \caption{Clustering definition XML file structure}
+  \label{fig:xml_structure}
+  
+\end{figure}
+
+\subsubsection{Parameter selection}
+
+There are two ways to define how the parameters are read from a Paraver trace.
+First, the values of individual events situated at the end of the Running 
+State, using \texttt{single\_event} nodes. Second, combining the values of
+two different events with a basic mathematical operation, using 
+\texttt{mixed\_events} nodes.
+
+A \textbf{\texttt{single\_event}} node, see Figure~\ref{subfig:xml_single_event},
+contains first two attributes: \texttt{apply\_log} that indicates if
+a logarithmic normalization will be applied to its values; the \texttt{name}
+parameter is the label the will be used in the different output file. 
+The inner node \texttt{event\_type} is mandatory, to define the event type 
+that appears in the Paraver trace. Optional nodes \texttt{range\_min} and 
+\texttt{range\_max} are used to filter the CPU burst outside these 
+boundaries. Finally, optional node \texttt{factor} is a multiplicative
+value so as to weight the parameter value.
+
+A \textbf{\texttt{mixed\_events}} node, see Figure~\ref{subfig:xml_mixed_events},
+is pretty similar to the previous one, but includes two mandatory internal
+nodes \texttt{event\_type\_a} and \texttt{event\_type\_b}, to define the
+two types of events involved, and the attribute \texttt{operation} to define
+the mathematical operation applied to the values read. Possible operations
+are \texttt{+}, \texttt{-}, \texttt{*} and \texttt{/}. The operation is 
+applied to the values of the two events defined, \textit{before} the 
+logarithmic normalization.
+
+To define the CPU bursts parameters that will be used by the cluster algorithm,
+they have to be placed below the \texttt{clustering\_parameters} node,
+see Figure~\ref{fig:xml_structure}. To define those that will be used to
+characterize the resulting clusters (as averages in the \texttt{.clusters\_info.csv}
+file), we have to place them below the \texttt{extrapolation\_parameters} node.
+
+If we want to use the duration of the CPU bursts as a parameter, we need to 
+set to \textit{yes} the attribute \texttt{use\_duration} present in the root
+node (\texttt{cluste\-ring\_definition}).
+
+% The duration will always be used as
+% parameter used by the cluster algorithm.
+
+\begin{figure}
+  \centering
+  
+  \subfloat[\texttt{single\_event} node structure]
+  {
+    \begin{tikzpicture}
+    \node [fill=figureshade,rounded corners=5pt]
+    {
+    \includegraphics[scale=.7]{clustering_xml/xml_single_event_definition.pdf}
+    };
+    \end{tikzpicture}
+    \label{subfig:xml_single_event}
+  }
+  
+  \subfloat[\texttt{mixed\_events} node structure]
+  {
+    \begin{tikzpicture}
+    \node [fill=figureshade,rounded corners=5pt]
+    {
+    \includegraphics[scale=.7]{clustering_xml/xml_mixed_events_definition.pdf}
+    };
+    \end{tikzpicture}
+    \label{subfig:xml_mixed_events}
+  }
+  
+  \caption{Nodes to define the parameters extracted from a trace}
+  \label{fig:xml_events_definition}
+
+\end{figure}
+
+\subsubsection{Filtering and normalization}
+
+The filtering and normalization is expressed at two points of the XML file.
+We have seen that the parameter definition nodes include both a range 
+filtering and also a logarithmic normalization. The filtering information
+included in the extrapolation parameters is not taken into account.
+
+The second point is the root node. In this node we find different attributes,
+see Figure~\ref{fig:xml_structure} regarding filters and normalizations.
+First one is \texttt{apply\_log}, that indicates if logarithmic normalization
+will be applied to the burst duration, if used. Next one is \texttt{normalize\_data},
+that indicates if a final range normalization will be applied to the values 
+of \textit{all} parameters (independently). Next we find the
+\texttt{duration\_filter}, expressed in $\mu s$, to discard those burst with
+less duration than the indicated. Finally, the \texttt{threshold\_filter}
+is a percentage to discard all the clusters found whose aggregated duration 
+represents less percentage of the total clusters duration than the indicated.
+
+\subsubsection{Output plots}
+
+Once defined the parameters used to characterize the CPU bursts, below
+the \texttt{output\_plots} node we can define the output plots combining
+the different metrics.
+
+If we set the attribute \texttt{all\_plots} of this main node to \textit{yes},
+the \texttt{libTrace\-Clustering} library will generate all possible 2D plots
+combining the parameters defined (clustering parameters and extrapolation
+parameters). If we want to manually define the combinations we can use 
+the \texttt{plot\_definition} structure, see Figure \ref{fig:xml_plot_definition}.
+
+What we find first in the \texttt{plot\_definition} node is the attribute
+\texttt{raw\_metrics}. In case we applied normalization to the clustering
+parameters setting this attribute to ``yes'' indicates that the resulting
+plot will use the raw values of the parameters. Then we find three kind
+of nodes \texttt{[x|y|z]\_metric}. Each of these nodes has a mandatory
+attribute \texttt{title} that will be used as the plot label for the
+corresponding axis. They have two optional attributes \texttt{max} and
+\texttt{min} to define the axis range. Finally, the content of each of
+these nodes must be the \textit{name} attribute of any of the parameters 
+defined previously (clustering parameter of extrapolation parameter). In case
+we want to use the duration, as it is defined differently from regular
+parameters, it has to be referenced simply using the text \texttt{Duration}.
+
+We can combine up to three metrics to create a 3 dimensional scatter-plot,
+where the individuals will be distinguished in series according to the
+cluster identifier assigned. The same is applicable when using just two
+metrics (\textit{x} and \textit{y}). If we just define a single metric 
+(\textit{x metric}), the resulting plot will be a 2 dimensional plot using
+the cluster identifier as y axis.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+  \node [fill=figureshade,rounded corners=5pt]
+  {
+  \includegraphics[scale=.7]{clustering_xml/xml_plot_definition.pdf}
+  };
+  \end{tikzpicture}
+  \caption{\texttt{plot\_definition} node of the clustering defintion XML}
+  \label{fig:xml_plot_definition}
+\end{figure}
+
+\bibliographystyle{plain} % Title is link if provided
+% \bibliography{papers_db}
+\bibliography{cluster_analysis_thesis_bibliography}
+\addcontentsline{toc}{chapter}{Bibliography}
+
+
+\end{document}

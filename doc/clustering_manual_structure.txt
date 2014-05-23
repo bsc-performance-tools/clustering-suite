@@ -1,0 +1,24 @@
+1.- Introduction
+
+  The package offers this and that. Brief description.
+
+2.- BurstClustering
+
+  BurstClustering is the main tool of the package. It implements
+the clustering analysis of a Paraver trace process.
+
+  Receives two inputs: Paraver trace and XML file.
+  
+2.1.- Use
+
+  * Creation of XML file
+    - Filters
+    - Clustering Parameters
+    - Extrapolation Parameters
+    - Output plots
+
+  * Execution of Burst Clustering
+
+  * Outputs
+
+2.2.- Practical Example

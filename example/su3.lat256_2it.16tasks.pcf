@@ -1,0 +1,316 @@
+DEFAULT_OPTIONS
+
+LEVEL               THREAD
+UNITS               NANOSEC
+LOOK_BACK           100
+SPEED               1
+FLAG_ICONS          ENABLED
+NUM_OF_STATE_COLORS 1000
+YMAX_SCALE          37
+
+
+DEFAULT_SEMANTIC
+
+THREAD_FUNC          State As Is
+
+
+STATES
+0    Idle
+1    Running
+2    Not created
+3    Waiting a message
+4    Blocking Send
+5    Synchronization
+6    Test/Probe
+7    Scheduling and Fork/Join
+8    Wait/WaitAll
+9    Blocked
+10    Immediate Send
+11    Immediate Receive
+12    I/O
+13    Group Communication
+14    Tracing Disabled
+15    Others
+16    Send Receive
+17    Memory transfer
+
+
+STATES_COLOR
+0    {117,195,255}
+1    {0,0,255}
+2    {255,255,255}
+3    {255,0,0}
+4    {255,0,174}
+5    {179,0,0}
+6    {0,255,0}
+7    {255,255,0}
+8    {235,0,0}
+9    {0,162,0}
+10    {255,0,255}
+11    {100,100,177}
+12    {172,174,41}
+13    {255,144,26}
+14    {2,255,177}
+15    {192,224,0}
+16    {66,66,66}
+17    {255,0,96}
+
+
+EVENT_TYPE
+9   50000001    MPI Point-to-point
+VALUES
+4   MPI_Irecv
+3   MPI_Isend
+37   MPI_Issend
+5   MPI_Wait
+0   Outside MPI
+
+
+EVENT_TYPE
+9   50000002    MPI Collective Comm
+VALUES
+8   MPI_Barrier
+7   MPI_Bcast
+9   MPI_Reduce
+0   Outside MPI
+
+
+EVENT_TYPE
+9   50000003    MPI Other
+VALUES
+19   MPI_Comm_rank
+20   MPI_Comm_size
+32   MPI_Finalize
+31   MPI_Init
+0   Outside MPI
+
+
+EVENT_TYPE
+1    50100001    Send Size in MPI Global OP
+1    50100002    Recv Size in MPI Global OP
+1    50100003    Root in MPI Global OP
+1    50100004    Communicator in MPI Global OP
+
+
+EVENT_TYPE
+6    40000033    Executing CPU
+
+
+EVENT_TYPE
+6    40000001    Application
+VALUES
+0      End
+1      Begin
+
+
+EVENT_TYPE
+6    40000003    Flushing Traces
+VALUES
+0      End
+1      Begin
+
+
+EVENT_TYPE
+6    40000036    Process IDentifier
+6    40000037    Parent Process IDentifier
+6    40000038    fork() depth
+
+
+EVENT_TYPE
+7  42000050 (PAPI_TOT_INS) Instr completed
+7  42000059 (PAPI_TOT_CYC) Total cycles
+7  42000053 (PAPI_LD_INS) Loads
+7  42000054 (PAPI_SR_INS) Stores
+7  42000106 (PAPI_VEC_DP) DP Vector/SIMD instr
+7  42000105 (PAPI_VEC_SP) SP Vector/SIMD instr
+7  42000052 (PAPI_FP_INS) FP instructions
+7  42000000 (PAPI_L1_DCM) L1D cache misses
+7  42000002 (PAPI_L2_DCM) L2D cache misses
+7  42000008 (PAPI_L3_TCM) L3 cache misses
+7  41999999 Active hardware counter set
+
+
+GRADIENT_COLOR
+0    {0,255,2}
+1    {0,244,13}
+2    {0,232,25}
+3    {0,220,37}
+4    {0,209,48}
+5    {0,197,60}
+6    {0,185,72}
+7    {0,173,84}
+8    {0,162,95}
+9    {0,150,107}
+10    {0,138,119}
+11    {0,127,130}
+12    {0,115,142}
+13    {0,103,154}
+14    {0,91,166}
+
+
+GRADIENT_NAMES
+0    Gradient 0
+1    Grad. 1/MPI Events
+2    Grad. 2/OMP Events
+3    Grad. 3/OMP locks
+4    Grad. 4/User func
+5    Grad. 5/User Events
+6    Grad. 6/General Events
+7    Grad. 7/Hardware Counters
+8    Gradient 8
+9    Gradient 9
+10    Gradient 10
+11    Gradient 11
+12    Gradient 12
+13    Gradient 13
+14    Gradient 14
+
+
+EVENT_TYPE
+0    70000001    Caller at level 1
+0    70000002    Caller at level 2
+0    70000003    Caller at level 3
+VALUES
+0   End
+1   Unresolved
+2   _NOT_Found
+3   g_sync
+4   initial_setup
+5   main
+6   mynode
+7   numnodes
+8   setup
+9   broadcast_int
+10   get_i
+11   setup_lattice
+12   setup_nodes
+13   start_gather
+14   test_gather
+15   wait_gather
+16   start_scatter
+17   wait_scatter
+18   initialize_prn
+19   broadcast_double
+20   get_d
+21   load_config
+22   setmulti
+23   updategauge
+24   staples_su3
+25   updatehiggs
+26   measure
+27   wait_gather_arr
+28   g_vecdoublesum
+29   writemeas
+30   dumpall
+
+
+EVENT_TYPE
+0    80000001    Caller line at level 1
+0    80000002    Caller line at level 2
+0    80000003    Caller line at level 3
+VALUES
+0   End
+1   0 (Unresolved)
+2   0 (_NOT_Found)
+3   301 (com_mpi.c) [su3_ahiggs]
+4   330 (com_mpi.c) [su3_ahiggs]
+5   353 (com_mpi.c) [su3_ahiggs]
+6   359 (com_mpi.c) [su3_ahiggs]
+7   378 (com_mpi.c) [su3_ahiggs]
+8   378 (com_mpi.c) [su3_ahiggs]
+9   460 (com_mpi.c) [su3_ahiggs]
+10   480 (com_mpi.c) [su3_ahiggs]
+11   503 (com_mpi.c) [su3_ahiggs]
+12   518 (com_mpi.c) [su3_ahiggs]
+13   570 (com_mpi.c) [su3_ahiggs]
+14   578 (com_mpi.c) [su3_ahiggs]
+15   586 (com_mpi.c) [su3_ahiggs]
+16   688 (com_mpi.c) [su3_ahiggs]
+17   740 (com_mpi.c) [su3_ahiggs]
+18   748 (com_mpi.c) [su3_ahiggs]
+19   37 (control.c) [su3_ahiggs]
+20   40 (control.c) [su3_ahiggs]
+21   49 (control.c) [su3_ahiggs]
+22   56 (control.c) [su3_ahiggs]
+23   90 (control.c) [su3_ahiggs]
+24   90 (control.c) [su3_ahiggs]
+25   90 (control.c) [su3_ahiggs]
+26   90 (control.c) [su3_ahiggs]
+27   90 (control.c) [su3_ahiggs]
+28   90 (control.c) [su3_ahiggs]
+29   151 (control.c) [su3_ahiggs]
+30   38 (layout.c) [su3_ahiggs]
+31   38 (layout.c) [su3_ahiggs]
+32   38 (layout.c) [su3_ahiggs]
+33   38 (layout.c) [su3_ahiggs]
+34   38 (layout.c) [su3_ahiggs]
+35   41 (layout.c) [su3_ahiggs]
+36   41 (layout.c) [su3_ahiggs]
+37   304 (layout.c) [su3_ahiggs]
+38   593 (layout.c) [su3_ahiggs]
+39   599 (layout.c) [su3_ahiggs]
+40   644 (layout.c) [su3_ahiggs]
+41   644 (layout.c) [su3_ahiggs]
+42   55 (measure.c) [su3_ahiggs]
+43   55 (measure.c) [su3_ahiggs]
+44   55 (measure.c) [su3_ahiggs]
+45   55 (measure.c) [su3_ahiggs]
+46   57 (measure.c) [su3_ahiggs]
+47   57 (measure.c) [su3_ahiggs]
+48   189 (measure.c) [su3_ahiggs]
+49   365 (measure.c) [su3_ahiggs]
+50   366 (measure.c) [su3_ahiggs]
+51   367 (measure.c) [su3_ahiggs]
+52   218 (multican_generic.c) [su3_ahiggs]
+53   42 (parameter_io.c) [su3_ahiggs]
+54   56 (parameter_io.c) [su3_ahiggs]
+55   30 (setup.c) [su3_ahiggs]
+56   37 (setup.c) [su3_ahiggs]
+57   38 (setup.c) [su3_ahiggs]
+58   39 (setup.c) [su3_ahiggs]
+59   47 (setup.c) [su3_ahiggs]
+60   51 (setup.c) [su3_ahiggs]
+61   52 (setup.c) [su3_ahiggs]
+62   54 (setup.c) [su3_ahiggs]
+63   55 (setup.c) [su3_ahiggs]
+64   57 (setup.c) [su3_ahiggs]
+65   60 (setup.c) [su3_ahiggs]
+66   65 (setup.c) [su3_ahiggs]
+67   86 (setup.c) [su3_ahiggs]
+68   93 (setup.c) [su3_ahiggs]
+69   94 (setup.c) [su3_ahiggs]
+70   95 (setup.c) [su3_ahiggs]
+71   96 (setup.c) [su3_ahiggs]
+72   99 (setup.c) [su3_ahiggs]
+73   104 (setup.c) [su3_ahiggs]
+74   105 (setup.c) [su3_ahiggs]
+75   132 (setup.c) [su3_ahiggs]
+76   134 (setup.c) [su3_ahiggs]
+77   135 (setup.c) [su3_ahiggs]
+78   174 (setup.c) [su3_ahiggs]
+79   29 (setup_basic.c) [su3_ahiggs]
+80   35 (setup_basic.c) [su3_ahiggs]
+81   36 (setup_basic.c) [su3_ahiggs]
+82   53 (setup_basic.c) [su3_ahiggs]
+83   27 (staples_generic.c) [su3_ahiggs]
+84   30 (staples_generic.c) [su3_ahiggs]
+85   33 (staples_generic.c) [su3_ahiggs]
+86   43 (staples_generic.c) [su3_ahiggs]
+87   45 (staples_generic.c) [su3_ahiggs]
+88   68 (staples_generic.c) [su3_ahiggs]
+89   29 (updategauge.c) [su3_ahiggs]
+90   39 (updategauge.c) [su3_ahiggs]
+91   42 (updategauge.c) [su3_ahiggs]
+92   19 (updatehiggs.c) [su3_ahiggs]
+93   19 (updatehiggs.c) [su3_ahiggs]
+94   19 (updatehiggs.c) [su3_ahiggs]
+95   19 (updatehiggs.c) [su3_ahiggs]
+
+
+EVENT_TYPE
+9    40000018    Tracing mode:
+VALUES
+1      Detailed
+2      CPU Bursts
+
+

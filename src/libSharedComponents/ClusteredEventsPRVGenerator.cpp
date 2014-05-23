@@ -60,7 +60,9 @@ using std::ostringstream;
 "EVENT_TYPE\n"\
 "9\t90000001\tCluster ID\n"\
 "VALUES\n"\
-"0\tEnd\n"
+"0\tEnd\n"\
+"1\tMissing Data\n"
+
 
 ClusteredEventsPRVGenerator::ClusteredEventsPRVGenerator(string  InputTraceName,
                                                          string  OutputTraceName)
@@ -389,9 +391,9 @@ bool ClusteredEventsPRVGenerator::BurstClosingEvent(Event* CurrentEvent)
           return false;
         }
       }
-
     }
   }
+
 }
 
 bool ClusteredEventsPRVGenerator::CopyROWFile(void)
