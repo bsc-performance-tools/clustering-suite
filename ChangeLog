@@ -10,7 +10,13 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
-2014-05-23 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.1
+2014-05-28 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.1
+	* Commit of the release 2.6.1
+
+	* Changes in the autotools files, to ensure the distribution of the
+	example and the documentation
+
+2014-05-23 Juan Gonzalez <juan.gonzalez@bsc.es> 
 	* Added 'example' and 'doc' folders and contens (example traces and
 	XMLs and documentation sources)
 

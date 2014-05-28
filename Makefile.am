@@ -10,7 +10,7 @@ AM_CPPFLAGS =\
 
 ## The 'pcfparser_svn1816' and 'common_utilities' directory will
 ## be merged in the new 'common-files' package
-SUBDIRS = include pcfparser_svn1816 common_utilities src scripts
+SUBDIRS = include pcfparser_svn1816 common_utilities src scripts doc
 
 instdir = $(includedir)
 
@@ -19,7 +19,7 @@ inst_HEADERS = \
 
 EXTRA_DIST = \
   $(top_srcdir)/SVN_VERSION \
-  $(clusteringsuitedoc_DATA) \
+  $(top_srcdir)/example \
   $(top_srcdir)/include \
   $(top_srcdir)/substitute \
   $(top_srcdir)/substitute-all
