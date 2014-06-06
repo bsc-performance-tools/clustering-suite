@@ -387,8 +387,10 @@ bool ClusteredStatesPRVGenerator::BurstOpeningRecord(ParaverRecord* CurrentRecor
     return false;
   }
 
-  if (BurstsToPrint[Object.str()].front()->BeginTime == CurrentRecord->GetTimestamp())
+  if (BurstsToPrint[Object.str()].front()->BeginTime == CurrentRecord->GetTimestamp() &&
+      !BurstsToPrint[Object.str()].front()->InUse)
   {
+    BurstsToPrint[Object.str()].front()->InUse = true;
     ID = BurstsToPrint[Object.str()].front()->ID;
     return true;
   }

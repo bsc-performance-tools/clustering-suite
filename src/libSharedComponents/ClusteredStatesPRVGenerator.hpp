@@ -63,6 +63,7 @@ class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
       timestamp_t  BeginTime;
       timestamp_t  EndTime;
       cluster_id_t ID;
+      bool         InUse;
     };
   private:
 
@@ -150,6 +151,7 @@ bool ClusteredStatesPRVGenerator::Run (T                     begin,
 
     NewBurstInfo->BeginTime = (*Burst)->GetBeginTime();
     NewBurstInfo->EndTime   = (*Burst)->GetEndTime();
+    NewBurstInfo->InUse     = false;
 
     switch ( (*Burst)->GetBurstType() )
     {

@@ -10,6 +10,11 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-06-06 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a bug in 'ClusteredStatesPRVGenerator.cpp' when opening
+	a burst region, that caused the duplication of the burst opening
+	events in the output trace
+
 2014-05-28 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.1
 	* Commit of the release 2.6.1
 
