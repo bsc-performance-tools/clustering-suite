@@ -50,7 +50,6 @@ void ClustersInfo::Unpack(PACKET_PTR InputPacket)
   char *ChildStatistics = NULL;
 
   PACKET_unpack(InputPacket, ClustersInfoFormatString, &ChildStatistics);
-fprintf(stderr, "UNPACK ----> %s\n", ChildStatistics);
 
   CombineStatistics( ChildStatistics );
   

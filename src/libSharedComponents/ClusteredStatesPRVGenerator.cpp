@@ -451,6 +451,9 @@ bool ClusteredStatesPRVGenerator::CopyROWFile(void)
 
   OutputROW << InputROW.rdbuf();
 
+  OutputROW.close();
+  InputROW.close();
+
   return true;
 }
 

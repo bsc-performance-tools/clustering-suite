@@ -144,6 +144,15 @@ class TraceData: public Error
                   set<event_type_t>&                BurstEndEvents,
                   bool                              toCluster = true);
 
+    bool NewBurst(task_id_t                         TaskId,
+                  thread_id_t                       ThreadId,
+                  line_t                            Line,
+                  timestamp_t                       BeginTime,
+                  timestamp_t                       EndTime,
+                  duration_t                        BurstDuration,
+                  map<event_type_t, event_value_t>& EventsData,
+                  bool                              toCluster = true);
+	
     bool NewBurst(instance_t           Instance,
                   task_id_t            TaskId,
                   thread_id_t          ThreadId,

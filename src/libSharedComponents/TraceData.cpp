@@ -321,6 +321,42 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
 /****************************************************************************
  * NewBurst
  ***************************************************************************/
+/** 2014/08/28: This version of 'NewBurst' is essentially an adapter to call
+  * it from the TreeDBSCAN, avoiding the requirement of providing the 
+  * BurstEnd events, closely related to the Trace based clustering
+  */
+bool TraceData::NewBurst(task_id_t                         TaskId,
+				         thread_id_t                       ThreadId,
+				         line_t                            Line,
+				         timestamp_t                       BeginTime,
+				         timestamp_t                       EndTime,
+				         duration_t                        BurstDuration,
+				         map<event_type_t, event_value_t>& EventsData,
+				         bool                              toCluster)
+{
+  set<event_type_t> FakeBurstEndEvents;
+
+  for(std::map<event_type_t, event_value_t>::iterator iter  = EventsData.begin();
+													  iter != EventsData.end();
+                                                      ++iter)
+  {
+    FakeBurstEndEvents.insert(iter->first);
+  }
+
+  return NewBurst(TaskId,
+                  ThreadId,
+                  Line,
+                  BeginTime,
+                  EndTime,
+                  BurstDuration,
+                  EventsData,
+                  FakeBurstEndEvents,
+                  toCluster);
+}
+
+/****************************************************************************
+ * NewBurst
+ ***************************************************************************/
 bool TraceData::NewBurst(instance_t           Instance,
                          task_id_t            TaskId,
                          thread_id_t          ThreadId,

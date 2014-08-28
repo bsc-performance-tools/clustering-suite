@@ -66,6 +66,7 @@ using std::setfill;
 MetricContainer::MetricContainer()
 {
   Individuals = 0;
+  Aggregate   = 0.0;
   Mean        = 0.0;
   M2          = 0.0;
   StdDev_2    = 0.0;
@@ -81,6 +82,7 @@ void MetricContainer::Update(double NewValue)
 {
   double Delta;
   Individuals = Individuals + 1;
+  Aggregate   = Aggregate + NewValue;
   Delta       = NewValue - Mean;
   Mean        = Mean + (Delta/Individuals);
   M2          = M2 + Delta * (NewValue - Mean);
@@ -247,6 +249,33 @@ double StatisticsContainer::GetClusteringParameterMean(size_t i)
   if (i >= 0 && i < ClusteringParameters.size())
   {
     return ClusteringParameters[i].GetMean();
+  }
+  else
+  {
+    return numeric_limits<float>::quiet_NaN();
+  }
+}
+
+/**
+ * Returns the mean of the i-th extrapolation metric, if it exists
+ *
+ * \param i Position of the extrapolation metric to retrieve
+ *
+ * \return The mean of the i-th extrapolation metric, NaN otherwise
+ *
+ */
+double StatisticsContainer::GetExtrapolationMetricAggregate(size_t i)
+{
+  if (i >= 0 && i < ExtrapolationMetrics.size())
+  {
+    if (ExtrapolationMetrics[i].GetIndividuals() != 0)
+    {
+      return ExtrapolationMetrics[i].GetAggregate();
+    }
+    else
+    {
+      return numeric_limits<float>::quiet_NaN();
+    }
   }
   else
   {

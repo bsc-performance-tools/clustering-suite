@@ -11,10 +11,16 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 2014-08-28 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.2
+	* Corrected 'Initiliaze' of ClusteringConfiguration from the TreeDBSCAN
+	side to match the new definitions
+
+	* Added a new implementation of 'NewBurst' on 'TraceData' to avoid
+	changes in the TreeDBSCAN side
+
 	* Release to update the Extrae 3.0 compatibility
 
 2014-08-28 German Llort <german.llort@bsc.es>
-	* Edited debug messages
+	* Edited debug messages in TreeDBSCAN
 
 2014-06-06 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a bug in 'ClusteredStatesPRVGenerator.cpp' when opening

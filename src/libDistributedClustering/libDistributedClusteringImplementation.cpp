@@ -124,7 +124,7 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
 
   ConfigurationManager = ClusteringConfiguration::GetInstance();
 
-  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML))
+  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML, "", false, false))
   {
     SetError(true);
     SetErrorMessage(ConfigurationManager->GetLastError());
@@ -166,7 +166,7 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
 
   ConfigurationManager = ClusteringConfiguration::GetInstance();
 
-  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML))
+  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML, "", false, false))
   {
     SetError(true);
     SetErrorMessage(ConfigurationManager->GetLastError());
@@ -243,7 +243,7 @@ bool libDistributedClusteringImplementation::InitClustering(string ClusteringDef
     }
   }
 
-  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML))
+  if (!ConfigurationManager->Initialize(ClusteringDefinitionXML, "", false, false))
   {
     SetError(true);
     SetErrorMessage(ConfigurationManager->GetLastError());
@@ -1092,6 +1092,7 @@ bool libDistributedClusteringImplementation::GetClusterStatistics(vector<Cluster
          i++)
     {
       NewClusterStatistics->AddMetric(ExtrapolationParametersNames[i],
+                                      CurrentClusterStatistics.GetExtrapolationMetricAggregate(i),
                                       CurrentClusterStatistics.GetExtrapolationMetricIndividuals(i),
                                       CurrentClusterStatistics.GetExtrapolationMetricMean(i),
                                       CurrentClusterStatistics.GetExtrapolationMetricStdDev_2(i));

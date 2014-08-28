@@ -64,6 +64,7 @@ class MetricContainer
 {
   private:
     size_t Individuals;
+    double Aggregate;
     double Mean;
     double M2;
     double StdDev_2;
@@ -74,7 +75,9 @@ class MetricContainer
     void Update(double NewValue);
 
     size_t GetIndividuals(void) { return Individuals; };
-    double GetMean(void)        { return Mean; };
+    // double GetMean(void)        { return Mean; };
+    double GetAggregate(void)   { return Aggregate; };
+    double GetMean(void)        { return (Aggregate/Individuals); };
     double GetM2(void)          { return M2; };
     double GetStdDev_2(void)    { return StdDev_2; };
 };
@@ -117,6 +120,7 @@ class StatisticsContainer
     double       GetDurationStdDev_2(void)  const { return DurationStdDev_2; };
 
     double       GetClusteringParameterMean(size_t i);
+    double       GetExtrapolationMetricAggregate(size_t i);
     double       GetExtrapolationMetricMean(size_t i);
     size_t       GetExtrapolationMetricIndividuals(size_t i);
     double       GetExtrapolationMetricStdDev_2(size_t i);
