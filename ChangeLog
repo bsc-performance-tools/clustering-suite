@@ -10,6 +10,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-08-28 German Llort <german.llort@bsc.es>
+	* Edited debug messages
+ 
 2014-06-06 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a bug in 'ClusteredStatesPRVGenerator.cpp' when opening
 	a burst region, that caused the duplication of the burst opening

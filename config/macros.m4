@@ -781,6 +781,8 @@ if test "x$have_mpfr" = "xyes" -a "x$have_gmp" = "xyes"; then
 	
 		AX_FLAGS_SAVE()
 
+
+
 		CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS $gmpinc"
 		CFLAGS="$CFLAGS $BOOST_CPPFLAGS $gmpinc"
 		LDFLAGS="$LDFLAGS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS $gmplibs"

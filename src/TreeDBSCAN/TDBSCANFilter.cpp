@@ -75,7 +75,7 @@ void Init(const TopologyLocalInfo & top_info)
 {
    WaitForNoise = WaitForHulls = WaitForStats = WaitForClustersInfo = top_info.get_NumChildren();
 
-   cerr << "[FILTER " << FILTER_ID(top_info) << "] NumChildren=" << top_info.get_NumChildren() << endl;
+   /* DEBUG -- cerr << "[FILTER " << FILTER_ID(top_info) << "] NumChildren=" << top_info.get_NumChildren() << endl; */
 
    if (NetworkStats == NULL)
    {

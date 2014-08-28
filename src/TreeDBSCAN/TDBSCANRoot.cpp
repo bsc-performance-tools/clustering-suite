@@ -248,7 +248,7 @@ int TDBSCANRoot::Run()
     // "< cat OUTPUT.GLOBAL_CLUSTERING_0.csv OUTPUT.GLOBAL_CLUSTERING_1.csv OUTPUT.GLOBAL_CLUSTERING_2.csv OUTPUT.GLOBAL_CLUSTERING_3.csv",
     // "< cat OUTPUT.GLOBAL_CLUSTERING_0.csv OUTPUT.GLOBAL_CLUSTERING_1.csv OUTPUT.GLOBAL_CLUSTERING_2.csv OUTPUT.GLOBAL_CLUSTERING_3.csv OUTPUT.GLOBAL_CLUSTERING_4.csv OUTPUT.GLOBAL_CLUSTERING_5.csv OUTPUT.GLOBAL_CLUSTERING_6.csv OUTPUT.GLOBAL_CLUSTERING_7.csv OUTPUT.GLOBAL_CLUSTERING_8.csv OUTPUT.GLOBAL_CLUSTERING_9.csv OUTPUT.GLOBAL_CLUSTERING_10.csv OUTPUT.GLOBAL_CLUSTERING_11.csv OUTPUT.GLOBAL_CLUSTERING_12.csv OUTPUT.GLOBAL_CLUSTERING_13.csv OUTPUT.GLOBAL_CLUSTERING_14.csv OUTPUT.GLOBAL_CLUSTERING_15.csv",
     "FINAL",
-    countGlobalHulls + 1)
+    countGlobalHulls)
   )
   {
     cout << "Error printing full clustering scripts: " << libClustering->GetErrorMessage() << endl;
@@ -267,7 +267,7 @@ int TDBSCANRoot::Run()
   Support GlobalSupport(NumberOfDimensions, MinGlobalDimensions, MaxGlobalDimensions);
   GlobalSupport.Unpack(p);
   GlobalSupport.Serialize(stSupport);
-  GlobalSupport.dump();
+  //GlobalSupport.dump();
   GlobalSupport.plot2("SUPPORT.txt");
 
   /* Receive the averaged clusters info stats */

@@ -350,6 +350,15 @@ bool TDBSCANWorkerOnline::ProcessResults(Support &GlobalSupport)
     return false;
   }
 
+  if (WhoAmI() == 0)
+  {
+    int k = 0;
+    for (k=0; k<Statistics.size(); k++)
+    {
+      cerr << "Cluster " << k+1 << endl << *(Statistics[k]) << endl;
+    }
+  }
+
   Messages.str("");
   Messages << "Received statistics from " << Statistics.size() << " clusters" << endl;
   system_messages::information(Messages.str());

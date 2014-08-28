@@ -142,8 +142,8 @@ int TDBSCANWorker::Run()
   libClustering->GetNoisePoints (NoisePoints, NoiseDurations );
   ClusteringStats.IncreaseOutputPoints ( NoisePoints.size() );
 
-  /* DEBUG -- count remaining noise points */
-  if (Verbose) cerr << "[BE " << WhoAmI() << "] Number of noise points = " << NoisePoints.size() << endl; 
+  /* DEBUG -- count remaining noise points 
+  if (Verbose) cerr << "[BE " << WhoAmI() << "] Number of noise points = " << NoisePoints.size() << endl; */
 
   NoiseManager Noise = NoiseManager (libClustering);
   Noise.Serialize (stClustering);
