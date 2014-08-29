@@ -9,6 +9,8 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	to myfile.ext but completely unrelated to the above
 
 	* anotherfile.ext (somefunction): more changes
+2014-08-29 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Added new 'boost.m4' release
 
 2014-08-28 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.2
 	* Corrected 'Initiliaze' of ClusteringConfiguration from the TreeDBSCAN

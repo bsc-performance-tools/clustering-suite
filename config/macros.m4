@@ -781,8 +781,6 @@ if test "x$have_mpfr" = "xyes" -a "x$have_gmp" = "xyes"; then
 	
 		AX_FLAGS_SAVE()
 
-
-
 		CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS $gmpinc"
 		CFLAGS="$CFLAGS $BOOST_CPPFLAGS $gmpinc"
 		LDFLAGS="$LDFLAGS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS $gmplibs"
@@ -798,11 +796,10 @@ cgal_enabled=no)
 
 		if test "x$cgal_enabled" = "xno"; then
 			AC_MSG_RESULT([CGAL not found, some functionalities will be missing])
-    else
-      CGAL_RPATH="-R ${mpfr_libdir} -R ${gmp_libdir} -R ${cgal_libdir}"
-      AC_SUBST(CGAL_RPATH)
-    fi
-
+		else
+			CGAL_RPATH="-R ${mpfr_libdir} -R ${gmp_libdir} -R ${cgal_libdir}"
+			AC_SUBST(CGAL_RPATH)
+		fi
 		AX_FLAGS_RESTORE()
 	fi
 fi
