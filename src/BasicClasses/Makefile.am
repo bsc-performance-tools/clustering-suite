@@ -1,8 +1,9 @@
 lib_LTLIBRARIES = libBasicClasses.la
 
-if HAVE_MPI
-libBasicClasses_la_CXXFLAGS = @MPI_CFLAGS@
-endif
+libBasicClasses_la_CPPFLAGS = $(top_srcdir)/include @CLUSTERING_CPPFLAGS@
+libBasicClasses_la_LDFLAGS  = @CLUSTERING_LDFLAGS@
+libBasicClasses_la_LIBADD   = @CLUSTERING_LIBS@
+
 
 instdir = $(includedir)
 

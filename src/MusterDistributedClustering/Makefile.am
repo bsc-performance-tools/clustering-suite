@@ -12,12 +12,10 @@ bin_PROGRAMS = \
 MusterDistributedClustering_SOURCES = \
 	MusterDistributedClustering.cpp	
 
+MusterDistributedClustering_CPPFLAGS = $(top_srcdir)/include @CLUSTERING_CPPFLAGS@
+MusterDistributedClustering_LDFLAGS  = @CLUSTERING_LDFLAGS@
 MusterDistributedClustering_LDADD = \
 	$(top_srcdir)/src/libTraceClustering/libTraceClustering.la \
-	$(top_srcdir)/src/BasicClasses/libBasicClasses.la
-
-MusterDistributedClustering_CXXFLAGS = ${CXXFLAGS} @MUSTER_CXXFLAGS@ @MPI_CFLAGS@
-MusterDistributedClustering_CFLAGS   = ${CFLAGS} @MUSTER_CXXFLAGS@ @MPI_CFLAGS@
-MusterDistributedClustering_LDFLAGS  = ${LDFLAGS} @XML2_LDFLAGS@ -static @MUSTER_LDFLAGS@ @MPI_LDFLAGS@
-MusterDistributedClustering_LDADD   +=  @XML2_LIBS@ ${LIBS} @MUSTER_LIBS@ @MPI_LIBS@
+	$(top_srcdir)/src/BasicClasses/libBasicClasses.la \
+	@CLUSTERING_LIBS@
 

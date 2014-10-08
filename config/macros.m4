@@ -334,8 +334,7 @@ AC_DEFUN([AX_PROG_MPI],
 
       if test -d "$MPI_INCLUDES/mpi" ; then
          MPI_INCLUDES="$MPI_INCLUDES/mpi"
-         MPI_CFLAGS="-I$MPI_INCLUDES"
-         CFLAGS="$MPI_CFLAGS $CFLAGS"
+         MPI_CPPFLAGS="-I$MPI_INCLUDES"
       fi
 
       dnl Check for the MPI header files.
@@ -370,9 +369,10 @@ AC_DEFUN([AX_PROG_MPI],
          MPI_INSTALLED="no"
       else
          MPI_LDFLAGS="${MPI_LDFLAGS}"
+         AC_SUBST(MPI_CPPFLAGS)
          AC_SUBST(MPI_LDFLAGS)
-         AC_SUBST(MPI_LIBS)
          AC_SUBST(MPI_LIBSDIR)
+         AC_SUBST(MPI_LIBS)
       fi
 
       dnl If $MPICC is not set, check for mpicc under $MPI_HOME/bin. We don't want to mix multiple MPI installations.
@@ -401,15 +401,18 @@ AC_DEFUN([AX_PROG_MPI],
    AC_SUBST(MPICC)
 
    # If the system do not have MPICC (or similar) be sure to add -lmpi and -Impi
-   AM_CONDITIONAL(NEED_MPI_LIB_INCLUDE, test "${CC}" = "${MPICC}" )
+   # AM_CONDITIONAL(NEED_MPI_LIB_INCLUDE, test "${CC}" = "${MPICC}" )
 
    dnl Did the checks pass?
-   AM_CONDITIONAL(HAVE_MPI, test "x${MPI_INSTALLED}" = "xyes")
+   #AM_CONDITIONAL(HAVE_MPI, test "x${MPI_INSTALLED}" = "xyes")
 
    if test "$MPI_INSTALLED" = "no" ; then
-       AC_MSG_WARN([No MPI installed. Distributed version will not be compiled])
+       # execute ACTION-IF-NOT-FOUND
+       ifelse([$2], , :, [$2])
    else
        AC_DEFINE([HAVE_MPI], 1, [Determine if MPI in installed])
+       # execute ACTION-IF-FOUND
+       ifelse([$1], , :, [$1])
    fi
 
    AX_FLAGS_RESTORE()
@@ -767,46 +770,34 @@ dnl Check for CGAL and MPFR (uses AX_LIB_CGAL_CORE)
 AC_DEFUN([AX_CHECK_CGAL],
 [
 
-cgal_enabled=no
-AX_CHECK_MPFR_GMP()
+  AX_FLAGS_SAVE()
 
-if test "x$have_mpfr" = "xyes" -a "x$have_gmp" = "xyes"; then
-	
-	BOOST_REQUIRE(1.36)
-	BOOST_THREADS
+  MPFR_LDFLAGS="-L$MPFR_LIBSDIR"
+  GMP_LDFLAGS="-L$GMP_LIBSDIR"
+
+  CFLAGS="$CFLAGS $BOOST_CPPFLAGS $GMP_CFLAGS $GMP_CFLAGS"
+  CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS $MPFR_CPPFLAGS $GMP_CPPFLAGS"
+
+  LDFLAGS="$LDFLAGS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS $MPFR_LDFLAGS $GMP_LDFLAGS"
+  LIBS="$LIBS $MPFR_LIBS $BOOST_THREAD_LIBS $MPFR_LIBS $GMP_LIBS"
+
+  AX_LIB_CGAL_CORE(
+    ac_cgal="yes",
+    ac_cgal="no")
   
-	dnl AC_MSG_CHECKING([for CGAL installation])
+  if test "x$ac_cgal" = "xyes"; then
 
-	if test -n "$BOOST_THREAD_LIBS"; then
-	
-		AX_FLAGS_SAVE()
-
-		CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS $gmpinc"
-		CFLAGS="$CFLAGS $BOOST_CPPFLAGS $gmpinc"
-		LDFLAGS="$LDFLAGS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS $gmplibs"
-		LIBS="$LIBS $MPFR_LIBS $BOOST_THREAD_LIBS $gmplibs"
-    
-		AX_LIB_CGAL_CORE(
-CGAL_CPPFLAGS="$CGAL_CPPFLAGS -frounding-math $MPFR_CXXFLAGS $BOOST_CPPFLAGS $gmpinc"
-CGAL_LDFLAGS="$CGAL_LDFLAGS $MPFR_LDFLAGS $MPFR_LIBS $BOOST_THREAD_LDFLAGS $BOOST_THREAD_LIBS $gmplibs"
-AC_SUBST(CGAL_CPPFLAGS)
-AC_SUBST(CGAL_LDFLAGS)
-cgal_enabled=yes,
-cgal_enabled=no)
-
-		if test "x$cgal_enabled" = "xno"; then
-			AC_MSG_RESULT([CGAL not found, some functionalities will be missing])
-		else
-			CGAL_RPATH="-R ${mpfr_libdir} -R ${gmp_libdir} -R ${cgal_libdir}"
-			AC_SUBST(CGAL_RPATH)
-		fi
-		AX_FLAGS_RESTORE()
-	fi
-fi
-
-AM_CONDITIONAL(HAVE_CGAL, test "x$cgal_enabled" = "xyes")
+    CGAL_RPATH="-R ${MPFR_LIBSDIR} -R ${GMP_LIBSDIR} -R ${CGAL_LIBSDIR}"
+    AC_SUBST(CGAL_RPATH)
+    ifelse([$1], , :, [$1]),
+  else
+    ifelse([$2], , :, [$2])
+  fi
+  
+  AX_FLAGS_RESTORE()
 
 ])
+
 
 # AX_CHECK_SEQAN
 # ----------------
@@ -817,7 +808,7 @@ AC_DEFUN([AX_CHECK_SEQAN],
 	AS_HELP_STRING([--with-seqan=SEQAN_DIR], [sets the given directory as location of Seqan includes]),
 	[seqan_paths="$withval"],
 	[seqan_paths="$SEQAN_HOME"' /usr /usr/local /opt /opt/local']
-)
+  )
 
 SEQAN_TEST_PROGRAM='
 '
@@ -923,3 +914,37 @@ fi
 
 AM_CONDITIONAL(HAVE_SEQAN, test "x$seqan_enabled" = "xyes")
 ])
+
+# SYNOPSIS
+#
+#   AX_CHECK_IS_SYSTEM_PATH([path],[ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+#
+# DESCRIPTION
+#
+#   Check if the 'path' provided corresponds to a system wide library path
+#   (/opt/local/lib* /usr/local/lib* /opt/lib* /usr/lib* /lib*)
+#
+AC_DEFUN([AX_CHECK_IS_SYSTEM_LIBRARY_PATH],
+[
+  system_path="no"
+  for ac_current_path in  /opt/local/lib* /usr/local/lib* /opt/lib* /usr/lib* /lib*
+  do
+    
+    if test x"$ac_current_path" != x && test ! -e "$ac_current_path"; then
+      continue
+    fi
+    
+    if test "$1" = "$ac_current_path"; then
+      system_path="yes"
+      break
+    fi
+  done
+  
+  if test "x$system_path" = "xyes"; then
+    ifelse([$2], , :, [$2]),
+  else
+    ifelse([$3], , :, [$3])
+  fi
+])
+
+

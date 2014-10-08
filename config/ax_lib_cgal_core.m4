@@ -20,7 +20,8 @@
 #   This macro calls:
 #
 #     AC_SUBST(CGAL_CPPFLAGS)
-#     AC_SUBST(CGAL_LDFLAGS)
+#     AC_SUBST(CGAL_LIBSDIR)
+#     AC_SUBST(CGAL_LIBS)
 #
 #   And sets:
 #
@@ -41,10 +42,10 @@ AC_DEFUN([AX_LIB_CGAL_CORE],[
 
 dnl guess from env, or use given value
 AC_ARG_WITH([cgal],
-	AS_HELP_STRING([--with-cgal@<:@=DIR@:>@],
-			[location of cgal installation, default $CGAL_HOME]),
-	[ac_cgal_dirs="$withval"],
-	[ac_cgal_dirs="$CGAL_HOME"' /usr /usr/local /opt /opt/local'])
+            AS_HELP_STRING([--with-cgal@<:@=DIR@:>@],
+                           [location of cgal installation, default $CGAL_HOME]),
+            [ac_cgal_dirs="$withval"],
+            [ac_cgal_dirs="$CGAL_HOME"' /usr /usr/local /opt /opt/local'])
 
 dnl This test program is taken from:
 dnl http://www.cgal.org/Manual/latest/examples/Convex_hull_2/vector_convex_hull_2.cpp
@@ -53,20 +54,26 @@ TEST_PROGRAM='
 
 AC_LANG_PUSH([C++])
 
+CPPFLAGS_SAVED="$CPPFLAGS"
+LDFLAGS_SAVED="$LDFLAGS"
+LIBS_SAVED="$LIBS"
+
 for ac_cgal_iterate in $ac_cgal_dirs ; do
 
-	CPPFLAGS_SAVED="$CPPFLAGS"
-	CGAL_CPPFLAGS="-DNDEBUG -I$ac_cgal_iterate/include"
-	CPPFLAGS="$CPPFLAGS $CGAL_CPPFLAGS"
-	export CPPFLAGS
+  CGAL_CPPFLAGS="-DNDEBUG -I$ac_cgal_iterate/include"
+  CGAL_LDFLAGS="-L$ac_cgal_iterate/lib"
+  CGAL_LIBS="-lCGAL -lCGAL_Core"
 
-	CGAL_LDFLAGS="-L$ac_cgal_iterate/lib -lCGAL -lCGAL_Core" 
-	LDFLAGS_SAVED="$LDFLAGS"
-	LDFLAGS="$LDFLAGS $CGAL_LDFLAGS"
-	export LDFLAGS
+  CPPFLAGS="$CPPFLAGS_SAVED $CGAL_CPPFLAGS"
+  LDFLAGS="$LDFLAGS_SAVED $CGAL_LDFLAGS"
+  LIBS="$LIBS_SAVED $CGAL_LIBS"
 
-	AC_MSG_CHECKING([whether CGAL is available in $ac_cgal_iterate])
-	AC_LINK_IFELSE(
+  export CPPFLAGS
+  export LDFLAGS
+  export LIBS
+
+  AC_MSG_CHECKING([whether CGAL is available in $ac_cgal_iterate])
+  AC_LINK_IFELSE(
     [AC_LANG_PROGRAM(
       [
       [@%:@include <vector>]
@@ -92,32 +99,35 @@ for ac_cgal_iterate in $ac_cgal_dirs ; do
     [ac_cgal=yes],
     [ac_cgal=no])
 
-	LDFLAGS="$LDFLAGS_SAVED"
-	export LDFLAGS
-	CPPFLAGS="$CPPFLAGS_SAVED"
-	export CPPFLAGS
+  CPPFLAGS="$CPPFLAGS_SAVED"
+  LDFLAGS="$LDFLAGS_SAVED"
+  LIBS="$LIBS_SAVED"
+  
+  export LDFLAGS
+  export CPPFLAGS
+  export LIBS
 
-	if test $ac_cgal = yes ; then
-    cgal_libdir="$ac_cgal_iterate/lib"
-		AC_MSG_RESULT([yes])
-		break
-	else
-		AC_MSG_RESULT([no])
-	fi
+  if test $ac_cgal = yes ; then
+    CGAL_LIBSDIR="$ac_cgal_iterate/lib"
+    AC_MSG_RESULT([yes])
+    break
+  else
+    AC_MSG_RESULT([no])
+  fi
 done
 
 AC_LANG_POP([C++])
 
 if test "x$ac_cgal" = "xyes" ; then
-	AC_DEFINE(HAVE_CGAL,[1],[Indicates presence of CGAL library])
-  AC_SUBST(cgal_libdir)
-	AC_SUBST(CGAL_CPPFLAGS)
-	AC_SUBST(CGAL_LDFLAGS)
-        # execute ACTION-IF-FOUND
-        ifelse([$1], , :, [$1])
+  AC_DEFINE(HAVE_CGAL,[1],[Indicates presence of CGAL library])
+  AC_SUBST(CGAL_CPPFLAGS)
+  AC_SUBST(CGAL_LIBSDIR)
+  AC_SUBST(CGAL_LIBS)
+  # execute ACTION-IF-FOUND
+  ifelse([$1], , :, [$1])
 else
-        # execute ACTION-IF-NOT-FOUND
-        ifelse([$2], , :, [$2])
+  # execute ACTION-IF-NOT-FOUND
+  ifelse([$2], , :, [$2])
 fi
 
 ])

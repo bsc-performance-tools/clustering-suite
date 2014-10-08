@@ -14,7 +14,7 @@ SUBDIRS = \
 	BurstClustering \
 	ClustersDiff \
 	ClustersSequenceScore
-	
+
 
 if HAVE_MPI
 if HAVE_MUSTER
@@ -22,9 +22,9 @@ SUBDIRS += MusterDistributedClustering
 endif
 endif
 
-if HAVE_CGAL
+if CGAL_INSTALLED
 SUBDIRS += libDistributedClustering
-if HAVE_MRNETAPP
+if MRNETAPP_INSTALLED
 SUBDIRS += TreeDBSCAN 
 endif
 endif

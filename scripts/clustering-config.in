@@ -7,11 +7,14 @@ Usage: clustering-config [OPTION]
 
 Known values for OPTION are:
 
-  --prefix      print ClusteringSuite installation directory
-  --cflags      print pre-processor and compiler flags 
-  --libs        print library linking information 
-  --help        display this help and exit
-  --version     output version information
+  --prefix          print ClusteringSuite installation directory
+  --cppflags        print pre-processor and compiler flags 
+  --cflags          equivalent to 'cppflags' (for compatibility)
+  --ldflags         print linker directories
+  --libtool-ldflags print libtool friendly (re)linking directories
+  --libs            print library linking information
+  --help            display this help and exit
+  --version         output version information
 
 EOF
 
@@ -37,12 +40,24 @@ while test $# -gt 0; do
 		usage 0
 		;;
 
+	--cppflags)
+		echo "-I@sub_PREFIX@/include @sub_CPPFLAGS@"
+		;;
+
 	--cflags)
-		echo "-I@sub_PREFIX@/include @sub_CGAL_CPPFLAGS@"
+		echo "-I@sub_PREFIX@/include @sub_CPPFLAGS@"
+		;;
+
+	--ldflags)
+		echo "-L@sub_PREFIX@/lib @sub_LDFLAGS@"
+		;;
+
+	--libtool-ldflags)
+		echo "-L@sub_PREFIX@/lib -R@sub_PREFIX@/lib @sub_LIBTOOL_LDFLAGS@"
 		;;
 
 	--libs)
-		echo "-L@sub_PREFIX@/lib @sub_CGAL_LDFLAGS@"
+		echo "@sub_LIBS@"
 		;;
 
 	*)

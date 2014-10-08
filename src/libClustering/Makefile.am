@@ -3,42 +3,6 @@ SUBDIRS = gmeans
 
 lib_LTLIBRARIES = libClustering.la
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/BasicClasses \
-	-I$(top_srcdir)/src/libANN \
-	-I$(top_srcdir)/src/SharedComponents 
-
-libClustering_la_LIBADD= \
-	$(top_srcdir)/src/BasicClasses/libBasicClasses.la \
-	$(top_srcdir)/src/libANN/libANN.la \
-	./gmeans/libInternalGMeans.la
-
-libClustering_la_CXXFLAGS=@CXXFLAGS@
-libClustering_la_LDFLAGS=@LDFLAGS@
-libClustering_la_LIBS=@LIBS@
-
-if HAVE_CGAL
-libClustering_la_CXXFLAGS += @CGAL_CPPFLAGS@
-libClustering_la_LDFLAGS += @CGAL_LDFLAGS@
-endif
-
-if HAVE_MUSTER
-
-libClustering_la_CXXFLAGS += @MUSTER_CXXFLAGS@
-libClustering_la_LDFLAGS += @MUSTER_LDFLAGS@
-libClustering_la_LIBS += @MUSTER_LIBS@
-
-if HAVE_MPI
-libClustering_la_CXXFLAGS += @MPI_CFLAGS@
-libClustering_la_LDFLAGS += @MPI_LDFLAGS@
-libClustering_la_LIBS += @MPI_LIBS@
-endif
-
-endif
-
-
-
 instdir = $(includedir)
 
 inst_HEADERS = \
@@ -71,10 +35,9 @@ libClustering_la_SOURCES = \
 	Partition.hpp \
 	Partition.cpp
 
-if HAVE_CGAL
+if CGAL_INSTALLED
 inst_HEADERS += \
 	ConvexHullModel.hpp 
-
 
 libClustering_la_SOURCES += \
 	ConvexHullModel.hpp \
@@ -108,5 +71,15 @@ libClustering_la_SOURCES += \
 endif
 
 endif
+
+libClustering_la_CPPFLAGS=@CLUSTERING_CPPFLAGS@ -I$(top_srcdir)/src/libANN
+libClustering_la_LDFLAGS=@CLUSTERING_LDFLAGS@
+libClustering_la_LIBADD= \
+	$(top_srcdir)/src/BasicClasses/libBasicClasses.la \
+	$(top_srcdir)/src/libANN/libANN.la \
+	./gmeans/libInternalGMeans.la \
+	@CLUSTERING_LIBS@
+
+
 
 

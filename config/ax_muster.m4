@@ -6,34 +6,39 @@ AC_DEFUN([AX_MUSTER],
       [--with-muster=MUSTER_DIR],
       [sets the given directory as location of muster includes and libs (needs Boost libraries)]
     ),
-    [
-	  muster_dir="$withval"
+    [muster_dir="$withval"]
+    [muster_dir="/usr)"]
+  )
 
-    if test ! -d $muster_dir/include; then
-      AC_MSG_ERROR([muster include directory not found, check --with-muster])
-    fi
-	
-	  if test ! -f $muster_dir/lib/libmuster.so; then
-		  AC_MSG_ERROR([muster dynamic library file not found, check --with-muster])
-	  fi
+  ac_muster_installed="yes"
 
-    MUSTER_CXXFLAGS="-I$muster_dir/include $BOOST_CPPFLAGS"
-    MUSTER_CFLAGS="-I$muster_dir/include"
+  if test ! -f $muster_dir/include/partition.h; then
+    ac_muster_installed="no"
+  fi
+
+  if test ! -f $muster_dir/lib/libmuster.so; then
+    ac_muster_installed="no"
+  fi
+
+  if test "x${ac_muster_enabled}" = "xyes"; then
+
+    MUSTER_CPPFLAGS="-I$muster_dir/include"
     MUSTER_LDFLAGS="-L$muster_dir/lib -R$muster_dir/lib"
     MUSTER_LIBS="-lmuster"
-    MUSTER_LIBDIR="$muster_dir/lib"
+    MUSTER_LIBSDIR="$muster_dir/lib"
 
-    AC_SUBST(MUSTER_CXXFLAGS)
-    AC_SUBST(MUSTER_CFLAGS)
+    AC_SUBST(MUSTER_CPPFLAGS)
     AC_SUBST(MUSTER_LDFLAGS)
     AC_SUBST(MUSTER_LIBS)
-    AC_SUBST(MUSTER_LIBDIR)
+    AC_SUBST(MUSTER_LIBSDIR)
 
-	  muster_enabled=yes
-	  AC_DEFINE(HAVE_MUSTER, 1, [Defined if MUSTER library is enabled])
-    ],
-    [
-	  muster_enabled=no
-    ]
-  )
+    AC_DEFINE(HAVE_MUSTER, 1, [Defined if MUSTER library is enabled])
+
+    # execute ACTION-IF-FOUND
+    ifelse([$1], , :, [$1])
+  else
+    # execute ACTION-IF-NOT-FOUND
+    ifelse([$2], , :, [$2])
+  fi
+
 ])

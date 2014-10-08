@@ -1,108 +1,148 @@
-AC_DEFUN([AX_CHECK_MPFR_GMP],
-[
-
-# Check for GMP and MPFR
-gmplibs="-lmpfr -lgmp"
-gmpinc=
-have_gmp=no
-have_mpfr=no
-
-# Specify a location for mpfr
-# check for this first so it ends up on the link line before gmp.
+# SYNOPSIS
+#
+#   AX_LIB_MPFR([ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+#
+# DESCRIPTION
+#
+#   Test for the MPFR library
+#
+#   By using the "--with-mpfr=" option, define a special installation
+#   directory. If MPFR is not found there, the script will fail immediately.
+#   Otherwise, $MPFR_HOME is searched, then standard system locations.
+#
+#   This macro calls:
+#
+#     AC_SUBST(MPFR_CPPFLAGS)
+#     AC_SUBST(MPFR_LIBSDIR)
+#     AC_SUBST(MPFR_LIBS)
+#
+#   And sets:
+#
+#     HAVE_MPFR
+#
+AC_DEFUN([AX_LIB_MPFR],[
 
 AC_ARG_WITH(
-  mpfr,
-  [AS_HELP_STRING(
-    [--with-mpfr=PATH],
-		[specify prefix directory for installed MPFR package.])],
-  [mpfr_paths="$withval"],
-	[mpfr_paths="$MPFR_HOME"' /usr /usr/local /opt /opt/local']
-)
+  [mpfr],
+  AS_HELP_STRING([--with-mpfr=PATH],
+                 [specify prefix directory for installed MPFR package.]),
+  [ac_mpfr_dirs="$withval"],
+  [ac_mpfr_dirs="$MPFR_HOME"' /usr /usr/local /opt /opt/local'])
 
-for mpfr_iterate in $mpfr_paths; do
+AC_MSG_CHECKING([whether MPFR is available...])
 
-  if test -e $mpfr_iterate/include/mpfr.h -a -e $mpfr_iterate/lib/libmpfr.so; then
-    mpfr_enabled="yes"
-  fi
+MPFR_CPPFLAGS=
+MPFR_LIBSDIR=
+MPFR_LIBS="-lmpfr"
 
-  if test -e $mpfr_iterate/include/mpfr.h -a -e $mpfr_iterate/lib/i386-linux-gnu/libmpfr.so; then
-    mpfr_enabled="yes"
-  fi
+ac_mpfr="no"
 
-	AC_MSG_CHECKING([whether MPFR is available in $mpfr_iterate])
+for ac_mpfr_iterate in $ac_mpfr_dirs; do
 
-  if test "$mpfr_enabled" = "yes"; then
-    mpfr_dir=$mpfr_iterate
-
-    mpfr_libdir="$mpfr_dir/lib"
-    AC_SUBST(mpfr_libdir)
-
-    gmplibs="-L$mpfr_dir/lib $gmplibs"
-    gmpinc="-I$mpfr_dir/include $gmpinc"
-
-    have_mpfr=yes
-    AC_MSG_RESULT([yes])
+  if test -e $ac_mpfr_iterate/include/mpfr.h -a -e $ac_mpfr_iterate/lib/libmpfr.so; then
+    MPFR_CPPFLAGS=-I$ac_mpfr_iterate/include
+    MPFR_LIBSDIR=$ac_mpfr_iterate/lib
+    ac_mpfr="yes"
     break
-  else
-    AC_MSG_RESULT([no])
   fi
 
+  if test -e $ac_mpfr_iterate/include/mpfr.h -a -e $ac_mpfr_iterate/lib/i386-linux-gnu/libmpfr.so; then
+    MPFR_CPPFLAGS=-I$ac_mpfr_iterate/include
+    MPFR_LIBSDIR=$ac_mpfr_iteratee/lib/i386-linux-gnu
+    ac_mpfr="yes"
+    break
+  fi
 done
+
+if test "$ac_mpfr" = "yes"; then
+  AC_MSG_RESULT([yes])
+  AC_DEFINE(HAVE_MPFR, [1], [Indicates the presence of MPFR])
+  AC_SUBST(MPFR_CPPFLAGS)
+  AC_SUBST(MPFR_LIBSDIR)
+  AC_SUBST(MPFR_LIBS)
+  # execute ACTION-IF-FOUND
+  ifelse([$1], , :, [$1])
+else
+  AC_MSG_RESULT([no])
+  # execute ACTION-IF-NOT-FOUND
+  ifelse([$2], , :, [$2])
+fi
+
+])
+
+# SYNOPSIS
+#
+#   AX_LIB_GMP([ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+#
+# DESCRIPTION
+#
+#   Test for the GMP library
+#
+#   By using the "--with-mpfr=" option, define a special installation
+#   directory. If MPFR is not found there, the script will fail immediately.
+#   Otherwise, $MPFR_HOME is searched, then standard system locations.
+#   This macro calls:
+#
+#     AC_SUBST(GMP_CPPFLAGS)
+#     AC_SUBST(GMP_LIBSDIR)
+#     AC_SUBST(GMP_LIBS)
+#
+#   And sets:
+#
+#     HAVE_GMP
+
+AC_DEFUN([AX_LIB_GMP],[
 
 # Specify a location for gmp
 AC_ARG_WITH(
-  gmp,
-  [AS_HELP_STRING(
-    [--with-gmp=PATH],
-    [specify prefix directory for the installed GMP package.]
-  )],
-  [gmp_paths="$withval"],
-	[gmp_paths="$GMP_HOME"' /usr /usr/local /opt /opt/local']
+  [gmp],
+  AS_HELP_STRING([--with-gmp=PATH],
+                 [specify prefix directory for the installed GMP package.]),
+  [ac_gmp_dirs="$withval"],
+  [ac_gmp_dirs="$GMP_HOME"' /usr /usr/local /opt /opt/local']
 )
 
+AC_MSG_CHECKING([whether GMP is available...])
 
-for gmp_iterate in $gmp_paths; do
+GMP_CPPFLAGS=
+GMP_LIBSDIR=
+GMP_LIBS="-lgmp"
+ac_gmp="no"
 
-  if test -e $gmp_iterate/include/gmp.h -a -e $gmp_iterate/lib/libgmp.so; then
-    gmp_enabled="yes"
-  fi
+for ac_gmp_iterate in $ac_gmp_dirs; do
 
-  if test -e $gmp_iterate/include/gmp.h -a -e $gmp_iterate/lib/i386-linux-gnu/libgmp.so; then
-    gmp_enabled="yes"
-  fi
-
-	AC_MSG_CHECKING([whether GMP is available in $gmp_iterate])
-
-  if test "$gmp_enabled" = "yes"; then
-    gmp_dir=$gmp_iterate
-    
-    gmp_libdir="$gmp_dir/lib"
-    AC_SUBST(gmp_libdir)
-
-    gmplibs="-L$gmp_dir/lib $gmplibs"
-    gmpinc="-I$gmp_dir/include $gmpinc"
-
-    have_gmp=yes
-    AC_MSG_RESULT([yes])
+  if test -e $ac_gmp_iterate/include/gmp.h -a -e $ac_gmp_iterate/lib/libgmp.so; then
+    GMP_CPPFLAGS=-I$ac_gmp_iterate/include
+    GMP_LIBSDIR=$ac_gmp_iterate/lib
+    ac_gmp="yes"
     break
-  else
-    AC_MSG_RESULT([no])
   fi
 
+  if test -e $ac_gmp_iterate/include/gmp.h -a -e $ac_gmp_iterate/lib/i386-linux-gnu/libgmp.so; then
+    GMP_CPPFLAGS=-I$ac_gmp_iterate/include
+    GMP_LIBSDIR=$ac_gmp_iterate/lib/i386-linux-gnu
+    ac_gmp="yes"
+    break
+  fi
 done
 
-if test x$have_mpfr != xyes -o x$have_gmp != xyes; then
-    AC_MSG_WARN([GMP and MPFR libraries are needed to include CGAL.
-Try the --with-gmp, --with-mpfr options to specify their locations. Source code
-for these libraries can be found at their respective hosting sites. If you
-obtained GMP/MPFR from a vendor distribution package, make sure that you
-have installed both the libraries and the headerfiles.
-They may be located in separate packages.])
+
+if test "$ac_gmp" = "yes"; then
+  AC_MSG_RESULT([yes])
+  AC_DEFINE(HAVE_GMP, [1], [Indicates the presence of GMP])
+  AC_SUBST(GMP_CPPFLAGS)
+  AC_SUBST(GMP_LIBSDIR)
+  AC_SUBST(GMP_LIBS)
+  # execute ACTION-IF-FOUND
+  ifelse([$1], , :, [$1])
+else
+  AC_MSG_RESULT([no])
+  # execute ACTION-IF-NOT-FOUND
+  ifelse([$2], , :, [$2])
 fi
 
-# Flags needed for both GMP, MPFR and/or MPC.
-AC_SUBST(gmplibs)
-AC_SUBST(gmpinc)
-
 ])
+
+
+
 

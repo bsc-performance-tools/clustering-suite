@@ -19,8 +19,10 @@
 #
 #   This macro calls:
 #
-#     AC_SUBST(SQLITE3_CFLAGS)
+#     AC_SUBST(SQLITE3_CPPFLAGS)
 #     AC_SUBST(SQLITE3_LDFLAGS)
+#     AC_SUBST(SQLITE3_LIBSDIR)
+#     AC_SUBST(SQLITE3_LIBS)
 #     AC_SUBST(SQLITE3_VERSION)
 #
 #   And sets:
@@ -83,8 +85,9 @@ AC_DEFUN([AX_LIB_SQLITE3],
         AC_MSG_CHECKING([for SQLite3 library >= $sqlite3_version_req])
 
         if test "$ac_sqlite3_path" != ""; then
-            ac_sqlite3_ldflags="-L$ac_sqlite3_path/lib"
             ac_sqlite3_cppflags="-I$ac_sqlite3_path/include"
+            ac_sqlite3_ldflags="-L$ac_sqlite3_path/lib"
+            ac_sqlite3_libsdir="$ac_sqlite3_path/lib"
         else
             for ac_sqlite3_path_tmp in /usr /usr/local /opt ; do
                 if test -f "$ac_sqlite3_path_tmp/include/$ac_sqlite3_header" \
@@ -92,6 +95,7 @@ AC_DEFUN([AX_LIB_SQLITE3],
                     ac_sqlite3_path=$ac_sqlite3_path_tmp
                     ac_sqlite3_cppflags="-I$ac_sqlite3_path_tmp/include"
                     ac_sqlite3_ldflags="-L$ac_sqlite3_path_tmp/lib"
+                    ac_sqlite3_libsdir="$ac_sqlite3_path_tmp/lib"
                     break;
                 fi
             done
@@ -130,8 +134,10 @@ AC_DEFUN([AX_LIB_SQLITE3],
 
         if test "$success" = "yes"; then
 
-            SQLITE3_CFLAGS="$ac_sqlite3_cppflags"
+            SQLITE3_CPPFLAGS="$ac_sqlite3_cppflags"
             SQLITE3_LDFLAGS="$ac_sqlite3_ldflags"
+            SQLITE3_LIBSDIR="$ac_sqlite3_libdir"
+            SQLITE3_LIBS="-lsqlite3"
 
             ac_sqlite3_header_path="$ac_sqlite3_path/include/$ac_sqlite3_header"
 
@@ -147,8 +153,10 @@ AC_DEFUN([AX_LIB_SQLITE3],
                 fi
             fi
 
-            AC_SUBST(SQLITE3_CFLAGS)
+            AC_SUBST(SQLITE3_CPPFLAGS)
             AC_SUBST(SQLITE3_LDFLAGS)
+            AC_SUBST(SQLITE3_LIBSDIR)
+            AC_SUBST(SQLITE3_LIBS)
             AC_SUBST(SQLITE3_VERSION)
             AC_DEFINE([HAVE_SQLITE3], [], [Have the SQLITE3 library])
         fi

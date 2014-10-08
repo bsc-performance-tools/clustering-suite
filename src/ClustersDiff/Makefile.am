@@ -3,7 +3,7 @@
 AM_CPPFLAGS =  \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common_utilities \
-    -I$(top_srcdir)/src/BasicClasses \
+	-I$(top_srcdir)/src/BasicClasses \
 	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libSharedComponents
 
@@ -16,8 +16,13 @@ ClustersDiff_SOURCES =  \
 	MirkinDistance.cpp \
 	MirkinDistance.hpp
 
+ClustersDiff_CPPFLAGS =\
+ @CLUSTERING_CPPFLAGS@\
+ -I$(top_srcdir)/src/libClustering\
+ -I$(top_srcdir)/src/libTraceClustering\
+ -I$(top_srcdir)/src/libSharedComponents
+ 
+ClustersDiff_LDFLAGS  = @CLUSTERING_LDFLAGS@
 ClustersDiff_LDADD = \
-	$(top_srcdir)/src/BasicClasses/libBasicClasses.la
-
-ClustersDiff_CXXFLAGS = ${CXXFLAGS}
-ClustersDiff_LDFLAGS  = ${LDFLAGS} -static
+	$(top_srcdir)/src/BasicClasses/libBasicClasses.la \
+	@CLUSTERING_LIBS@

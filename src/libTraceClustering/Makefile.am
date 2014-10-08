@@ -8,45 +8,10 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/BasicClasses \
 	-I$(top_srcdir)/src/libANN \
-	-I$(top_srcdir)/src/libClustering \
 	-I$(top_srcdir)/src/libSharedComponents \
 	-I$(top_srcdir)/src/libParaverTraceParser \
 	-I$(top_srcdir)/common_utilities \
 	-I$(top_srcdir)/pcfparser_svn1816
-
-libTraceClustering_la_LIBADD =  \
-	$(top_srcdir)/src/libClustering/libClustering.la \
-	$(top_srcdir)/src/libSharedComponents/libSharedComponents.la 
-
-##	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la
-
-
-libTraceClustering_la_CXXFLAGS=@CXXFLAGS@ @XML2_CXXFLAGS@
-libTraceClustering_la_LDFLAGS=@LDFLAGS@ 
-libTraceClustering_la_LIBS=
-
-if HAVE_MUSTER
-libTraceClustering_la_CXXFLAGS += @MUSTER_CXXFLAGS@
-libTraceClustering_la_LDFLAGS += @MUSTER_LDFLAGS@
-libTraceClustering_la_LIBS += @MUSTER_LIBS@
-
-if HAVE_MPI
-
-libTraceClustering_la_CXXFLAGS += @MPI_CFLAGS@
-libTraceClustering_la_LDFLAGS += @MPI_LDFLAGS@
-
-endif
-endif
-
-if HAVE_CGAL
-libTraceClustering_la_CXXFLAGS +=  @CGAL_CPPFLAGS@
-libTraceClustering_la_LDFLAGS += @CGAL_LDFLAGS@ 
-endif
-
-if HAVE_SQLITE3
-libTraceClustering_la_CXXFLAGS += @SQLITE3_CFLAGS@
-libTraceClustering_la_LDFLAGS  += @SQLITE3_LDFLAGS@
-endif
 
 instdir = $(includedir)
 
@@ -58,5 +23,22 @@ libTraceClustering_la_SOURCES = \
 	libTraceClustering.hpp \
 	libTraceClusteringImplementation.cpp \
 	libTraceClusteringImplementation.hpp 
+
+libTraceClustering_la_CPPFLAGS = @CLUSTERING_CPPFLAGS@\
+  -I$(top_srcdir)/src/libClustering\
+  -I$(top_srcdir)/src/libSharedComponents\
+  -I$(top_srcdir)/pcfparser_svn1816\
+  -I$(top_srcdir)/src/libANN\
+  -I$(top_srcdir)/src/libParaverTraceParser
+
+libTraceClustering_la_LDFLAGS  = @CLUSTERING_LDFLAGS@
+libTraceClustering_la_LIBADD =  \
+	$(top_srcdir)/src/libClustering/libClustering.la \
+	$(top_srcdir)/src/libSharedComponents/libSharedComponents.la \
+	@CLUSTERING_LIBS@
+
+##	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la
+
+
 
 

@@ -49,7 +49,9 @@ using std::string;
 #include <vector>
 using std::vector;
 
-#include <stdio.h>
+#include <cstdio>
+// Required for 'off_t' definition
+#include <sys/types.h>
 
 /* Record type codification for GetNextRecord function */
 #define STATE_REC  2

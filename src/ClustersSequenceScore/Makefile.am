@@ -1,28 +1,23 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS =  \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/common_utilities \
-	-I$(top_srcdir)/pcfparser_svn1816 \
-    -I$(top_srcdir)/src/BasicClasses \
-	-I$(top_srcdir)/src/libClustering \
-	-I$(top_srcdir)/src/libSharedComponents \
-	-I$(top_srcdir)/src/libTraceClustering 
-
-
 bin_PROGRAMS =  \
 	ClustersSequenceScore
 
 ClustersSequenceScore_SOURCES =  \
 	ClustersSequenceScore.cpp
 
+ClustersSequenceScore_CPPFLAGS =\
+ @CLUSTERING_CPPFLAGS@\
+ -I$(top_srcdir)/src/libClustering\
+ -I$(top_srcdir)/src/libTraceClustering\
+ -I$(top_srcdir)/src/libSharedComponents\
+ -I$(top_srcdir)/pcfparser_svn1816
+
+ClustersSequenceScore_LDFLAGS  = @CLUSTERING_LDFLAGS@
+
 ClustersSequenceScore_LDADD = \
-	$(top_srcdir)/src/libTraceClustering/libTraceClustering.la
+ $(top_srcdir)/src/libTraceClustering/libTraceClustering.la\
+ $(top_srcdir)/src/libClustering/libClustering.la\
+ $(top_srcdir)/src/BasicClasses/libBasicClasses.la\
+ @CLUSTERING_LIBS@
 
-ClustersSequenceScore_CXXFLAGS = ${CXXFLAGS}
-ClustersSequenceScore_LDFLAGS  = ${LDFLAGS} -static
-
-if HAVE_SQLITE3
-ClustersSequenceScore_CXXFLAGS += @SQLITE3_CFLAGS@
-ClustersSequenceScore_LDFLAGS  += @SQLITE3_LDFLAGS@
-endif

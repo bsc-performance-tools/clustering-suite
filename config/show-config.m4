@@ -13,17 +13,20 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
 	echo common-files:        ${common_filesdir:-default}
 	echo CXXFLAGS:            ${CXXFLAGS}
 	echo CFLAGS:              ${CFLAGS}
-	echo LDFLAGS:             ${LDFLAGS}
-	echo LIBS:                ${LIBS}
+	echo CLUSTERING_CPPFLAGS: ${CLUSTERING_CPPFLAGS}
+	echo CLUSTERING_LDFLAGS:  ${CLUSTERING_LDFLAGS}
+	echo CLUSTERING_LIBS:     ${CLUSTERING_LIBS}
 	echo 
 
   echo
   echo Optional features:
   echo ------------------
 
-  echo Muster clustering library: ${muster_enabled}
+  echo Muster clustering library: ${muster_installed}
   if test "${muster_enabled}" = "yes"; then
-    echo -e \\\tMuster home:             ${muster_dir}
+    echo -e \\\tMUSTER_CPPFLAGS:         ${MUSTER_CPPFLAGS}
+    echo -e \\\tMUSTER_LIBSDIR:          ${MUSTER_LIBSDIR}
+    echo -e \\\tMUSTER_LIBS:             ${MUSTER_LIBS}
   fi
 
   echo MPI support: ${MPI_INSTALLED}
@@ -31,16 +34,25 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
     echo -e \\\tMPI home:                ${MPI_HOME}
     echo -e \\\tshared libraries?        ${MPI_SHARED_LIB_FOUND}
   fi
-
-  echo CGAL support: ${cgal_enabled}
-  if test "x$cgal_enabled" = "xyes"; then
+  
+  echo TREEDBSCAN enabled: ${TREEDBSCAN_ENABLED}
+  if test "x${TREEDBSCAN_ENABLED}" = "xyes"; then
+    echo ""
+    echo -e -- MPFR flags --
+    echo -e \\\tMPFR_CPPFLAGS:           ${MPFR_CPPFLAGS}
+    echo -e \\\tMPFR_LIBSDIR:            ${MPFR_LIBSDIR}
+    echo -e \\\tMPFR_LIBS:               ${MPFR_LIBS}
+    echo -e -- GMP  flags --
+    echo -e \\\tGMP_CPPFLAGS:            ${GMP_CPPFLAGS}
+    echo -e \\\tGMP_LIBSDIR:             ${GMP_LIBSDIR}
+    echo -e \\\tGMP_LIBS:                ${GMP_LIBS}
+    echo -e -- CGAL flags --
     echo -e \\\tCGAL_CPPFLAGS:           ${CGAL_CPPFLAGS}
-    echo -e \\\tCGAL_LDFLAGS:            ${CGAL_LDFLAGS}
-  fi
-
-  echo MRNetApp support: ${MRNETAPP_INSTALLED}
-  if test "x${MRNETAPP_INSTALLED}" = "xyes"; then
+    echo -e \\\tCGAL_LIBSDIR:            ${CGAL_LIBSDIR}
+    echo -e \\\tCGAL_LIBS:               ${CGAL_LIBS}
+    echo -e -- MRNetApp flags --
     echo -e \\\tMRNetApp config script: "${MRNETAPP_HOME}/bin/mrnapp-config"
+    echo ""
   fi
 
   echo SQLite3 support: ${SQLITE3_INSTALLED}
@@ -49,7 +61,7 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
     echo -e \\\tSQLITE3_LDFLAGS:         ${SQLITE3_LDFLAGS}
   fi
 
-  if test "x${MRNETAPP_INSTALLED}" = "xyes" -a "x${SQLITE3_INSTALLED}"  = "xno"; then
+  if test "x${TREEDBSCAN_ENABLED}" = "xyes" -a "x${SQLITE3_INSTALLED}"  = "xno"; then
     echo ""
     echo "WARNING: compiling the TreeDBSCAN packages without SQLite3 availability"
     echo "WARNING: results on a memory bound implementation of the algorithm"

@@ -7,17 +7,12 @@ bin_SCRIPTS = $(CLUSTERING_CONFIG)
 
 $(CLUSTERING_CONFIG): $(CLUSTERING_CONFIG).in
 	cp $^ $@
-	$(top_srcdir)/substitute $(SED) "@sub_PREFIX@" "${prefix}" $@
-	$(top_srcdir)/substitute $(SED) "@sub_VERSION@" "${VERSION}" $@
-	$(top_srcdir)/substitute $(SED) "@sub_CGAL_CPPFLAGS@" "${CGAL_CPPFLAGS}" $@
-	$(top_srcdir)/substitute $(SED) "@sub_CGAL_LDFLAGS@" "${CGAL_LDFLAGS}" $@
-if HAVE_MPI
-	$(top_srcdir)/substitute $(SED) "@sub_MPI_CFLAGS@" "-I@MPI_INCLUDES@" $@
-	$(top_srcdir)/substitute $(SED) "@sub_MPI_LDFLAGS@" "@MPI_LDFLAGS@ @MPI_LIBS@" $@
-else
-	$(top_srcdir)/substitute $(SED) "@sub_MPI_CFLAGS@" "" $@
-	$(top_srcdir)/substitute $(SED) "@sub_MPI_LDFLAGS@" "" $@
-endif
+	$(top_srcdir)/substitute $(SED) "@sub_PREFIX@"          "${prefix}" $@
+	$(top_srcdir)/substitute $(SED) "@sub_VERSION@"         "${VERSION}" $@
+	$(top_srcdir)/substitute $(SED) "@sub_CPPFLAGS@"        "${CLUSTERING_CPPFLAGS}" $@
+	$(top_srcdir)/substitute $(SED) "@sub_LDFLAGS@"         "${CLUSTERING_CLEAN_LDFLAGS}" $@
+	$(top_srcdir)/substitute $(SED) "@sub_LIBTOOL_LDFLAGS@" "${CLUSTERING_LDFLAGS}" $@
+	$(top_srcdir)/substitute $(SED) "@sub_LIBS@"            "${CLUSTERING_LIBS}" $@
 	chmod u+x $@
 
 clean-local:

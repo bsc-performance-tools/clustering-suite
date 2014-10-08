@@ -1,18 +1,5 @@
 noinst_LTLIBRARIES=libParaverTraceParser.la
 
-## common_filesdir = @common_filesdir@
-
-AM_CPPFLAGS = \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/BasicClasses \
-	-I$(top_srcdir)/src/SharedComponents \
-	-I$(top_srcdir)/common_utilities
-
-libParaverTraceParser_la_CXXFLAGS=@CXXFLAGS@
-
-libParaverTraceParser_la_LIBADD = \
-	$(top_srcdir)/common_utilities/libCommonUtilities.la
-
 libParaverTraceParser_la_SOURCES=\
 	ParaverApplicationDescription.cpp \
 	ParaverApplicationDescription.hpp \
@@ -27,7 +14,15 @@ libParaverTraceParser_la_SOURCES=\
 	ParaverMetadataManager.cpp \
 	ParaverMetadataManager.hpp
 
-#nodist_libParaverTraceParser_la_SOURCES=\
-#	$(common_filesdir)/Dimemas_Generation.c \
-#    $(common_filesdir)/EventEncoding.c \
-#    $(common_filesdir)/Dimemas2Prv.c
+AM_CPPFLAGS = \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src/BasicClasses \
+	-I$(top_srcdir)/src/SharedComponents \
+	-I$(top_srcdir)/common_utilities
+
+libParaverTraceParser_la_CPPFLAGS = @CLUSTERING_CPPFLAGS@
+libParaverTraceParser_la_LDFLAGS  = @CLUSTERING_LDFLAGS@
+libParaverTraceParser_la_LIBADD = \
+	$(top_srcdir)/common_utilities/libCommonUtilities.la \
+	@CLUSTERING_LIBS@
+

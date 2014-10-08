@@ -2,8 +2,8 @@ noinst_LTLIBRARIES = libCommonUtilities.la
 
 simulator_dir = $(top_srcdir)/Simulator
 
+libCommonUtilities_la_CPPFLAGS=@CLUSTERING_CPPFLAGS@
 libCommonUtilities_la_CFLAGS=-DNEW_DIMEMAS_TRACE -DNANOSECOND_TRACE
-
 libCommonUtilities_la_CXXFLAGS=-DNEW_DIMEMAS_TRACE -DNANOSECOND_TRACE
 
 libCommonUtilities_la_SOURCES = \

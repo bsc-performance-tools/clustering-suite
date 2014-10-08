@@ -1,9 +1,9 @@
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/BasicClasses \
-	-I$(top_srcdir)/src/libClustering \
-	-I$(top_srcdir)/src/libSharedComponents \
-	-I$(top_srcdir)/src/libTraceClustering
+	-I$(top_srcdir)/src/BasicClasses
+	
+	
+	
 
 ###############################################################################
 # 'DataExtractor' binary
@@ -14,26 +14,16 @@ bin_PROGRAMS = ClusteringDataExtractor
 ClusteringDataExtractor_SOURCES = \
 	ClusteringDataExtractorMain.cpp 
 
-ClusteringDataExtractor_LDADD = \
-	$(top_srcdir)/src/libTraceClustering/libTraceClustering.la \
-	$(top_srcdir)/src/BasicClasses/libBasicClasses.la
-
-ClusteringDataExtractor_CXXFLAGS = ${CXXFLAGS}
-ClusteringDataExtractor_CFLAGS   = ${CFLAGS}
-ClusteringDataExtractor_LDFLAGS  = ${LDFLAGS} -static
-ClusteringDataExtractor_LDADD   +=  @XML2_LDFLAGS@ @XML2_LIBS@ ${LIBS}
-
-if HAVE_MUSTER
-
-ClusteringDataExtractor_CXXFLAGS += @MUSTER_CXXFLAGS@
-ClusteringDataExtractor_LDFLAGS += @MUSTER_LDFLAGS@
-ClusteringDataExtractor_LDADD   += @MUSTER_LIBS@
-
-if HAVE_MPI
-ClusteringDataExtractor_CXXFLAGS += @MPI_CFLAGS@
-ClusteringDataExtractor_LDFLAGS += @MPI_LDFLAGS@
-ClusteringDataExtractor_LDADD   += @MPI_LIBS@
-endif
+ClusteringDataExtractor_CPPFLAGS = @CLUSTERING_CPPFLAGS@\
+ -I$(top_srcdir)/src/libClustering\
+ -I$(top_srcdir)/src/libTraceClustering\
+ -I$(top_srcdir)/src/libSharedComponents
+  
+ClusteringDataExtractor_LDFLAGS  = @CLUSTERING_LDFLAGS@
+ClusteringDataExtractor_LDADD =\
+ $(top_srcdir)/src/libTraceClustering/libTraceClustering.la\
+ $(top_srcdir)/src/BasicClasses/libBasicClasses.la\
+ @CLUSTERING_LIBS@
 
 
-endif
+
