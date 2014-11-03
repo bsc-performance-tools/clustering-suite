@@ -1,4 +1,3 @@
-
 SOURCEME_SH     = TDBSCAN_env.sh
 FE_WRAPPER      = TDBSCAN_FE 
 BE_WRAPPER      = TDBSCAN_BE
@@ -17,8 +16,7 @@ install-data-hook:
 	$(top_srcdir)/substitute-all $(SED) "@sub_PREFIX@" ${prefix} $(prefix)/etc
 	$(top_srcdir)/substitute-all $(SED) "@sub_MRNETAPP_HOME@" @MRNETAPP_HOME@ $(prefix)/etc
 	$(top_srcdir)/substitute-all $(SED) "@sub_MRNETAPP_LIBSDIR@" @MRNETAPP_LIBSDIR@ $(prefix)/etc
-	$(top_srcdir)/substitute-all $(SED) "@sub_CLUSTERING_DYNAMIC_PATH@" @CLUSTERING_DYNAMIC_PATH@ $(prefix)/etc
-	$(top_srcdir)/substitute-all $(SED) "@sub_CGAL_DYNAMIC_PATH@" @CGAL_DYNAMIC_PATH@ $(prefix)/etc
+	$(top_srcdir)/substitute-all $(SED) "@sub_CLUSTERING_LD_LIBRARY_PATH@" @CLUSTERING_LD_LIBRARY_PATH@ $(prefix)/etc
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(FE_WRAPPER)
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(BE_WRAPPER)
 	chmod a+x $(bindir)/$(FE_WRAPPER) $(bindir)/$(BE_WRAPPER)

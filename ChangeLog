@@ -10,6 +10,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-10-31 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved the generation of 'TDBSCAN_env.sh' LD_LIBRARY_PATH variable (now
+	it uses CLUSTERING_LD_LIBRARY_PATH, created at configure.ac) 
+
 2014-10-09 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Huge changes in the building system to maximize the use of 'rpaths'
 

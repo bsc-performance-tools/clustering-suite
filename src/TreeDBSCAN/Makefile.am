@@ -1,4 +1,3 @@
-
 SUBDIRS = scripts
 
 AM_CPPFLAGS = \
