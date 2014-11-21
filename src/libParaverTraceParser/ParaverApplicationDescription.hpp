@@ -3,7 +3,7 @@
  *                             ClusteringSuite                               *
  *   Infrastructure and tools to apply clustering analysis to Paraver and    *
  *                              Dimemas traces                               *
- *                                                                           * 
+ *                                                                           *
  *****************************************************************************
  *     ___     This library is free software; you can redistribute it and/or *
  *    /  __         modify it under the terms of the GNU LGPL as published   *
@@ -62,13 +62,13 @@ class TaskDescription
       this->ThreadCount = ThreadCount;
       this->Node        = Node;
     };
-    
+
     void Write ( ostream & os ) const;
-    
+
     INT32 GetTaskId(void)      { return TaskId; };
     INT32 GetThreadCount(void) { return ThreadCount; };
     INT32 GetNode(void)        { return Node; };
-    
+
 };
 typedef TaskDescription* TaskDescription_t;
 
@@ -82,10 +82,10 @@ class ApplicationDescription: public Error
 {
   private:
     INT32 ApplicationId;
-    
+
     INT32                     TaskCount;
     vector<TaskDescription_t> TaskInfo;
-    
+
     INT32                     CommunicatorCount;
     vector<Communicator_t>    Communicators;
 
@@ -93,12 +93,12 @@ class ApplicationDescription: public Error
     ApplicationDescription(INT32 ApplicationId,
                            INT32 TaskCount,
                            INT32 CommunicatorCount);
-  
+
     ApplicationDescription(INT32 ApplicationId,
                            INT32 TaskCount,
                            INT32 CommunicatorCount,
                            char* ASCIITaskInfo);
-    
+
     INT32 GetApplicationId(void)                { return ApplicationId; };
     INT32 GetTaskCount(void)                    { return TaskCount; };
     vector<TaskDescription_t> GetTaskInfo(void) { return TaskInfo; };
@@ -108,30 +108,30 @@ class ApplicationDescription: public Error
     INT32 GetCOMM_WORLD_Id(void);
 
     void Write ( ostream & os ) const;
-    
+
     bool AddTaskDescription(TaskDescription_t NewTaskDescription)
     {
       TaskInfo.push_back(NewTaskDescription);
       return true;
     };
-    
+
     bool AddCommunicator(Communicator_t NewCommunicator)
     {
       Communicators.push_back(NewCommunicator);
       return true;
     };
-    
+
     bool AddTaskDescription(INT32 TaskId, INT32 ThreadCount, INT32 Node = 0)
     {
       TaskDescription_t NewTaskDescription = new TaskDescription(TaskId,
                                                                  ThreadCount,
                                                                  Node);
-      
+
       AddTaskDescription(NewTaskDescription);
       return true;
     };
-    
-    
+
+
 };
 typedef ApplicationDescription* ApplicationDescription_t;
 

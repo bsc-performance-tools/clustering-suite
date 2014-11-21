@@ -35,7 +35,8 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
     echo -e \\\tshared libraries?        ${MPI_SHARED_LIB_FOUND}
   fi
   
-  echo TREEDBSCAN enabled: ${TREEDBSCAN_ENABLED}
+  # Tree DSBCAN is available is 'MRNETApp' (Synapse) is available
+  echo TREEDBSCAN enabled: ${mrnetapp_enabled:-no}
   if test "x${TREEDBSCAN_ENABLED}" = "xyes"; then
     echo ""
     echo -e -- MPFR flags --
@@ -55,7 +56,7 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
     echo ""
   fi
 
-  echo SQLite3 support: ${SQLITE3_INSTALLED}
+  echo SQLite3 support: ${sqlite3_installed}
   if test "x${SQLITE3_INSTALLED}" = "xyes"; then
     echo -e \\\tSQLITE3_CFLAGS:          ${SQLITE3_CFLAGS}
     echo -e \\\tSQLITE3_LDFLAGS:         ${SQLITE3_LDFLAGS}

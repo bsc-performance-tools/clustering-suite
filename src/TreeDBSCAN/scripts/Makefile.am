@@ -20,4 +20,4 @@ install-data-hook:
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(FE_WRAPPER)
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(BE_WRAPPER)
 	chmod a+x $(bindir)/$(FE_WRAPPER) $(bindir)/$(BE_WRAPPER)
-	ln -fs $(bindir)/$(FE_WRAPPER) $(bindir)/TDBSCAN
+	ln -fs `basename $(bindir)/$(FE_WRAPPER)` $(bindir)/TDBSCAN

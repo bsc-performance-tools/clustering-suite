@@ -260,8 +260,9 @@ int TDBSCANRoot::Run()
   MRN_STREAM_RECV (stClustering, &tag, p, TAG_STATISTICS);
   NetworkStats.Unpack (p);
   PrintGraphStats (NetworkStats);
-   
 
+
+#if 0
   /* Receive the support */
   MRN_STREAM_RECV (stSupport, &tag, p, TAG_SUPPORT);
   Support GlobalSupport(NumberOfDimensions, MinGlobalDimensions, MaxGlobalDimensions);
@@ -273,7 +274,7 @@ int TDBSCANRoot::Run()
   /* Receive the averaged clusters info stats */
   ClustersInfo ClustersStats;
   MRN_STREAM_RECV (stClustering, &tag, p, TAG_CLUSTERS_INFO);
-  ClustersStats.Unpack (p); 
+  ClustersStats.Unpack (p);
   ClustersStats.Print();
   cout << ClustersStats;
   ofstream ClustersInfoFile;
@@ -283,6 +284,9 @@ int TDBSCANRoot::Run()
 
   xfree(MinGlobalDimensions);
   xfree(MaxGlobalDimensions);
+
+#endif // 0
+
 
   return countGlobalHulls;
 }

@@ -10,6 +10,21 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-11-21 Juan Gonzalez <juan.gonzalez@bsc.es> 
+	* Fixed a minimum regression in 'libDistributedClusteringImplementation',
+	to ensure that all backends on the TreeDBSCAN implementation are able
+	to correctly assign the IDs to each local points
+
+2014-11-15 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.3
+	* Polished the building system. It didn't work properly when compiling
+	without Tree DBSCAN support due to the spaces in 'test' operation
+	comparison. Solution seen in:
+
+	https://lists.gnu.org/archive/html/automake/2011-09/msg00001.html
+
+	* Corrected TDBSCAN link generation to be agnostic from $(bindir) in
+	the building system
+
 2014-10-31 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved the generation of 'TDBSCAN_env.sh' LD_LIBRARY_PATH variable (now
 	it uses CLUSTERING_LD_LIBRARY_PATH, created at configure.ac) 

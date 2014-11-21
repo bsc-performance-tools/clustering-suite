@@ -142,7 +142,7 @@ int TDBSCANWorker::Run()
   libClustering->GetNoisePoints (NoisePoints, NoiseDurations );
   ClusteringStats.IncreaseOutputPoints ( NoisePoints.size() );
 
-  /* DEBUG -- count remaining noise points 
+  /* DEBUG -- count remaining noise points
   if (Verbose) cerr << "[BE " << WhoAmI() << "] Number of noise points = " << NoisePoints.size() << endl; */
 
   NoiseManager Noise = NoiseManager (libClustering);
@@ -220,14 +220,21 @@ int TDBSCANWorker::Run()
 
   system_messages::show_timer ("Clustering time", t.end() );
 
+#if 0
   Support BackendSupport(libClustering, 50);
   BackendSupport.Serialize(stSupport);
 
   Support GlobalSupport(BackendSupport);
   MRN_STREAM_RECV (stSupport, &tag, p, TAG_SUPPORT);
   GlobalSupport.Unpack(p);
+#endif
 
   /* Process the results and generate the output files */
+
+  /* WARNING: this 'Support' variable should be removed from here
+   * when reactivating the support management in the very previous
+   * '#if 0' */
+  Support GlobalSupport;
 
   if (!ProcessResults(GlobalSupport) )
   {

@@ -22,10 +22,8 @@ SUBDIRS += MusterDistributedClustering
 endif
 endif
 
-if CGAL_INSTALLED
+if TREEDBSCAN_ENABLED
 SUBDIRS += libDistributedClustering
-if MRNETAPP_INSTALLED
 SUBDIRS += TreeDBSCAN 
-endif
 endif
 

@@ -21,6 +21,10 @@ dnl echo -n $VERSION>$srcdir/VERSION
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
 
+dnl =========================================================================
+dnl Libtool availability
+dnl =========================================================================
+AM_PROG_LIBTOOL
 
 dnl Check if CFLAGS/CXXFLAGS have been defined by user
 AC_MSG_CHECKING([whether configure should try to set CFLAGS])
@@ -39,11 +43,16 @@ else
 fi
 AC_MSG_RESULT($enable_cxxflags_setting)
 
+
 dnl =========================================================================
 dnl Main CLUSTERING flags to ensure the possible rpaths
 dnl
 dnl CLUSTERING_CLEAN_LDFLAGS is used to provide just the '-L' information
 dnl without the libtool flags in the 'clustering-config' script
+dnl 
+dnl WARNNING!!! The CPPFLAGS used here should be changed to avoid using
+dnl absolute PATHs
+dnl
 dnl =========================================================================
 CLUSTERING_CPPFLAGS="-DCLUSTERING_SUITE -I`pwd`/include -I`pwd`/src/BasicClasses -I`pwd`/common_utilities"
 CLUSTERING_CLEAN_LDFLAGS=""
@@ -225,11 +234,6 @@ AX_CHECK_IS_SYSTEM_LIBRARY_PATH([${XML2_SHAREDLIBSDIR}],[],
 ])
 
 dnl =========================================================================
-dnl Check for Libtool
-dnl =========================================================================
-AM_PROG_LIBTOOL
-
-dnl =========================================================================
 dnl COMMON_FILES_DIR: point the compiling system where the tools 'common-files'
 dnl directory is located
 dnl =========================================================================
@@ -301,9 +305,12 @@ dnl =========================================================================
 muster_installed="no"
 AX_MUSTER(
   [muster_installed="yes"],
-  AC_MSG_WARN([No Muster library detected. Muster algorithms not available])
+  [
+    AC_MSG_WARN([No Muster library detected. Muster algorithms not available])
+    muster_installed="no"
+  ]
 )
-AM_CONDITIONAL(HAVE_MUSTER, test "x$muster_installed" = "xyes")
+AM_CONDITIONAL([HAVE_MUSTER], [test "x$muster_installed" = "xyes"])
 
 if test "x$muster_installed" = "xyes"; then
 
@@ -322,16 +329,19 @@ fi
 dnl =========================================================================
 dnl AX_PROG_MPI: set if distributed version must be compiled
 dnl =========================================================================
-mpi_installed="no"
 AX_PROG_MPI(
   [mpi_installed="yes"],
-  AC_MSG_WARN([No MPI installed. Distributed version will not be compiled]))
+  [
+    AC_MSG_WARN([No MPI installed. Distributed version will not be compiled])
+    mpi_installed="no"
+  ]
+)
 
 # If the system do not have MPICC (or similar) be sure to add -lmpi and -Impi
 AM_CONDITIONAL(NEED_MPI_LIB_INCLUDE, test "x${MPICC}" != "x" )
 
 dnl Did the checks pass?
-AM_CONDITIONAL(HAVE_MPI, test "x${mpi_installed}" = "xyes")
+AM_CONDITIONAL([HAVE_MPI], [test "x${mpi_installed}" = "xyes"])
 
 if test "x$mpi_installed" = "xyes"; then
 
@@ -353,7 +363,7 @@ dnl =========================================================================
 dnl AX_LIB_SQLITE3()
 if test "x$SQLITE3_VERSION" != "x"; then
 
-  SQLITE3_INSTALLED="yes"
+  sqlite3_installed="yes"
   CLUSTERING_CPPFLAGS="${CLUSTERING_CPPFLAGS} ${SQLITE3_CPPFLAGS}"
   CLUSTERING_CLEAN_LDFLAGS="${CLUSTERING_CLEAN_LDFLAGS} -L${SQLITE3_LIBSDIR}"
   CLUSTERING_LIBS="${CLUSTERING_LIBS} ${SQLITE3_LIBS}"
@@ -365,14 +375,17 @@ if test "x$SQLITE3_VERSION" != "x"; then
   ])
   
 else
-  SQLITE3_INSTALLED="no"
+  sqlite3_installed="no"
 fi
-AM_CONDITIONAL(HAVE_SQLITE3, test "$SQLITE3_INSTALLED" = "yes")
+AM_CONDITIONAL([HAVE_SQLITE3], [test "x$sqlite3_installed" = "xyes"])
 
 dnl =========================================================================
 dnl 'enable-treedbscan': enables the compilation of the TreeDBSCAN (parallel
 dnl                      implementation of DBSCAN) support.for Extrae >= 3.0
 dnl =========================================================================
+
+dnl First we set the availability to 'no', only if all dependencies are
+dnl resolved, it will be set to yes
 
 AC_ARG_ENABLE(
   treedbscan,
@@ -382,8 +395,8 @@ AC_ARG_ENABLE(
      'boost-thread', 'mpfr', 'gmp', 'cgal' and 'mrnetapp' libraries. Please
      check the different '--with-*' options to provide this requirements]
   ),
-  treedbscan_enabled="yes",
-  treedbscan_enabled="no"
+  [treedbscan_enabled="yes"],
+  [treedbscan_enabled="no"]
 )
 
 dnl =========================================================================
@@ -396,24 +409,33 @@ BOOST_THREAD()
 
 dnl AX_BOOST_THREAD()
 
-CLUSTERING_CLEAN_LDFLAGS="${CLUSTERING_CLEAN_LDFLAGS} -L${BOOST_THREAD_LDPATH}"
-CLUSTERING_LIBS="${CLUSTERING_LIBS} ${BOOST_THREAD_LIBS}"
+if test "x$BOOST_THREAD_LIBS" != "x"; then
 
-AX_CHECK_IS_SYSTEM_LIBRARY_PATH([${BOOST_THREAD_LDPATH}],[],
-[
-  CLUSTERING_LDFLAGS="${CLUSTERING_LDFLAGS} -L${BOOST_THREAD_LDPATH} -R${BOOST_THREAD_LDPATH}"
-  CLUSTERING_LD_LIBRARY_PATH="${CLUSTERING_LD_LIBRARY_PATH}:${BOOST_THREAD_LDPATH}"
-])
+  CLUSTERING_CLEAN_LDFLAGS="${CLUSTERING_CLEAN_LDFLAGS} -L${BOOST_THREAD_LDPATH}"
+  CLUSTERING_LIBS="${CLUSTERING_LIBS} ${BOOST_THREAD_LIBS}"
+
+  AX_CHECK_IS_SYSTEM_LIBRARY_PATH([${BOOST_THREAD_LDPATH}],[],
+  [
+    CLUSTERING_LDFLAGS="${CLUSTERING_LDFLAGS} -L${BOOST_THREAD_LDPATH} -R${BOOST_THREAD_LDPATH}"
+    CLUSTERING_LD_LIBRARY_PATH="${CLUSTERING_LD_LIBRARY_PATH}:${BOOST_THREAD_LDPATH}"
+  ])
+else
+  AC_MSG_ERROR([required Boost Thread library])
+fi
 
 
 dnl =========================================================================
 dnl AX_LIB_MPFR: checks for the presence of MPFR, required to by CGAL.
 dnl              (defined at 'config/gmp_mpfr.m4')
 dnl =========================================================================
-mpfr_enabled="no"
+
 AX_LIB_MPFR(
   mpfr_enabled="yes",
-  AC_MSG_ERROR([required MPFR library not found]))
+  [
+    AC_MSG_ERROR([required MPFR library not found])
+    mpfr_enabled="no"
+  ]
+)
 
 CLUSTERING_CPPFLAGS="${CLUSTERING_CPPFLAGS} ${MPFR_CPPFLAGS}"
 CLUSTERING_CLEAN_LDFLAGS="${CLUSTERING_CLEAN_LDFLAGS} -L${MPFR_LIBSDIR}"
@@ -429,10 +451,13 @@ dnl =========================================================================
 dnl AX_LIB_GMP: checks for the presence of GMP, required to by CGAL
 dnl             (defined at 'config/gmp_mpfr.m4')
 dnl =========================================================================
-gmp_enabled="no"
 AX_LIB_GMP(
   gmp_enabled="yes",
-  AC_MSG_ERROR([required GMP library not found]))
+  [
+    AC_MSG_ERROR([required GMP library not found])
+    gmp_enabled="no"
+  ]
+)
 
 CLUSTERING_CPPFLAGS="${CLUSTERING_CPPFLAGS} ${GMP_CPPFLAGS}"
 CLUSTERING_CLEAN_LDFLAGS="${CLUSTERING_CLEAN_LDFLAGS} -L${GMP_LIBSDIR}"
@@ -448,10 +473,13 @@ dnl =========================================================================
 dnl AX_CHECK_CGAL: checks for the presence of CGAL, required for the 
 dnl                TreeDBSCAN implementation (defined at 'config/macros.m4')
 dnl =========================================================================
-cgal_enabled="no"
 AX_CHECK_CGAL(
   [cgal_enabled="yes"],
-  AC_MSG_ERROR([required CGAL library not found]))
+  [
+    AC_MSG_ERROR([required CGAL library not found])
+    cgal_enabled="no"
+  ]
+)
   
 CLUSTERING_CPPFLAGS="${CLUSTERING_CPPFLAGS} ${CGAL_CPPFLAGS}"
 CLUSTERING_CLEAN_LDFLAGS="${CLUSTERING_CLEAN_LDFLAGS} -L${CGAL_LIBSDIR}"
@@ -472,16 +500,16 @@ dnl                   directly used in the 'TreeDBSCAN/Makefile.am'
 dnl =========================================================================
 AX_PROG_MRNETAPP(
   [mrnetapp_enabled="yes"],
-  AC_MSG_ERROR([required MRNetApp library not found]))
-
-
-TREEDBSCAN_ENABLED="yes"
+  [
+    AC_MSG_ERROR([required MRNetApp library not found])
+    mrnetapp_enabled="no"
+  ]
+)
 
 fi
 
-AM_CONDITIONAL(TREEDBSCAN_ENABLED, test "x$mrnetapp_enabled"="xyes" )
-AM_CONDITIONAL(CGAL_INSTALLED, test "x$cgal_enabled"="xyes")
-AM_CONDITIONAL(MRNETAPP_INSTALLED, test "x$mrnetapp_enabled"="xyes")
+AM_CONDITIONAL([TREEDBSCAN_ENABLED], [test "x$mrnetapp_enabled" = "xyes"])
+
 
 dnl =========================================================================
 dnl Final substitutions of CLUSTERING flags

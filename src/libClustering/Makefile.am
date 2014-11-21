@@ -35,7 +35,7 @@ libClustering_la_SOURCES = \
 	Partition.hpp \
 	Partition.cpp
 
-if CGAL_INSTALLED
+if TREEDBSCAN_ENABLED
 inst_HEADERS += \
 	ConvexHullModel.hpp 
 
@@ -51,8 +51,6 @@ libClustering_la_SOURCES += \
 	CGAL_Kernel/MyPointC2.h \
 	CGAL_Kernel/MyPointC2_iostream.h \
 	CGAL_Kernel/MySegmentC2.h
-
-
 endif
 
 if HAVE_MUSTER
