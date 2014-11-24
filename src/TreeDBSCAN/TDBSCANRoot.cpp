@@ -41,6 +41,9 @@ using std::ofstream;
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 
+#include <FileNameManipulator.hpp>
+using cepba_tools::FileNameManipulator;
+
 #include <libDistributedClustering.hpp>
 
 #include "TDBSCANRoot.h"
@@ -49,6 +52,7 @@ using cepba_tools::system_messages;
 #include "TDBSCANTags.h"
 #include "Utils.h"
 #include "Support.h"
+
 
 /**
  * Constructor sets the clustering configuration parameters.
@@ -62,31 +66,47 @@ TDBSCANRoot::TDBSCANRoot (
   bool   Verbose,
   bool   ReconstructTrace)
 {
-  this->Epsilon                 = Eps;
-  this->MinPoints               = MinPts;
+
   this->ClusteringDefinitionXML = ClusteringDefinitionXML;
   this->InputTraceName          = InputTraceName;
   this->OutputFileName          = OutputFileName;
   this->Verbose                 = Verbose;
   this->ReconstructTrace        = ReconstructTrace;
-
   system_messages::verbose      = Verbose;
+
+  libClustering = new libDistributedClustering(Verbose, "FE");
+  libClustering->InitClustering(ClusteringDefinitionXML, true, 0, 1);
+
+  if (Eps == -1)
+  {
+    this->Epsilon = libClustering->GetEpsilon();
+  }
+  else
+  {
+    this->Epsilon = Eps;
+  }
+  if (MinPoints == -1)
+  {
+    this->MinPoints = libClustering->GetMinPoints();
+  }
+  else
+  {
+    this->MinPoints = MinPts;
+  }
 }
 
 TDBSCANRoot::TDBSCANRoot (
   string ClusteringDefinitionXML,
   bool   Verbose)
 {
-  libDistributedClustering *libClustering = new libDistributedClustering(Verbose, "FE");
+  this->ClusteringDefinitionXML = ClusteringDefinitionXML;
+  this->Verbose                 = Verbose;
 
+  libClustering = new libDistributedClustering(Verbose, "FE");
   libClustering->InitClustering(ClusteringDefinitionXML, true, 0, 1);
 
   this->Epsilon                 = libClustering->GetEpsilon();
   this->MinPoints               = libClustering->GetMinPoints();
-  this->ClusteringDefinitionXML = ClusteringDefinitionXML;
-  this->Verbose                 = Verbose;
-
-  delete libClustering;
 }
 
 
@@ -114,6 +134,12 @@ int TDBSCANRoot::Run()
   int       countGlobalHulls = 0;
   int       tag;
   PacketPtr p;
+
+  string OutputFileExtension;
+
+  OutputFileExtension = FileNameManipulator::GetExtension (OutputFileName);
+  FileNameManipulator NameManipulator (OutputFileName, OutputFileExtension);
+  OutputPrefix = NameManipulator.GetChoppedFileName();
 
   Messages << "[FE] Sending clustering configuration:"                       << endl;
   Messages << "[FE] + Epsilon     = " << Epsilon                             << endl;
@@ -146,6 +172,7 @@ int TDBSCANRoot::Run()
 
   MRN_STREAM_RECV (stXchangeDims, &tag, p, TAG_XCHANGE_DIMENSIONS);
   PACKET_unpack(p, "%alf %alf", &MinGlobalDimensions, &NumberOfDimensions, &MaxGlobalDimensions, &NumberOfDimensions);
+
   stXchangeDims->send (p);
 
   Messages.str ("");
@@ -228,32 +255,25 @@ int TDBSCANRoot::Run()
   system_messages::information (Messages.str() );
 
   /* Write the final aggregate scatter plot */
-  /* XXX libClustering NOT INITIALIZED IN OFFLINE MODE!!! */
-  libDistributedClustering *libClustering = new libDistributedClustering(Verbose, "FE");
-
-  libClustering->InitClustering(ClusteringDefinitionXML, true, 0, 1);
-
   Messages.str ("");
   Messages << "Printing full clustering scripts" << endl;
   system_messages::information (Messages.str() );
 
-  MergedDataFileNames << "< cat";
+  MergedDataFileNames << "cat ";
   for (unsigned int i = 0; i < NumBackEnds(); i++)
   {
-    MergedDataFileNames << " OUTPUT.GLOBAL_CLUSTERING_" << i << ".csv";
+    MergedDataFileNames << OutputPrefix << ".GLOBAL_CLUSTERING_" << i << ".csv "; 
   }
+  string FinalDataFileName = OutputPrefix + ".FINAL.DATA.csv";
 
   if (!libClustering->PrintGlobalPlotScripts(
-    MergedDataFileNames.str(),
-    // "< cat OUTPUT.GLOBAL_CLUSTERING_0.csv OUTPUT.GLOBAL_CLUSTERING_1.csv OUTPUT.GLOBAL_CLUSTERING_2.csv OUTPUT.GLOBAL_CLUSTERING_3.csv",
-    // "< cat OUTPUT.GLOBAL_CLUSTERING_0.csv OUTPUT.GLOBAL_CLUSTERING_1.csv OUTPUT.GLOBAL_CLUSTERING_2.csv OUTPUT.GLOBAL_CLUSTERING_3.csv OUTPUT.GLOBAL_CLUSTERING_4.csv OUTPUT.GLOBAL_CLUSTERING_5.csv OUTPUT.GLOBAL_CLUSTERING_6.csv OUTPUT.GLOBAL_CLUSTERING_7.csv OUTPUT.GLOBAL_CLUSTERING_8.csv OUTPUT.GLOBAL_CLUSTERING_9.csv OUTPUT.GLOBAL_CLUSTERING_10.csv OUTPUT.GLOBAL_CLUSTERING_11.csv OUTPUT.GLOBAL_CLUSTERING_12.csv OUTPUT.GLOBAL_CLUSTERING_13.csv OUTPUT.GLOBAL_CLUSTERING_14.csv OUTPUT.GLOBAL_CLUSTERING_15.csv",
-    "FINAL",
+    FinalDataFileName,
+    OutputPrefix + ".FINAL",
     countGlobalHulls)
   )
   {
     cout << "Error printing full clustering scripts: " << libClustering->GetErrorMessage() << endl;
   }
-
 
   /* Receive the statistics from all nodes */
   Statistics NetworkStats (WhoAmI(), false);
@@ -262,31 +282,30 @@ int TDBSCANRoot::Run()
   PrintGraphStats (NetworkStats);
 
 
-#if 0
   /* Receive the support */
   MRN_STREAM_RECV (stSupport, &tag, p, TAG_SUPPORT);
   Support GlobalSupport(NumberOfDimensions, MinGlobalDimensions, MaxGlobalDimensions);
   GlobalSupport.Unpack(p);
   GlobalSupport.Serialize(stSupport);
   //GlobalSupport.dump();
-  GlobalSupport.plot2("SUPPORT.txt");
+  GlobalSupport.plot2(OutputPrefix + ".FINAL.support.csv");
 
   /* Receive the averaged clusters info stats */
   ClustersInfo ClustersStats;
   MRN_STREAM_RECV (stClustering, &tag, p, TAG_CLUSTERS_INFO);
   ClustersStats.Unpack (p);
-  ClustersStats.Print();
-  cout << ClustersStats;
+  //ClustersStats.Print();
+  //cout << ClustersStats;
   ofstream ClustersInfoFile;
-  ClustersInfoFile.open ("CLUSTERS_INFO.txt");
+  ClustersInfoFile.open (string(OutputPrefix + ".FINAL.clusters_info.csv").c_str());
   ClustersInfoFile << ClustersStats;
   ClustersInfoFile.close();
 
+  /* Write the final DATA file */
+  system( string(MergedDataFileNames.str() + " > " + FinalDataFileName).c_str() );
+
   xfree(MinGlobalDimensions);
   xfree(MaxGlobalDimensions);
-
-#endif // 0
-
 
   return countGlobalHulls;
 }
@@ -295,16 +314,16 @@ void TDBSCANRoot::PrintGraphStats (Statistics &NetworkStats)
 {
   ostringstream Messages;
 
-  string TreeLayoutFileName = "MRNetStats.layout";
+  string TreeLayoutFileName = OutputPrefix + ".MRNETSTATS.layout";
   GetNetwork()->get_NetworkTopology()->print_DOTGraph ( TreeLayoutFileName.c_str() );
 
-  string StatsFileName = "MRNetStats.data";
+  string StatsFileName = OutputPrefix + ".MRNETSTATS.data";
   ofstream StatsFile;
   StatsFile.open (StatsFileName.c_str() );
   NetworkStats.DumpAllStats (StatsFile);
   StatsFile.close();
 
-  string OutputDOTName = "MRNetStats.dot";
+  string OutputDOTName = OutputPrefix + ".MRNETSTATS.dot";
   string CMD = string (getenv ("TDBSCAN_HOME") ) + "/bin/draw_stats " + TreeLayoutFileName + " " + StatsFileName + " " + OutputDOTName;
 
   Messages << "[FE] Generating debug statistics... ";

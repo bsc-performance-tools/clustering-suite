@@ -51,6 +51,7 @@ class TDBSCANWorkerOnline: public TDBSCANWorker
 
       bool InitLibrary();
       bool ExtractData();
+      bool NormalizeData();
       bool AnalyzeData();
       bool ProcessResults(Support &GlobalSupport);
 

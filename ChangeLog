@@ -10,6 +10,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-11-24 German Llort <german.llort@bsc.es>
+	* Fixed the offline version of the TreeDBSCAN 
+
 2014-11-21 Juan Gonzalez <juan.gonzalez@bsc.es> 
 	* Fixed a minimum regression in 'libDistributedClusteringImplementation',
 	to ensure that all backends on the TreeDBSCAN implementation are able

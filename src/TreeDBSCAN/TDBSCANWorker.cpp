@@ -53,6 +53,7 @@ using cepba_tools::FileNameManipulator;
 #include "Utils.h"
 #include "Statistics.h"
 #include "Support.h"
+#include "ClustersInfo.h"
 
 
 /**
@@ -61,6 +62,8 @@ using cepba_tools::FileNameManipulator;
 TDBSCANWorker::TDBSCANWorker()
 {
   libClustering = NULL;
+  GlobalMin.clear();
+  GlobalMax.clear();
 }
 
 
@@ -92,6 +95,8 @@ int TDBSCANWorker::Run()
   /* Delete any previous clustering */
   if (libClustering != NULL)
   {
+    GlobalMin.clear();
+    GlobalMax.clear();
     delete libClustering;
   }
 
@@ -116,8 +121,18 @@ int TDBSCANWorker::Run()
   {
     exit (EXIT_FAILURE);
   }
-
   system_messages::show_timer ("Data extraction time", t.end() );
+
+  if (!ExchangeDimensions())
+  {
+    exit(EXIT_FAILURE);
+  }
+
+  if (!NormalizeData())
+  {
+    exit(EXIT_FAILURE);
+  }
+
 
   ClusteringStats.IncreaseInputPoints ( libClustering->GetNumberOfPoints() );
 
@@ -220,21 +235,16 @@ int TDBSCANWorker::Run()
 
   system_messages::show_timer ("Clustering time", t.end() );
 
-#if 0
   Support BackendSupport(libClustering, 50);
   BackendSupport.Serialize(stSupport);
 
   Support GlobalSupport(BackendSupport);
   MRN_STREAM_RECV (stSupport, &tag, p, TAG_SUPPORT);
   GlobalSupport.Unpack(p);
-#endif
+
 
   /* Process the results and generate the output files */
-
-  /* WARNING: this 'Support' variable should be removed from here
-   * when reactivating the support management in the very previous
-   * '#if 0' */
-  Support GlobalSupport;
+  GenerateScripts();
 
   if (!ProcessResults(GlobalSupport) )
   {
@@ -243,6 +253,92 @@ int TDBSCANWorker::Run()
 
   PACKET_delete (p);
   return 0;
+}
+
+bool TDBSCANWorker::GenerateScripts()
+{
+  ostringstream Messages, ModelTitle;
+
+  /* Print local clustering plots (initial clustering on each back-end) */
+  system_messages::information ("Printing local data plot script\n");
+
+  if (!libClustering->PrintPlotScripts (OutputLocalClusteringFileName, "", true) ) // true = Local partition
+  {
+    Messages.str ("");
+    Messages << "Error printing local data plot scripts: " << libClustering->GetErrorMessage() << endl;
+    system_messages::information (Messages.str(), stderr);
+    return false;
+  }
+
+
+  /* Print the local model (all back-ends) */
+  system_messages::information ("Printing local model\n");
+
+  ModelTitle.str ("");
+  ModelTitle << "Local Hull Models BE " << WhoAmI() << " MinPoints = " << MinPoints << " Eps = " << Epsilon;
+
+  if (!libClustering->PrintModels (LocalModel,
+                                   LocalModelDataFileName,
+                                   LocalModelPlotFileNamePrefix,
+                                   ModelTitle.str() ) )
+  {
+    Messages.str ("");
+    Messages << "Error printing local model scripts: " << libClustering->GetErrorMessage() << endl;
+    system_messages::information (Messages.str(), stderr);
+    return false;
+  }
+
+  /* Print the global model (only 1 back-end) */
+  if (WhoAmI() == 0)
+  {
+    system_messages::information ("Printing global model script\n");
+
+    ModelTitle.str ("");
+    ModelTitle << "Global Model MinPoints = " << MinPoints << " Eps = " << Epsilon;
+
+    if (!libClustering->PrintModels (GlobalModel,
+                                     GlobalModelDataFileName,
+                                     GlobalModelPlotFileNamePrefix,
+                                     ModelTitle.str() ) )
+    {
+      Messages.str ("");
+      Messages << "Error printing global model script: " << libClustering->GetErrorMessage() << endl;
+      system_messages::information (Messages.str(), stderr);
+      return false;
+    }
+  }
+
+  /* Print the global clustering plots (classification using the global model) */
+  system_messages::information ("Printing global data plot script\n");
+
+  if (!libClustering->PrintPlotScripts (OutputGlobalClusteringFileName, "", false) ) // false = Global classification
+  {
+    Messages.str ("");
+    Messages << "Error printing global data plot scripts: " << libClustering->GetErrorMessage() << endl;
+    system_messages::information (Messages.str(), stderr);
+    return false;
+  }
+
+  /* Process clusters statistics */
+  vector<ClusterStatistics*> Statistics;
+
+  system_messages::information ("Retrieving local statistics per cluster\n");
+  if (!libClustering->GetClusterStatistics(Statistics))
+  {
+    Messages.str ("");
+    Messages << "Error retrieving cluster statistics: " << libClustering->GetErrorMessage() << endl;
+    system_messages::error (Messages.str());
+    return false;
+  }
+
+  Messages.str("");
+  Messages << "Received statistics from " << Statistics.size() << " clusters" << endl;
+  system_messages::information(Messages.str());
+
+  ClustersInfo CInfoData (Statistics);
+  CInfoData.Serialize(stClustering);
+
+  return true;
 }
 
 
@@ -280,9 +376,89 @@ void TDBSCANWorker::CheckOutputFile()
   ModelExtension.str ("");
   ModelExtension << "GLOBAL_CLUSTERING_" << WhoAmI();
   OutputGlobalClusteringFileName = NameManipulator.AppendStringAndExtension (ModelExtension.str(), "csv");
-
-  /* Names for the final global clustering (all back-ends data merged) */
-  FinalClusteringFileName          = NameManipulator.AppendStringAndExtension ("DATA", "csv");
-  FinalClustersInformationFileName = NameManipulator.AppendStringAndExtension ("clusters_info", "csv");
 }
 
+bool TDBSCANWorker::ExchangeDimensions()
+{
+  ostringstream Messages;
+  int tag, NumberOfDimensions=0;
+  vector<double> MinLocalDimensions, MaxLocalDimensions;
+  double *MinGlobalDimensions=NULL, *MaxGlobalDimensions=NULL;
+  PACKET_new (p);
+
+  libClustering->GetParameterRanges(MinLocalDimensions, MaxLocalDimensions);
+
+  /* DEBUG -- print the min/max local dimensions
+  Messages.str("");
+  Messages << "MinLocalDimensions = { ";
+  for (unsigned int i=0; i<MinLocalDimensions.size(); i++)
+  {
+    Messages << MinLocalDimensions[i];
+    if (i < MinLocalDimensions.size()-1)
+    {
+      Messages << ", ";
+    }
+  }
+  Messages << " }" << endl;
+  system_messages::information(Messages.str());
+
+  Messages.str("");
+  Messages << "MaxLocalDimensions = { ";
+  for (unsigned int i=0; i<MaxLocalDimensions.size(); i++)
+  {
+    Messages << MaxLocalDimensions[i];
+    if (i < MaxLocalDimensions.size()-1)
+    {
+      Messages << ", ";
+    }
+  }
+  Messages << " }" << endl;
+  system_messages::information(Messages.str());
+  */
+
+  /* Send the local dimensions range and receive the global range */
+  STREAM_send(stXchangeDims, TAG_XCHANGE_DIMENSIONS, "%alf %alf",
+    &MinLocalDimensions[0], MinLocalDimensions.size(),
+    &MaxLocalDimensions[0], MaxLocalDimensions.size());
+
+  STREAM_recv(stXchangeDims, &tag, p, TAG_XCHANGE_DIMENSIONS);
+
+  PACKET_unpack(p, "%alf %alf", &MinGlobalDimensions, &NumberOfDimensions, &MaxGlobalDimensions, &NumberOfDimensions);
+
+  for (size_t i = 0; i < NumberOfDimensions; i++)
+  {
+    GlobalMin.push_back( MinGlobalDimensions[i] );
+    GlobalMax.push_back( MaxGlobalDimensions[i] );
+  }
+
+  /* DEBUG -- print the min/max global dimensions */
+  Messages.str("");
+  Messages << "MinGlobalDimensions = { ";
+  for (unsigned int i=0; i<NumberOfDimensions; i++)
+  {
+    Messages << GlobalMin[i];
+    if (i < NumberOfDimensions-1)
+    {
+      Messages << ", ";
+    }
+  }
+  Messages << " }" << endl;
+  system_messages::information(Messages.str());
+
+  Messages.str("");
+  Messages << "MaxGlobalDimensions = { ";
+  for (unsigned int i=0; i<NumberOfDimensions; i++)
+  {
+    Messages << GlobalMax[i];
+    if (i < NumberOfDimensions-1)
+    {
+      Messages << ", ";
+    }
+  }
+  Messages << " }" << endl;
+  system_messages::information(Messages.str());
+
+  xfree(MinGlobalDimensions);
+  xfree(MaxGlobalDimensions);
+  PACKET_delete(p);
+}

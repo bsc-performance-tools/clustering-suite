@@ -48,7 +48,11 @@
 class TDBSCANRoot : public TDBSCANCore, public FrontProtocol
 {
   private:
-//    libDistributedClustering *libClustering;
+      string OutputGlobalClusteringFileName;
+      libDistributedClustering *libClustering;
+
+  protected:
+      string OutputPrefix;
 
   public:
     TDBSCANRoot (double Eps,

@@ -48,8 +48,8 @@ using std::endl;
 #include <fstream>
 
 /* Configuration variables */
-double Epsilon   = 0.015;
-int    MinPoints = 10;
+double Epsilon   = -1;
+int    MinPoints = -1;
 string ClusteringDefinitionXML;  /* Clustering definition XML file name -- Epsilon and MinPoints are ignored! */
 string InputTraceName;           /* Input trace name */
 string OutputFileName;           /* Data extracted from input trace */

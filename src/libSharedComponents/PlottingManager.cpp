@@ -155,7 +155,16 @@ bool PlottingManager::PrintPlots(string             PlotsDataFileName,
   */
 
   /* Check the paths */
-  string DataFileName(basename((char*) PlotsDataFileName.c_str()));
+  string DataFileName;
+
+  if (PlotsDataFileName.compare(0, 5, "< cat") != 0)
+  {
+    DataFileName = basename((char*) PlotsDataFileName.c_str());
+  }
+  else
+  {
+    DataFileName = PlotsDataFileName;
+  }
 
   for (size_t i = 0; i < Plots.size(); i++)
   {

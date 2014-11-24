@@ -94,96 +94,15 @@ bool TDBSCANWorkerOnline::InitLibrary(void)
  */
 bool TDBSCANWorkerOnline::ExtractData(void)
 {
-  ostringstream Messages;
-
-  int tag, NumberOfDimensions=0, InputSize=0;
-  vector<double> MinLocalDimensions, MaxLocalDimensions;
-  double *MinGlobalDimensions=NULL, *MaxGlobalDimensions=NULL;
-  PACKET_new(p);
-
   DataExtractCallback(libClustering);
 
-  libClustering->GetParameterRanges(MinLocalDimensions, MaxLocalDimensions);
+  return true;
+}
 
-  /* DEBUG -- print the min/max local dimensions
-  Messages.str("");
-  Messages << "MinLocalDimensions = { ";
-  for (unsigned int i=0; i<MinLocalDimensions.size(); i++)
-  {
-    Messages << MinLocalDimensions[i];
-    if (i < MinLocalDimensions.size()-1)
-    {
-      Messages << ", ";
-    }
-  }
-  Messages << " }" << endl;
-  system_messages::information(Messages.str());
-
-  Messages.str("");
-  Messages << "MaxLocalDimensions = { ";
-  for (unsigned int i=0; i<MaxLocalDimensions.size(); i++)
-  {
-    Messages << MaxLocalDimensions[i];
-    if (i < MaxLocalDimensions.size()-1)
-    {
-      Messages << ", ";
-    }
-  }
-  Messages << " }" << endl;
-  system_messages::information(Messages.str());
-  */
-
-  /* Send the local dimensions range and receive the global range */
-  STREAM_send(stXchangeDims, TAG_XCHANGE_DIMENSIONS, "%alf %alf",
-    &MinLocalDimensions[0], MinLocalDimensions.size(),
-    &MaxLocalDimensions[0], MaxLocalDimensions.size());
-
-  STREAM_recv(stXchangeDims, &tag, p, TAG_XCHANGE_DIMENSIONS);
-
-  PACKET_unpack(p, "%alf %alf", &MinGlobalDimensions, &NumberOfDimensions, &MaxGlobalDimensions, &NumberOfDimensions);
-
-  vector<double> GlobalMin(MinGlobalDimensions, MinGlobalDimensions + NumberOfDimensions);
-  vector<double> GlobalMax(MaxGlobalDimensions, MaxGlobalDimensions + NumberOfDimensions);
-
-  for (size_t i = 0; i < NumberOfDimensions; i++)
-  {
-    GlobalMin[i] = MinGlobalDimensions[i];
-    GlobalMax[i] = MaxGlobalDimensions[i];
-  }
-
-  /* DEBUG -- print the min/max global dimensions */
-  Messages.str("");
-  Messages << "MinGlobalDimensions = { ";
-  for (unsigned int i=0; i<NumberOfDimensions; i++)
-  {
-    Messages << GlobalMin[i];
-    if (i < NumberOfDimensions-1)
-    {
-      Messages << ", ";
-    }
-  }
-  Messages << " }" << endl;
-  system_messages::information(Messages.str());
-
-  Messages.str("");
-  Messages << "MaxGlobalDimensions = { ";
-  for (unsigned int i=0; i<NumberOfDimensions; i++)
-  {
-    Messages << GlobalMax[i];
-    if (i < NumberOfDimensions-1)
-    {
-      Messages << ", ";
-    }
-  }
-  Messages << " }" << endl;
-  system_messages::information(Messages.str());
-
+bool TDBSCANWorkerOnline::NormalizeData(void)
+{
   /* Normalize the input data with the global dimensions */
   libClustering->NormalizeData( GlobalMin, GlobalMax );
-
-  xfree(MinGlobalDimensions);
-  xfree(MaxGlobalDimensions);
-  PACKET_delete(p);
 
   return true;
 }
@@ -207,165 +126,24 @@ bool TDBSCANWorkerOnline::AnalyzeData(void)
 
 
 /**
- * Prints the output plots.
+ * Send the clusters information to the tracing library
  * @return true on success; false otherwise.
  */
 bool TDBSCANWorkerOnline::ProcessResults(Support &GlobalSupport)
 {
-
-#if 0
-  ofstream LocalDataFile, GlobalDataFile;
-  LocalDataFile.open (LocalModelDataFileName.c_str());
-
-  /* Print the local model */
-  for (unsigned int i=0; i<LocalModel.size(); i++)
-  {
-    if (!LocalModel[i]->Flush(LocalDataFile, MIN_CLUSTERID+i+PARAVER_OFFSET))
-    {
-      ostringstream Messages;
-      Messages << "Error writing local hull #" << i;
-      Messages << " data (density=" << GlobalModel[i]->Density() << "): ";
-      Messages << libClustering->GetErrorMessage() << endl;
-      system_messages::information(Messages.str(), stderr);
-      return false;
-    }
-  }
-  LocalDataFile.close();
-
-  /* Print the global model */
-  if (WhoAmI() == 0)
-  {
-    GlobalDataFile.open (GlobalModelDataFileName.c_str());
-
-    for (unsigned int i=0; i<GlobalModel.size(); i++)
-    {
-      if (!GlobalModel[i]->Flush(GlobalDataFile, MIN_CLUSTERID+i+PARAVER_OFFSET))
-      {
-        ostringstream Messages;
-
-        GlobalDataFile.close();
-
-        Messages << "Error writing global hull #" << i;
-        Messages << " data (density=" << GlobalModel[i]->Density() << "): ";
-        Messages << libClustering->GetErrorMessage() << endl;
-        system_messages::information(Messages.str(), stderr);
-        return false;
-      }
-    }
-
-    GlobalDataFile.close();
-  }
-#else
-  ostringstream ModelTitle, Messages;
-  cepba_tools::Timer t;
+  ostringstream Messages;
 
   vector<Point *>      Points;
-/*
-  vector<task_id_t>    TaskIDs;
-  vector<thread_id_t>  ThreadIDs;
-*/
   vector<timestamp_t>  BeginTimes;
   vector<timestamp_t>  EndTimes;
   vector<cluster_id_t> ClusterIDs;
 
-  libClustering->GetFullBurstsInformation(Points, /* TaskIDs, ThreadIDs, */ BeginTimes, EndTimes, ClusterIDs);
+  libClustering->GetFullBurstsInformation(Points, BeginTimes, EndTimes, ClusterIDs);
 
   vector<int> BurstsSupport;
   GlobalSupport.GetSupport( BurstsSupport );
 
-
   DataFeedCallback( BeginTimes, EndTimes, ClusterIDs, BurstsSupport );
-
-  if (WhoAmI() == 0)
-  {
-    /* Print the global model (only 1 back-end) */
-    system_messages::information ("Printing global model script\n");
-
-    ModelTitle.str ("");
-    ModelTitle << "Global Model MinPoints = " << MinPoints << " Eps = " << Epsilon;
-
-    // fprintf(stderr, "[DEBUG PrintModels] %s %s\n", GlobalModelDataFileName.c_str(), GlobalModelPlotFileNamePrefix.c_str());
-
-    if (!libClustering->PrintModels (GlobalModel,
-                                     GlobalModelDataFileName,
-                                     GlobalModelPlotFileNamePrefix,
-                                     ModelTitle.str() ) )
-    {
-      Messages.str ("");
-      Messages << "Error printing global model script: " << libClustering->GetErrorMessage() << endl;
-      system_messages::information (Messages.str(), stderr);
-      return false;
-    }
-  }
-
-  /* Print the local model (all back-ends) */
-  system_messages::information ("Printing local model\n");
-
-  ModelTitle.str ("");
-  ModelTitle << "Local Hull Models BE " << WhoAmI() << " MinPoints = " << MinPoints << " Eps = " << Epsilon;
-
-  if (!libClustering->PrintModels (LocalModel,
-                                   LocalModelDataFileName,
-                                   LocalModelPlotFileNamePrefix,
-                                   ModelTitle.str() ) )
-  {
-    Messages.str ("");
-    Messages << "Error printing local model scripts: " << libClustering->GetErrorMessage() << endl;
-    system_messages::information (Messages.str(), stderr);
-    return false;
-  }
-
-  /* Print local clustering plots (initial clustering on each back-end) */
-  system_messages::information ("Printing local data plot script\n");
-
-  if (!libClustering->PrintPlotScripts (OutputLocalClusteringFileName, "", true) ) // true = Local partition
-  {
-    Messages.str ("");
-    Messages << "Error printing local data plot scripts: " << libClustering->GetErrorMessage() << endl;
-    system_messages::information (Messages.str(), stderr);
-    return false;
-  }
-
-  /* Print the global clustering plots (classification using the global model) */
-  system_messages::information ("Printing global data plot script\n");
-
-  if (!libClustering->PrintPlotScripts (OutputGlobalClusteringFileName, "", false) ) // false = Global classification
-  {
-    Messages.str ("");
-    Messages << "Error printing global data plot scripts: " << libClustering->GetErrorMessage() << endl;
-    system_messages::information (Messages.str(), stderr);
-    return false;
-  }
-
-  /* DEBUG: Print local clustering plots (initial clustering on each back-end) */
-  system_messages::information ("Retrieving local statistics per cluster\n");
-
-  vector<ClusterStatistics*> Statistics;
-
-  if (!libClustering->GetClusterStatistics(Statistics))
-  {
-    Messages.str ("");
-    Messages << "Error retrieving cluster statistics: " << libClustering->GetErrorMessage() << endl;
-    system_messages::error (Messages.str());
-    return false;
-  }
-
-  if (WhoAmI() == 0)
-  {
-    int k = 0;
-    for (k=0; k<Statistics.size(); k++)
-    {
-      cerr << "Cluster " << k+1 << endl << *(Statistics[k]) << endl;
-    }
-  }
-
-  Messages.str("");
-  Messages << "Received statistics from " << Statistics.size() << " clusters" << endl;
-  system_messages::information(Messages.str());
-
-  ClustersInfo CInfoData (Statistics);
-  CInfoData.Serialize(stClustering);
-#endif
 
   return true;
 }

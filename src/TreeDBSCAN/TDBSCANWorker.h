@@ -55,8 +55,11 @@ class TDBSCANWorker : public TDBSCANCore, public BackProtocol
 
       virtual bool InitLibrary(void) = 0;
       virtual bool ExtractData(void) = 0;
+      virtual bool NormalizeData(void) { return true; };
       virtual bool AnalyzeData(void) = 0;
       virtual bool ProcessResults(Support &GlobalSupport) { return true; };
+   private:
+      bool ExchangeDimensions(void);
 
    protected:
       libDistributedClustering *libClustering;
@@ -75,8 +78,12 @@ class TDBSCANWorker : public TDBSCANCore, public BackProtocol
       string FinalClusteringFileName;
       string FinalClustersInformationFileName;
 
+      vector<double> GlobalMin;
+      vector<double> GlobalMax;
+
    private:
       void CheckOutputFile();
+      bool GenerateScripts();
 };
 
 #endif /* __TDBSCAN_WORKER_H__ */
