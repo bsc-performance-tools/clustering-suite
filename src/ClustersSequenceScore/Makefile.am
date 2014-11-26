@@ -1,23 +1,24 @@
 ## Process this file with automake to produce Makefile.in
-
 bin_PROGRAMS =  \
-	ClustersSequenceScore
+	ClustersSequenceScore.bin
 
-ClustersSequenceScore_SOURCES =  \
+ClustersSequenceScore_bin_SOURCES =  \
 	ClustersSequenceScore.cpp
 
-ClustersSequenceScore_CPPFLAGS =\
+ClustersSequenceScore_bin_CPPFLAGS =\
  @CLUSTERING_CPPFLAGS@\
  -I$(top_srcdir)/src/libClustering\
  -I$(top_srcdir)/src/libTraceClustering\
  -I$(top_srcdir)/src/libSharedComponents\
  -I$(top_srcdir)/pcfparser_svn1816
 
-ClustersSequenceScore_LDFLAGS  = @CLUSTERING_LDFLAGS@
+ClustersSequenceScore_bin_LDFLAGS  = @CLUSTERING_LDFLAGS@
 
-ClustersSequenceScore_LDADD = \
+ClustersSequenceScore_bin_LDADD = \
  $(top_srcdir)/src/libTraceClustering/libTraceClustering.la\
  $(top_srcdir)/src/libClustering/libClustering.la\
  $(top_srcdir)/src/BasicClasses/libBasicClasses.la\
  @CLUSTERING_LIBS@
 
+EXTRA_DIST=ClustersSequenceScore
+bin_SCRIPTS=ClustersSequenceScore

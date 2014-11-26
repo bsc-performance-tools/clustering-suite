@@ -10,6 +10,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-11-25 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.3
+	* Added wrapping scripts to invoke the different binaries, so as to 
+	minimize the possible conflicts related to dynamic libraries
+
 2014-11-24 German Llort <german.llort@bsc.es>
 	* Fixed the offline version of the TreeDBSCAN 
 
@@ -18,7 +22,7 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	to ensure that all backends on the TreeDBSCAN implementation are able
 	to correctly assign the IDs to each local points
 
-2014-11-15 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.3
+2014-11-15 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.3 (FAILED)
 	* Polished the building system. It didn't work properly when compiling
 	without Tree DBSCAN support due to the spaces in 'test' operation
 	comparison. Solution seen in:
