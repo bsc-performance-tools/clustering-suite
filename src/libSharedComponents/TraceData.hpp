@@ -99,8 +99,8 @@ class TraceData: public Error
     ParametersManager *Parameters;
 
     /* Sampling attributes */
-    size_t            NumberOfTasks;
-    bool              SampleData;
+    size_t             NumberOfTasks;
+    bool               SampleData;
 
     size_t ClusteringDimensions;
     size_t ExtrapolationDimensions;
@@ -152,7 +152,7 @@ class TraceData: public Error
                   duration_t                        BurstDuration,
                   map<event_type_t, event_value_t>& EventsData,
                   bool                              toCluster = true);
-	
+
     bool NewBurst(instance_t           Instance,
                   task_id_t            TaskId,
                   thread_id_t          ThreadId,
@@ -196,6 +196,7 @@ class TraceData: public Error
 
     /* Clustering points modifiers */
     bool  Normalize(void);
+    bool  Normalize(vector<double>& MinValues, vector<double>& MaxValues);
     void  ScalePoints(void);
     void  MeanAdjust(void);
     void  BaseChange(vector< vector<double> >& BaseChangeMatrix);
@@ -236,6 +237,8 @@ class TraceData: public Error
     void PrintTraceDataInformation(void);
 
   private:
+
+    bool ActualNormalize(void);
 
     bool SampleSingleTask(vector<CPUBurst*>& TaskBursts, size_t NumSamples);
 

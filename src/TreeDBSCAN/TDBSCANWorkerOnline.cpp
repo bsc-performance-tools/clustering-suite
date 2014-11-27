@@ -99,14 +99,6 @@ bool TDBSCANWorkerOnline::ExtractData(void)
   return true;
 }
 
-bool TDBSCANWorkerOnline::NormalizeData(void)
-{
-  /* Normalize the input data with the global dimensions */
-  libClustering->NormalizeData( GlobalMin, GlobalMax );
-
-  return true;
-}
-
 
 /**
  * Analyzes the data fetched from the tracing runtime.

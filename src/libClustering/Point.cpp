@@ -116,6 +116,7 @@ Point::RangeNormalization(const vector<double>& MaxValues,
   */
 
 
+
   for (size_t i = 0; i < Dimensions.size(); i++)
   {
     BaseValue = Dimensions[i];

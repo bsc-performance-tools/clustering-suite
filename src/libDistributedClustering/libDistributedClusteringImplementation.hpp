@@ -49,27 +49,32 @@ class libDistributedClusteringImplementation;
 class libDistributedClusteringImplementation: public Error
 {
   private:
-    bool           Root;
-    TraceData     *Data;
-    libClustering *ClusteringCore;
-    Partition      LastPartition;
-    Partition      ClassificationPartition;
+    bool                    Root;
+    TraceData              *Data;
+    libClustering          *ClusteringCore;
 
-    bool                 UsingExternalData;
-    vector<const Point*> ExternalData;
-    vector<long long>    ExternalDataDurations;
+    vector<ConvexHullModel> GlobalModelHulls;
+    Partition               LastPartition;
+    Partition               ClassificationPartition;
+    Partition               TraceReconstructionPartition;
 
-    string         InputFileName;
-    input_file_t   InputFileType;
+    bool                    UsingExternalData;
+    vector<const Point*>    ExternalData;
+    vector<long long>       ExternalDataDurations;
 
-    double         Epsilon;
-    INT32          MinPoints;
+    string                  InputFileName;
+    input_file_t            InputFileType;
 
-    bool              PRVEventsParsing;
-    set<event_type_t> EventsToDealWith;
-    bool              ConsecutiveEvts;
+    double                  Epsilon;
+    INT32                   MinPoints;
 
-    ClusteringStatistics     Statistics;
+    bool                    PRVEventsParsing;
+    set<event_type_t>       EventsToDealWith;
+    bool                    ConsecutiveEvts;
+
+    vector<ConvexHullModel> InternalHulls;
+
+    ClusteringStatistics    Statistics;
 
     /*
     bool                  ClusteringExecuted;

@@ -514,15 +514,15 @@ bool libDistributedClusteringImplementation::ClusterAnalysis(vector<HullModel*>&
  */
 bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& ClusterModels)
 {
-  vector<ConvexHullModel> InternalHulls;
+
 
   for (size_t i = 0; i < ClusterModels.size(); i++)
   {
     ConvexHullModel* CurrentConvexHull = ClusterModels[i]->Model();
-    InternalHulls.push_back(*CurrentConvexHull);
+    GlobalModelHulls.push_back(*CurrentConvexHull);
   }
 
-  ConvexHullClassifier ClassifierCore(InternalHulls, Epsilon, MinPoints);
+  ConvexHullClassifier ClassifierCore(GlobalModelHulls, Epsilon, MinPoints);
 
   /* DEBUG
   ostringstream Messages;
@@ -539,13 +539,6 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& Cl
   }
   else
   {
-    /*
-    ClassifierCore.Classify(Data->GetClusteringBursts().begin(),
-                            Data->GetClusteringBursts().end(),
-                            Data->GetClusteringBursts().size(),
-                            ClassificationPartition);
-    */
-
 #ifdef HAVE_SQLITE3
 
     // ostringstream Messages;
@@ -557,9 +550,10 @@ bool libDistributedClusteringImplementation::ClassifyData(vector<HullModel*>& Cl
                             Data->GetCompleteBurstsSize(),
                             ClassificationPartition);
 #else
-    ClassifierCore.Classify(Data->GetCompleteBursts().begin(),
-                            Data->GetCompleteBursts().end(),
-                            Data->GetCompleteBursts().size(),
+
+    ClassifierCore.Classify(Data->GetClusteringBursts().begin(),
+                            Data->GetClusteringBursts().end(),
+                            Data->GetClusteringBursts().size(),
                             ClassificationPartition);
 #endif
   }
@@ -616,7 +610,16 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
     }
 #else
 
+
+    /* The statistics only take into account the ClusteringBursts
     if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
+                                      ClassificationPartition.GetAssignmentVector()))
+    {
+      SetErrorMessage(Statistics.GetLastError());
+      return false;
+    }
+    */
+    if (!Statistics.ComputeStatistics(Data->GetClusteringBursts(),
                                       ClassificationPartition.GetAssignmentVector()))
     {
       SetErrorMessage(Statistics.GetLastError());
@@ -669,15 +672,27 @@ bool libDistributedClusteringImplementation::GenerateStatistics (bool UseClassif
  */
 bool libDistributedClusteringImplementation::ReconstructInputTrace(string OutputTraceName)
 {
-  if (ClassificationPartition.NumberOfClusters() == 0)
+  ConvexHullClassifier ClassifierCore(GlobalModelHulls, Epsilon, MinPoints);
+
+  /* Only the "root worker" may run the trace reconstruction! */
+  if (!Root)
   {
-    SetError(true);
-    SetErrorMessage("classification not performed");
+    return false;
   }
 
-  vector<cluster_id_t>& IDs = ClassificationPartition.GetAssignmentVector();
+  /* First, classify the 'CompleteBursts' collection */
+  ClassifierCore.Classify(Data->GetCompleteBursts().begin(),
+                          Data->GetCompleteBursts().end(),
+                          Data->GetCompleteBursts().size(),
+                          TraceReconstructionPartition);
 
-  if (IDs.size() == 0)
+  if (TraceReconstructionPartition.NumberOfClusters() == 0)
+  {
+    SetError(true);
+    SetErrorMessage("number of clusters equals to 0, input trace reconstruction not available");
+  }
+
+  if (TraceReconstructionPartition.GetAssignmentVector().size() == 0)
   {
     SetErrorMessage("no cluster analysis data available to reconstruct the input trace");
     return false;
@@ -706,8 +721,8 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
 #else
         if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
                                      Data->GetAllBursts().end(),
-                                     ClassificationPartition.GetAssignmentVector(),
-                                     ClassificationPartition.GetIDs()))
+                                     TraceReconstructionPartition.GetAssignmentVector(),
+                                     TraceReconstructionPartition.GetIDs()))
         {
           SetErrorMessage(TraceReconstructor->GetLastError());
           return false;
@@ -732,8 +747,8 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
 #else
         if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
                                      Data->GetAllBursts().end(),
-                                     ClassificationPartition.GetAssignmentVector(),
-                                     ClassificationPartition.GetIDs()))
+                                     TraceReconstructionPartition.GetAssignmentVector(),
+                                     TraceReconstructionPartition.GetIDs()))
         {
           SetErrorMessage(TraceReconstructor->GetLastError());
           return false;
@@ -760,8 +775,8 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
 #else
       if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
                                    Data->GetAllBursts().end(),
-                                   ClassificationPartition.GetAssignmentVector(),
-                                   ClassificationPartition.GetIDs()))
+                                   TraceReconstructionPartition.GetAssignmentVector(),
+                                   TraceReconstructionPartition.GetIDs()))
       {
         SetErrorMessage(TraceReconstructor->GetLastError());
         return false;
@@ -776,8 +791,8 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
 
       if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
                                    Data->GetAllBursts().end(),
-                                   ClassificationPartition.GetAssignmentVector(),
-                                   ClassificationPartition.GetIDs()))
+                                   TraceReconstructionPartition.GetAssignmentVector(),
+                                   TraceReconstructionPartition.GetIDs()))
       {
         SetErrorMessage(TraceReconstructor->GetLastError());
         return false;
@@ -1029,10 +1044,7 @@ void libDistributedClusteringImplementation::GetParameterRanges(vector<double>& 
 void libDistributedClusteringImplementation::NormalizeData(vector<double>& MinValues,
                                                            vector<double>& MaxValues)
 {
-  Data->SetMinValues(MinValues);
-  Data->SetMaxValues(MaxValues);
-
-  Data->Normalize();
+  Data->Normalize(MinValues, MaxValues);
 
   return;
 }
@@ -1650,6 +1662,7 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
   {
     DataPrintSet WhatToPrint;
 
+    /*
     if (Root)
     {
       WhatToPrint = PrintCompleteBursts;
@@ -1658,10 +1671,11 @@ bool libDistributedClusteringImplementation::FlushData(string DataFileName, bool
     {
       WhatToPrint = PrintClusteringBursts;
     }
+    */
 
     if (!Data->FlushPoints(OutputStream,
                            ClassificationPartition.GetAssignmentVector(),
-                           WhatToPrint))
+                           PrintClusteringBursts))
     {
       SetError(true);
       SetErrorMessage("error flushing global points", Data->GetLastError());

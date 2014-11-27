@@ -150,7 +150,11 @@ TraceData::TraceData(void)
 /****************************************************************************
  * NewBurst
  ***************************************************************************/
-
+/**
+ * 2014/11/27: Now, this version of NewBurst calls directly to the third
+ * implementation. Here we just transform the EventsData map to the
+ * corresponding vectors required for the further implementation
+ */
 bool TraceData::NewBurst(task_id_t                         TaskId,
                          thread_id_t                       ThreadId,
                          line_t                            Line,
@@ -229,6 +233,20 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
     return true;
   }
 
+  return NewBurst(std::numeric_limits<instance_t>::max(), // When we access by this method, no instance is defined
+                  TaskId,
+                  ThreadId,
+                  Line,
+                  BeginTime,
+                  EndTime,
+                  BurstDuration,
+                  ClusteringRawData,
+                  ClusteringProcessedData,
+                  ExtrapolationData,
+                  BurstType);
+
+#if 0
+
   Burst = new CPUBurst (TaskId,
                         ThreadId,
                         Line,
@@ -262,15 +280,28 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
 
   if (BurstType == CompleteBurst)
   {
+
+    /*
     if (Master || ReadThisTask(TaskId))
     {
       if (TaskId > NumberOfTasks)
-      { /* Keep track of the total number of tasks */
+      { /* Keep track of the total number of tasks
         NumberOfTasks = TaskId;
       }
 #ifndef HAVE_SQLITE3
       CompleteBursts.push_back(Burst);
 #endif
+    }
+    */
+
+    if (ReadThisTask(TaskId))
+    {
+      ClusteringBursts.push_back(Burst);
+    }
+
+    if (Master)
+    {
+      CompleteBursts.push_back(Burst);
     }
 
     for (size_t i = 0; i < ClusteringDimensions; i++)
@@ -290,31 +321,30 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
       SumValues[i] += ClusteringProcessedData[i];
     }
 
+    /*
     if (ReadThisTask(TaskId))
     {
       ClusteringBursts.push_back(Burst);
     }
+    */
   }
 
-  if (!ReadThisTask(TaskId))
+  if (!ReadThisTask(TaskId) && !Master)
   {
-    if (!Master)
-    {
-      delete Burst;
-    }
+    delete Burst;
+  }
 #ifdef HAVE_SQLITE3
     if (Master)
     {
       delete Burst;
     }
 #endif
-  }
 
   /* DEBUG
   cout << "ClusteringBursts.size = " << ClusteringBursts.size() << endl;
   cout << "BurstType = " << BurstType << endl;
   */
-
+#endif
   return true;
 }
 
@@ -322,23 +352,23 @@ bool TraceData::NewBurst(task_id_t                         TaskId,
  * NewBurst
  ***************************************************************************/
 /** 2014/08/28: This version of 'NewBurst' is essentially an adapter to call
-  * it from the TreeDBSCAN, avoiding the requirement of providing the 
+  * it from the TreeDBSCAN, avoiding the requirement of providing the
   * BurstEnd events, closely related to the Trace based clustering
   */
 bool TraceData::NewBurst(task_id_t                         TaskId,
-				         thread_id_t                       ThreadId,
-				         line_t                            Line,
-				         timestamp_t                       BeginTime,
-				         timestamp_t                       EndTime,
-				         duration_t                        BurstDuration,
-				         map<event_type_t, event_value_t>& EventsData,
-				         bool                              toCluster)
+                         thread_id_t                       ThreadId,
+                         line_t                            Line,
+                         timestamp_t                       BeginTime,
+                         timestamp_t                       EndTime,
+                         duration_t                        BurstDuration,
+                         map<event_type_t, event_value_t>& EventsData,
+                         bool                              toCluster)
 {
   set<event_type_t> FakeBurstEndEvents;
 
   for(std::map<event_type_t, event_value_t>::iterator iter  = EventsData.begin();
-													  iter != EventsData.end();
-                                                      ++iter)
+      iter != EventsData.end();
+      ++iter)
   {
     FakeBurstEndEvents.insert(iter->first);
   }
@@ -369,17 +399,34 @@ bool TraceData::NewBurst(instance_t           Instance,
                          map<size_t, double> &ExtrapolationData,
                          burst_type_t         BurstType)
 {
-  CPUBurst *Burst = new CPUBurst (Instance,
-                                  TaskId,
-                                  ThreadId,
-                                  Line,
-                                  BeginTime,
-                                  EndTime,
-                                  BurstDuration,
-                                  ClusteringRawData,
-                                  ClusteringProcessedData,
-                                  ExtrapolationData,
-                                  BurstType);
+  CPUBurst *Burst;
+  if (Instance == std::numeric_limits<instance_t>::max())
+  {
+    Burst = new CPUBurst (TaskId,
+                          ThreadId,
+                          Line,
+                          BeginTime,
+                          EndTime,
+                          BurstDuration,
+                          ClusteringRawData,
+                          ClusteringProcessedData,
+                          ExtrapolationData,
+                          BurstType);
+  }
+  else
+  {
+    Burst = new CPUBurst (Instance,
+                          TaskId,
+                          ThreadId,
+                          Line,
+                          BeginTime,
+                          EndTime,
+                          BurstDuration,
+                          ClusteringRawData,
+                          ClusteringProcessedData,
+                          ExtrapolationData,
+                          BurstType);
+  }
 
   /* DEBUG
   ostringstream Messages;
@@ -422,38 +469,52 @@ bool TraceData::NewBurst(instance_t           Instance,
 
   if (BurstType == CompleteBurst)
   {
+    /*
     if (Master || ReadThisTask(TaskId))
     {
       if (TaskId > NumberOfTasks)
-      { /* Keep track of the total number of tasks */
+      { /* Keep track of the total number of tasks
         NumberOfTasks = TaskId;
       }
 #ifndef HAVE_SQLITE3
       CompleteBursts.push_back(Burst);
 #endif
     }
-
-    for (size_t i = 0; i < ClusteringDimensions; i++)
-    {
-      if (ClusteringProcessedData[i] > MaxValues[i])
-      {
-        MaxValues[i]    = ClusteringProcessedData[i];
-        MaxInstances[i] = Burst->GetInstance();
-      }
-
-      if (ClusteringProcessedData[i] < MinValues[i])
-      {
-        MinValues[i]    = ClusteringProcessedData[i];
-        MinInstances[i] = Burst->GetInstance();
-      }
-
-      SumValues[i] += ClusteringProcessedData[i];
-    }
+    */
 
     if (ReadThisTask(TaskId))
     {
       ClusteringBursts.push_back(Burst);
+
+      for (size_t i = 0; i < ClusteringDimensions; i++)
+      {
+        if (ClusteringProcessedData[i] > MaxValues[i])
+        {
+          MaxValues[i]    = ClusteringProcessedData[i];
+          MaxInstances[i] = Burst->GetInstance();
+        }
+
+        if (ClusteringProcessedData[i] < MinValues[i])
+        {
+          MinValues[i]    = ClusteringProcessedData[i];
+          MinInstances[i] = Burst->GetInstance();
+        }
+
+        SumValues[i] += ClusteringProcessedData[i];
+      }
     }
+
+    if (Master)
+    {
+      CompleteBursts.push_back(Burst);
+    }
+
+    /*
+    if (ReadThisTask(TaskId))
+    {
+      ClusteringBursts.push_back(Burst);
+    }
+    */
   }
 
   if (!Master && !ReadThisTask(TaskId))
@@ -555,14 +616,166 @@ bool TraceData::Sampling(size_t MaxSamples)
   return true;
 }
 
+/* This method avoids to call the normalization using the
+ * internal ranges */
 bool TraceData::Normalize(void)
+{
+  if (TraceData::distributed)
+  {
+    return true;
+  }
+  else
+  {
+    return ActualNormalize();
+  }
+}
+
+
+bool TraceData::Normalize(vector<double>& MinValues,
+                          vector<double>& MaxValues)
+{
+  SetMinValues(MinValues);
+  SetMaxValues(MaxValues);
+
+  return ActualNormalize();
+}
+
+bool TraceData::ActualNormalize(void)
 {
   bool EmptyRanges = true;
 
   TraceData::iterator DataIterator;
 
-  if (NormalizeData && !Normalized)
+  vector<double> Factors = Parameters->GetClusteringParametersFactors();
+
+  /* Check parameters ranges */
+  for (size_t i = 0; i < MaxValues.size(); i++)
   {
+    if (MaxValues[i] !=  MinValues[i])
+    {
+      EmptyRanges = false;
+      break;
+    }
+  }
+
+  if (EmptyRanges)
+  {
+    SetError(true);
+    SetErrorMessage("all clustering parameters have empty ranges");
+    Normalized = false;
+    return false;
+  }
+
+  ostringstream Messages;
+  Messages.str("");
+  Messages << "'TraceData::Normalize' MinValues = { ";
+  for (unsigned int i=0; i<MinValues.size(); i++)
+  {
+    Messages << MinValues[i];
+    if (i < MinValues.size()-1)
+    {
+      Messages << ", ";
+    }
+  }
+  Messages << " }" << endl;
+  system_messages::information(Messages.str());
+
+  Messages.str("");
+  Messages << "'TraceData::Normalize' MaxValues = { ";
+  for (unsigned int i=0; i<MaxValues.size(); i++)
+  {
+    Messages << MaxValues[i];
+    if (i < MaxValues.size()-1)
+    {
+      Messages << ", ";
+    }
+  }
+  Messages << " }" << endl;
+  system_messages::information(Messages.str());
+
+
+  if (Master)
+  {
+    for (DataIterator  = CompleteBursts.begin();
+         DataIterator != CompleteBursts.end();
+         DataIterator++)
+    {
+      if (!(*DataIterator)->IsNormalized())
+      {
+        (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
+      }
+    }
+  }
+  else
+  {
+    for (DataIterator  = ClusteringBursts.begin();
+         DataIterator != ClusteringBursts.end();
+         DataIterator++)
+    {
+      if (!(*DataIterator)->IsNormalized())
+      {
+        (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
+      }
+    }
+  }
+  /*
+  for (DataIterator  = CompleteBursts.begin();
+       DataIterator != CompleteBursts.end();
+       DataIterator++)
+  {
+    if (!(*DataIterator)->IsNormalized())
+    {
+      (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
+    }
+  }
+  */
+  for (DataIterator  = FilteredBursts.begin();
+       DataIterator != FilteredBursts.end();
+       DataIterator++)
+  {
+    if (!(*DataIterator)->IsNormalized())
+    {
+      (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
+    }
+  }
+
+  Normalized = true;
+
+  return true;
+
+  /* DEBUG
+  cout << "MaxValues = { ";
+  for (INT32 i = 0; i < MaxValues.size(); i++)
+  {
+    cout << MaxValues[i] << " ";
+  }
+  cout << "}" << endl;
+
+  cout << "MaxInstances = { ";
+  for (INT32 i = 0; i < MaxInstances.size(); i++)
+  {
+    cout << MaxInstances[i] << " ";
+  }
+  cout << "}" << endl;
+
+  cout << "MinValues = { ";
+  for (INT32 i = 0; i < MinValues.size(); i++)
+  {
+    cout << MinValues[i] << " ";
+  }
+  cout << "}" << endl;
+
+  cout << "MinInstances = { ";
+  for (INT32 i = 0; i < MinInstances.size(); i++)
+  {
+    cout << MinInstances[i] << " ";
+  }
+  cout << "}" << endl;
+  */
+
+  /* It is possible to normalize the data multiple times
+  if (NormalizeData && !Normalized)
+    {
     /* DEBUG
     cout << "MaxValues = { ";
     for (INT32 i = 0; i < MaxValues.size(); i++)
@@ -653,25 +866,7 @@ bool TraceData::Normalize(void)
     } */
 #endif
 
-    vector<double> Factors = Parameters->GetClusteringParametersFactors();
 
-    /* Check parameters ranges */
-    for (size_t i = 0; i < MaxValues.size(); i++)
-    {
-      if (MaxValues[i] !=  MinValues[i])
-      {
-        EmptyRanges = false;
-        break;
-      }
-    }
-
-    if (EmptyRanges)
-    {
-      SetError(true);
-      SetErrorMessage("all clustering parameters have empty ranges");
-      Normalized = false;
-      return false;
-    }
 
 #ifdef HAVE_SQLITE3
     if (Master)
@@ -715,34 +910,10 @@ bool TraceData::Normalize(void)
     }
 #else
 
-    for (DataIterator  = CompleteBursts.begin();
-         DataIterator != CompleteBursts.end();
-         DataIterator++)
-    {
-      if (!(*DataIterator)->IsNormalized())
-      {
-        (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
-      }
-    }
-    for (DataIterator  = FilteredBursts.begin();
-         DataIterator != FilteredBursts.end();
-         DataIterator++)
-    {
-      if (!(*DataIterator)->IsNormalized())
-      {
-        (*DataIterator)->RangeNormalization(MaxValues, MinValues, Factors);
-      }
-    }
+
+
 #endif
 
-
-
-    // cout << "END OF NORMALIZATIONS" << endl;
-
-    Normalized = true;
-  }
-
-  return true;
 }
 
 void TraceData::ScalePoints(void)

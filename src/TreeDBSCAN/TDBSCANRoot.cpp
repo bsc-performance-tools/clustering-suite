@@ -161,7 +161,6 @@ int TDBSCANRoot::Run()
   /* Send the clustering configuration to the back-ends */
   Send_Configuration();
 
-
   Messages.str ("");
   Messages << "[FE] Computing global dimensions..." << endl;
   system_messages::information (Messages.str() );
@@ -262,7 +261,7 @@ int TDBSCANRoot::Run()
   MergedDataFileNames << "cat ";
   for (unsigned int i = 0; i < NumBackEnds(); i++)
   {
-    MergedDataFileNames << OutputPrefix << ".GLOBAL_CLUSTERING_" << i << ".csv "; 
+    MergedDataFileNames << OutputPrefix << ".GLOBAL_CLUSTERING_" << i << ".csv ";
   }
   string FinalDataFileName = OutputPrefix + ".FINAL.DATA.csv";
 

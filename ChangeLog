@@ -9,6 +9,21 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	to myfile.ext but completely unrelated to the above
 
 	* anotherfile.ext (somefunction): more changes
+2014-11-26 Juan Gonzalez <juan.gonzalez@bsc.es> 
+	* Solved a bug in the data normalization that caused incorrect results
+	when using the TreeDBSCAN in offline mode. Now, if you invoke 
+	'Normalize' method into 'TraceData' class without parameters in a
+	'distributed' context, it does not modify the data
+
+	* Unification of the 'NewBurst' methods in 'TraceData' class, so as
+	to mantain a single code
+
+	* The management of Clustering/Complete/All Bursts vectors in the
+	TraceData class are clear (CompleteBursts are only stored by the 'root
+	worker'). All trasnformations in 'libDistributedClusteringImplementation'
+	act on the ClusteringBursts, with the exception of the trace
+	reconstruction, which generates a new partition (TraceReconstructionPartition)
+	that refers to CompleteBursts.
 
 2014-11-25 Juan Gonzalez <juan.gonzalez@bsc.es> - 2.6.3
 	* Added wrapping scripts to invoke the different binaries, so as to 

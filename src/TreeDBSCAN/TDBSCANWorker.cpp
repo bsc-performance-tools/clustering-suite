@@ -100,10 +100,10 @@ int TDBSCANWorker::Run()
     delete libClustering;
   }
 
-  libClustering = new libDistributedClustering (Verbose, "BE");
-
   /* Receive clustering configuration from the front-end */
   Recv_Configuration();
+
+  libClustering = new libDistributedClustering (Verbose, "BE");
 
   /* Prepare all outputs file names */
   CheckOutputFile();
@@ -115,6 +115,11 @@ int TDBSCANWorker::Run()
     exit (EXIT_FAILURE);
   }
 
+  /* DEBUG: That should be tuned by parameter
+  system_messages::verbose = true;
+  system_messages::messages_from_all_ranks = true;
+  */
+
   t.begin();
 
   if (!ExtractData() )
@@ -123,16 +128,17 @@ int TDBSCANWorker::Run()
   }
   system_messages::show_timer ("Data extraction time", t.end() );
 
+
   if (!ExchangeDimensions())
   {
+    Messages.str("");
+    Messages << "That's weird!" << endl;
+    system_messages::information(Messages.str());
     exit(EXIT_FAILURE);
   }
 
-  if (!NormalizeData())
-  {
-    exit(EXIT_FAILURE);
-  }
-
+  /* Normalize the input data with the global dimensions */
+  libClustering->NormalizeData( GlobalMin, GlobalMax );
 
   ClusteringStats.IncreaseInputPoints ( libClustering->GetNumberOfPoints() );
 
@@ -252,6 +258,7 @@ int TDBSCANWorker::Run()
   }
 
   PACKET_delete (p);
+
   return 0;
 }
 
@@ -388,7 +395,7 @@ bool TDBSCANWorker::ExchangeDimensions()
 
   libClustering->GetParameterRanges(MinLocalDimensions, MaxLocalDimensions);
 
-  /* DEBUG -- print the min/max local dimensions
+  /* DEBUG -- print the min/max local dimensions */
   Messages.str("");
   Messages << "MinLocalDimensions = { ";
   for (unsigned int i=0; i<MinLocalDimensions.size(); i++)
@@ -414,7 +421,7 @@ bool TDBSCANWorker::ExchangeDimensions()
   }
   Messages << " }" << endl;
   system_messages::information(Messages.str());
-  */
+
 
   /* Send the local dimensions range and receive the global range */
   STREAM_send(stXchangeDims, TAG_XCHANGE_DIMENSIONS, "%alf %alf",
@@ -461,4 +468,6 @@ bool TDBSCANWorker::ExchangeDimensions()
   xfree(MinGlobalDimensions);
   xfree(MaxGlobalDimensions);
   PACKET_delete(p);
+
+  return true;
 }

@@ -55,7 +55,6 @@ class TDBSCANWorker : public TDBSCANCore, public BackProtocol
 
       virtual bool InitLibrary(void) = 0;
       virtual bool ExtractData(void) = 0;
-      virtual bool NormalizeData(void) { return true; };
       virtual bool AnalyzeData(void) = 0;
       virtual bool ProcessResults(Support &GlobalSupport) { return true; };
    private:

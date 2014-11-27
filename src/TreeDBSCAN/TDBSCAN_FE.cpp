@@ -82,6 +82,7 @@ int main (int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
+
   /* Load the clustering protocol */
   FrontProtocol *protClustering = new TDBSCANRoot (Epsilon, MinPoints, ClusteringDefinitionXML, InputTraceName, OutputFileName, Verbose, ReconstructTrace);
   FE->LoadProtocol ( protClustering );
