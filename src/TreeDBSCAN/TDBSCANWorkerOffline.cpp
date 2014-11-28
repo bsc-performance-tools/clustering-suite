@@ -100,28 +100,6 @@ bool TDBSCANWorkerOffline::ExtractData (void)
 
 
 /**
- * Analyzes the data extracted from the Paraver trace.
- * @return true on success; false otherwise.
- */
-bool TDBSCANWorkerOffline::AnalyzeData (void)
-{
-  cepba_tools::Timer t;
-  t.begin();
-
-  if (!libClustering->ClusterAnalysis (LocalModel) )
-  {
-    ostringstream Messages;
-    Messages << "Error clustering data: " << libClustering->GetErrorMessage() << endl;
-    system_messages::information (Messages.str(), stderr);
-    return false;
-  }
-
-  system_messages::show_timer ("Local clustering time", t.end() );
-  return true;
-}
-
-
-/**
  * Reconstructs the trace if necessary.
  * @return true on success; false otherwise.
  */

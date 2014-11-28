@@ -56,6 +56,7 @@ class TDBSCANCore
 
       double Epsilon;
       int    MinPoints;
+      int    TargetMinPoints;
       string ClusteringDefinitionXML;
       string InputTraceName;
       string OutputFileName;

@@ -83,7 +83,7 @@ void TDBSCANCore::Recv_Configuration (void)
 
   /* Receive clustering configuration from the front-end */
   STREAM_recv (stClustering, &tag, p, TAG_CLUSTERING_CONFIG);
-  PACKET_unpack (p, "%lf %d %s %s %s %d %d", &Epsilon, &MinPoints, &XML, &Input, &Output, &Verb, &Reconstruct);
+  PACKET_unpack (p, "%lf %d %s %s %s %d %d", &Epsilon, &TargetMinPoints, &XML, &Input, &Output, &Verb, &Reconstruct);
   PACKET_delete (p);
 
   MinPoints               = 3;

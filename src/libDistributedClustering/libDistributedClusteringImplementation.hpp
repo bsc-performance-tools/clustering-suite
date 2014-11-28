@@ -103,6 +103,8 @@ class libDistributedClusteringImplementation: public Error
 
     double    GetEpsilon(void);
 
+    void      SetMinPoints(INT32 MinPts);
+
     int       GetMinPoints(void);
 
     bool ExtractData(string            InputFileName,

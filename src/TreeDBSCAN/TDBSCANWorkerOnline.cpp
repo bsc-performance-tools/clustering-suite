@@ -101,23 +101,6 @@ bool TDBSCANWorkerOnline::ExtractData(void)
 
 
 /**
- * Analyzes the data fetched from the tracing runtime.
- * @return true on success; false otherwise.
- */
-bool TDBSCANWorkerOnline::AnalyzeData(void)
-{
-   if (!libClustering->ClusterAnalysis(LocalModel))
-   {
-      ostringstream Messages;
-      Messages << "Error clustering data: " << libClustering->GetErrorMessage() << endl;
-      system_messages::information(Messages.str(), stderr);
-      return false;
-   }
-   return true;
-}
-
-
-/**
  * Send the clusters information to the tracing library
  * @return true on success; false otherwise.
  */

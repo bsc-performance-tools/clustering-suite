@@ -93,6 +93,8 @@ class libDistributedClustering
 
     double GetEpsilon(void);
 
+    void   SetMinPoints(int MinPts);
+
     int    GetMinPoints(void);
 
     bool   ExtractData(string InputFileName, set<int>& TasksToRead);

@@ -46,7 +46,6 @@ class TDBSCANWorkerOffline: public TDBSCANWorker
    public:
       bool InitLibrary();
       bool ExtractData();
-      bool AnalyzeData();
       bool ProcessResults(Support &GlobalSupport);
 };
 

@@ -270,6 +270,14 @@ double libDistributedClusteringImplementation::GetEpsilon(void)
   return this->Epsilon;
 }
 
+/** 
+ * Sets the MinPoints value used in the library
+ */
+void libDistributedClusteringImplementation::SetMinPoints(INT32 MinPts)
+{
+  this->MinPoints = MinPts;
+}
+
 /**
  * Returns the MinPoints value used in the library
  *

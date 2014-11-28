@@ -150,8 +150,11 @@ int TDBSCANWorker::Run()
   t.begin();
   ClusteringStats.ClusteringTimeStart();
 
-  if (!AnalyzeData() )
+  if (!libClustering->ClusterAnalysis(LocalModel))
   {
+    Messages.str ("");
+    Messages << "Error clustering data: " << libClustering->GetErrorMessage() << endl;
+    system_messages::information(Messages.str(), stderr);
     exit (EXIT_FAILURE);
   }
 
@@ -231,6 +234,7 @@ int TDBSCANWorker::Run()
   system_messages::information (Messages.str() );
 
   // t.begin();
+  libClustering->SetMinPoints( TargetMinPoints );
   if (!libClustering->ClassifyData (GlobalModel) )
   {
     Messages.str ("");
