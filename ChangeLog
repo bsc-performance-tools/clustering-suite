@@ -9,6 +9,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	to myfile.ext but completely unrelated to the above
 
 	* anotherfile.ext (somefunction): more changes
+
+2014-11-28 German Llort <german.llort@bsc.es>
+	* Fixed bug in the parsing of MinPoints parameter
+
 2014-11-26 Juan Gonzalez <juan.gonzalez@bsc.es> 
 	* Solved a bug in the data normalization that caused incorrect results
 	when using the TreeDBSCAN in offline mode. Now, if you invoke 

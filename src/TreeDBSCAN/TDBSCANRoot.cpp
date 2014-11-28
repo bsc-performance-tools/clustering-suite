@@ -85,7 +85,7 @@ TDBSCANRoot::TDBSCANRoot (
   {
     this->Epsilon = Eps;
   }
-  if (MinPoints == -1)
+  if (MinPts == -1)
   {
     this->MinPoints = libClustering->GetMinPoints();
   }
