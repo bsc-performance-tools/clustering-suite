@@ -11,6 +11,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 2014-12-04 German Llort <german.llort@bsc.es>
+	* Changed obsolete macro AM_PROG_CC_STDC to AC_PROG_CC in
+	configure.ac.template
+
 	* Initial steps to improve the adaption of MinPoint values at different
 	tree levels
 
