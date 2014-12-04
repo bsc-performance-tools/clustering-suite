@@ -311,20 +311,14 @@
 		<Unit filename="src/libClustering/libClustering.hpp" />
 		<Unit filename="src/libClustering/libClusteringImplementation.cpp" />
 		<Unit filename="src/libClustering/libClusteringImplementation.hpp" />
+		<Unit filename="src/libDistributedClustering/ClusterStatistics.cpp" />
+		<Unit filename="src/libDistributedClustering/ClusterStatistics.hpp" />
 		<Unit filename="src/libDistributedClustering/HullModel.cpp" />
 		<Unit filename="src/libDistributedClustering/HullModel.hpp" />
-		<Unit filename="src/libDistributedClustering/libDistributedClustering.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libDistributedClustering/libDistributedClustering.hpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libDistributedClustering/libDistributedClusteringImplementation.cpp">
-			<Option target="Compile" />
-		</Unit>
-		<Unit filename="src/libDistributedClustering/libDistributedClusteringImplementation.hpp">
-			<Option target="Compile" />
-		</Unit>
+		<Unit filename="src/libDistributedClustering/libDistributedClustering.cpp" />
+		<Unit filename="src/libDistributedClustering/libDistributedClustering.hpp" />
+		<Unit filename="src/libDistributedClustering/libDistributedClusteringImplementation.cpp" />
+		<Unit filename="src/libDistributedClustering/libDistributedClusteringImplementation.hpp" />
 		<Unit filename="src/libParaverTraceParser/ParaverApplicationDescription.cpp">
 			<Option target="Compile" />
 		</Unit>
@@ -368,6 +362,8 @@
 		<Unit filename="src/libSharedComponents/ClusterInformation.hpp" />
 		<Unit filename="src/libSharedComponents/ClusteredEventsPRVGenerator.cpp" />
 		<Unit filename="src/libSharedComponents/ClusteredEventsPRVGenerator.hpp" />
+		<Unit filename="src/libSharedComponents/ClusteredStatesPRVGenerator.BACKUP.cpp" />
+		<Unit filename="src/libSharedComponents/ClusteredStatesPRVGenerator.BACKUP.hpp" />
 		<Unit filename="src/libSharedComponents/ClusteredStatesPRVGenerator.cpp" />
 		<Unit filename="src/libSharedComponents/ClusteredStatesPRVGenerator.hpp" />
 		<Unit filename="src/libSharedComponents/ClusteredTRFGenerator.cpp" />

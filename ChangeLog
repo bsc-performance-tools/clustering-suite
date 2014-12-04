@@ -10,8 +10,21 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
-2014-11-28 German Llort <german.llort@bsc.es>
-	* Fixed bug in the parsing of MinPoints parameter
+2014-12-04 German Llort <german.llort@bsc.es>
+	* Initial steps to improve the adaption of MinPoint values at different
+	tree levels
+
+	* Solved a bug in hull intersection density calculation
+
+	* Added 'tdbscan-launcher' script ease the offline TreeDBSCAN execution
+
+	* Updated time measurements accross TreeDBSCAN implementation
+
+	* Moved 'AnalyzeData' method from WorkerOffline & Online to the
+	generic Worker class
+
+	* Solved a bug in CSVDataExtractor that do not avoid comment lines
+	starting with '#'
 
 2014-11-26 Juan Gonzalez <juan.gonzalez@bsc.es> 
 	* Solved a bug in the data normalization that caused incorrect results

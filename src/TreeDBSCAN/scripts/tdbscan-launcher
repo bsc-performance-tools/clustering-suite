@@ -1,0 +1,78 @@
+#!/usr/bin/python
+
+import os
+import sys
+
+# MRNEt topgen binary
+MRNET_HOME   = "/apps/CEPBATOOLS/deps/mrnet/4.0"
+mrnet_topgen = MRNET_HOME + "/bin/mrnet_topgen"
+TDBSCAN_HOME = "/home/bsc41/bsc41127/tools/ClusteringSuite-2.6.4a1/install"
+TDBSCAN_FE   = TDBSCAN_HOME + "/bin/TDBSCAN_FE"
+
+# Global variables
+TopologyFile  = ".tdbscan-topology.txt"
+FrontEndHost  = "localhost"
+InternalHosts = ".tdbscan-resources.txt"
+
+# Parses the resources assigned to the execution
+def GetResources():
+  global FrontEndHost
+  global InternalHosts
+
+  if (os.environ.has_key("LSB_HOSTS")):
+    print "LSF scheduler detected. Parsing available resources from LSB_HOSTS variable...";
+    AllHosts = os.getenv("LSB_HOSTS").split(' ');
+
+  elif (os.environ.has_key("TDBSCAN_HOSTS")):
+    print "User-defined host list detected. Parsing available hosts from TDBSCAN_HOSTS file..."
+    AllHosts = [Host.strip() for Host in open(os.getenv("TDBSCAN_HOSTS"))]
+
+  else:
+    sys.exit("Any known job scheduler detected. Please specify the resources by setting the environment TDBSCAN_HOSTS pointing to the list of available hosts.");
+
+  print AllHosts
+
+  # Front-end is the first host available
+  FrontEndHost = AllHosts[0];
+
+  # All the rest are for the CP's and BE's, write the hosts in a file
+  fd = open(InternalHosts, 'w')
+  for Host in AllHosts[1:]:
+    print >> fd, Host
+  
+
+############
+### MAIN ###
+############
+
+# Check arguments
+if len(sys.argv) < 3:
+    sys.exit('Usage: %s <topology-spec> <clustering-args>' % sys.argv[0])
+
+TopologySpec   = sys.argv[1]
+ClusteringArgs = sys.argv[2:]
+
+GetResources()
+
+cmd = mrnet_topgen + " --fehost=" + FrontEndHost + " --hosts=" + InternalHosts + " --topology=" + TopologySpec + " -o " + TopologyFile
+
+print "Running the topology generator..."
+print cmd
+rc = os.system( cmd )
+if (rc != 0):
+  sys.exit('Could not generate the topology file. See errors above...')
+else:
+  print "Topology written to '" + TopologyFile + ":"
+  os.system( 'cat ' + TopologyFile )
+
+# Run the TDBSCAN front-end
+print "Setting MRNAPP_TOPOLOGY to '" + TopologyFile + ":"
+os.environ["MRNAPP_TOPOLOGY"] = TopologyFile
+
+cmd = TDBSCAN_FE + " " + " ".join(ClusteringArgs)
+print "Running the front-end:"
+print cmd
+
+rc = os.system( cmd )
+
+

@@ -20,5 +20,5 @@ ClustersSequenceScore_bin_LDADD = \
  $(top_srcdir)/src/BasicClasses/libBasicClasses.la\
  @CLUSTERING_LIBS@
 
-EXTRA_DIST=ClustersSequenceScore
 bin_SCRIPTS=ClustersSequenceScore
+EXTRA_DIST=ClustersSequenceScore

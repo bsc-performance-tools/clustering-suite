@@ -89,8 +89,10 @@ int TDBSCANWorker::Run()
   int tag;
   PACKET_new (p);
   vector<HullModel*>::iterator it;
-  cepba_tools::Timer t;
+  cepba_tools::Timer FullTimer, SectionTimer;
   Statistics ClusteringStats (WhoAmI(true), true);
+
+  FullTimer.begin();
 
   /* Delete any previous clustering */
   if (libClustering != NULL)
@@ -120,13 +122,13 @@ int TDBSCANWorker::Run()
   system_messages::messages_from_all_ranks = true;
   */
 
-  t.begin();
-
+  SectionTimer.begin();
   if (!ExtractData() )
   {
     exit (EXIT_FAILURE);
   }
-  system_messages::show_timer ("Data extraction time", t.end() );
+  ExtractionTime = SectionTimer.end();
+  system_messages::show_timer ("Data extraction time", ExtractionTime );
 
 
   if (!ExchangeDimensions())
@@ -146,8 +148,8 @@ int TDBSCANWorker::Run()
   Messages << "Bursts to analyze: " << libClustering->GetNumberOfPoints() << endl;
   system_messages::information (Messages.str() );
 
-  /* Start the clustering analysis */
-  t.begin();
+  /* Start the local clustering analysis */
+  SectionTimer.begin();
   ClusteringStats.ClusteringTimeStart();
 
   if (!libClustering->ClusterAnalysis(LocalModel))
@@ -159,6 +161,9 @@ int TDBSCANWorker::Run()
   }
 
   ClusteringStats.ClusteringTimeStop();
+  LocalClusteringTime = SectionTimer.end();
+
+  SectionTimer.begin();
 
 #if defined(PROCESS_NOISE)
   vector<const Point *> NoisePoints;
@@ -220,20 +225,23 @@ int TDBSCANWorker::Run()
   }
   while (tag != TAG_ALL_HULLS_SENT);
 
+  MergeTime = SectionTimer.end();
+
   /* Once the clustering is over, send the statistics to the root */
   ClusteringStats.Serialize (stClustering);
 
   Messages.str ("");
   Messages << "Received " << GlobalModel.size() << " global hulls." << endl;
   system_messages::information (Messages.str() );
-  // cout << "[BE " << WhoAmI() << "] >> Clustering time: " << t.end() << "[" << NumBackEnds() << " BEs]" << endl;
+
 
   /* All back-ends classify their local data */
   Messages.str ("");
   Messages << "START CLASSIFYING WITH " << GlobalModel.size() << " GLOBAL HULLS." << endl;
   system_messages::information (Messages.str() );
 
-  // t.begin();
+  SectionTimer.begin();
+  libClustering->SetMinPoints( TargetMinPoints );
   libClustering->SetMinPoints( TargetMinPoints );
   if (!libClustering->ClassifyData (GlobalModel) )
   {
@@ -242,8 +250,8 @@ int TDBSCANWorker::Run()
     system_messages::information (Messages.str(), stderr);
     exit (EXIT_FAILURE);
   }
-
-  system_messages::show_timer ("Clustering time", t.end() );
+  ClassificationTime = SectionTimer.end();
+  system_messages::show_timer ("Classification time", ClassificationTime );
 
   Support BackendSupport(libClustering, 50);
   BackendSupport.Serialize(stSupport);
@@ -256,12 +264,21 @@ int TDBSCANWorker::Run()
   /* Process the results and generate the output files */
   GenerateScripts();
 
+  SectionTimer.begin();
   if (!ProcessResults(GlobalSupport) )
   {
     exit (EXIT_FAILURE);
   }
+  ReconstructTime = SectionTimer.end();
 
   PACKET_delete (p);
+
+  TotalTime = FullTimer.end();
+
+  if (WhoAmI() == 0)
+  {
+    fprintf(stderr, "[CSV] %d, %d, %d, %d, %lf, %lf, %lf, %lf, %lf, %lf\n", NumBackEnds(), libClustering->GetNumberOfPoints(), LocalModel.size(), GlobalModel.size(), ExtractionTime, LocalClusteringTime, MergeTime, ClassificationTime, ReconstructTime, TotalTime);
+  }
 
   return 0;
 }

@@ -447,7 +447,7 @@ bool ConvexHullModel::IsNear (ConvexHullModel *Hull2, double Epsilon, int MinPoi
       sqrDistance = CGAL::to_double(squared_distance(Cand1, Cand2));
 
       if ( sqrDistance <= pow(Epsilon, 2.0) &&
-          ((Cand1.NeighbourhoodSize() + (Cand2.NeighbourhoodSize())/2)+1) >= MinPoints)
+          (((Cand1.NeighbourhoodSize() + Cand2.NeighbourhoodSize())/2)+1) >= MinPoints)
       {
         // std::cout << "Cand1.NeighbourhoodSize = " << Cand1.NeighbourhoodSize() << " Cand2.NeighbourhoodSize = " << Cand2.NeighbourhoodSize() << std::endl;
         return true;

@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
   system_messages::information("**** COMPUTING SCORE ****\n");
   Statistics.InitStatistics(DataPartition.GetIDs());
 
-  if (!Statistics.ComputeStatistics(DataSet->GetCompleteBursts(),
+  if (!Statistics.ComputeStatistics(DataSet->GetClusteringBursts(),
                                     DataPartition.GetAssignmentVector()))
   {
     cerr << "Unable to compute clusters statistics: ";

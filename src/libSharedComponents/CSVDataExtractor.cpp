@@ -132,11 +132,13 @@ bool CSVDataExtractor::ExtractData(TraceData* TraceDataSet)
   {
     Record.clear();
 
-    PopulateRecord (Record, Line, ',');
-    ParseRecord (Record, TraceDataSet);
+    if (Line.substr(0,1) != "#")
+    {
+      PopulateRecord (Record, Line, ',');
+      ParseRecord (Record, TraceDataSet);
+    }
 
     int Percentage = static_cast<int>(CSVFile.tellg()) * 100 / EndPos;
-
     system_messages::show_percentage_progress("Loading file '"+CSVFileName+"'",
                                               Percentage);
 

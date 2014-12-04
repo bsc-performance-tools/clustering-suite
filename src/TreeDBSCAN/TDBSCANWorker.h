@@ -59,6 +59,14 @@ class TDBSCANWorker : public TDBSCANCore, public BackProtocol
    private:
       bool ExchangeDimensions(void);
 
+      /* Performance measurements */
+      double ExtractionTime;
+      double LocalClusteringTime;
+      double MergeTime;
+      double ClassificationTime;
+      double ReconstructTime;
+      double TotalTime;
+
    protected:
       libDistributedClustering *libClustering;
       vector<HullModel*> LocalModel;
