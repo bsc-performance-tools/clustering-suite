@@ -205,9 +205,11 @@ bool ClusteringStatistics::ComputeStatistics(T                           begin,
                                              const vector<cluster_id_t>& IDs)
 {
   /* DEBUG
-  cout << "Total number of bursts = " << Bursts.size() << endl; */
+  cout << "Total number of bursts = " << size << endl;
+  cout << "Total number of IDs    = " << IDs.size() << endl;
+  */
 
-  if (size != IDs.size())
+  if (size != (size_t) IDs.size())
   {
     ostringstream Messages;
 

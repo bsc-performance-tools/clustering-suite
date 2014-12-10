@@ -310,8 +310,7 @@ bool ClusteredStatesPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& Different
     return false;
   }
 
-  if (fprintf(OutputPCFFile,
-              "") < 0)
+  if (fprintf(OutputPCFFile,              "") < 0)
   {
     unlink(OutputPCFName.c_str());
     return false;
@@ -329,7 +328,7 @@ bool ClusteredStatesPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& Different
 }
 
 bool ClusteredStatesPRVGenerator::BurstCloseAndOpenRecord(ParaverRecord* CurrentRecord,
-                                                         cluster_id_t&  ID)
+                                                          cluster_id_t&  ID)
 {
   ostringstream Object;
 
@@ -424,6 +423,38 @@ bool ClusteredStatesPRVGenerator::BurstClosingRecord(ParaverRecord* CurrentRecor
   }
 
   return false;
+}
+
+bool ClusteredStatesPRVGenerator::DuplicatedOpening(
+  string                                              TraceObject,
+  map<string, std::pair<timestamp_t, cluster_id_t> >& LastBurstsPrinted,
+  timestamp_t                                         CurrentTimestamp,
+  cluster_id_t                                        CurrentID)
+{
+  std::pair<timestamp_t, cluster_id_t> LastBurstInformation;
+  map<string, std::pair<timestamp_t, cluster_id_t> >::iterator it;
+
+
+  it = LastBurstsPrinted.find(TraceObject);
+
+  if (it != LastBurstsPrinted.end())
+  {
+    LastBurstInformation = it->second;
+
+    if (CurrentTimestamp == LastBurstInformation.first &&
+        CurrentID        == LastBurstInformation.second)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else
+  {
+    return false;
+  }
 }
 
 bool ClusteredStatesPRVGenerator::CopyROWFile(void)

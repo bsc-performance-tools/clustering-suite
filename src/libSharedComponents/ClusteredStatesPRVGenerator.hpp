@@ -113,6 +113,11 @@ class ClusteredStatesPRVGenerator: public ClusteredTraceGenerator
 
     bool BurstClosingRecord (ParaverRecord* CurrentRecord);
 
+    bool DuplicatedOpening(string                                              TraceObject,
+                           map<string, std::pair<timestamp_t, cluster_id_t> >& LastBurstsPrinted,
+                           timestamp_t                                         CurrentTimestamp,
+                           cluster_id_t                                        CurrentID);
+
     bool CopyROWFile();
 
     void PrepareClusterIDsVector (vector<cluster_id_t>& ClusterIDs,
@@ -132,12 +137,15 @@ bool ClusteredStatesPRVGenerator::Run (T                     begin,
   ParaverHeader*                  Header;
   vector<ApplicationDescription*> AppsDescription;
 
-  ParaverRecord                *CurrentRecord;
-  Event                        *CurrentEvent;
-  percentage_t                  CurrentPercentage = 0;
+  ParaverRecord                  *CurrentRecord;
+  Event                          *CurrentEvent;
+  percentage_t                    CurrentPercentage = 0;
 
-  size_t                        TotalBursts;
-  double                        TimeFactor;
+  size_t                          TotalBursts;
+  double                          TimeFactor;
+
+  /* struct to avoid duplicated open events */
+  map<string, std::pair<timestamp_t, cluster_id_t> > LastBurstsPrinted;
 
 
   /* Create the map with the bursts information IDs vector */
@@ -282,6 +290,9 @@ bool ClusteredStatesPRVGenerator::Run (T                     begin,
     { /* Here we close the previous region and open the following at the
        * the same point */
       Event* NewEvent;
+      ostringstream TraceObject;
+
+      TraceObject << CurrentRecord->GetTaskId() << "." << CurrentRecord->GetThreadId();
 
       NewEvent = new Event (0, /* Line not needed */
                             CurrentRecord->GetTimestamp(),
@@ -301,18 +312,31 @@ bool ClusteredStatesPRVGenerator::Run (T                     begin,
         return false;
       }
 
+      LastBurstsPrinted[TraceObject.str()] = std::make_pair(CurrentRecord->GetTimestamp(),
+                                                             ID);
+
+
       delete NewEvent;
     }
-    else  if (BurstOpeningRecord(CurrentRecord, ID) )
+    else if (BurstOpeningRecord(CurrentRecord, ID) )
     {
-        Event* NewEvent;
+      Event*        NewEvent;
+      ostringstream TraceObject;
 
+      TraceObject << CurrentRecord->GetTaskId() << "." << CurrentRecord->GetThreadId();
+
+      if (!DuplicatedOpening(TraceObject.str(),
+                             LastBurstsPrinted,
+                             CurrentRecord->GetTimestamp(),
+                             ID))
+      {
         NewEvent = new Event (0, /* Line not needed */
                               CurrentRecord->GetTimestamp(),
                               CurrentRecord->GetCPU() + 1,
                               CurrentRecord->GetAppId() + 1,
                               CurrentRecord->GetTaskId() + 1,
                               CurrentRecord->GetThreadId() + 1);
+
 
         NewEvent->AddTypeValue (90000001, ID);
 
@@ -324,7 +348,11 @@ bool ClusteredStatesPRVGenerator::Run (T                     begin,
           return false;
         }
 
+        LastBurstsPrinted[TraceObject.str()] = std::make_pair(CurrentRecord->GetTimestamp(),
+                                                              ID);
+
         delete NewEvent;
+      }
     }
     else if (BurstClosingRecord(CurrentRecord))
     {

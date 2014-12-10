@@ -605,8 +605,6 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
     }
   }
 
-
-
   Partition& PartitionUsed = (SampleData ? ClassificationPartition : LastPartition);
 
   Statistics.InitStatistics(PartitionUsed.GetIDs(),
@@ -615,7 +613,12 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
                             Parameters->GetExtrapolationParametersNames(),
                             Parameters->GetExtrapolationParametersPrecision());
 
+  /*
   if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
+                                    PartitionUsed.GetAssignmentVector()))
+  {
+  */
+  if (!Statistics.ComputeStatistics(Data->GetClusteringBursts(),
                                     PartitionUsed.GetAssignmentVector()))
   {
     SetErrorMessage(Statistics.GetLastError());

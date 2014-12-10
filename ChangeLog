@@ -10,6 +10,14 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-12-10 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a bug in 'ClusteredStatesPRVGenerator' that caused a duplicity
+	of the clusters opening event
+
+	* Fixed a regression in 'TraceData' when using 'CompleteBursts' and
+	'ClusteringBursts', that broke the correct behaviour of the 'BurstClustering'
+	application
+
 2014-12-10 German Llort <german.llort@bsc.es>
 	* Added suffix .sh to the wrapper scripts BurstClustering and ClustersSequenceScore 
 	to avoid compilation problems.
@@ -17,7 +25,7 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* TDBSCAN now prints timing statistics 
 
 	* Added a sweep script to run multiple TDBSCAN experiments
- 
+
 2014-12-04 German Llort <german.llort@bsc.es>
 	* Changed obsolete macro AM_PROG_CC_STDC to AC_PROG_CC in
 	configure.ac.template

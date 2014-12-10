@@ -739,7 +739,7 @@ int main(int argc, char *argv[])
     if (!Clustering.ComputeSequenceScore(ClusterSequencesFileName,
                                          FASTASequences))
     {
-      cerr << "Error clustering data: " << Clustering.GetErrorMessage() << endl;
+      cerr << "Error generating cluster sequences: " << Clustering.GetErrorMessage() << endl;
       exit (EXIT_FAILURE);
     }
   }

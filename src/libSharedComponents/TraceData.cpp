@@ -666,6 +666,7 @@ bool TraceData::ActualNormalize(void)
     return false;
   }
 
+  /*
   ostringstream Messages;
   Messages.str("");
   Messages << "'TraceData::Normalize' MinValues = { ";
@@ -692,6 +693,7 @@ bool TraceData::ActualNormalize(void)
   }
   Messages << " }" << endl;
   system_messages::information(Messages.str());
+  */
 
 
   if (Master)
@@ -1124,7 +1126,8 @@ bool TraceData::FlushPoints(ostream&             str,
                                 Cluster_IDs);
 
 #else
-      if (Cluster_IDs.size() != CompleteBursts.size())
+
+      if (Cluster_IDs.size() != ClusteringBursts.size())
       {
         ostringstream Message;
         Message << "number of IDs (" << Cluster_IDs.size() << ") ";
@@ -1136,12 +1139,12 @@ bool TraceData::FlushPoints(ostream&             str,
         return false;
       }
 
-      sort(CompleteBursts.begin(), CompleteBursts.end(), InstanceNumCompare());
+      sort(ClusteringBursts.begin(), ClusteringBursts.end(), InstanceNumCompare());
 
       return GenericFlushPoints(str,
-                                CompleteBursts.begin(),
-                                CompleteBursts.end(),
-                                CompleteBursts.size(),
+                                ClusteringBursts.begin(),
+                                ClusteringBursts.end(),
+                                ClusteringBursts.size(),
                                 Cluster_IDs);
 #endif
       break;
