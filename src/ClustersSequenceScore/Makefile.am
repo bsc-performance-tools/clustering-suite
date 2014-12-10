@@ -20,5 +20,9 @@ ClustersSequenceScore_bin_LDADD = \
  $(top_srcdir)/src/BasicClasses/libBasicClasses.la\
  @CLUSTERING_LIBS@
 
-bin_SCRIPTS=ClustersSequenceScore
-EXTRA_DIST=ClustersSequenceScore
+bin_SCRIPTS=ClustersSequenceScore.sh
+EXTRA_DIST=ClustersSequenceScore.sh
+
+install-data-hook:
+	mv ${prefix}/bin/ClustersSequenceScore.sh ${prefix}/bin/ClustersSequenceScore
+

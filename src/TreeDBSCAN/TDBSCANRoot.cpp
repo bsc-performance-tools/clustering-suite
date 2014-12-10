@@ -258,12 +258,16 @@ int TDBSCANRoot::Run()
   Messages << "Printing full clustering scripts" << endl;
   system_messages::information (Messages.str() );
 
-  MergedDataFileNames << "cat ";
+  string FinalDataFileName = OutputPrefix + ".FINAL.DATA.csv";
+  MergedDataFileNames << "head -n 1 " << OutputPrefix << ".GLOBAL_CLUSTERING_0.csv ";
+  MergedDataFileNames << "> " + FinalDataFileName + "; ";
+  MergedDataFileNames << "tail -qn +2 ";
+
   for (unsigned int i = 0; i < NumBackEnds(); i++)
   {
     MergedDataFileNames << OutputPrefix << ".GLOBAL_CLUSTERING_" << i << ".csv ";
   }
-  string FinalDataFileName = OutputPrefix + ".FINAL.DATA.csv";
+  MergedDataFileNames << ">> " + FinalDataFileName + "; ";  
 
   if (!libClustering->PrintGlobalPlotScripts(
     FinalDataFileName,
@@ -301,7 +305,8 @@ int TDBSCANRoot::Run()
   ClustersInfoFile.close();
 
   /* Write the final DATA file */
-  system( string(MergedDataFileNames.str() + " > " + FinalDataFileName).c_str() );
+  cerr << MergedDataFileNames.str() << endl;
+  system( MergedDataFileNames.str().c_str() );
 
   xfree(MinGlobalDimensions);
   xfree(MaxGlobalDimensions);

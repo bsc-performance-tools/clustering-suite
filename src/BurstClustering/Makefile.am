@@ -16,6 +16,8 @@ BurstClustering_bin_LDADD = \
 	$(top_srcdir)/src/BasicClasses/libBasicClasses.la \
 	@CLUSTERING_LIBS@
 
-bin_SCRIPTS = BurstClustering
-EXTRA_DIST  = BurstClustering
+bin_SCRIPTS = BurstClustering.sh
+EXTRA_DIST  = BurstClustering.sh
 
+install-data-hook:
+	mv ${prefix}/bin/BurstClustering.sh ${prefix}/bin/BurstClustering

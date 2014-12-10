@@ -10,6 +10,14 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-12-10 German Llort <german.llort@bsc.es>
+	* Added suffix .sh to the wrapper scripts BurstClustering and ClustersSequenceScore 
+	to avoid compilation problems.
+
+	* TDBSCAN now prints timing statistics 
+
+	* Added a sweep script to run multiple TDBSCAN experiments
+ 
 2014-12-04 German Llort <german.llort@bsc.es>
 	* Changed obsolete macro AM_PROG_CC_STDC to AC_PROG_CC in
 	configure.ac.template
