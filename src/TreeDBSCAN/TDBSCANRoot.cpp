@@ -278,12 +278,6 @@ int TDBSCANRoot::Run()
     cout << "Error printing full clustering scripts: " << libClustering->GetErrorMessage() << endl;
   }
 
-  /* Receive the statistics from all nodes */
-  Statistics NetworkStats (WhoAmI(), false);
-  MRN_STREAM_RECV (stClustering, &tag, p, TAG_STATISTICS);
-  NetworkStats.Unpack (p);
-  PrintGraphStats (NetworkStats);
-
 
   /* Receive the support */
   MRN_STREAM_RECV (stSupport, &tag, p, TAG_SUPPORT);
@@ -303,6 +297,12 @@ int TDBSCANRoot::Run()
   ClustersInfoFile.open (string(OutputPrefix + ".FINAL.clusters_info.csv").c_str());
   ClustersInfoFile << ClustersStats;
   ClustersInfoFile.close();
+
+  /* Receive the statistics from all nodes */
+  Statistics NetworkStats (WhoAmI(), false);
+  MRN_STREAM_RECV (stClustering, &tag, p, TAG_STATISTICS);
+  NetworkStats.Unpack (p);
+  PrintGraphStats (NetworkStats);
 
   /* Write the final DATA file */
   cerr << MergedDataFileNames.str() << endl;

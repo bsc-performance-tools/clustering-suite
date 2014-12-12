@@ -28,10 +28,18 @@ class Statistics
     void IncreaseInputPoints  (int num_points);
     void IncreaseOutputPoints (int num_points);
     void IncreaseNumIntersects(bool valid);
-    void IntersectTimeStart();
-    void IntersectTimeStop();
-    void ClusteringTimeStart();
-    void ClusteringTimeStop();
+    void ExtractionTimerStart();
+    void ExtractionTimerStop();
+    void ClusteringTimerStart();
+    void ClusteringTimerStop();
+    void MergeTimerStart();
+    void MergeTimerStop();
+    void ClassificationTimerStart();
+    void ClassificationTimerStop();
+    void ReconstructTimerStart();
+    void ReconstructTimerStop();
+    void TotalTimerStart();
+    void TotalTimerStop();
 
     void to_str(string &NodeStats, string &EdgeStats);
     void Serialize(STREAM *OutputStream);
@@ -52,10 +60,20 @@ class Statistics
     int NumOutputPoints;
     int NumValidIntersects;
     int NumTotalIntersects;
+
+    double ElapsedTimeExtraction;
     double ElapsedTimeClustering;
     double ElapsedTimeIntersecting;
-    cepba_tools::Timer IntersectTimer;
+    double ElapsedTimeClassification;
+    double ElapsedTimeReconstruct;
+    double ElapsedTimeTotal;
+
+    cepba_tools::Timer ExtractionTimer;
     cepba_tools::Timer ClusteringTimer;
+    cepba_tools::Timer MergeTimer;
+    cepba_tools::Timer ClassificationTimer;
+    cepba_tools::Timer ReconstructTimer;
+    cepba_tools::Timer TotalTimer;
 
     map< int, pair<string, string> > NodeStats;
     

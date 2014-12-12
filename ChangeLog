@@ -10,6 +10,13 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-12-11 German Llort <german.llort@bsc.es>
+	* Modified script tdbscan-sweep to run the same experiment several times
+
+	* Added new statistics to the final report of tdbscan-sweep, and make averages of all backends 
+
+	* Fixed bug in tdscan-launcher when parsing the hostfile from the LSF system manager
+
 2014-12-10 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a bug in 'ClusteredStatesPRVGenerator' that caused a duplicity
 	of the clusters opening event

@@ -174,11 +174,11 @@ void filterTDBSCAN( std::vector< PacketPtr >& packets_in,
             cerr << "[DEBUG FILTER " << FILTER_ID(top_info) << "] NoisePoints.size()=" << NoisePoints.size() << endl; */
 
             /* Cluster all children noise points */
-            NetworkStats->ClusteringTimeStart();
+            NetworkStats->ClusteringTimerStart();
             vector<HullModel*> NoiseModel;
             int CountRemainingNoise = 0;
             Noise.ClusterNoise( NoisePoints, NoiseDurations, NoiseModel, CountRemainingNoise );
-            NetworkStats->ClusteringTimeStop();
+            NetworkStats->ClusteringTimerStop();
             NetworkStats->IncreaseOutputPoints( CountRemainingNoise );
 
             /* Send remaining noise points to the next tree level */
@@ -235,9 +235,9 @@ void filterTDBSCAN( std::vector< PacketPtr >& packets_in,
          /* Merge the hulls as they arrive */
          for (unsigned int i = 0; i < ChildHulls.size(); i ++)
          {
-            NetworkStats->IntersectTimeStart();
+            NetworkStats->MergeTimerStart();
             NewMerge(ChildHulls[i], Epsilon, WeightedMinPoints);
-            NetworkStats->IntersectTimeStop();
+            NetworkStats->MergeTimerStop();
          }
          NetworkStats->IncreaseInputHulls( ChildHulls.size() );
          break;

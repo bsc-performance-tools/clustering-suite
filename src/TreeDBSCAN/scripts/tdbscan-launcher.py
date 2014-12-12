@@ -17,19 +17,22 @@ InternalHosts = ".tdbscan-resources.txt"
 def GetResources():
   global FrontEndHost
   global InternalHosts
+  AllHosts = ()
 
-  if (os.environ.has_key("LSB_HOSTS")):
-    print "LSF scheduler detected. Parsing available resources from LSB_HOSTS variable...";
-    AllHosts = os.getenv("LSB_HOSTS").split(' ');
+  if (os.environ.has_key("LSB_DJOB_HOSTFILE")):
+    LSB_HostFile = os.getenv("LSB_DJOB_HOSTFILE");
+    print "LSF scheduler detected. Parsing available resources from LSB_DJOB_HOSTFILE file '" + LSB_HostFile + "'...";
+    AllHosts = [Host.strip() for Host in open(LSB_HostFile)]
 
   elif (os.environ.has_key("TDBSCAN_HOSTS")):
-    print "User-defined host list detected. Parsing available hosts from TDBSCAN_HOSTS file..."
-    AllHosts = [Host.strip() for Host in open(os.getenv("TDBSCAN_HOSTS"))]
+    User_HostFile = os.getenv("TDBSCAN_HOSTS")
+    print "User-defined host list detected. Parsing available hosts from TDBSCAN_HOSTS file '" + User_HostFile + "'..."
+    AllHosts = [Host.strip() for Host in open(User_HostFile)]
 
   else:
     sys.exit("Any known job scheduler detected. Please specify the resources by setting the environment TDBSCAN_HOSTS pointing to the list of available hosts.");
 
-  print AllHosts
+  #print AllHosts
 
   # Front-end is the first host available
   FrontEndHost = AllHosts[0];

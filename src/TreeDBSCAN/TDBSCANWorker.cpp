@@ -42,7 +42,6 @@ using std::ostringstream;
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 
-#include <Timer.hpp>
 #include <FileNameManipulator.hpp>
 using cepba_tools::FileNameManipulator;
 
@@ -89,11 +88,10 @@ int TDBSCANWorker::Run()
   int tag;
   PACKET_new (p);
   vector<HullModel*>::iterator it;
-  cepba_tools::Timer FullTimer, SectionTimer;
   Statistics ClusteringStats (WhoAmI(true), true);
 
-  FullTimer.begin();
-
+  ClusteringStats.TotalTimerStart();
+  
   /* Delete any previous clustering */
   if (libClustering != NULL)
   {
@@ -122,14 +120,11 @@ int TDBSCANWorker::Run()
   system_messages::messages_from_all_ranks = true;
   */
 
-  SectionTimer.begin();
+  ClusteringStats.ExtractionTimerStart();
   if (!ExtractData() )
   {
     exit (EXIT_FAILURE);
   }
-  ExtractionTime = SectionTimer.end();
-  system_messages::show_timer ("Data extraction time", ExtractionTime );
-
 
   if (!ExchangeDimensions())
   {
@@ -138,6 +133,7 @@ int TDBSCANWorker::Run()
     system_messages::information(Messages.str());
     exit(EXIT_FAILURE);
   }
+  ClusteringStats.ExtractionTimerStop();
 
   /* Normalize the input data with the global dimensions */
   libClustering->NormalizeData( GlobalMin, GlobalMax );
@@ -149,8 +145,7 @@ int TDBSCANWorker::Run()
   system_messages::information (Messages.str() );
 
   /* Start the local clustering analysis */
-  SectionTimer.begin();
-  ClusteringStats.ClusteringTimeStart();
+  ClusteringStats.ClusteringTimerStart();
 
   if (!libClustering->ClusterAnalysis(LocalModel))
   {
@@ -160,10 +155,9 @@ int TDBSCANWorker::Run()
     exit (EXIT_FAILURE);
   }
 
-  ClusteringStats.ClusteringTimeStop();
-  LocalClusteringTime = SectionTimer.end();
+  ClusteringStats.ClusteringTimerStop();
 
-  SectionTimer.begin();
+  ClusteringStats.MergeTimerStart();
 
 #if defined(PROCESS_NOISE)
   vector<const Point *> NoisePoints;
@@ -225,10 +219,8 @@ int TDBSCANWorker::Run()
   }
   while (tag != TAG_ALL_HULLS_SENT);
 
-  MergeTime = SectionTimer.end();
+  ClusteringStats.MergeTimerStop();
 
-  /* Once the clustering is over, send the statistics to the root */
-  ClusteringStats.Serialize (stClustering);
 
   Messages.str ("");
   Messages << "Received " << GlobalModel.size() << " global hulls." << endl;
@@ -240,7 +232,7 @@ int TDBSCANWorker::Run()
   Messages << "START CLASSIFYING WITH " << GlobalModel.size() << " GLOBAL HULLS." << endl;
   system_messages::information (Messages.str() );
 
-  SectionTimer.begin();
+  ClusteringStats.ClassificationTimerStart();
   libClustering->SetMinPoints( TargetMinPoints );
   libClustering->SetMinPoints( TargetMinPoints );
   if (!libClustering->ClassifyData (GlobalModel) )
@@ -250,8 +242,7 @@ int TDBSCANWorker::Run()
     system_messages::information (Messages.str(), stderr);
     exit (EXIT_FAILURE);
   }
-  ClassificationTime = SectionTimer.end();
-  system_messages::show_timer ("Classification time", ClassificationTime );
+  ClusteringStats.ClassificationTimerStop();
 
   Support BackendSupport(libClustering, 50);
   BackendSupport.Serialize(stSupport);
@@ -264,21 +255,19 @@ int TDBSCANWorker::Run()
   /* Process the results and generate the output files */
   GenerateScripts();
 
-  SectionTimer.begin();
+  ClusteringStats.ReconstructTimerStart();
   if (!ProcessResults(GlobalSupport) )
   {
     exit (EXIT_FAILURE);
   }
-  ReconstructTime = SectionTimer.end();
+  ClusteringStats.ReconstructTimerStop();
+
+  ClusteringStats.TotalTimerStop();
+
+  /* Once the clustering is over, send the statistics to the root */
+  ClusteringStats.Serialize (stClustering);
 
   PACKET_delete (p);
-
-  TotalTime = FullTimer.end();
-
-  if (WhoAmI() == 0)
-  {
-    fprintf(stderr, "[CSV] %d, %d, %d, %d, %lf, %lf, %lf, %lf, %lf, %lf\n", NumBackEnds(), libClustering->GetNumberOfPoints(), LocalModel.size(), GlobalModel.size(), ExtractionTime, LocalClusteringTime, MergeTime, ClassificationTime, ReconstructTime, TotalTime);
-  }
 
   return 0;
 }

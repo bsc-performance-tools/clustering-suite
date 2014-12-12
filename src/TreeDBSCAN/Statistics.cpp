@@ -7,7 +7,6 @@
 
 using std::ostringstream;
 
-
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -50,24 +49,64 @@ void Statistics::IncreaseNumIntersects(bool valid)
   NumTotalIntersects ++;
 }
 
-void Statistics::IntersectTimeStart()
+void Statistics::ExtractionTimerStart()
 {
-  IntersectTimer.begin();
+  ExtractionTimer.begin();
 }
 
-void Statistics::IntersectTimeStop()
+void Statistics::ExtractionTimerStop()
 {
-  ElapsedTimeIntersecting += IntersectTimer.end();
+  ElapsedTimeExtraction += ExtractionTimer.end();
 }
 
-void Statistics::ClusteringTimeStart()
+void Statistics::ClusteringTimerStart()
 {
   ClusteringTimer.begin();
 }
 
-void Statistics::ClusteringTimeStop()
+void Statistics::ClusteringTimerStop()
 {
   ElapsedTimeClustering += ClusteringTimer.end();
+}
+
+void Statistics::MergeTimerStart()
+{
+  MergeTimer.begin();
+}
+
+void Statistics::MergeTimerStop()
+{
+  ElapsedTimeIntersecting += MergeTimer.end();
+}
+
+void Statistics::ClassificationTimerStart()
+{
+  ClassificationTimer.begin();
+}
+
+void Statistics::ClassificationTimerStop()
+{
+  ElapsedTimeClassification += ClassificationTimer.end();
+}
+
+void Statistics::ReconstructTimerStart()
+{
+  ReconstructTimer.begin();
+}
+
+void Statistics::ReconstructTimerStop()
+{
+  ElapsedTimeReconstruct += ReconstructTimer.end();
+}
+
+void Statistics::TotalTimerStart()
+{
+  TotalTimer.begin();
+}
+
+void Statistics::TotalTimerStop()
+{
+  ElapsedTimeTotal += TotalTimer.end();
 }
 
 void Statistics::to_str(string &InStats, string &OutStats)
@@ -81,7 +120,12 @@ void Statistics::to_str(string &InStats, string &OutStats)
   {
     Stats.str("");
     Stats << "Clustering points=" << NumInputPoints << "\\n"
-          << "Clustering time=" << ElapsedTimeClustering;
+          << "Extraction time=" << ElapsedTimeExtraction << "\\n"
+          << "Clustering time=" << ElapsedTimeClustering << "\\n"
+          << "Merge time=" << ElapsedTimeIntersecting << "\\n"
+          << "Classification time=" << ElapsedTimeClassification << "\\n"
+          << "Reconstruct time=" << ElapsedTimeClassification << "\\n"
+          << "Total time=" << ElapsedTimeTotal;
     InStats = Stats.str();
 
     Stats.str("");
@@ -252,13 +296,17 @@ void Statistics::DumpAllStats(ostream &Output)
 void Statistics::Reset(void)
 {
   NodeStats.clear();
-  NumInputHulls           = 0;
-  NumOutputHulls          = 0;
-  NumInputPoints          = 0;
-  NumOutputPoints         = 0;
-  NumValidIntersects      = 0;
-  NumTotalIntersects      = 0;
-  ElapsedTimeClustering   = 0;
-  ElapsedTimeIntersecting = 0;
+  NumInputHulls             = 0;
+  NumOutputHulls            = 0;
+  NumInputPoints            = 0;
+  NumOutputPoints           = 0;
+  NumValidIntersects        = 0;
+  NumTotalIntersects        = 0;
+  ElapsedTimeExtraction     = 0;
+  ElapsedTimeClustering     = 0;
+  ElapsedTimeIntersecting   = 0;
+  ElapsedTimeClassification = 0;
+  ElapsedTimeReconstruct    = 0;
+  ElapsedTimeTotal          = 0;
 }
 
