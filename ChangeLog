@@ -11,6 +11,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* anotherfile.ext (somefunction): more changes
 
 2014-12-11 German Llort <german.llort@bsc.es>
+	* Added support for BlueWaters' PBS system manager in
+	tdbscan-launcher.py
+
+2014-12-11 German Llort <german.llort@bsc.es>
 	* Modified script tdbscan-sweep to run the same experiment several times
 
 	* Added new statistics to the final report of tdbscan-sweep, and make averages of all backends 

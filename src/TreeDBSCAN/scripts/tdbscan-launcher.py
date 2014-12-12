@@ -24,6 +24,15 @@ def GetResources():
     print "LSF scheduler detected. Parsing available resources from LSB_DJOB_HOSTFILE file '" + LSB_HostFile + "'...";
     AllHosts = [Host.strip() for Host in open(LSB_HostFile)]
 
+  # Support for BlueWaters
+  if (os.environ.has_key("PBS_NODEFILE")):
+    PBS_HostFile = os.getenv("PBS_NODEFILE");
+    print "PBS scheduler detected. Parsing available resources from PBS_NODEFILE file '" + PBS_HostFile + "'...";
+    AllHosts = [Host.strip() for Host in open(PBS_HostFile)]
+    for i in range(0, len(AllHosts)):
+      Host = AllHosts[i]
+      AllHosts[i] = "nid" + str(100000 + int(Host))[1:]
+
   elif (os.environ.has_key("TDBSCAN_HOSTS")):
     User_HostFile = os.getenv("TDBSCAN_HOSTS")
     print "User-defined host list detected. Parsing available hosts from TDBSCAN_HOSTS file '" + User_HostFile + "'..."
