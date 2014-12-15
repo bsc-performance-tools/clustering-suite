@@ -7,9 +7,9 @@ DRAW_HULLS      = draw_hulls
 DRAW_STATS      = draw_stats
 EXPAND_NODELIST = sl_expand_nodelist.pl
 
-EXTRA_DIST = $(SOURCEME_SH) $(LAUNCHER) $(LAUNCHER).py $(SWEEP) $(SWEEP).py $(FE_WRAPPER) $(BE_WRAPPER) $(DRAW_HULLS) $(DRAW_STATS) $(EXPAND_NODELIST)
+EXTRA_DIST = $(SOURCEME_SH) $(LAUNCHER) $(LAUNCHER).py $(SWEEP) $(SWEEP).py $(FE_WRAPPER) $(BE_WRAPPER) $(DRAW_HULLS) $(DRAW_STATS) $(EXPAND_NODELIST) tdbscan-mass-submit tdbscan-mass-submit.py tdbscan-process-results tdbscan-process-results.py
 
-bin_SCRIPTS    = $(LAUNCHER) $(LAUNCHER).py $(SWEEP) $(SWEEP).py $(FE_WRAPPER) $(BE_WRAPPER) $(DRAW_HULLS) $(DRAW_STATS) $(EXPAND_NODELIST)
+bin_SCRIPTS    = $(LAUNCHER) $(LAUNCHER).py $(SWEEP) $(SWEEP).py $(FE_WRAPPER) $(BE_WRAPPER) $(DRAW_HULLS) $(DRAW_STATS) $(EXPAND_NODELIST) tdbscan-mass-submit tdbscan-mass-submit.py tdbscan-process-results tdbscan-process-results.py
 noinst_SCRIPTS = $(SOURCEME_SH)
 
 install-data-hook:
@@ -26,6 +26,10 @@ install-data-hook:
 	$(top_srcdir)/substitute     $(SED) "@sub_MRNETAPP_HOME@" @MRNETAPP_HOME@ $(bindir)/$(LAUNCHER).py
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(SWEEP)
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(SWEEP).py
+	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/tdbscan-mass-submit
+	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/tdbscan-process-results
+	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/tdbscan-process-results.py
 	chmod a+x $(bindir)/$(LAUNCHER) $(bindir)/$(SWEEP)
 	chmod a+x $(bindir)/$(FE_WRAPPER) $(bindir)/$(BE_WRAPPER)
+	chmod a+x $(bindir)/tdbscan-mass-submit $(bindir)/tdbscan-process-results
 	ln -fs `basename $(bindir)/$(FE_WRAPPER)` $(bindir)/TDBSCAN

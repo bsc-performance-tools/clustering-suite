@@ -25,7 +25,7 @@ def GetResources():
     AllHosts = [Host.strip() for Host in open(LSB_HostFile)]
 
   # Support for BlueWaters
-  if (os.environ.has_key("PBS_NODEFILE")):
+  elif (os.environ.has_key("PBS_NODEFILE")):
     PBS_HostFile = os.getenv("PBS_NODEFILE");
     print "PBS scheduler detected. Parsing available resources from PBS_NODEFILE file '" + PBS_HostFile + "'...";
     AllHosts = [Host.strip() for Host in open(PBS_HostFile)]
