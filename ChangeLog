@@ -9,12 +9,19 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	to myfile.ext but completely unrelated to the above
 
 	* anotherfile.ext (somefunction): more changes
+
 2014-12-15 German Llort <german.llort@bsc.es>
 	* Added scripts tdbscan-mass-submit and tdbscan-process-results, 
 	to submit experiments to the system queue and parse the results
 
 	* Fixed bug in tdbscan-launcher when parsing the environment to 
 	detect known system managers
+
+	* Fixed bug in tdbscan-launcher when parsing the available resources
+	to generate the topology
+
+	* Fixed paths of the files that are generated in the experiments scripts 
+	so that the outputs are generated in the current directory
 
 2014-12-11 German Llort <german.llort@bsc.es>
 	* Added support for BlueWaters' PBS system manager in

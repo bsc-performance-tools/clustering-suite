@@ -44,11 +44,11 @@ def GetResources():
   #print AllHosts
 
   # Front-end is the first host available
-  FrontEndHost = AllHosts[0];
+  FrontEndHost = AllHosts[0]
 
   # All the rest are for the CP's and BE's, write the hosts in a file
   fd = open(InternalHosts, 'w')
-  for Host in AllHosts[1:]:
+  for Host in AllHosts:
     print >> fd, Host
   
 
@@ -65,7 +65,8 @@ ClusteringArgs = sys.argv[2:]
 
 GetResources()
 
-cmd = mrnet_topgen + " --fehost=" + FrontEndHost + " --hosts=" + InternalHosts + " --topology=" + TopologySpec + " -o " + TopologyFile
+#cmd = mrnet_topgen + " --fehost=" + FrontEndHost + " --hosts=" + InternalHosts + " --topology=" + TopologySpec + " -o " + TopologyFile
+cmd = mrnet_topgen + " --hosts=" + InternalHosts + " --topology=" + TopologySpec + " -o " + TopologyFile
 
 print "Running the topology generator..."
 print cmd

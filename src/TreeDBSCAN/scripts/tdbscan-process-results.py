@@ -60,7 +60,7 @@ with open(InputTrace, 'r') as f:
 
 # Check Mirkin Distance and Sequence Score
 if (HaveReference):
-  ReferenceCSVSorted = ReferenceCSV[0:-4] + ".sorted.csv"
+  ReferenceCSVSorted = ReferenceCSV.split('/')[-1][0:-4] + ".sorted.csv"
   FinalCSV = OutputPrefix + ".FINAL.DATA.csv"
   FinalCSVSorted = FinalCSV[0:-4] + ".sorted.csv"
 

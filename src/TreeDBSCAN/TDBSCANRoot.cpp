@@ -305,7 +305,8 @@ int TDBSCANRoot::Run()
   PrintGraphStats (NetworkStats);
 
   /* Write the final DATA file */
-  cerr << MergedDataFileNames.str() << endl;
+  cout << "Concatenating data files..." << endl;
+  cout << MergedDataFileNames.str() << endl;
   system( MergedDataFileNames.str().c_str() );
 
   xfree(MinGlobalDimensions);

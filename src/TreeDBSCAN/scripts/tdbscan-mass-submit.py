@@ -66,9 +66,11 @@ while (NumBackends >= MinBackends):
       cmd = "sed -i 's/@SWEEP_NUM_BACKENDS@/" + str(NumBackends) + "/g' " + ExperimentDir+ "/" + Template
       os.system(cmd)
 
-      cmd = "bsub < " + ExperimentDir+ "/" + Template
+      os.chdir(ExperimentDir)
+      cmd = "bsub < " + Template
       print cmd
       os.system(cmd)
+      os.chdir("..")
 
       ExperimentNo=ExperimentNo + 1
     FanIn=FanIn/2
