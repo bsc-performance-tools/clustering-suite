@@ -129,7 +129,7 @@ void TDBSCANRoot::Setup()
 int TDBSCANRoot::Run()
 {
   ostringstream Messages;
-  ostringstream MergedDataFileNames;
+  //ostringstream MergedDataFileNames;
 
   int       countGlobalHulls = 0;
   int       tag;
@@ -259,6 +259,7 @@ int TDBSCANRoot::Run()
   system_messages::information (Messages.str() );
 
   string FinalDataFileName = OutputPrefix + ".FINAL.DATA.csv";
+#if 0
   MergedDataFileNames << "head -n 1 " << OutputPrefix << ".GLOBAL_CLUSTERING_0.csv ";
   MergedDataFileNames << "> " + FinalDataFileName + "; ";
   MergedDataFileNames << "tail -qn +2 ";
@@ -268,6 +269,7 @@ int TDBSCANRoot::Run()
     MergedDataFileNames << OutputPrefix << ".GLOBAL_CLUSTERING_" << i << ".csv ";
   }
   MergedDataFileNames << ">> " + FinalDataFileName + "; ";  
+#endif
 
   if (!libClustering->PrintGlobalPlotScripts(
     FinalDataFileName,
@@ -306,8 +308,11 @@ int TDBSCANRoot::Run()
 
   /* Write the final DATA file */
   cout << "Concatenating data files..." << endl;
-  cout << MergedDataFileNames.str() << endl;
-  system( MergedDataFileNames.str().c_str() );
+  ostringstream ConcatCMD;
+  ConcatCMD << getenv("TDBSCAN_HOME") << "/bin/concat-csv " << NumBackEnds() << " " << OutputPrefix << ".GLOBAL_CLUSTERING_" << " " << FinalDataFileName; 
+  cout << ConcatCMD.str() << endl;
+  cout.flush();
+  system( ConcatCMD.str().c_str() );
 
   xfree(MinGlobalDimensions);
   xfree(MaxGlobalDimensions);

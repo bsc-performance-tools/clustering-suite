@@ -10,6 +10,10 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2014-12-17 German Llort <german.llort@bsc.es>
+	* Changed the way the final DATA.csv is generated in TreeDBSCAN.
+	Now we run an external script that merges the files.
+
 2014-12-15 German Llort <german.llort@bsc.es>
 	* Added scripts tdbscan-mass-submit and tdbscan-process-results, 
 	to submit experiments to the system queue and parse the results
