@@ -156,6 +156,10 @@ int TDBSCANRoot::Run()
   Messages << "[FE] + Reconstruct = " << ( ReconstructTrace ? "yes" : "no" ) << endl;
   Messages << endl;
 
+  /* DEBUG: That should be tuned by parameter */
+  system_messages::verbose = true;
+  system_messages::messages_from_all_ranks = true;
+
   system_messages::information (Messages.str() );
 
   /* Send the clustering configuration to the back-ends */
@@ -173,6 +177,12 @@ int TDBSCANRoot::Run()
   PACKET_unpack(p, "%alf %alf", &MinGlobalDimensions, &NumberOfDimensions, &MaxGlobalDimensions, &NumberOfDimensions);
 
   stXchangeDims->send (p);
+
+  Messages.str ("");
+  Messages << "[FE] In barrier while back-ends are clustering...." << endl;
+  system_messages::information (Messages.str() );
+
+  Barrier();
 
   Messages.str ("");
   Messages << "[FE] Computing global hulls..." << endl;

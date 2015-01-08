@@ -57,6 +57,38 @@ bool   Verbose          = true;
 bool   ReconstructTrace = false;
 string TDBSCAN_HOME;
 
+#if defined(BACKEND_ATTACH)
+
+int main (int argc, char *argv[])
+{
+  int status;
+
+  /* Parse input argumens */
+  ReadArgs (argc, argv);
+
+  /* Create an MRNet front-end */
+  FrontEnd *FE = new FrontEnd();
+
+  if (FE->Init () == -1)
+  {
+    cerr << "MRNet front-end could not be initialized due to previous errors." << endl;
+    exit (EXIT_FAILURE);
+  }
+
+  /* Load the clustering protocol */
+  FrontProtocol *protClustering = new TDBSCANRoot (Epsilon, MinPoints, ClusteringDefinitionXML, InputTraceName, OutputFileName, Verbose, ReconstructTrace);
+  FE->LoadProtocol ( protClustering );
+
+  /* Tell the back-ends to run the clustering protocol */
+  FE->Dispatch ("TDBSCAN", status);
+
+  /* Shutdown the network */
+  FE->Shutdown();
+
+  return 0;
+}
+
+#else
 
 /**
  * The front-end application parses the configuration parameters,
@@ -76,13 +108,18 @@ int main (int argc, char *argv[])
   FrontEnd *FE = new FrontEnd();
   const char **BE_argv = (const char **) (& (argv[1]) );
 
+  cout << "Starting the network..." << endl;
+  cout.flush();
   if (FE->Init (string (TDBSCAN_HOME + "/bin/TDBSCAN_BE").c_str(), BE_argv) == -1)
   {
     cerr << "MRNet front-end could not be initialized due to previous errors." << endl;
     exit (EXIT_FAILURE);
   }
+  cout << "Network started." << endl;
+  cout.flush();
 
-
+  cout << "Loading protocols..." << endl;
+  cout.flush();
   /* Load the clustering protocol */
   FrontProtocol *protClustering = new TDBSCANRoot (Epsilon, MinPoints, ClusteringDefinitionXML, InputTraceName, OutputFileName, Verbose, ReconstructTrace);
   FE->LoadProtocol ( protClustering );
@@ -96,6 +133,7 @@ int main (int argc, char *argv[])
   return 0;
 }
 
+#endif
 
 /**
  * Parse the input parameters.

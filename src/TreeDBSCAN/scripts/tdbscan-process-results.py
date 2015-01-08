@@ -35,19 +35,20 @@ AvgLocalHulls = 0
 MirkinDistance = 0
 SequenceScore = 0
 
-if ((len(sys.argv) < 6) or (len(sys.argv) > 7)):
-  print "Usage: $0 <experiment-id> <input-trace> <fan> <num-backends> <output-prefix> [reference-trace]"
+if ((len(sys.argv) < 7) or (len(sys.argv) > 8)):
+  print "Usage: $0 <experiment-id> <input-trace> <fan> <num-backends> <total-resources> <output-prefix> [reference-trace]"
   sys.exit(-1)
 
 ExperimentId  = int(sys.argv[1])
 InputTrace    = sys.argv[2]
 Fan           = int(sys.argv[3])
 NumBackends   = int(sys.argv[4])
-OutputPrefix  = sys.argv[5]
+TotalResources = int(sys.argv[5])
+OutputPrefix  = sys.argv[6]
 OutputCSV     = "experiment_results.csv"
-if (len(sys.argv) == 7):
+if (len(sys.argv) == 8):
   HaveReference = True
-  ReferenceTrace = sys.argv[6]
+  ReferenceTrace = sys.argv[7]
   ReferenceCSV = ReferenceTrace[0:-4] + ".DATA.csv"
 else:
   HaveReference = False
@@ -75,13 +76,13 @@ if (HaveReference):
   except:
     MirkinDistance = 0
 
-cmd = ClustersSequenceScore + " " + OutputPrefix + ".FINAL.DATA.csv"
-print "Running: " + cmd
-try:
-  output = subprocess.check_output(cmd, shell=True)
-  SequenceScore = float(output)
-except:
-  SequenceScore = 0
+  cmd = ClustersSequenceScore + " " + OutputPrefix + ".FINAL.DATA.csv"
+  print "Running: " + cmd
+  try:
+    output = subprocess.check_output(cmd, shell=True)
+    SequenceScore = float(output)
+  except:
+    SequenceScore = 0
 
 # Read the statistics from the MRNETSTATS.data file
 StatisticsDataFile = OutputPrefix + ".MRNETSTATS.data"
@@ -120,11 +121,12 @@ GlobalHulls = len(clusters_names.split(',')) - 2
 clusters_info_fd.close()
 
 fd = open(OutputCSV, 'w');
-fd.write("Experiment, NumTasks, FanIn, NumBackends, NumPoints, LocalHulls, GlobalHulls, ExtractionTime, LocalClusteringTime, MergeTime, ClassificationTime, ReconstructTime, TotalTime, MirkinDistance, SequenceScore\n")
+fd.write("Experiment, NumTasks, FanIn, NumBackends, TotalResources, NumPoints, LocalHulls, GlobalHulls, ExtractionTime, LocalClusteringTime, MergeTime, ClassificationTime, ReconstructTime, TotalTime, MirkinDistance, SequenceScore\n")
 fd.write(str(ExperimentId) + ", " +
          str(NumTasks) + ", " + 
          str(Fan) + ", " +
          str(NumBackends) + ", " + 
+         str(TotalResources) + ", " + 
          str(AvgClusteringPoints) + ", " + 
          str(AvgLocalHulls) + ", " + 
          str(GlobalHulls) + ", " + 

@@ -10,6 +10,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2015-01-08 German Llort <german.llort@bsc.es>
+	* Added support for TDBSCAN to be launched using the back-end attach mode.
+
 2014-12-17 German Llort <german.llort@bsc.es>
 	* Changed the way the final DATA.csv is generated in TreeDBSCAN.
 	Now we run an external script that merges the files.

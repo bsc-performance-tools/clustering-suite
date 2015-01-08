@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python @sub_PREFIX@/bin/tdbscan-launcher.py 1 $*

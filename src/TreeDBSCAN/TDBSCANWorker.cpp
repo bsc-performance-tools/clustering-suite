@@ -157,6 +157,16 @@ int TDBSCANWorker::Run()
 
   ClusteringStats.ClusteringTimerStop();
 
+  Messages.str("");
+  Messages << "Back-end entering barrier after local clustering..." << endl;
+  system_messages::information(Messages.str(), stderr);
+
+  Barrier();
+
+  Messages.str("");
+  Messages << "All back-ends finished the local clustering" << endl;
+  system_messages::information(Messages.str(), stderr);
+
   ClusteringStats.MergeTimerStart();
 
 #if defined(PROCESS_NOISE)
@@ -165,8 +175,8 @@ int TDBSCANWorker::Run()
   libClustering->GetNoisePoints (NoisePoints, NoiseDurations );
   ClusteringStats.IncreaseOutputPoints ( NoisePoints.size() );
 
-  /* DEBUG -- count remaining noise points
-  if (Verbose) cerr << "[BE " << WhoAmI() << "] Number of noise points = " << NoisePoints.size() << endl; */
+  /* DEBUG -- count remaining noise points */
+  if (Verbose) cerr << "[BE " << WhoAmI() << "] Number of noise points = " << NoisePoints.size() << endl; 
 
   NoiseManager Noise = NoiseManager (libClustering);
   Noise.Serialize (stClustering);
