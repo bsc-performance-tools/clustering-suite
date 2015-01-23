@@ -28,6 +28,6 @@ libANN_la_SOURCES=\
 	ANN/ANNperf.h \
 	ANN/ANNx.h
 
-libANN_la_CPPFLAGS = -I$(top_srcdir)/libANN
+libANN_la_CPPFLAGS = -I$(top_srcdir)/libANN @CLUSTERING_CPPFLAGS@
 #libANN_la_INCLUDES =  ANN
 

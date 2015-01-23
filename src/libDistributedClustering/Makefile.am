@@ -34,7 +34,7 @@ libDistributedClustering_la_CPPFLAGS = @CLUSTERING_CPPFLAGS@\
  -I$(top_srcdir)/src/libParaverTraceParser\
  -I$(top_srcdir)/src/libANN
  
-libDistributedClustering_la_LDFLAGS  = @CLUSTERING_LDFLAGS@
+libDistributedClustering_la_LDFLAGS  = @CLUSTERING_LDFLAGS@ @CLUSTERING_CPPFLAGS@
 libDistributedClustering_la_LIBADD= \
 	$(top_srcdir)/src/BasicClasses/libBasicClasses.la \
 	$(top_srcdir)/src/libSharedComponents/libSharedComponents.la \

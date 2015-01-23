@@ -36,6 +36,8 @@
 #ifndef _CLUSTERING_STATISTICS_HPP_
 #define _CLUSTERING_STATISTICS_HPP_
 
+#include <Utilities.hpp>
+
 #include "trace_clustering_types.h"
 
 #include "ClusteringStatistics.hpp"
@@ -207,6 +209,7 @@ bool ClusteringStatistics::ComputeStatistics(T                           begin,
   /* DEBUG
   cout << "Total number of bursts = " << size << endl;
   cout << "Total number of IDs    = " << IDs.size() << endl;
+  cepba_tools::print_stacktrace();
   */
 
   if (size != (size_t) IDs.size())

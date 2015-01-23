@@ -341,6 +341,7 @@ bool DBSCAN::Classify(const vector<const Point*> &Data,
   ClusterAssignmentVector.clear();
 
   system_messages::show_progress("Classifying points", 0, (int) Data.size());
+
   for (size_t i = 0; i < Data.size(); i++)
   {
     system_messages::show_progress("Classifying points", i, (int) Data.size());

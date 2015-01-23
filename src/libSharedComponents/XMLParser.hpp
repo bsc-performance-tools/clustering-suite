@@ -175,6 +175,8 @@ class XMLParser: public Error
 
     bool IsNumber(const string& String);
 
+
+
 };
 
 #endif // _DATAEXTRACTIONXMLPARSER_H_

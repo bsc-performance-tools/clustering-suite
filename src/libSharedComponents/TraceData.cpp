@@ -37,6 +37,8 @@
 #include <SystemMessages.hpp>
 using cepba_tools::system_messages;
 
+#include <Utilities.hpp>
+
 #include <ParametersManager.hpp>
 
 #include "TraceData.hpp"
@@ -400,6 +402,7 @@ bool TraceData::NewBurst(instance_t           Instance,
                          burst_type_t         BurstType)
 {
   CPUBurst *Burst;
+
   if (Instance == std::numeric_limits<instance_t>::max())
   {
     Burst = new CPUBurst (TaskId,
@@ -508,13 +511,6 @@ bool TraceData::NewBurst(instance_t           Instance,
     {
       CompleteBursts.push_back(Burst);
     }
-
-    /*
-    if (ReadThisTask(TaskId))
-    {
-      ClusteringBursts.push_back(Burst);
-    }
-    */
   }
 
   if (!Master && !ReadThisTask(TaskId))
@@ -562,6 +558,10 @@ bool TraceData::Sampling(size_t MaxSamples)
 {
   vector< vector<CPUBurst*> > BurstsPerTask (NumberOfTasks, vector<CPUBurst*>());
 
+  /* DEBUG
+  cout << "CompleteBursts.size() = " << CompleteBursts.size() << endl;
+  */
+
   if (CompleteBursts.size() <= MaxSamples)
   {
     /* No Sampling Needed! */
@@ -582,22 +582,33 @@ bool TraceData::Sampling(size_t MaxSamples)
   }
 
   /* DEBUG
+
+  cout << "MaxSamples = " << MaxSamples << endl;
+  cout << "CompleteBursts size = " << CompleteBursts.size() << endl;
   cout << "Bursts per Task: ";
   for (size_t i = 0; i < BurstsPerTask.size(); i++)
   {
     cout << "[" << i+1 << ":" << BurstsPerTask[i].size() << "] ";
   }
-  cout << endl; */
+  cout << endl;
+  */
 
   /* DEBUG
-  cout << "Sampling Sizes = "; */
+  cout << "Sampling Sizes: " << endl;
+  */
+
   srand(time(NULL));
 
   for (size_t i = 0; i < BurstsPerTask.size(); i++)
   {
     size_t CurrentTaskSampleSize;
 
+
     CurrentTaskSampleSize = (size_t) std::floor((BurstsPerTask[i].size()*MaxSamples)/CompleteBursts.size());
+
+    /* DEBUG
+    cout << "[" << i+1 << ":" << CurrentTaskSampleSize << "] ";
+    */
 
     if (!SampleSingleTask(BurstsPerTask[i], CurrentTaskSampleSize))
     {
@@ -611,7 +622,8 @@ bool TraceData::Sampling(size_t MaxSamples)
 
   /* DEBUG
   cout << "ClusteringBursts.size() =" << ClusteringBursts.size() << endl;
-  exit(EXIT_SUCCESS); */
+  exit(EXIT_SUCCESS);
+  */
 
   return true;
 }
@@ -959,8 +971,7 @@ void TraceData::ScalePoints(void)
   }
 }
 
-void
-TraceData::MeanAdjust(void)
+void TraceData::MeanAdjust(void)
 {
   TraceData::iterator DataIterator;
   vector<double> DimensionsAverage (ClusteringDimensions);
@@ -993,8 +1004,7 @@ TraceData::MeanAdjust(void)
   }
 }
 
-void
-TraceData::BaseChange(vector< vector<double> >& BaseChangeMatrix)
+void TraceData::BaseChange(vector< vector<double> >& BaseChangeMatrix)
 {
   TraceData::iterator DataIterator;
 
@@ -1056,6 +1066,13 @@ bool TraceData::FlushPoints(ostream&             str,
                             DataPrintSet         WhatToPrint)
 {
   bool Unclassified = false;
+
+
+
+  /* DEBUG
+  cout << "Cluster_IDs = " << Cluster_IDs.size() << endl;
+  cepba_tools::print_stacktrace(stderr, 63);
+  */
 
   if (Cluster_IDs.size() == 0)
   {
@@ -1127,24 +1144,24 @@ bool TraceData::FlushPoints(ostream&             str,
 
 #else
 
-      if (Cluster_IDs.size() != ClusteringBursts.size())
+      if (Cluster_IDs.size() != CompleteBursts.size())
       {
         ostringstream Message;
         Message << "number of IDs (" << Cluster_IDs.size() << ") ";
         Message << "different from number of complete bursts (";
-        Message << ClusteringBursts.size() << ")";
+        Message << CompleteBursts.size() << ")";
 
         SetErrorMessage(Message.str());
         SetError(true);
         return false;
       }
 
-      sort(ClusteringBursts.begin(), ClusteringBursts.end(), InstanceNumCompare());
+      sort(CompleteBursts.begin(), CompleteBursts.end(), InstanceNumCompare());
 
       return GenericFlushPoints(str,
-                                ClusteringBursts.begin(),
-                                ClusteringBursts.end(),
-                                ClusteringBursts.size(),
+                                CompleteBursts.begin(),
+                                CompleteBursts.end(),
+                                CompleteBursts.size(),
                                 Cluster_IDs);
 #endif
       break;
@@ -1245,7 +1262,14 @@ TraceData::PrintTraceDataInformation(void)
 bool TraceData::SampleSingleTask(vector<CPUBurst*>& TaskBursts,
                                  size_t             NumSamples)
 {
-  size_t SamplingFrequency = (size_t) std::floor(TaskBursts.size()/NumSamples);
+  size_t SamplingFrequency;
+
+  if (NumSamples == 0)
+  {
+    return true;
+  }
+
+  SamplingFrequency = (size_t) std::floor(TaskBursts.size()/NumSamples);
 
   if (NumSamples > TaskBursts.size())
   {

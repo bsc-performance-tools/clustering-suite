@@ -76,12 +76,14 @@ class ClusteredTRFGenerator: public ClusteredTraceGenerator
               T                     end,
               vector<cluster_id_t>& IDs,
               set<cluster_id_t>&    DifferentIDs,
-              bool                  MinimizeInformation = false);
+              bool                  PrintOnlyEvents,
+              bool                  DoNotPrintFilteredBursts);
 
-    bool Run(vector<CPUBurst*>&    ClusteringBursts,
-             vector<cluster_id_t>& IDs,
-             set<cluster_id_t>&    DifferentIDs,
-             bool                  MinimizeInformation = false);
+    bool Run (vector<CPUBurst*>&    ClusteringBursts,
+              vector<cluster_id_t>& IDs,
+              set<cluster_id_t>&    DifferentIDs,
+              bool                  PrintOnlyEvents,
+              bool                  DoNotPrintFilteredBursts);
 
   private:
     INT32 GetNextClusterId(void);
@@ -111,7 +113,8 @@ bool ClusteredTRFGenerator::Run (T                     begin,
                                  T                     end,
                                  vector<cluster_id_t>& IDs,
                                  set<cluster_id_t>&    DifferentIDs,
-                                 bool                  MinimizeInformation)
+                                 bool                  PrintOnlyEvents,
+                                 bool                  DoNotPrintFilteredBursts)
 {
   bool               InIdleBlock = false;
   char               Buffer[256], AuxBuffer[256];

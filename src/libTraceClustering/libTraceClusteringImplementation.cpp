@@ -140,6 +140,12 @@ bool libTraceClusteringImplementation::InitTraceClustering(string        Cluster
     SetErrorMessage(ConfigurationManager->GetLastError());
     return false;
   }
+
+  if (ConfigurationManager->GetWarning())
+  {
+    system_messages::information(ConfigurationManager->GetWarningMessage());
+  }
+
   /* Set if MPI should be used */
   ConfigurationManager->SetDistributed(USE_MPI(UseFlags));
 
@@ -358,6 +364,13 @@ libTraceClusteringImplementation::ExtractData(string            InputFileName,
     }
   }
 
+  if (SampleData)
+  { /* This is necessary to ensure that there will be two different
+     * vectors, one with the clustering bursts and other with all
+     * the bursts */
+    Data->SetMaster(true);
+  }
+
   if (!Extractor->ExtractData(Data))
   {
     SetError(true);
@@ -451,7 +464,14 @@ bool libTraceClusteringImplementation::FlushData(string OutputCSVFileNamePrefix)
 
   if (USE_CLUSTERING(UseFlags) || USE_CLUSTERING_REFINEMENT(UseFlags))
   {
-    WhatToPrint = PrintCompleteBursts;
+    if (SampleData)
+    {
+      WhatToPrint = PrintCompleteBursts;
+    }
+    else
+    {
+      WhatToPrint = PrintClusteringBursts;
+    }
   }
   else
   {
@@ -613,16 +633,25 @@ bool libTraceClusteringImplementation::ClusterAnalysis(void)
                             Parameters->GetExtrapolationParametersNames(),
                             Parameters->GetExtrapolationParametersPrecision());
 
-  /*
-  if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
-                                    PartitionUsed.GetAssignmentVector()))
+
+
+  if (SampleData)
   {
-  */
-  if (!Statistics.ComputeStatistics(Data->GetClusteringBursts(),
-                                    PartitionUsed.GetAssignmentVector()))
+    if (!Statistics.ComputeStatistics(Data->GetCompleteBursts(),
+                                      PartitionUsed.GetAssignmentVector()))
+    {
+      SetErrorMessage(Statistics.GetLastError());
+      return false;
+    }
+  }
+  else
   {
-    SetErrorMessage(Statistics.GetLastError());
-    return false;
+    if (!Statistics.ComputeStatistics(Data->GetClusteringBursts(),
+                                      PartitionUsed.GetAssignmentVector()))
+    {
+      SetErrorMessage(Statistics.GetLastError());
+      return false;
+    }
   }
 
   Statistics.TranslatedIDs(PartitionUsed.GetAssignmentVector());
@@ -1247,7 +1276,8 @@ bool libTraceClusteringImplementation::GenericRefinement(bool           Divisive
       if (!TraceGenerator->Run(Data->GetAllBursts(),
                                PartitionsHierarchy[i].GetAssignmentVector(),
                                PartitionsHierarchy[i].GetIDs(),
-                               true)) // Minimize information
+                               true,   // Minimize information
+                               false)) // Print Filtered Events
       {
           // system_messages::verbose = verbose_state;
           SetErrorMessage(TraceGenerator->GetLastError());
@@ -1358,9 +1388,18 @@ bool libTraceClusteringImplementation::ComputeSequenceScore(string OutputFilePre
  *
  * \param OutputTraceName Name of the output trace file
  *
+ * \param PrintOnlyEventsOnOutputTrace Generate an output trace just contaning
+ *                                     the clustering events (focused on Paraver
+ *                                     traces)
+ *
+ * \param DoNotPrintFilteredEventsOnOutputTrace Avoid printing events for filtered
+ *                                              bursts on the output trace
+ *
  * \result True if the scripts where printed correctly, false otherwise
  */
-bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceName)
+bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceName,
+                                                             bool   PrintOnlyEventsOnOutputTrace,
+                                                             bool   DoNotPrintFilteredEventsOnOutputTrace)
 {
   /* to lowercase a string
   std::transform(str.begin(), str.end(), str.begin(),
@@ -1417,7 +1456,9 @@ bool libTraceClusteringImplementation::ReconstructInputTrace(string OutputTraceN
 
   if (!TraceReconstructor->Run(Data->GetAllBursts(),
                                PartitionUsed.GetAssignmentVector(),
-                               PartitionUsed.GetIDs()))
+                               PartitionUsed.GetIDs(),
+                               PrintOnlyEventsOnOutputTrace,
+                               DoNotPrintFilteredEventsOnOutputTrace))
   {
     SetErrorMessage(TraceReconstructor->GetLastError());
     return false;

@@ -94,14 +94,16 @@ class SemanticGuidedPRVGenerator: public ClusteredTraceGenerator
     bool Run (vector<CPUBurst*>&    Bursts,
               vector<cluster_id_t>& IDs,
               set<cluster_id_t>&    DifferentIDs,
-              bool                  MinimizeInformation = false);
+              bool                  PrintOnlyEvents,
+              bool                  DoNotPrintFilteredBursts);
 
     template <typename T>
     bool Run (T                     begin,
               T                     end,
               vector<cluster_id_t>& IDs,
               set<cluster_id_t>&    DifferentIDs,
-              bool                  MinimizeInformation = false);
+              bool                  PrintOnlyEvents,
+              bool                  DoNotPrintFilteredBursts);
 
   private:
     bool GenerateOutputPCF (set<cluster_id_t>& DifferentIDs);
@@ -126,7 +128,8 @@ bool SemanticGuidedPRVGenerator::Run (T                     begin,
                                       T                     end,
                                       vector<cluster_id_t>& IDs,
                                       set<cluster_id_t>&    DifferentIDs,
-                                      bool                  MinimizeInformation)
+                                      bool                  PrintOnlyEvents,
+                                      bool                  DoNotPrintFilteredBursts)
 {
   ParaverHeader*                  Header;
   vector<ApplicationDescription*> AppsDescription;
@@ -146,25 +149,22 @@ bool SemanticGuidedPRVGenerator::Run (T                     begin,
   {
     cluster_id_t  CurrentID;
     ostringstream TraceObject;
-    BurstInfo*    NewBurstInfo = new BurstInfo();
-
-    NewBurstInfo->BeginTime = (*Burst)->GetBeginTime();
-    NewBurstInfo->EndTime   = (*Burst)->GetEndTime();
+    BurstInfo*    NewBurstInfo;
 
     switch ( (*Burst)->GetBurstType() )
     {
       case CompleteBurst:
-        CurrentID = IDs[CurrentClusteringBurst] + PARAVER_OFFSET;
+        CurrentID = IDs[CurrentClusteringBurst];
         CurrentClusteringBurst++;
         break;
       case DurationFilteredBurst:
-        CurrentID = DURATION_FILTERED_CLUSTERID + PARAVER_OFFSET;
+        CurrentID = DURATION_FILTERED_CLUSTERID;
         break;
       case RangeFilteredBurst:
-        CurrentID = RANGE_FILTERED_CLUSTERID + PARAVER_OFFSET;
+        CurrentID = RANGE_FILTERED_CLUSTERID;
         break;
       case MissingDataBurst:
-        CurrentID = MISSING_DATA_CLUSTERID + PARAVER_OFFSET;
+        CurrentID = MISSING_DATA_CLUSTERID;
         break;
       default:
         /* This option should never happen */
@@ -173,15 +173,25 @@ bool SemanticGuidedPRVGenerator::Run (T                     begin,
         return false;
     }
 
-    NewBurstInfo->ID = CurrentID;
-
-    TraceObject << (*Burst)->GetTaskId() << "." << (*Burst)->GetThreadId();
-    if ( BurstsToPrint.find(TraceObject.str()) == BurstsToPrint.end())
+    if (!DoNotPrintFilteredBursts ||
+         (CurrentID != DURATION_FILTERED_CLUSTERID &&
+          CurrentID != RANGE_FILTERED_CLUSTERID    &&
+          CurrentID != MISSING_DATA_CLUSTERID))
     {
-      BurstsToPrint.insert(make_pair(TraceObject.str(), list<BurstInfo*>()));
-    }
+      NewBurstInfo = new BurstInfo();
 
-    BurstsToPrint[TraceObject.str()].push_back(NewBurstInfo);
+      NewBurstInfo->BeginTime = (*Burst)->GetBeginTime();
+      NewBurstInfo->EndTime   = (*Burst)->GetEndTime();
+      NewBurstInfo->ID = CurrentID + PARAVER_OFFSET;
+
+      TraceObject << (*Burst)->GetTaskId() << "." << (*Burst)->GetThreadId();
+      if ( BurstsToPrint.find(TraceObject.str()) == BurstsToPrint.end())
+      {
+        BurstsToPrint.insert(make_pair(TraceObject.str(), list<BurstInfo*>()));
+      }
+
+      BurstsToPrint[TraceObject.str()].push_back(NewBurstInfo);
+    }
   }
 
   /* Sort all bursts in terms of trace appearance, using the line comparison */
@@ -360,7 +370,7 @@ bool SemanticGuidedPRVGenerator::Run (T                     begin,
     }
 
     /* If 'MinimizeInformation' is active, general records are not flushed */
-    if (!CurrentRecordFlushed && !MinimizeInformation)
+    if (!CurrentRecordFlushed && !PrintOnlyEvents)
     {
       if (!CurrentRecord->Flush (OutputTraceFile) )
       {

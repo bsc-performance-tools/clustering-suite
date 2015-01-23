@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libBasicClasses.la
 
 libBasicClasses_la_CPPFLAGS = $(top_srcdir)/include @CLUSTERING_CPPFLAGS@
-libBasicClasses_la_LDFLAGS  = @CLUSTERING_LDFLAGS@
+libBasicClasses_la_LDFLAGS  = @CLUSTERING_LDFLAGS@ @CLUSTERING_CPPFLAGS@
 libBasicClasses_la_LIBADD   = @CLUSTERING_LIBS@
 
 

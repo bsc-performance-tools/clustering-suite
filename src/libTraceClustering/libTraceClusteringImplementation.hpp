@@ -114,7 +114,9 @@ class libTraceClusteringImplementation: public Error
     bool ComputeSequenceScore(string OutputFilePrefix,
                               bool   FASTASequenceFile);
 
-    bool ReconstructInputTrace(string OutputTraceName);
+    bool ReconstructInputTrace(string OutputTraceName,
+                               bool   PrintOnlyEventsOnOutputTrace,
+                               bool   DoNotPrintFilteredEventsOnOutputTrace);
 
     bool PrintPlotScripts(string DataFileNamePrefix,
                           string ScriptsFileNamePrefix);

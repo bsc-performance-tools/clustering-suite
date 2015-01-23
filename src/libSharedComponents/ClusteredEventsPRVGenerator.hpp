@@ -85,14 +85,16 @@ class ClusteredEventsPRVGenerator: public ClusteredTraceGenerator
     bool Run (vector<CPUBurst*>&    Bursts,
               vector<cluster_id_t>& IDs,
               set<cluster_id_t>&    DifferentIDs,
-              bool                  MinimizeInformation = false);
+              bool                  PrintOnlyEvents,
+              bool                  DoNotPrintFilteredBursts);
 
     template <typename T>
     bool Run (T                     begin,
               T                     end,
               vector<cluster_id_t>& IDs,
               set<cluster_id_t>&    DifferentIDs,
-              bool                  MinimizeInformation = false);
+              bool                  PrintOnlyEvents,
+              bool                  DoNotPrintFilteredBursts);
 
   private:
     bool GenerateOutputPCF (set<cluster_id_t>& DifferentIDs);
@@ -115,7 +117,8 @@ bool ClusteredEventsPRVGenerator::Run (T                     begin,
                                        T                     end,
                                        vector<cluster_id_t>& IDs,
                                        set<cluster_id_t>&    DifferentIDs,
-                                       bool                  MinimizeInformation)
+                                       bool                  PrintOnlyEvents,
+                                       bool                  DoNotPrintFilteredBursts)
 {
   ParaverHeader*                  Header;
   vector<ApplicationDescription*> AppsDescription;
@@ -158,38 +161,41 @@ bool ClusteredEventsPRVGenerator::Run (T                     begin,
 
   for (T Burst = begin; Burst != end; ++Burst)
   {
+    cluster_id_t CurrentID;
+
     switch ( (*Burst)->GetBurstType() )
     {
       case CompleteBurst:
         // CompleteIDs.push_back (IDs[CurrentClusteringBurst] + PARAVER_OFFSET);
-        CompleteIDs[ (*Burst)->GetLine() ] =
-          std::make_pair (IDs[CurrentClusteringBurst] + PARAVER_OFFSET,
-                          (*Burst)->GetEndTime());
+        CurrentID = IDs[CurrentClusteringBurst];
         CurrentClusteringBurst++;
         break;
       case DurationFilteredBurst:
         // CompleteIDs.push_back (DURATION_FILTERED_CLUSTERID + PARAVER_OFFSET);
-        CompleteIDs[ (*Burst)->GetLine() ] =
-          std::make_pair (DURATION_FILTERED_CLUSTERID + PARAVER_OFFSET,
-                          (*Burst)->GetEndTime());
+        CurrentID = DURATION_FILTERED_CLUSTERID;
         break;
       case RangeFilteredBurst:
         // CompleteIDs.push_back (RANGE_FILTERED_CLUSTERID + PARAVER_OFFSET);
-        CompleteIDs[ (*Burst)->GetLine() ] =
-          std::make_pair (RANGE_FILTERED_CLUSTERID + PARAVER_OFFSET,
-                          (*Burst)->GetEndTime());
+        CurrentID = RANGE_FILTERED_CLUSTERID;
         break;
       case MissingDataBurst:
         // CompleteIDs.push_back (MISSING_DATA_CLUSTERID + PARAVER_OFFSET);
-        CompleteIDs[ (*Burst)->GetLine() ] =
-          std::make_pair (MISSING_DATA_CLUSTERID + PARAVER_OFFSET,
-                          (*Burst)->GetEndTime());
+        CurrentID = MISSING_DATA_CLUSTERID;
         break;
       default:
         /* This option should never happen */
         SetErrorMessage ("incorrect burst type when generating Paraver trace");
         SetError (false);
         return false;
+    }
+
+    if (!DoNotPrintFilteredBursts ||
+         (CurrentID != DURATION_FILTERED_CLUSTERID &&
+          CurrentID != RANGE_FILTERED_CLUSTERID    &&
+          CurrentID != MISSING_DATA_CLUSTERID))
+    {
+      CompleteIDs[ (*Burst)->GetLine() ] =
+          std::make_pair (CurrentID + PARAVER_OFFSET, (*Burst)->GetEndTime());
     }
 #ifdef HAVE_SQLITE3
     delete (*Burst);
@@ -319,7 +325,9 @@ bool ClusteredEventsPRVGenerator::Run (T                     begin,
           BurstsEnd[CurrentEvent->GetTaskId() ][CurrentEvent->GetThreadId() ] = 0;
         }
 
-        if (BurstsInfo != CompleteIDs.end())
+        /* Now we have to check if the current information corresponds to
+         * the current bursts by checking the line where it was read */
+        if ( (*BurstsInfo).first == CurrentEvent->GetLine())
         {
           Event* NewEvent;
 
@@ -437,7 +445,7 @@ bool ClusteredEventsPRVGenerator::Run (T                     begin,
     }
 
     /* If 'MinimizeInformation' is active, general records are not flushed */
-    if (!CurrentRecordFlushed && !MinimizeInformation)
+    if (!CurrentRecordFlushed && !PrintOnlyEvents)
     {
       if (!CurrentRecord->Flush (OutputTraceFile) )
       {

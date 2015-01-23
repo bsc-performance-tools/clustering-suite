@@ -270,7 +270,7 @@ double libDistributedClusteringImplementation::GetEpsilon(void)
   return this->Epsilon;
 }
 
-/** 
+/**
  * Sets the MinPoints value used in the library
  */
 void libDistributedClusteringImplementation::SetMinPoints(INT32 MinPts)
@@ -730,7 +730,9 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
         if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
                                      Data->GetAllBursts().end(),
                                      TraceReconstructionPartition.GetAssignmentVector(),
-                                     TraceReconstructionPartition.GetIDs()))
+                                     TraceReconstructionPartition.GetIDs(),
+                                     false,   // PrintOnlyEvents = false
+                                     false))  // DoNoPrintFilteredBurstEvents = false
         {
           SetErrorMessage(TraceReconstructor->GetLastError());
           return false;
@@ -756,7 +758,9 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
         if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
                                      Data->GetAllBursts().end(),
                                      TraceReconstructionPartition.GetAssignmentVector(),
-                                     TraceReconstructionPartition.GetIDs()))
+                                     TraceReconstructionPartition.GetIDs(),
+                                     false,   // PrintOnlyEvents = false
+                                     false))  // DoNoPrintFilteredBurstEvents = false
         {
           SetErrorMessage(TraceReconstructor->GetLastError());
           return false;
@@ -784,7 +788,9 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
       if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
                                    Data->GetAllBursts().end(),
                                    TraceReconstructionPartition.GetAssignmentVector(),
-                                   TraceReconstructionPartition.GetIDs()))
+                                   TraceReconstructionPartition.GetIDs(),
+                                   false,   // PrintOnlyEvents = false
+                                   false))  // DoNoPrintFilteredBurstEvents = false
       {
         SetErrorMessage(TraceReconstructor->GetLastError());
         return false;
@@ -800,7 +806,9 @@ bool libDistributedClusteringImplementation::ReconstructInputTrace(string Output
       if (!TraceReconstructor->Run(Data->GetAllBursts().begin(),
                                    Data->GetAllBursts().end(),
                                    TraceReconstructionPartition.GetAssignmentVector(),
-                                   TraceReconstructionPartition.GetIDs()))
+                                   TraceReconstructionPartition.GetIDs(),
+                                   false,   // PrintOnlyEvents = false
+                                   false))  // DoNoPrintFilteredBurstEvents = false
       {
         SetErrorMessage(TraceReconstructor->GetLastError());
         return false;

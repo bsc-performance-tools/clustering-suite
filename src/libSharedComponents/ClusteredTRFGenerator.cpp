@@ -83,9 +83,15 @@ bool ClusteredTRFGenerator::SetEventsToDealWith (set<event_type_t>& EventsToDeal
 bool ClusteredTRFGenerator::Run(vector<CPUBurst*>&    Bursts,
                                 vector<cluster_id_t>& IDs,
                                 set<cluster_id_t>&    DifferentIDs,
-                                bool                  MinimizeInformation)
+                                bool                  PrintOnlyEvents,
+                                bool                  DoNotPrintFilteredBursts)
 {
-  return Run(Bursts.begin(), Bursts.end(), IDs, DifferentIDs, MinimizeInformation);
+  return Run(Bursts.begin(),
+             Bursts.end(),
+             IDs,
+             DifferentIDs,
+             PrintOnlyEvents,
+             DoNotPrintFilteredBursts);
 }
 
 /* PrintClusteredBurst *******************************************************/

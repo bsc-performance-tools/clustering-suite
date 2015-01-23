@@ -199,13 +199,19 @@ bool ClusteredStatesPRVGenerator::SetEventsToDealWith (set<event_type_t>& Events
 bool ClusteredStatesPRVGenerator::Run(vector<CPUBurst*>&    Bursts,
                                       vector<cluster_id_t>& IDs,
                                       set<cluster_id_t>&    DifferentIDs,
-                                      bool                  MinimizeInformation)
+                                      bool                  PrintOnlyEvents,
+                                      bool                  DoNotPrintFilteredBursts)
 {
   /* Sort all burst in terms of instance number, to guarantee the positional
      assignment in the IDs vector */
   sort (Bursts.begin(), Bursts.end(), InstanceNumCompare() );
 
-  return Run(Bursts.begin(), Bursts.end(), IDs, DifferentIDs, MinimizeInformation);
+  return Run(Bursts.begin(),
+             Bursts.end(),
+             IDs,
+             DifferentIDs,
+             PrintOnlyEvents,
+             DoNotPrintFilteredBursts);
 }
 
 bool ClusteredStatesPRVGenerator::GenerateOutputPCF(set<cluster_id_t>& DifferentIDs)

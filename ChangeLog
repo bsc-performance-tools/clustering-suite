@@ -10,8 +10,32 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2015-01-23 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* Solved a regression that broke the sampling version of the
+	clustering tool
+
+	* Added a routine in the Utilities to print a backtrace
+
+2015-01-15 Juan Gonzalez <juan.gonzalez@bsc.es>
+	* New feature to indicate the time unit used in the 'duration_filter'
+	of the clustering definition XML. The possible time units are:
+	- 'D' for days
+	- 'H' for hours
+	- 'M' for minutes
+	- 's' or 'S' for minutes
+	- 'm' for miliseconds
+	- 'u' for microseconds (default if no time unit is given)
+	- 'n' nanoseconds
+
+	* Added to new '-o' "subparameters" to finely tune the output trace:
+	- 's' to generate an input trace only including the clustering events
+	- 'f' to avoid generating the events refering to filtered bursts
+
+	* Clustering Manual updated
+
 2015-01-08 German Llort <german.llort@bsc.es>
-	* Added support for TDBSCAN to be launched using the back-end attach mode.
+	* Added support for TDBSCAN to be launched using the back-end
+	attach mode.
 
 2014-12-17 German Llort <german.llort@bsc.es>
 	* Changed the way the final DATA.csv is generated in TreeDBSCAN.
@@ -27,19 +51,22 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	* Fixed bug in tdbscan-launcher when parsing the available resources
 	to generate the topology
 
-	* Fixed paths of the files that are generated in the experiments scripts 
-	so that the outputs are generated in the current directory
+	* Fixed paths of the files that are generated in the experiments
+	scripts so that the outputs are generated in the current directory
 
 2014-12-11 German Llort <german.llort@bsc.es>
 	* Added support for BlueWaters' PBS system manager in
 	tdbscan-launcher.py
 
 2014-12-11 German Llort <german.llort@bsc.es>
-	* Modified script tdbscan-sweep to run the same experiment several times
+	* Modified script tdbscan-sweep to run the same experiment several
+	times
 
-	* Added new statistics to the final report of tdbscan-sweep, and make averages of all backends 
+	* Added new statistics to the final report of tdbscan-sweep, and make
+	averages of all backends 
 
-	* Fixed bug in tdscan-launcher when parsing the hostfile from the LSF system manager
+	* Fixed bug in tdscan-launcher when parsing the hostfile from the LSF
+	system manager
 
 2014-12-10 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a bug in 'ClusteredStatesPRVGenerator' that caused a duplicity
@@ -50,8 +77,8 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 	application
 
 2014-12-10 German Llort <german.llort@bsc.es>
-	* Added suffix .sh to the wrapper scripts BurstClustering and ClustersSequenceScore 
-	to avoid compilation problems.
+	* Added suffix .sh to the wrapper scripts BurstClustering and
+	ClustersSequenceScore to avoid compilation problems.
 
 	* TDBSCAN now prints timing statistics 
 

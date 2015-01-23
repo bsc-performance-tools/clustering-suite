@@ -31,7 +31,7 @@ libTraceClustering_la_CPPFLAGS = @CLUSTERING_CPPFLAGS@\
   -I$(top_srcdir)/src/libANN\
   -I$(top_srcdir)/src/libParaverTraceParser
 
-libTraceClustering_la_LDFLAGS  = @CLUSTERING_LDFLAGS@
+libTraceClustering_la_LDFLAGS  = @CLUSTERING_CPPFLAGS@ @CLUSTERING_LDFLAGS@
 libTraceClustering_la_LIBADD =  \
 	$(top_srcdir)/src/libClustering/libClustering.la \
 	$(top_srcdir)/src/libSharedComponents/libSharedComponents.la \

@@ -80,7 +80,7 @@ libSharedComponents_la_CPPFLAGS = @CLUSTERING_CPPFLAGS@\
   -I${top_srcdir}/pcfparser_svn1816
   
 
-libSharedComponents_la_LDFLAGS  = @CLUSTERING_LDFLAGS@
+libSharedComponents_la_LDFLAGS  = @CLUSTERING_LDFLAGS@ @CLUSTERING_CPPFLAGS@
 
 libSharedComponents_la_LIBADD =  \
 	$(top_srcdir)/pcfparser_svn1816/libparavertraceconfig.la \

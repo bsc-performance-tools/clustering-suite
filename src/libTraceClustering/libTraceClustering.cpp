@@ -422,13 +422,25 @@ bool libTraceClustering::ComputeSequenceScore(string OutputFilePrefix,
 /**
  * Generates an output trace adding the cluster analysis information to the input trace
  *
- * \param OutputTraceName Name of the output trace file
+ * \param OutputTraceName    Name of the output trace file
+ *
+ * \param PrintOnlyEventsOnOutputTrace Generate an output trace just contaning
+ *                                     the clustering events (focused on Paraver
+ *                                     traces)
+ *
+ * \param DoNotPrintFilteredEventsOnOutputTrace Avoid printing events for filtered
+ *                                              bursts on the output trace
+ *
  *
  * \result True if reconstruction worked properly, false otherwise
  */
-bool libTraceClustering::ReconstructInputTrace(string OutputTraceName)
+bool libTraceClustering::ReconstructInputTrace(string OutputTraceName,
+                                               bool   PrintOnlyEventsOnOutputTrace,
+                                               bool   DoNotPrintFilteredEventsOnOutputTrace)
 {
-  if (!Implementation->ReconstructInputTrace(OutputTraceName))
+  if (!Implementation->ReconstructInputTrace(OutputTraceName,
+                                             PrintOnlyEventsOnOutputTrace,
+                                             DoNotPrintFilteredEventsOnOutputTrace))
   {
     Error = true;
     ErrorMessage = Implementation->GetLastError();

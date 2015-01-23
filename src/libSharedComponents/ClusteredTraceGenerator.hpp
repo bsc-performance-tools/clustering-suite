@@ -68,12 +68,14 @@ class ClusteredTraceGenerator: public Error
               T                     end,
               vector<cluster_id_t>& IDs,
               set<cluster_id_t>&    DifferentIDs,
-              bool                  MinimizeInformation = false);
+              bool                  PrintOnlyEvents,
+              bool                  DoNotPrintFilteredBursts);
 
     virtual bool Run (vector<CPUBurst*>&    Bursts,
                       vector<cluster_id_t>& IDs,
                       set<cluster_id_t>&    DifferentIDs,
-                      bool                  MinimizeInformation = false) = 0;
+                      bool                  PrintOnlyEvents,
+                      bool                  DoNotPrintFilteredBursts) = 0;
 
     virtual bool SetEventsToDealWith (set<event_type_t>& EventsToDealWith,
                                       bool               ConsecutiveEvts) = 0;

@@ -35,6 +35,7 @@
 #include "XMLParser.hpp"
 
 #include <EventEncoding.h>
+#include <Utilities.hpp>
 
 #include <iostream>
 using std::cout;
@@ -195,8 +196,10 @@ bool XMLParser::ParseXML(string                   XMLFileName,
     DurationFilter = DEFAULT_DURATION_FILTER;
   else
   {
-    DurationFilter = strtoull(AuxCharStr, NULL, 10);
-    DurationFilter = llround(DurationFilter*1e3);    /* Duration filter in nanosecs. */
+    /* Now we use the 'getTimeFromStr' obtained from Extrae! */
+    DurationFilter = cepba_tools::getTimeFromStr(AuxCharStr, "Duration Filter");
+    // DurationFilter = strtoull(AuxCharStr, NULL, 10);
+    // DurationFilter = llround(DurationFilter*1e3);    /* Duration filter in nanosecs. */
     xmlFree(AuxCharStr);
   }
 
@@ -1604,5 +1607,4 @@ bool XMLParser::IsNumber(const string& String)
 
   return !String.empty() && it == String.end();
 }
-
 

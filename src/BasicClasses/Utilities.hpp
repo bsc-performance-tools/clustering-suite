@@ -61,6 +61,13 @@ namespace cepba_tools
 
   std::string &trim(std::string &s);
 
+/* Adapted from Extrae 'utils.c' */
+
+  unsigned long long getTimeFromStr (char *time, char *envvar);
+
+  int is_Alphabetic(char c);
+
+  void print_stacktrace(FILE *out = stderr, unsigned int max_frames = 63);
 }
 
 

@@ -179,13 +179,15 @@ class TraceData: public Error
       return (vector<const Point*>&) ClusteringBursts;
     };
 
-    vector<const Point*>& GetCompletePoints(void) { return (vector<const Point*>&) CompleteBursts; }
+    vector<const Point*>& GetCompletePoints(void) { return (vector<const Point*>&) CompleteBursts; };
 
-    vector<CPUBurst*>& GetAllBursts(void)         { return AllBursts;         }
-    vector<CPUBurst*>& GetCompleteBursts(void)    { return CompleteBursts;    }
-    vector<CPUBurst*>& GetClusteringBursts(void)  { return ClusteringBursts;  }
-    vector<CPUBurst*>& GetFilteredBursts(void)    { return FilteredBursts;    }
-    vector<CPUBurst*>& GetMissingDataBursts(void) { return MissingDataBursts; }
+    vector<CPUBurst*>& GetAllBursts(void)         { return AllBursts;         };
+    vector<CPUBurst*>& GetCompleteBursts(void)    { return CompleteBursts;    };
+    vector<CPUBurst*>& GetClusteringBursts(void)  { return ClusteringBursts;  };
+    vector<CPUBurst*>& GetFilteredBursts(void)    { return FilteredBursts;    };
+    vector<CPUBurst*>& GetMissingDataBursts(void) { return MissingDataBursts; };
+
+    void               SwitchClusteringAndCompletePoints(void) { ClusteringBursts = CompleteBursts; };
 
 #ifdef HAVE_SQLITE3
     BurstsDB::iterator GetAllBursts_begin(void)       { return AllBurstsDB.all_bursts_begin(); };
