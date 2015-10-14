@@ -392,7 +392,7 @@ AC_ARG_ENABLE(
   AS_HELP_STRING(
     [--enable-treedbscan],
     [enable compilation of TreeDBSCAN support for Extrae >= 3.0. It requires
-     'boost-thread', 'mpfr', 'gmp', 'cgal' and 'mrnetapp' libraries. Please
+     'boost-thread', 'mpfr', 'gmp', 'cgal' and 'synapse' libraries. Please
      check the different '--with-*' options to provide this requirements]
   ),
   [treedbscan_enabled="yes"],
@@ -493,22 +493,22 @@ AX_CHECK_IS_SYSTEM_LIBRARY_PATH([${CGAL_LIBSDIR}],[],
 ])
 
 dnl =========================================================================
-dnl AX_PROG_MRNETAPP: set directories of MRNetApp library to build TreeDBSCAN
-dnl                   (defined at 'config/macros.m4')
-dnl                   The different variables provided by this macro are
-dnl                   directly used in the 'TreeDBSCAN/Makefile.am'
+dnl AX_PROG_SYNAPSE: set directories of Synapse library to build TreeDBSCAN
+dnl                  (defined at 'config/macros.m4')
+dnl                  The different variables provided by this macro are
+dnl                  directly used in the 'TreeDBSCAN/Makefile.am'
 dnl =========================================================================
-AX_PROG_MRNETAPP(
-  [mrnetapp_enabled="yes"],
+AX_PROG_SYNAPSE(
+  [synapse_enabled="yes"],
   [
-    AC_MSG_ERROR([required MRNetApp library not found])
-    mrnetapp_enabled="no"
+    AC_MSG_ERROR([required Synapse library not found])
+    synapse_enabled="no"
   ]
 )
 
 fi
 
-AM_CONDITIONAL([TREEDBSCAN_ENABLED], [test "x$mrnetapp_enabled" = "xyes"])
+AM_CONDITIONAL([TREEDBSCAN_ENABLED], [test "x$synapse_enabled" = "xyes"])
 
 
 dnl =========================================================================

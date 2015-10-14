@@ -35,8 +35,9 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
     echo -e \\\tshared libraries?        ${MPI_SHARED_LIB_FOUND}
   fi
   
-  # Tree DSBCAN is available is 'MRNETApp' (Synapse) is available
-  echo TREEDBSCAN enabled: ${mrnetapp_enabled:-no}
+  # Tree DSBCAN is available if Synapse is 
+  TREEDBSCAN_ENABLED="${synapse_enabled:-no}"
+  echo TREEDBSCAN enabled: ${TREEDBSCAN_ENABLED}
   if test "x${TREEDBSCAN_ENABLED}" = "xyes"; then
     echo ""
     echo -e -- MPFR flags --
@@ -51,8 +52,8 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
     echo -e \\\tCGAL_CPPFLAGS:           ${CGAL_CPPFLAGS}
     echo -e \\\tCGAL_LIBSDIR:            ${CGAL_LIBSDIR}
     echo -e \\\tCGAL_LIBS:               ${CGAL_LIBS}
-    echo -e -- MRNetApp flags --
-    echo -e \\\tMRNetApp config script: "${MRNETAPP_HOME}/bin/mrnapp-config"
+    echo -e -- Synapse flags --
+    echo -e \\\tSynapse config script: "${SYNAPSE_HOME}/bin/synapse-config"
     echo ""
   fi
 

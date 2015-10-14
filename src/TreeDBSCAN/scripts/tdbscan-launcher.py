@@ -4,7 +4,7 @@ import subprocess
 import threading
 
 # MRNEt topgen binary
-MRNET_HOME      = subprocess.check_output("@sub_MRNETAPP_HOME@/bin/mrnapp-config --mrnet", shell=True).rstrip("\n")
+MRNET_HOME      = subprocess.check_output("@sub_SYNAPSE_HOME@/bin/synapse-config --mrnet", shell=True).rstrip("\n")
 mrnet_topgen    = MRNET_HOME + "/bin/mrnet_topgen"
 TDBSCAN_HOME    = "@sub_PREFIX@"
 TDBSCAN_FE      = TDBSCAN_HOME + "/bin/TDBSCAN_FE"
@@ -164,14 +164,14 @@ print "Topology written to '" + TopologyFile + ":"
 os.system( 'cat ' + TopologyFile )
 
 # Run the TDBSCAN front-end
-print "Setting MRNAPP_TOPOLOGY to '" + TopologyFile + "':"
+print "Setting SYNAPSE_TOPOLOGY to '" + TopologyFile + "':"
+print "Setting SYNAPSE_NUM_BE to " + str(NumBackEnds)
+print "Setting SYNAPSE_BE_CONNECTIONS to '" + ConnectionsFile + "'"
 print "Setting MRNET_STARTUP_TIMEOUT to '300'"
-print "Setting MRNAPP_NUM_BE to " + str(NumBackEnds)
-print "Setting MRNAPP_BE_CONNECTIONS to '" + ConnectionsFile + "'"
-os.environ["MRNAPP_TOPOLOGY"] = TopologyFile
+os.environ["SYNAPSE_TOPOLOGY"] = TopologyFile
+os.environ['SYNAPSE_NUM_BE'] = str(NumBackEnds)
+os.environ['SYNAPSE_BE_CONNECTIONS'] = ConnectionsFile
 os.environ['MRNET_STARTUP_TIMEOUT'] = '300'
-os.environ['MRNAPP_NUM_BE'] = str(NumBackEnds)
-os.environ['MRNAPP_BE_CONNECTIONS'] = ConnectionsFile
 
 if (BackEndAttachMode):
   cmd = TDBSCAN_FE_NOBE + " " + " ".join(ClusteringArgs)

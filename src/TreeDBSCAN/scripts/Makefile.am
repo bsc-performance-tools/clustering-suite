@@ -15,8 +15,8 @@ install-data-hook:
 	$(mkdir_p) $(prefix)/etc
 	cp $(SOURCEME_SH) $(prefix)/etc
 	$(top_srcdir)/substitute-all $(SED) "@sub_PREFIX@" ${prefix} $(prefix)/etc
-	$(top_srcdir)/substitute-all $(SED) "@sub_MRNETAPP_HOME@" @MRNETAPP_HOME@ $(prefix)/etc
-	$(top_srcdir)/substitute-all $(SED) "@sub_MRNETAPP_LIBSDIR@" @MRNETAPP_LIBSDIR@ $(prefix)/etc
+	$(top_srcdir)/substitute-all $(SED) "@sub_SYNAPSE_HOME@" @SYNAPSE_HOME@ $(prefix)/etc
+	$(top_srcdir)/substitute-all $(SED) "@sub_SYNAPSE_LIBSDIR@" @SYNAPSE_LIBSDIR@ $(prefix)/etc
 	$(top_srcdir)/substitute-all $(SED) "@sub_CLUSTERING_LD_LIBRARY_PATH@" @CLUSTERING_LD_LIBRARY_PATH@ $(prefix)/etc
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(FE_WRAPPER)
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(BE_WRAPPER)
@@ -25,7 +25,7 @@ install-data-hook:
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/tdbscan-launcher
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/tdbscan-launcher-nobe
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/tdbscan-launcher.py
-	$(top_srcdir)/substitute     $(SED) "@sub_MRNETAPP_HOME@" @MRNETAPP_HOME@ $(bindir)/tdbscan-launcher.py
+	$(top_srcdir)/substitute     $(SED) "@sub_SYNAPSE_HOME@" @SYNAPSE_HOME@ $(bindir)/tdbscan-launcher.py
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(SWEEP)
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(SWEEP).py
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/tdbscan-mass-submit

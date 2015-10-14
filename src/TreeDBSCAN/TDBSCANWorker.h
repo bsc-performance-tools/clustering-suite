@@ -41,6 +41,8 @@
 #include "TDBSCANCore.h"
 #include "Support.h"
 
+using namespace Synapse;
+
 /**
  * This class implements the back-end side of the TDBSCAN protocol.
  */

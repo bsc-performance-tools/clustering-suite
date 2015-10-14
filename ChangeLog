@@ -10,6 +10,9 @@ YYYY-MM-DD  John Doe  <johndoe@example.com>
 
 	* anotherfile.ext (somefunction): more changes
 
+2015-10-14 German Llort <german.llort@bsc.es>
+	* Code adapted to use Synapse library 2.0 instead of the older version libmrnapp.
+
 2015-01-23 Juan Gonzalez <juan.gonzalez@bsc.es>
 	* Solved a regression that broke the sampling version of the
 	clustering tool

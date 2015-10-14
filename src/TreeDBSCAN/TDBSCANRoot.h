@@ -41,6 +41,8 @@
 #include "Statistics.h"
 #include "ClustersInfo.h"
 
+using namespace Synapse;
+
 /**
  * This class implements the front-end side of the TDBSCAN protocol,
  * which is the same both for the on-line and off-line back-ends.
