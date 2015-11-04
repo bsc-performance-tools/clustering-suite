@@ -55,6 +55,12 @@ class Communicator: public Error
     set<INT32>  CommunicatorTasks;
     bool        COMM_SELF;
     bool        COMM_WORLD;
+  
+    bool        isIntercommunicator = false;
+    int         Intracomm1;
+    int         Intracomm2;
+    int         Leader1;
+    int         Leader2;
 
   public:
     Communicator(char* ASCIICommunicator);

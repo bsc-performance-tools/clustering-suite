@@ -49,7 +49,7 @@ using std::endl;
 
 Communicator::Communicator(char* ASCIICommunicator)
 {
-  INT32 AppId, CommId, TaskCount;
+  INT32 AppId, CommId, TaskCount = 0;
   char* TaskList = (char*) calloc(strlen(ASCIICommunicator)+1, sizeof(char));
   
   if (sscanf(ASCIICommunicator,
@@ -86,6 +86,17 @@ Communicator::Communicator(char* ASCIICommunicator)
       LastError = "wrong communicator format";
       return;
     }
+  }
+  else if (sscanf(ASCIICommunicator,
+           "i:%d:%d:%d:%d:%d:%d",
+           &ApplicationId,
+           &CommunicatorId,
+           &Intracomm1,
+           &Leader1,
+           &Intracomm2,
+           &Leader2) == 6)
+  { /* Special case for intercommunicators */
+    isIntercommunicator = true;
   }
   else
   {
@@ -144,15 +155,32 @@ Communicator::Flush(FILE* OutputFile)
     return false;
   }
   
-  if (fprintf(OutputFile,
+  if (isIntercommunicator)
+  {
+    if (fprintf(OutputFile,
+                "i:%d:%d:%d:%d:%d:%d",
+                ApplicationId,
+                CommunicatorId,
+                Intracomm1, Leader1,
+                Intracomm2, Leader2) < 0)
+    {
+      SetError(true);
+      SetErrorMessage("problem printing intercommunicator", strerror(errno));
+      return false;
+    }
+  }
+  else 
+  {
+    if (fprintf(OutputFile,
               "c:%d:%d:%d",
               ApplicationId,
               CommunicatorId,
-              CommunicatorTasks.size()) < 0)
-  {
-    SetError(true);
-    SetErrorMessage("problem printing communicator", strerror(errno));
-    return false;
+              (int)CommunicatorTasks.size()) < 0)
+    {
+      SetError(true);
+      SetErrorMessage("problem printing communicator", strerror(errno));
+      return false;
+    }
   }
   
   for (CommunicatorTasksIterator  = CommunicatorTasks.begin();

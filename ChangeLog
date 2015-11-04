@@ -1,14 +1,8 @@
 ChangeLog 'ClusteringSuite'
 
-YYYY-MM-DD  John Doe  <johndoe@example.com>
-
-	* myfile.ext (myfunction): my changes made
-	additional changes
-
-	* myfile.ext (unrelated_change): my changes made
-	to myfile.ext but completely unrelated to the above
-
-	* anotherfile.ext (somefunction): more changes
+2015-11-04 German Llort <german.llort@bsc.es>
+	* Fixed bug in the parsing of intercommunicators in the input trace.
+	* Upgraded revision to 2.6.6.
 
 2015-10-14 German Llort <german.llort@bsc.es>
 	* Code adapted to use Synapse library 2.0 instead of the older version libmrnapp.
