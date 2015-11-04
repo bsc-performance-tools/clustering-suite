@@ -49,6 +49,7 @@ using std::endl;
 
 Communicator::Communicator(char* ASCIICommunicator)
 {
+  isIntercommunicator = false;
   INT32 AppId, CommId, TaskCount = 0;
   char* TaskList = (char*) calloc(strlen(ASCIICommunicator)+1, sizeof(char));
   
@@ -122,10 +123,11 @@ Communicator::Communicator(char* ASCIICommunicator)
 
 Communicator::Communicator(const Communicator& Comm)
 {
-  CommunicatorId    = Comm.CommunicatorId;
-  ApplicationId     = Comm.ApplicationId;
-  CommunicatorTasks = Comm.CommunicatorTasks;
-  COMM_SELF         = Comm.COMM_SELF;
+  isIntercommunicator = false;
+  CommunicatorId      = Comm.CommunicatorId;
+  ApplicationId       = Comm.ApplicationId;
+  CommunicatorTasks   = Comm.CommunicatorTasks;
+  COMM_SELF           = Comm.COMM_SELF;
 }
 
 void

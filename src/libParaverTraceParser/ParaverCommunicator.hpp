@@ -56,7 +56,7 @@ class Communicator: public Error
     bool        COMM_SELF;
     bool        COMM_WORLD;
   
-    bool        isIntercommunicator = false;
+    bool        isIntercommunicator;
     int         Intracomm1;
     int         Intracomm2;
     int         Leader1;
