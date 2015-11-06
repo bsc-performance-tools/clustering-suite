@@ -163,7 +163,7 @@ class ClusteringStatistics: public Error
 
   public:
 
-    ClusteringStatistics() {} ;
+    ClusteringStatistics() { };
 
     ClusteringStatistics(set<cluster_id_t>& IDs,
                          vector<string> ClusteringParametersNames     = vector<string>(0),

@@ -1,5 +1,8 @@
 ChangeLog 'ClusteringSuite'
 
+2015-11-06 German Llort <german.llort@bsc.es>
+	* Fixed bug in the parsing of the PCF file for the description of hardware counter events.
+
 2015-11-04 German Llort <german.llort@bsc.es>
 	* Fixed bug in the parsing of intercommunicators in the input trace.
 	* Upgraded revision to 2.6.6.

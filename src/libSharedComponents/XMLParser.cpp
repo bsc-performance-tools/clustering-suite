@@ -1475,16 +1475,35 @@ bool XMLParser::GenerateAllCountersExtrapolations(void)
       string             ParameterName;
       unsigned           OpenParenth, CloseParenth;
 
-      OpenParenth  = it->second.find("(");
-      CloseParenth = it->second.find(")");
-
-      if (OpenParenth != std::string::npos && CloseParenth != std::string::npos)
+      if (it->second[0] == '(')
       {
-        ParameterName = it->second.substr(OpenParenth+1, (CloseParenth-OpenParenth)-1);
+        /* Old description syntax: (PAPI_TOT_INS) Instr completed */
+        OpenParenth  = it->second.find("(");
+        CloseParenth = it->second.find(")");
+
+        if (OpenParenth != std::string::npos && CloseParenth != std::string::npos)
+        {
+          ParameterName = it->second.substr(OpenParenth+1, (CloseParenth-OpenParenth)-1);
+        }
+        else
+        {
+          ParameterName = it->second;
+        }
       }
       else
       {
-        ParameterName = it->second;
+        /* New description syntax: PAPI_TOT_INS [Instr completed] */
+        OpenParenth  = it->second.find("[");
+        CloseParenth = it->second.find("]");
+
+        if (OpenParenth != std::string::npos && CloseParenth != std::string::npos)
+        { 
+          ParameterName = it->second.substr(0, OpenParenth-1);
+        }
+        else
+        { 
+          ParameterName = it->second;
+        }
       }
 
       NewParameter.ParameterType = SingleEventParameter;
