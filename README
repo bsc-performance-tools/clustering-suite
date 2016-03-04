@@ -39,6 +39,6 @@ The suite has been tested using MPICH
 
 http://www.mcs.anl.gov/research/projects/mpich2/
 
-* libMRNetApp ("--with-mrnetapp" configure option)
+* Synapse ("--with-synapse" configure option)
 
 http://www.bsc.es/performance-tools/downloads
