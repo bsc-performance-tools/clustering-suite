@@ -201,25 +201,24 @@ void system_messages::show_progress(const char* message,
     else
      real_percentage = current_percentage;
 
-    /*
-    if (real_percentage % 25 == 0 && real_percentage != 100 &&
+    if (real_percentage % 10 == 0 && real_percentage != 100 &&
         real_percentage > system_messages::last_percentage_written)
     {
-      fprintf(channel, "%s %03d%%\n", message, real_percentage);
+      fprintf(channel, " %03d%%", real_percentage);
       fflush(channel);
       system_messages::last_percentage_written = real_percentage;
     }
 
-    if(!system_messages::percentage_ongoing)
+    if(!system_messages::progress_ongoing)
     {
       fprintf(channel, "%s %03d%%", message, real_percentage);
       fflush(channel);
-      system_messages::percentage_ongoing      = true;
+      system_messages::progress_ongoing        = true;
       system_messages::last_percentage_written = 0;
     }
     else
     {
-      if (real_percentage % 25% == 0 && real_percentage != 100 &&
+      if (real_percentage % 10 == 0 && real_percentage != 100 &&
           real_percentage > system_messages::last_percentage_written)
       {
         fprintf(channel, " %03d%%", real_percentage);
@@ -227,7 +226,7 @@ void system_messages::show_progress(const char* message,
         system_messages::last_percentage_written = real_percentage;
       }
     }
-    */
+
     return;
   }
 
@@ -296,9 +295,9 @@ void system_messages::show_progress_end(const char* message,
 {
   if (system_messages::paraver_verbosity)
   {
-    fprintf(channel, "%s 100%%\n", message);
+    fprintf(channel, " 100%%\n");
     system_messages::progress_ongoing        = false;
-    system_messages::last_percentage_written = -1;
+    //system_messages::last_percentage_written = -1;
     fflush(channel);
     return;
   }
@@ -348,11 +347,10 @@ void system_messages::show_percentage_progress(const char* message,
 
   if (system_messages::paraver_verbosity)
   {
-    /*
-    if (real_percentage % 25 == 0 && real_percentage != 100 &&
+    if (real_percentage % 10 == 0 && real_percentage != 100 &&
         real_percentage > system_messages::last_percentage_written)
     {
-      fprintf(channel, "%s %03d%%\n", message, real_percentage);
+      fprintf(channel, " %03d%%", real_percentage);
       fflush(channel);
       system_messages::last_percentage_written = real_percentage;
     }
@@ -366,7 +364,7 @@ void system_messages::show_percentage_progress(const char* message,
     }
     else
     {
-      if (real_percentage % 25% == 0 && real_percentage != 100 &&
+      if (real_percentage % 10 == 0 && real_percentage != 100 &&
           real_percentage > system_messages::last_percentage_written)
       {
         fprintf(channel, " %03d%%", real_percentage);
@@ -374,7 +372,7 @@ void system_messages::show_percentage_progress(const char* message,
         system_messages::last_percentage_written = real_percentage;
       }
     }
-    */
+
     return;
   }
 
@@ -429,8 +427,9 @@ void system_messages::show_percentage_end(const char* message,
 {
   if (system_messages::paraver_verbosity)
   {
-    fprintf(channel, "%s 100%%\n", message);
-    system_messages::last_percentage_written = -1;
+    fprintf(channel, " 100%%\n");
+    //system_messages::last_percentage_written = -1;
+    system_messages::percentage_ongoing      = false;
     fflush(channel);
     return;
   }

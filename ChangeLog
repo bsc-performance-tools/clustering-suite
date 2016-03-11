@@ -1,5 +1,8 @@
 ChangeLog 'ClusteringSuite'
 
+2016-03-11 Eloy Martinez <eloy.martinez@bsc.es>
+	* Fixed system messages for proper updates of the progress within Paraver
+
 2015-12-17 German Llort <german.llort@bsc.es>
 	* Updated boost.m4 
 
