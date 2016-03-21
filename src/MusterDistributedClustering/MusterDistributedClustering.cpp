@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
   
   CheckOutputFile();
 
-  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, CLUSTERING|PLOTS|MPI))
+  if (!Clustering.InitTraceClustering(ClusteringDefinitionXML, CLUSTERING|PLOTS|CLUSTERING_MPI_SUPPORT))
   {
     cerr << "Error setting up clustering library: " << Clustering.GetErrorMessage() << endl;
     exit (EXIT_FAILURE);

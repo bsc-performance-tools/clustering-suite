@@ -1,5 +1,8 @@
 ChangeLog 'ClusteringSuite'
 
+2016-03-21 German Llort <german.llort@bsc.es>
+	* Fixed namespace conflict in #define MPI with Intel MPI and OpenMPI
+
 2016-03-11 Eloy Martinez <eloy.martinez@bsc.es>
 	* Fixed system messages for proper updates of the progress within Paraver
 

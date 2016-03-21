@@ -52,13 +52,13 @@ using std::set;
 #define PLOTS                   0x02
 #define PARAMETER_APPROXIMATION 0x04
 #define CLUSTERING_REFINEMENT   0x08
-#define MPI                     0x10
+#define CLUSTERING_MPI_SUPPORT  0x10
 
 #define USE_CLUSTERING(x)              (x & CLUSTERING)
 #define USE_PLOTS(x)                   (x & PLOTS)
 #define USE_PARAMETER_APPROXIMATION(x) (x & PARAMETER_APPROXIMATION)
 #define USE_CLUSTERING_REFINEMENT(x)   (x & CLUSTERING_REFINEMENT)
-#define USE_MPI(x)                     (x & MPI)
+#define USE_MPI(x)                     (x & CLUSTERING_MPI_SUPPORT)
 
 
 class libTraceClusteringImplementation;

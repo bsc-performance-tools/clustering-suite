@@ -1,4 +1,6 @@
-==== ClusteringSuite dependencies ====
+**************************************
+***  ClusteringSuite dependencies  ***
+**************************************
 
 The core features of the ClusteringSuite tool including DBSCAN and the
 Aggregative Cluster Refinement cluster analysis of Paraver traces requires
@@ -12,14 +14,38 @@ http://www.xmlsoft.org/
 
 http://www.boost.org/ 
 
+
+
+************************************************
+***  OPTIONAL EXTRA FEATURES (EXPERIMENTAL!) ***
+************************************************
+
 For extra features of this tool, based on third-party packages you will need
 the following libraries installed on your system:
+
+========================
+Enabling CAPEK algorithm
+========================
 
 * Muster clustering library ("--with-muster" configure option)
 
 http://tgamblin.github.com/muster/main.html
 
-* Computational Geometry Algorithms Library (CGAL) ("--with-cgal" configure 
+* An MPI implementation ("--with-mpi" configure option)
+
+The suite has been tested using MPICH
+
+http://www.mcs.anl.gov/research/projects/mpich2/
+
+====================================
+Enabling MRNet-based parallel DBSCAN
+====================================
+
+* Synapse ("--with-synapse" configure option)
+
+http://www.bsc.es/performance-tools/downloads
+
+* Computational Geometry Algorithms Library (CGAL) ("--with-cgal" configure
 option)
 
 http://www.cgal.org/
@@ -28,17 +54,8 @@ http://www.cgal.org/
 
 http://www.mpfr.org/
 
-* The GNU Multiple Precision Arithmetic Library (required by CGAL) 
+* The GNU Multiple Precision Arithmetic Library (required by CGAL)
 ("--with-gmp" configure option)
 
 http://www.gmplib.org
 
-* An MPI implementation ("--with-mpi" configure option)
-
-The suite has been tested using MPICH
-
-http://www.mcs.anl.gov/research/projects/mpich2/
-
-* Synapse ("--with-synapse" configure option)
-
-http://www.bsc.es/performance-tools/downloads
