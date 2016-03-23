@@ -343,26 +343,16 @@ AC_DEFUN([AX_PROG_MPI],
       dnl Check for the MPI library.
       dnl We won't use neither AC_CHECK_LIB nor AC_TRY_LINK because this library may have unresolved references to other libs (i.e: libgm).
       AC_MSG_CHECKING([for MPI library])
-      if test -f "${MPI_LIBSDIR}/libmpi.a" ; then
-         MPI_LIBS="-lmpi"
-      elif test -f "${MPI_LIBSDIR}/libmpi.so" ; then
-         MPI_LIBS="-lmpi"
-      elif test -f "${MPI_LIBSDIR}/libmpich.a" ; then
-         MPI_LIBS="-lmpich"
-      elif test -f "${MPI_LIBSDIR}/libmpich.so" ; then
-         MPI_LIBS="-lmpich"
+      if test -f "${MPI_LIBSDIR}/libmpi_cxx.a" -o -f "${MPI_LIBSDIR}/libmpi_cxx.so" ; then
+        MPI_LIBS="-lmpi_cxx"
+      elif test -f "${MPI_LIBSDIR}/libmpichcxx.a" -o -f "${MPI_LIBSDIR}/libmpichcxx.so" ; then
+        MPI_LIBS="-lmpich_cxx"
+      elif test -f "${MPI_LIBSDIR}/libmpi.a" -o -f "${MPI_LIBSDIR}/libmpi.so" ; then
+        MPI_LIBS="-lmpi"
       else
-         MPI_LIBS="not found"
+        MPI_LIBS="not found"
       fi
-      if test -f "${MPI_LIBSDIR}/libmpi.so"; then
-         MPI_SHARED_LIB_FOUND="yes"
-      elif test -f "${MPI_LIBSDIR}/libmpich.so"; then
-         MPI_SHARED_LIB_FOUND="yes"
-      elif test -f "${MPI_LIBSDIR}/shared/libmpi.so"; then
-         MPI_SHARED_LIB_FOUND="yes"
-      elif test -f "${MPI_LIBSDIR}/shared/libmpich.so"; then
-         MPI_SHARED_LIB_FOUND="yes"
-      fi
+
       AC_MSG_RESULT([${MPI_LIBSDIR}])
 
       if test "${MPI_LIBSDIR}" = "not found" ; then

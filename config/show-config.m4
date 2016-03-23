@@ -32,7 +32,6 @@ AC_DEFUN([AX_SHOW_CONFIGURATION],
   echo MPI support: ${MPI_INSTALLED}
   if test "${MPI_INSTALLED}" = "yes" ; then
     echo -e \\\tMPI home:                ${MPI_HOME}
-    echo -e \\\tshared libraries?        ${MPI_SHARED_LIB_FOUND}
   fi
   
   # Tree DSBCAN is available if Synapse is 

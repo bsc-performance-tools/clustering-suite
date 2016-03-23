@@ -1,5 +1,8 @@
 ChangeLog 'ClusteringSuite'
 
+2016-03-23 German Llort <german.llort@bsc.es>
+	* Fixed wrong dependency with MPI when enabling the TDBSCAN support: it was hardcoded to use Marenostrum's OpenMPI, now is specified at configure time with --with-mpi.
+
 2016-03-21 German Llort <german.llort@bsc.es>
 	* Fixed namespace conflict in #define MPI with Intel MPI and OpenMPI
 
