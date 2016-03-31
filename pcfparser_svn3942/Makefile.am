@@ -13,12 +13,10 @@ LIBPARAVERTRACECONFIG_COREFILES= \
 	UIParaverTraceConfig.cpp UIParaverTraceConfig.h \
 	ParaverTraceConfig.cpp ParaverTraceConfig.h
 
-libparavertraceconfig_la_SOURCES = $(LIBPARAVERTRACECONFIG_COREFILES)
+libparavertraceconfig_la_SOURCES  = $(LIBPARAVERTRACECONFIG_COREFILES)
 
-libparavertraceconfig_la_LIBADD  =
+libparavertraceconfig_la_CPPFLAGS = $(BOOST_CPPFLAGS)
 libparavertraceconfig_la_LDFLAGS  =
+libparavertraceconfig_la_LIBADD   =
 
-if NEED_BOOST_HOME
-libparavertraceconfig_la_CXXFLAGS = -I $(BOOST_HOME)/include
-endif
 
