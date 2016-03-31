@@ -20,3 +20,13 @@ p.parse("test/sampletrace.pcf", False)
 print p.getEventType_int("I/O Size")  # 40000011
 print p.getEventType_str(40000011)
 
+types = p.getEventTypes()
+for t in types:
+    print str(t) + " -> " + p.getEventType_str(t)
+    try:
+        values = p.getEventValues(t)
+        for v in values:
+            print "  " + str(v)  + " -> " + p.getEventValue_str(t, v)
+    except RuntimeError:
+        pass
+

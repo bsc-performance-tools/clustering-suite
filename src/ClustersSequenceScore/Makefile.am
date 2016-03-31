@@ -10,7 +10,7 @@ ClustersSequenceScore_bin_CPPFLAGS =\
  -I$(top_srcdir)/src/libClustering\
  -I$(top_srcdir)/src/libTraceClustering\
  -I$(top_srcdir)/src/libSharedComponents\
- -I$(top_srcdir)/pcfparser_svn1816
+ -I$(top_srcdir)/pcfparser_svn3942
 
 ClustersSequenceScore_bin_LDFLAGS  = @CLUSTERING_LDFLAGS@
 

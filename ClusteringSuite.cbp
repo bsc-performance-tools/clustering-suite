@@ -64,14 +64,14 @@
 		<Unit filename="include/types.h">
 			<Option target="Compile" />
 		</Unit>
-		<Unit filename="pcfparser_svn1816/ParaverTraceConfig.cpp" />
-		<Unit filename="pcfparser_svn1816/ParaverTraceConfig.h" />
-		<Unit filename="pcfparser_svn1816/ParaverTraceConfigGrammar.h" />
-		<Unit filename="pcfparser_svn1816/UIParaverTraceConfig.cpp" />
-		<Unit filename="pcfparser_svn1816/UIParaverTraceConfig.h" />
-		<Unit filename="pcfparser_svn1816/UIParaverTraceConfig_python.cpp" />
-		<Unit filename="pcfparser_svn1816/UIParaverTraceConfig_python.h" />
-		<Unit filename="pcfparser_svn1816/debug.h" />
+		<Unit filename="pcfparser_svn3942/ParaverTraceConfig.cpp" />
+		<Unit filename="pcfparser_svn3942/ParaverTraceConfig.h" />
+		<Unit filename="pcfparser_svn3942/ParaverTraceConfigGrammar.h" />
+		<Unit filename="pcfparser_svn3942/UIParaverTraceConfig.cpp" />
+		<Unit filename="pcfparser_svn3942/UIParaverTraceConfig.h" />
+		<Unit filename="pcfparser_svn3942/UIParaverTraceConfig_python.cpp" />
+		<Unit filename="pcfparser_svn3942/UIParaverTraceConfig_python.h" />
+		<Unit filename="pcfparser_svn3942/debug.h" />
 		<Unit filename="src/BasicClasses/Error.cpp">
 			<Option target="Compile" />
 		</Unit>

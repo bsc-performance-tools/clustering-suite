@@ -77,13 +77,13 @@ libSharedComponents_la_CPPFLAGS = @CLUSTERING_CPPFLAGS@\
   -I${top_srcdir}/src/libClustering\
   -I${top_srcdir}/src/libParaverTraceParser\
   -I${top_srcdir}/src/libANN\
-  -I${top_srcdir}/pcfparser_svn1816
+  -I${top_srcdir}/pcfparser_svn3942
   
 
 libSharedComponents_la_LDFLAGS  = @CLUSTERING_LDFLAGS@ @CLUSTERING_CPPFLAGS@
 
 libSharedComponents_la_LIBADD =  \
-	$(top_srcdir)/pcfparser_svn1816/libparavertraceconfig.la \
+	$(top_srcdir)/pcfparser_svn3942/libparavertraceconfig.la \
 	$(top_srcdir)/src/libClustering/libClustering.la \
 	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la \
 	./kalign2/libKalign2.la \

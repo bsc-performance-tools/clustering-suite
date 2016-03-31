@@ -177,7 +177,8 @@ void ParaverTraceConfig::addEventTypes(std::vector<EventType *> & eventTypes_) {
             EventType * oldEvent = event_types[(*begin)->getKey()];
             LOG("EVENT_TYPE with key: " + boost::lexical_cast<std::string>(oldEvent->getKey())
                 + " -> \"" + oldEvent->toString() + "\" overwritten to \"" + (*begin)->toString() +"\"")
-            delete oldEvent;
+            if( (*begin)->getEventValues() != oldEvent->getEventValues() )
+              delete oldEvent;
         }
         event_types[(*begin)->getKey()] = (*begin);
         begin++;
@@ -324,7 +325,7 @@ bool ParaverTraceConfig::parse(const std::string & filename, bool resend) {
 std::string ParaverTraceConfig::toString() const {
     std::string str = "";
 
-    str += "--------------- PCF DUMP BEGIN -----------------\n";
+    //str += "--------------- PCF DUMP BEGIN -----------------\n";
     // DEFAULT_OPTIONS
     str += "DEFAULT_OPTIONS\n\n";
     str += "LEVEL               " + level + "\n";
@@ -379,7 +380,7 @@ std::string ParaverTraceConfig::toString() const {
     str += "\n\n";
 
     // GRADIENT_NAME
-    str += "GRADIENT_NAME\n";
+    str += "GRADIENT_NAMES\n";
     gradient_names_type::const_iterator gradient_name_begin = gradient_names.begin();
     gradient_names_type::const_iterator gradient_name_end = gradient_names.end();
     while (gradient_name_begin != gradient_name_end) {
@@ -391,17 +392,33 @@ std::string ParaverTraceConfig::toString() const {
 
 
     // EVENT_TYPE
-    str += "EVENT_TYPE\n";
+    std::vector< std::vector< unsigned int > > groupedTypes = getGroupedEventTypes();
+    for ( std::vector< std::vector< unsigned int > >::const_iterator itGroup = groupedTypes.begin(); itGroup != groupedTypes.end(); ++itGroup )
+    {
+      str += "EVENT_TYPE\n";
+
+      for ( std::vector< unsigned int >::const_iterator itType = (*itGroup).begin(); itType != (*itGroup).end(); ++itType )
+      {
+        if ( itType == --(*itGroup).end() )
+          str += event_types.at( (int)(*itType) )->toString() + "\n";
+        else
+          str += event_types.at( (int)(*itType) )->toStringWithoutValues() + "\n";
+      }
+
+      str += "\n\n";
+/*
     event_types_type::const_iterator event_types_begin = event_types.begin();
     event_types_type::const_iterator event_types_end = event_types.end();
     while (event_types_begin != event_types_end) {
+        str += "EVENT_TYPE\n";
         str += event_types_begin->second->toString() + "\n";
         event_types_begin++;
         str += "\n\n";
+*/
     }
 
 
-    str += "--------------- PCF DUMP END   -----------------\n";
+    //str += "--------------- PCF DUMP END   -----------------\n";
     return str;
 }
 
@@ -458,6 +475,61 @@ std::vector<unsigned int > ParaverTraceConfig::getEventValues(unsigned int event
     return event_types.find(eventTypeKey)->second->getEventValues()->getValues();
 }
 
+
+std::vector< std::vector< unsigned int > > ParaverTraceConfig::getGroupedEventTypes() const
+{
+  std::vector< std::vector< unsigned int > > groupedEventTypes;
+  std::vector< unsigned int > currentGroup;
+
+  event_types_type::const_iterator firstType = event_types.begin();
+  event_types_type::const_iterator currentType = firstType;
+
+  EventType::EventValuesPtr firstTypeValues;
+
+  currentGroup.push_back( (unsigned int)(*currentType).first );
+
+  try
+  {
+    firstTypeValues = (*firstType).second->getEventValues();
+  }
+  catch ( UIParaverTraceConfig::value_not_found )
+  {}
+
+  while ( ++currentType != event_types.end() )
+  {
+    EventType::EventValuesPtr currentTypeValues;
+    try
+    {
+      currentTypeValues = (*currentType).second->getEventValues();
+    }
+    catch ( UIParaverTraceConfig::value_not_found )
+    {}
+
+    if ( currentTypeValues != firstTypeValues )
+    {
+      groupedEventTypes.push_back( currentGroup );
+      firstType = currentType;
+      firstTypeValues = currentTypeValues;
+      currentGroup.clear();
+    }
+
+    currentGroup.push_back( (unsigned int)(*currentType).first );
+  }
+
+  return groupedEventTypes;
+}
+
+
+void ParaverTraceConfig::setEventValues( unsigned int eventTypeKey, std::map< unsigned int, std::string > &values )
+{
+    if (event_types.find(eventTypeKey) == event_types.end()) {
+        BOOST_THROW_EXCEPTION(UIParaverTraceConfig::value_not_found());
+    }
+
+    event_types[ eventTypeKey ]->setEventValues( values );
+}
+
+
 /* StateColor class */
 
 ParaverTraceConfig::StateColor::StateColor(int red_, int green_, int blue_):
@@ -493,10 +565,18 @@ ParaverTraceConfig::EventType::EventType(int color_, int key_, std::string descr
         UIParaverTraceConfig::EventType(color_, key_, descr_) {
 }
 
+
 void ParaverTraceConfig::EventType::setEventValues(EventValues * eventValues_) {
     EventValuesPtr tmp(eventValues_);
     eventValues = tmp;
 }
+
+
+void ParaverTraceConfig::EventType::setEventValues( std::map< unsigned int, std::string > &values )
+{
+  eventValues->setEventValues( values );
+}
+
 
 std::string ParaverTraceConfig::EventType::toString() const {
     std::string str = "";
@@ -510,8 +590,22 @@ std::string ParaverTraceConfig::EventType::toString() const {
     return str;
 }
 
+
+std::string ParaverTraceConfig::EventType::toStringWithoutValues() const {
+    std::string str = "";
+    str += boost::lexical_cast<std::string>(color) + "\t";
+    str += boost::lexical_cast<std::string>(key) + "\t";
+    str += descr;
+
+    return str;
+}
+
+
 const ParaverTraceConfig::EventType::EventValuesPtr ParaverTraceConfig::EventType::getEventValues() const {
-    return eventValues;
+	if (eventValues == NULL)
+		BOOST_THROW_EXCEPTION(UIParaverTraceConfig::value_not_found());
+
+  return eventValues;
 }
 
 /* EventValues class */
@@ -566,6 +660,15 @@ std::vector<unsigned int> ParaverTraceConfig::EventValues::getValues() const {
         begin++;
     }
     return keys;
+}
+
+void ParaverTraceConfig::EventValues::setEventValues( std::map< unsigned int, std::string > &values )
+{
+  eventValues.clear();
+  for( std::map< unsigned int, std::string >::iterator it = values.begin(); it != values.end(); ++it )
+  {
+    eventValues[ (int)(*it).first ] = (*it).second;
+  }
 }
 
 }

@@ -22,6 +22,7 @@ public:
     struct pcf_format_error : virtual error {
         // vector<"filename;line;column">
         std::vector<std::string> excps;
+        pcf_format_error() {}
         pcf_format_error(std::vector<std::string> e) : excps(e) {}
         ~pcf_format_error() throw() {}
     };
@@ -38,20 +39,20 @@ public:
 
         virtual ~Color();
 
-        inline const int getRed() const;
+        inline int getRed() const;
         
         void setRed(int color);
 
-        inline const int getGreen() const;
+        inline int getGreen() const;
         
         void setGreen(int color);
 
-        inline const int getBlue() const;
+        inline int getBlue() const;
         
         void setBlue(int color);
 
         bool operator==(const Color & sc) const;
-        
+
         bool operator!=(const Color & sc) const;
 
         virtual std::string toString() const;
@@ -76,7 +77,7 @@ public:
     public:
         EventValue(int key_, std::string descr_);
 
-        inline const int getKey() const;
+        inline int getKey() const;
 
         inline const std::string getDescription() const;
 
@@ -98,13 +99,14 @@ public:
 
         virtual ~EventType();
 
-        inline const int getColor() const;
+        inline int getColor() const;
 
-        inline const int getKey() const;
+        inline int getKey() const;
 
         inline const std::string getDescription() const;
 
         virtual std::string toString() const;
+        virtual std::string toStringWithoutValues() const;
 
         EventType & operator=(const EventType & eventType);
     };
@@ -130,7 +132,7 @@ public:
      * \brief Gets the parsing output debug value
      * \return Returns the debug value true/false
      */
-    const bool getDebug() const;
+    bool getDebug() const;
 
     /**
      * \brief Sets LEVEL in DEFAULT_OPTIONS context
@@ -166,7 +168,7 @@ public:
     /**
      * \brief Gets the LOOK_BACK value
      */
-    const int getLook_back() const;
+    int getLook_back() const;
 
     /**
      * \brief Sets the SPEED value
@@ -176,7 +178,7 @@ public:
     /**
      * \brief Gets the SPEED value
      */
-    const int getSpeed() const;
+    int getSpeed() const;
 
     /**
      * \brief Set the FLAG_ICONS value
@@ -197,7 +199,7 @@ public:
     /**
      * \brief Gets the NUM_OF_STATE_COLORS value
      */
-    const int getNum_of_state_colors() const;
+    int getNum_of_state_colors() const;
 
     /**
      * \brief Sets the YMAX_SCALE value
@@ -207,7 +209,7 @@ public:
     /**
      * \brief Gets the YMAX_SCALE value
      */
-    const int getYmax_scale() const;
+    int getYmax_scale() const;
 
     /**
      * \brief Sets the THREAD_FUNC value
@@ -334,6 +336,10 @@ public:
      */
     std::vector<unsigned int > getEventValues(unsigned int eventTypeKey) const;
 
+    std::vector< std::vector< unsigned int > > getGroupedEventTypes() const;
+
+
+    void setEventValues( unsigned int eventTypeKey, std::map< unsigned int, std::string >& values );
 
 protected:
     ParaverTraceConfig * traceConfig;

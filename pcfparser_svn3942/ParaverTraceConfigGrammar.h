@@ -9,7 +9,8 @@
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/spirit/include/phoenix_object.hpp>
-#include <boost/spirit/home/phoenix/container.hpp>
+//#include <boost/spirit/home/phoenix/container.hpp>
+#include <boost/spirit/include/phoenix_container.hpp>
 
 #include <boost/spirit/include/phoenix_function.hpp>
 
@@ -31,7 +32,8 @@ namespace phoenix
 {
 struct setEventValues_Impl
 {
-    template <typename C, typename F>
+    //template <typename C, typename F>
+    template <typename C>
     struct result
     {
         typedef void type;
@@ -54,7 +56,12 @@ function<setEventValues_Impl> const setEventValues = setEventValues_Impl();
 
 namespace libparaver {
 
+#ifdef WIN32
+typedef BOOST_TYPEOF(SKIPPER) skipper_type_;
+#define skipper_type skipper_type_
+#else
 typedef BOOST_TYPEOF(SKIPPER) skipper_type;
+#endif
 
 template<class Iterator, class ActionHandler>
 class ParaverTraceConfigGrammar : public qi::grammar<Iterator, skipper_type> {

@@ -8,9 +8,9 @@ AM_CPPFLAGS =\
 
 ##    -I@common_filesdir@
 
-## The 'pcfparser_svn1816' and 'common_utilities' directory will
+## The 'pcfparser_svn3942' and 'common_utilities' directory will
 ## be merged in the new 'common-files' package
-SUBDIRS = include pcfparser_svn1816 common_utilities src scripts doc
+SUBDIRS = include pcfparser_svn3942 common_utilities src scripts doc
 
 instdir = $(includedir)
 

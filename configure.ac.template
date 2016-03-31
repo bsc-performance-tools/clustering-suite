@@ -520,14 +520,14 @@ AC_SUBST(CLUSTERING_CLEAN_LDFLAGS)
 AC_SUBST(CLUSTERING_LIBS)
 AC_SUBST(CLUSTERING_LD_LIBRARY_PATH)
 
-dnl NOTE: the 'pcfparser_svn1816' is a temporary dependency until the new
+dnl NOTE: the 'pcfparser_svn3942' is a temporary dependency until the new
 dnl 'common_files' package is defined
 
 AC_CONFIG_FILES([
 Makefile
 include/Makefile
 common_utilities/Makefile
-pcfparser_svn1816/Makefile
+pcfparser_svn3942/Makefile
 src/Makefile
 src/BasicClasses/Makefile
 src/libParaverTraceParser/Makefile

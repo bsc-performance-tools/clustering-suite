@@ -30,7 +30,7 @@ AM_CPPFLAGS = \
 libDistributedClustering_la_CPPFLAGS = @CLUSTERING_CPPFLAGS@\
  -I$(top_srcdir)/src/libClustering\
  -I$(top_srcdir)/src/libSharedComponents\
- -I$(top_srcdir)/pcfparser_svn1816\
+ -I$(top_srcdir)/pcfparser_svn3942\
  -I$(top_srcdir)/src/libParaverTraceParser\
  -I$(top_srcdir)/src/libANN
  

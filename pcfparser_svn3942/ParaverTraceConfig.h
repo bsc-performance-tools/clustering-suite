@@ -1,6 +1,8 @@
 #ifndef _PARAVER_TRACE_CONFIG_H
 #define _PARAVER_TRACE_CONFIG_H
 
+#define BOOST_SPIRIT_USE_PHOENIX_V3 1
+
 #include <map>
 #include <string>
 #include <iostream>
@@ -60,6 +62,8 @@ public:
 
         virtual std::string toString() const;
 
+        void setEventValues( std::map< unsigned int, std::string > &values );
+
     protected:
         eventValues_type eventValues;
     };
@@ -67,14 +71,18 @@ public:
     class EventType : public UIParaverTraceConfig::EventType {
     public:
         typedef boost::shared_ptr<EventValues> EventValuesPtr;
-        
+
         EventType(int color_, int key_, std::string descr_);
 
         const EventValuesPtr getEventValues() const;
 
         void setEventValues(EventValues * eventValues_);
 
+        void setEventValues( std::map< unsigned int, std::string > &values );
+
         virtual std::string toString() const;
+        virtual std::string toStringWithoutValues() const;
+
     protected:
         EventValuesPtr eventValues;
 
@@ -209,6 +217,10 @@ public:
     std::vector<unsigned int > getEventTypes() const;
 
     std::vector<unsigned int > getEventValues(unsigned int eventTypeKey) const;
+
+    std::vector< std::vector< unsigned int > > getGroupedEventTypes() const;
+
+    void setEventValues( unsigned int eventTypeKey, std::map< unsigned int, std::string > &values );
 };
 
 #include "ParaverTraceConfig.ipp"

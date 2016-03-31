@@ -31,7 +31,7 @@ void UIParaverTraceConfig::setDebug(bool value) {
  * \brief Gets the parsing output debug value
  * \return Returns the debug value true/false
  */
-const bool UIParaverTraceConfig::getDebug() const {
+bool UIParaverTraceConfig::getDebug() const {
     return traceConfig->getDebug();
 }
 
@@ -79,7 +79,7 @@ void UIParaverTraceConfig::setLook_back(int value) {
 /**
  * \brief Gets the LOOK_BACK value
  */
-const int UIParaverTraceConfig::getLook_back() const {
+int UIParaverTraceConfig::getLook_back() const {
     return traceConfig->getLook_back();
 }
 
@@ -93,7 +93,7 @@ void UIParaverTraceConfig::setSpeed(int value) {
 /**
  * \brief Gets the SPEED value
  */
-const int UIParaverTraceConfig::getSpeed() const {
+int UIParaverTraceConfig::getSpeed() const {
     return traceConfig->getSpeed();
 }
 
@@ -122,7 +122,7 @@ void UIParaverTraceConfig::setNum_of_state_colors(int value) {
 /**
  * \brief Gets the NUM_OF_STATE_COLORS value
  */
-const int UIParaverTraceConfig::getNum_of_state_colors() const {
+int UIParaverTraceConfig::getNum_of_state_colors() const {
     return traceConfig->getNum_of_state_colors();
 }
 
@@ -136,7 +136,7 @@ void UIParaverTraceConfig::setYmax_scale(int value) {
 /**
  * \brief Gets the YMAX_SCALE value
  */
-const int UIParaverTraceConfig::getYmax_scale() const {
+int UIParaverTraceConfig::getYmax_scale() const {
     return traceConfig->getYmax_scale();
 }
 
@@ -173,7 +173,7 @@ bool UIParaverTraceConfig::parse(std::istream & input, const std::string & filen
     return traceConfig->parse(input, filename);
 }
 
- /** 
+ /**
  * \brief Function to parse the input and construct an internal representation of the pcf file. This function skips the bad format parts of the file.
   * \param std::string object (filename)
   * \param bool resend Resend exceptions. It sends a vector of "file;line;column" indicating errors
@@ -305,11 +305,21 @@ std::vector<unsigned int > UIParaverTraceConfig::getEventValues(unsigned int eve
     return traceConfig->getEventValues(eventTypeKey);
 }
 
-std::ostream & operator<<(std::ostream & os, const UIParaverTraceConfig & ptraceConfig) {
-    return os<<ptraceConfig.toString();
+void UIParaverTraceConfig::setEventValues( unsigned int eventTypeKey, std::map< unsigned int, std::string >& values )
+{
+  traceConfig->setEventValues( eventTypeKey, values );
 }
 
 
+std::vector< std::vector< unsigned int > > UIParaverTraceConfig::getGroupedEventTypes() const
+{
+  return traceConfig->getGroupedEventTypes();
+}
+
+
+std::ostream & operator<<(std::ostream & os, const UIParaverTraceConfig & ptraceConfig) {
+    return os<<ptraceConfig.toString();
+}
 
 
 
@@ -392,6 +402,11 @@ UIParaverTraceConfig::EventType::~EventType() {
 std::string UIParaverTraceConfig::EventType::toString() const {
     return "";
 }
+
+std::string UIParaverTraceConfig::EventType::toStringWithoutValues() const {
+    return "";
+}
+
 
 /* EventValues class */
 
