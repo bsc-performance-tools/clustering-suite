@@ -954,7 +954,7 @@ AC_DEFUN([AX_CHECK_LIBSTDCXX],
   LIBSTDCXX=`$CXX -print-file-name=libstdc++.so`
   if [[ $? -eq 0 ]]; then
     AC_MSG_CHECKING([for libstdc++ location])
-    if test -f $PATH_LIBSTDCXX; then
+    if test -f $LIBSTDCXX; then
       LIBSTDCXX_LIBDIR=`dirname $LIBSTDCXX`
       AC_MSG_RESULT([$LIBSTDCXX_LIBDIR])
     else
