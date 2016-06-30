@@ -779,7 +779,7 @@ AC_DEFUN([AX_CHECK_CGAL],
 
     CGAL_RPATH="-R ${MPFR_LIBSDIR} -R ${GMP_LIBSDIR} -R ${CGAL_LIBSDIR}"
     AC_SUBST(CGAL_RPATH)
-    ifelse([$1], , :, [$1]),
+    ifelse([$1], , :, [$1])
   else
     ifelse([$2], , :, [$2])
   fi
@@ -931,10 +931,37 @@ AC_DEFUN([AX_CHECK_IS_SYSTEM_LIBRARY_PATH],
   done
   
   if test "x$system_path" = "xyes"; then
-    ifelse([$2], , :, [$2]),
+    ifelse([$2], , :, [$2])
   else
     ifelse([$3], , :, [$3])
   fi
 ])
 
+# SYNOPSIS
+# 
+#   AX_CHECK_LIBSTDCXX
+#
+# DESCRIPTION
+# 
+#   Query the compiler for the location of libstdc++.so. If found, 
+#   the variable LIBSTDCXX is set to the absolute path of the library,
+#   and LIBSTDCXX_LIBDIR is set to the absolute path of the directory
+#   containing the library
+#
+AC_DEFUN([AX_CHECK_LIBSTDCXX],
+[
+  LIBSTDCXX_LIBDIR=""
+  LIBSTDCXX=`$CXX -print-file-name=libstdc++.so`
+  if [[ $? -eq 0 ]]; then
+    AC_MSG_CHECKING([for libstdc++ location])
+    if test -f $PATH_LIBSTDCXX; then
+      LIBSTDCXX_LIBDIR=`dirname $LIBSTDCXX`
+      AC_MSG_RESULT([$LIBSTDCXX_LIBDIR])
+    else
+      AC_MSG_RESULT([default])
+    fi
+  else
+    AC_MSG_WARN([Compiler $CXX does not support flag -print-file-name])
+  fi
+])
 

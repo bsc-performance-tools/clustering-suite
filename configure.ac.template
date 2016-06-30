@@ -510,6 +510,15 @@ fi
 
 AM_CONDITIONAL([TREEDBSCAN_ENABLED], [test "x$synapse_enabled" = "xyes"])
 
+dnl =========================================================================
+dnl AX_CHECK_LIBSTDCXX: check for the location of the libstdc++ to add 
+dnl                     an rpath
+dnl =========================================================================
+AX_CHECK_LIBSTDCXX
+
+if [[ "${LIBSTDCXX_LIBDIR}" != "" ]]; then
+  CLUSTERING_LDFLAGS="${CLUSTERING_LDFLAGS} -L${LIBSTDCXX_LIBDIR} -R${LIBSTDCXX_LIBDIR}"
+fi
 
 dnl =========================================================================
 dnl Final substitutions of CLUSTERING flags

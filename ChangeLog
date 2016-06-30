@@ -1,5 +1,8 @@
 ChangeLog 'ClusteringSuite'
 
+2016-06-30 German Llort <german.llort@bsc.es>
+	+ Added macro to search for the libstdc++ path to add an rpath. 
+
 2016-03-31 German Llort <german.llort@bsc.es>
 	* Upgraded pcfparser to the version found in the libtools package v1.0.4
 
