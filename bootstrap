@@ -27,3 +27,7 @@ libtoolize --automake --force --copy \
 && automake --gnu --add-missing --copy \
 && autoconf
 
+if test `basename ${0}` = "bootstrap-and-dist" ; then
+        ./configure
+        make dist-bzip2
+fi
