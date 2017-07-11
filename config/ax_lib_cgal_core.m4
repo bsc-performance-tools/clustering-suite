@@ -61,7 +61,11 @@ LIBS_SAVED="$LIBS"
 for ac_cgal_iterate in $ac_cgal_dirs ; do
 
   CGAL_CPPFLAGS="-DNDEBUG -I$ac_cgal_iterate/include"
-  CGAL_LDFLAGS="-L$ac_cgal_iterate/lib"
+	if test -e "$ac_cgal_iterate/lib64" ; then
+		CGAL_LDFLAGS="-L$ac_cgal_iterate/lib64"
+	else
+		CGAL_LDFLAGS="-L$ac_cgal_iterate/lib"
+	fi
   CGAL_LIBS="-lCGAL -lCGAL_Core"
 
   CPPFLAGS="$CPPFLAGS_SAVED $CGAL_CPPFLAGS"
