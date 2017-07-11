@@ -1,0 +1,14 @@
+INSTALL
+Makefile.in
+SVN_VERSION
+aclocal.m4
+autom4te.cache/
+clustering_suite_config.h.in
+common_utilities/Makefile.in
+config.log
+config/compile
+config/depcomp
+config/ltmain.sh
+config/missing
+configure
+configure.ac
