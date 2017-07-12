@@ -591,7 +591,7 @@ DBSCAN::ComputeKNeighbourhoods(const vector<const Point*>& Data,
       ErrorMessage << "Unable to open ";
       ErrorMessage << k_begin+i;
       ErrorMessage << "-Neighbour distance data file \"";
-      ErrorMessage << KNeighbourDataFileName;
+      ErrorMessage << KNeighbourDataFileName.str();
       ErrorMessage << "\"";
 
       SetError(true);
