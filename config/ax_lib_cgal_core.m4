@@ -112,7 +112,11 @@ for ac_cgal_iterate in $ac_cgal_dirs ; do
   export LIBS
 
   if test $ac_cgal = yes ; then
-    CGAL_LIBSDIR="$ac_cgal_iterate/lib"
+  	if test -e "$ac_cgal_iterate/lib64" ; then
+      CGAL_LIBSDIR="$ac_cgal_iterate/lib64"
+  	else
+      CGAL_LIBSDIR="$ac_cgal_iterate/lib"
+  	fi
     AC_MSG_RESULT([yes])
     break
   else
