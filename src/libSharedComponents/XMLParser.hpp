@@ -113,7 +113,9 @@ class XMLParser: public Error
   private:
 
     bool                      PCFParserPresent;
+#if !defined(OLD_PCFPARSER)
     UIParaverTraceConfig      PCFParser;
+#endif
     bool                      PCFParserError;
     string                    PCFParserErrorString;
     map<string, event_type_t> PCFEventsMap;

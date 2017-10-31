@@ -367,6 +367,10 @@ bool XMLParser::InitializePCFParser(string PCFFileName)
   }
   TestOpenFile.close();
 
+#if defined(OLD_PCFPARSER)
+  UIParaverTraceConfig PCFParser(PCFFileName);
+
+#else
   try
   {
     PCFParser.parse(PCFFileName);
@@ -380,6 +384,7 @@ bool XMLParser::InitializePCFParser(string PCFFileName)
     PCFParserErrorString = "line "+PCFErrors[1]+", column "+PCFErrors[2];
     return true;
   }
+#endif
 
   AllEventTypes = PCFParser.getEventTypes();
 
@@ -387,6 +392,9 @@ bool XMLParser::InitializePCFParser(string PCFFileName)
   {
     string EventName;
 
+#if defined(OLD_PCFPARSER)
+    EventName = PCFParser.getEventType(AllEventTypes[i]);
+#else
     try
     {
       EventName = PCFParser.getEventType(AllEventTypes[i]);
@@ -399,6 +407,7 @@ bool XMLParser::InitializePCFParser(string PCFFileName)
 
       return true;
     }
+#endif
 
     PCFEventsMap[EventName]               = AllEventTypes[i];
     PCFEventsReverseMap[AllEventTypes[i]] = EventName;

@@ -7,11 +7,25 @@ lib_LTLIBRARIES = libparavertraceconfig.la
 
 include_HEADERS = UIParaverTraceConfig.h UIParaverTraceConfig.ipp
 
-LIBPARAVERTRACECONFIG_COREFILES= \
+if MAKE_OLD_PCFPARSER
+  LIBPARAVERTRACECONFIG_COREFILES = \
+    old/ParaverEventType.cpp old/ParaverEventType.h \
+    old/ParaverEventValue.cpp old/ParaverEventValue.h \
+    old/ParaverGradientColor.cpp old/ParaverGradientColor.h \
+    old/ParaverGradientNames.cpp old/ParaverGradientNames.h \
+    old/ParaverState.cpp old/ParaverState.h \
+    old/ParaverStatesColor.cpp old/ParaverStatesColor.h \
+    old/ParaverTraceConfig.cpp old/ParaverTraceConfig.h \
+    old/ParaverTraceConfigGrammar.cpp old/ParaverTraceConfigGrammar.h \
+    old/UIParaverTraceConfig.cpp old/UIParaverTraceConfig.h \
+    old/LibException.cpp old/LibException.h
+else
+  LIBPARAVERTRACECONFIG_COREFILES= \
 	debug.h \
 	ParaverTraceConfigGrammar.h \
 	UIParaverTraceConfig.cpp UIParaverTraceConfig.h \
 	ParaverTraceConfig.cpp ParaverTraceConfig.h
+endif
 
 libparavertraceconfig_la_SOURCES  = $(LIBPARAVERTRACECONFIG_COREFILES)
 

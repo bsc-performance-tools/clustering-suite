@@ -1,5 +1,8 @@
 ChangeLog 'ClusteringSuite'
 
+2017-10-31 German Llort <german.llort@bsc.es>
+	+ Added backwards compatibility to the old pcfparser
+
 2016-06-30 German Llort <german.llort@bsc.es>
 	+ Added macro to search for the libstdc++ path to add an rpath. 
 

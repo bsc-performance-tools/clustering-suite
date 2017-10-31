@@ -76,8 +76,12 @@ endif
 libSharedComponents_la_CPPFLAGS = @CLUSTERING_CPPFLAGS@\
   -I${top_srcdir}/src/libClustering\
   -I${top_srcdir}/src/libParaverTraceParser\
-  -I${top_srcdir}/src/libANN\
-  -I${top_srcdir}/pcfparser_svn3942
+  -I${top_srcdir}/src/libANN
+if MAKE_OLD_PCFPARSER
+  libSharedComponents_la_CPPFLAGS += -I${top_srcdir}/pcfparser_svn3942/old
+else
+  libSharedComponents_la_CPPFLAGS += -I${top_srcdir}/pcfparser_svn3942
+endif
   
 
 libSharedComponents_la_LDFLAGS  = @CLUSTERING_LDFLAGS@ @CLUSTERING_CPPFLAGS@
