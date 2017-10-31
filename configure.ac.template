@@ -7,7 +7,7 @@ AC_CONFIG_AUX_DIR(config)
 AC_CANONICAL_SYSTEM
 
 dnl AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_HEADERS([clustering_suite_config.h])
 AM_MAINTAINER_MODE
 
@@ -199,6 +199,12 @@ elif test "$Operating_System" = "linux" ; then
 fi
 
 AC_SUBST(Operating_System)
+
+dnl =========================================================================
+dnl Checks for programs
+dnl =========================================================================
+
+AX_PROG_ENABLE_OLD_PCFPARSER
 
 dnl =========================================================================
 dnl Check for Latex packages to generate the documentation
