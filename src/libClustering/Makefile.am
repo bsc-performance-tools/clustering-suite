@@ -73,8 +73,8 @@ endif
 libClustering_la_CPPFLAGS=@CLUSTERING_CPPFLAGS@ -I$(top_srcdir)/src/libANN
 libClustering_la_LDFLAGS=@CLUSTERING_LDFLAGS@ @CLUSTERING_CPPFLAGS@
 libClustering_la_LIBADD= \
-	$(top_srcdir)/src/BasicClasses/libBasicClasses.la \
-	$(top_srcdir)/src/libANN/libANN.la \
+	$(top_builddir)/src/BasicClasses/libBasicClasses.la \
+	$(top_builddir)/src/libANN/libANN.la \
 	./gmeans/libInternalGMeans.la \
 	@CLUSTERING_LIBS@
 

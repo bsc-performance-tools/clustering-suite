@@ -565,6 +565,18 @@ src/TreeDBSCAN/scripts/Makefile
 doc/Makefile
 ])
 
+AC_CONFIG_LINKS([include/types.h:include/types.h] \
+                [common_utilities/Error.hpp:common_utilities/Error.hpp] \
+                [src/BasicClasses/Error.hpp:src/BasicClasses/Error.hpp] \
+                [common_utilities/EventEncoding.h:common_utilities/EventEncoding.h] \
+                [common_utilities/Dimemas_Generation.h:common_utilities/Dimemas_Generation.h] \
+                [common_utilities/ParaverColors.h:common_utilities/ParaverColors.h] \
+                [src/BasicClasses/Utilities.hpp:src/BasicClasses/Utilities.hpp] \
+                [src/BasicClasses/SystemMessages.hpp:src/BasicClasses/SystemMessages.hpp] \
+                [src/BasicClasses/Timer.hpp:src/BasicClasses/Timer.hpp] \
+                [src/BasicClasses/FileNameManipulator.hpp:src/BasicClasses/FileNameManipulator.hpp] \
+)
+
 AC_OUTPUT
 AX_SHOW_CONFIGURATION
 

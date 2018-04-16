@@ -15,9 +15,9 @@ ClustersSequenceScore_bin_CPPFLAGS =\
 ClustersSequenceScore_bin_LDFLAGS  = @CLUSTERING_LDFLAGS@
 
 ClustersSequenceScore_bin_LDADD = \
- $(top_srcdir)/src/libTraceClustering/libTraceClustering.la\
- $(top_srcdir)/src/libClustering/libClustering.la\
- $(top_srcdir)/src/BasicClasses/libBasicClasses.la\
+ $(top_builddir)/src/libTraceClustering/libTraceClustering.la\
+ $(top_builddir)/src/libClustering/libClustering.la\
+ $(top_builddir)/src/BasicClasses/libBasicClasses.la\
  @CLUSTERING_LIBS@
 
 bin_SCRIPTS=ClustersSequenceScore.sh

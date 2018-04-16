@@ -23,6 +23,6 @@ AM_CPPFLAGS = \
 libParaverTraceParser_la_CPPFLAGS = @CLUSTERING_CPPFLAGS@
 libParaverTraceParser_la_LDFLAGS  = @CLUSTERING_LDFLAGS@ @CLUSTERING_CPPFLAGS@
 libParaverTraceParser_la_LIBADD = \
-	$(top_srcdir)/common_utilities/libCommonUtilities.la \
+	$(top_builddir)/common_utilities/libCommonUtilities.la \
 	@CLUSTERING_LIBS@
 

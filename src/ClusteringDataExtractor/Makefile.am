@@ -15,8 +15,8 @@ ClusteringDataExtractor_bin_CPPFLAGS = \
   
 ClusteringDataExtractor_bin_LDFLAGS  = @CLUSTERING_LDFLAGS@
 ClusteringDataExtractor_bin_LDADD =\
- $(top_srcdir)/src/libTraceClustering/libTraceClustering.la\
- $(top_srcdir)/src/BasicClasses/libBasicClasses.la\
+ $(top_builddir)/src/libTraceClustering/libTraceClustering.la\
+ $(top_builddir)/src/BasicClasses/libBasicClasses.la\
  @CLUSTERING_LIBS@
 
 EXTRA_DIST=ClusteringDataExtractor

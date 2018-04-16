@@ -87,9 +87,9 @@ endif
 libSharedComponents_la_LDFLAGS  = @CLUSTERING_LDFLAGS@ @CLUSTERING_CPPFLAGS@
 
 libSharedComponents_la_LIBADD =  \
-	$(top_srcdir)/pcfparser_svn3942/libparavertraceconfig.la \
-	$(top_srcdir)/src/libClustering/libClustering.la \
-	$(top_srcdir)/src/libParaverTraceParser/libParaverTraceParser.la \
+	$(top_builddir)/pcfparser_svn3942/libparavertraceconfig.la \
+	$(top_builddir)/src/libClustering/libClustering.la \
+	$(top_builddir)/src/libParaverTraceParser/libParaverTraceParser.la \
 	./kalign2/libKalign2.la \
 	@CLUSTERING_LIBS@
 

@@ -16,7 +16,7 @@ ClustersDiff_bin_CPPFLAGS =\
  
 ClustersDiff_bin_LDFLAGS  = @CLUSTERING_LDFLAGS@
 ClustersDiff_bin_LDADD = \
-	$(top_srcdir)/src/BasicClasses/libBasicClasses.la \
+	$(top_builddir)/src/BasicClasses/libBasicClasses.la \
 	@CLUSTERING_LIBS@
 
 EXTRA_DIST=ClustersDiff
