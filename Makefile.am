@@ -18,7 +18,6 @@ inst_HEADERS = \
 	clustering_suite_config.h
 
 EXTRA_DIST = \
-  $(top_srcdir)/SVN_VERSION \
   $(top_srcdir)/example \
   $(top_srcdir)/include \
   $(top_srcdir)/substitute \

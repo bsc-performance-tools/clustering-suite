@@ -1,5 +1,9 @@
 ChangeLog 'ClusteringSuite'
 
+2018-05-24 German Llort <german.llort@bsc.es>
+	+ Stardardise versioning
+	- Remove deprecated autogen* scripts
+
 2018-04-16 German Llort <german.llort@bsc.es>
 	* Fixed LD_LIBRARY_PATH to look for libraries under lib and lib64
 
