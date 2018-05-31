@@ -20,4 +20,4 @@ bin_SCRIPTS = BurstClustering.sh
 EXTRA_DIST  = BurstClustering.sh
 
 install-data-hook:
-	mv ${prefix}/bin/BurstClustering.sh ${prefix}/bin/BurstClustering
+	mv $(DESTDIR)${bindir}/BurstClustering.sh $(DESTDIR)${bindir}/BurstClustering

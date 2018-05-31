@@ -1,5 +1,8 @@
 ChangeLog 'ClusteringSuite'
 
+2018-05-31 German Llort <german.llort@bsc.es> via Dave Love <loveshack>
+	* Adds missing $(DESTDIR) in the install paths to allow RPM generation (closes #1)
+
 2018-05-24 German Llort <german.llort@bsc.es>
 	+ Stardardise versioning
 	- Remove deprecated autogen* scripts

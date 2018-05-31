@@ -21,12 +21,12 @@ endif
 noinst_SCRIPTS = $(SOURCEME_SH)
 
 install-data-hook:
-	$(mkdir_p) $(prefix)/etc
-	cp $(SOURCEME_SH) $(prefix)/etc
-	$(top_srcdir)/substitute-all $(SED) "@sub_PREFIX@" ${prefix} $(prefix)/etc
-	$(top_srcdir)/substitute-all $(SED) "@sub_SYNAPSE_HOME@" @SYNAPSE_HOME@ $(prefix)/etc
-	$(top_srcdir)/substitute-all $(SED) "@sub_SYNAPSE_LIBSDIR@" @SYNAPSE_LIBSDIR@ $(prefix)/etc
-	$(top_srcdir)/substitute-all $(SED) "@sub_CLUSTERING_LD_LIBRARY_PATH@" @CLUSTERING_LD_LIBRARY_PATH@ $(prefix)/etc
+	$(mkdir_p) $(DESTDIR)$(prefix)/etc
+	cp $(SOURCEME_SH) $(DESTDIR)$(prefix)/etc
+	$(top_srcdir)/substitute-all $(SED) "@sub_PREFIX@" ${prefix} $(DESTDIR)$(prefix)/etc
+	$(top_srcdir)/substitute-all $(SED) "@sub_SYNAPSE_HOME@" @SYNAPSE_HOME@ $(DESTDIR)$(prefix)/etc
+	$(top_srcdir)/substitute-all $(SED) "@sub_SYNAPSE_LIBSDIR@" @SYNAPSE_LIBSDIR@ $(DESTDIR)$(prefix)/etc
+	$(top_srcdir)/substitute-all $(SED) "@sub_CLUSTERING_LD_LIBRARY_PATH@" @CLUSTERING_LD_LIBRARY_PATH@ $(DESTDIR)$(prefix)/etc
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(FE_WRAPPER)
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/$(BE_WRAPPER)
 	$(top_srcdir)/substitute     $(SED) "@sub_PREFIX@" ${prefix} $(bindir)/tdbscan-launcher

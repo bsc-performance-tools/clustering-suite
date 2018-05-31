@@ -24,5 +24,5 @@ bin_SCRIPTS=ClustersSequenceScore.sh
 EXTRA_DIST=ClustersSequenceScore.sh
 
 install-data-hook:
-	mv ${prefix}/bin/ClustersSequenceScore.sh ${prefix}/bin/ClustersSequenceScore
+	mv $(DESTDIR)${bindir}/ClustersSequenceScore.sh $(DESTDIR)${bindir}/ClustersSequenceScore
 
