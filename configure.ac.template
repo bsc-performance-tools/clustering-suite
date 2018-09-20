@@ -7,7 +7,7 @@ AC_CONFIG_AUX_DIR(config)
 AC_CANONICAL_SYSTEM
 
 dnl AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
-AM_INIT_AUTOMAKE([subdir-objects])
+AM_INIT_AUTOMAKE([1.9 tar-pax subdir-objects])
 AC_CONFIG_HEADERS([clustering_suite_config.h])
 AM_MAINTAINER_MODE
 
@@ -575,6 +575,75 @@ AC_CONFIG_LINKS([include/types.h:include/types.h] \
                 [src/BasicClasses/SystemMessages.hpp:src/BasicClasses/SystemMessages.hpp] \
                 [src/BasicClasses/Timer.hpp:src/BasicClasses/Timer.hpp] \
                 [src/BasicClasses/FileNameManipulator.hpp:src/BasicClasses/FileNameManipulator.hpp] \
+                [doc/clusteringsuite_manual.tex:doc/clusteringsuite_manual.tex ] \
+                [doc/clusteringsuite_manual.pdf:doc/clusteringsuite_manual.pdf ] \
+                [doc/clustering_manual_structure.txt:doc/clustering_manual_structure.txt ] \
+                [doc/clusteringsuite_design.tex:doc/clusteringsuite_design.tex ] \
+                [doc/clusteringsuite_bsctools.pdf:doc/clusteringsuite_bsctools.pdf ] \
+                [doc/clusteringsuite_design.pdf:doc/clusteringsuite_design.pdf ] \
+                [doc/figure_sources/uml_design/libclustering_uml.pdf:doc/figure_sources/uml_design/libclustering_uml.pdf ] \
+                [doc/figure_sources/uml_design/libtraceclustering_uml.pdf:doc/figure_sources/uml_design/libtraceclustering_uml.pdf ] \
+                [doc/figure_sources/uml_design/libClustering_uml.graffle:doc/figure_sources/uml_design/libClustering_uml.graffle ] \
+                [doc/figure_sources/uml_design/libTraceClustering_uml.graffle:doc/figure_sources/uml_design/libTraceClustering_uml.graffle ] \
+                [doc/figure_sources/plots_example/int_vs_fop_plot.pdf:doc/figure_sources/plots_example/int_vs_fop_plot.pdf ] \
+                [doc/figure_sources/plots_example/inst_vs_ipc_plot.pdf:doc/figure_sources/plots_example/inst_vs_ipc_plot.pdf ] \
+                [doc/figure_sources/plots_example/mainmem_vs_l2_plot.pdf:doc/figure_sources/plots_example/mainmem_vs_l2_plot.pdf ] \
+                [doc/figure_sources/plots_example/int_vs_fop_plot.png:doc/figure_sources/plots_example/int_vs_fop_plot.png ] \
+                [doc/figure_sources/plots_example/inst_vs_ipc_plot.png:doc/figure_sources/plots_example/inst_vs_ipc_plot.png ] \
+                [doc/figure_sources/plots_example/stores_vs_loads_plot.pdf:doc/figure_sources/plots_example/stores_vs_loads_plot.pdf ] \
+                [doc/figure_sources/plots_example/stores_vs_loads_plot.png:doc/figure_sources/plots_example/stores_vs_loads_plot.png ] \
+                [doc/figure_sources/plots_example/mainmem_vs_l2_plot.png:doc/figure_sources/plots_example/mainmem_vs_l2_plot.png ] \
+                [doc/figure_sources/stats_plot/GADGET-DEISA.MEDIUM.256.1HWCG.chop1.bursts.dat:doc/figure_sources/stats_plot/GADGET-DEISA.MEDIUM.256.1HWCG.chop1.bursts.dat ] \
+                [doc/figure_sources/stats_plot/GADGET-DEISA.MEDIUM.256.1HWCG.chop1.bursts.gnuplot:doc/figure_sources/stats_plot/GADGET-DEISA.MEDIUM.256.1HWCG.chop1.bursts.gnuplot ] \
+                [doc/figure_sources/stats_plot/stats_plot.pdf:doc/figure_sources/stats_plot/stats_plot.pdf ] \
+                [doc/figure_sources/clustering_xml/xml_plot_definition.pdf:doc/figure_sources/clustering_xml/xml_plot_definition.pdf ] \
+                [doc/figure_sources/clustering_xml/xml_structure.pdf:doc/figure_sources/clustering_xml/xml_structure.pdf ] \
+                [doc/figure_sources/clustering_xml/xml_single_event_definition.pdf:doc/figure_sources/clustering_xml/xml_single_event_definition.pdf ] \
+                [doc/figure_sources/clustering_xml/xml_mixed_events_definition.pdf:doc/figure_sources/clustering_xml/xml_mixed_events_definition.pdf ] \
+                [doc/figure_sources/clustering_xml/xml_algorithm_definition.pdf:doc/figure_sources/clustering_xml/xml_algorithm_definition.pdf ] \
+                [doc/figure_sources/clustering_xml/clustering_xml_definition.graffle:doc/figure_sources/clustering_xml/clustering_xml_definition.graffle ] \
+                [doc/cluster_analysis_thesis_bibliography.bib:doc/cluster_analysis_thesis_bibliography.bib ] \
+                [doc/extra_commands.tex:doc/extra_commands.tex ] \
+                [doc/figures/uml_design/libclustering_uml.pdf:doc/figures/uml_design/libclustering_uml.pdf ] \
+                [doc/figures/uml_design/libtraceclustering_uml.pdf:doc/figures/uml_design/libtraceclustering_uml.pdf ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.LD_vs_ST.gnuplot:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.LD_vs_ST.gnuplot ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.L2DATA_vs_MainMEMData.gnuplot:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.L2DATA_vs_MainMEMData.gnuplot ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.CLUSTERED.FULL_POINTS.Cluster3.csv:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.CLUSTERED.FULL_POINTS.Cluster3.csv ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.L2DATA_vs_MainMEMData.PNG.gnuplot:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.L2DATA_vs_MainMEMData.PNG.gnuplot ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.CLUSTERED.FULL_POINTS.Cluster1.csv:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.CLUSTERED.FULL_POINTS.Cluster1.csv ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.FPU_vs_FXU.PNG.gnuplot:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.FPU_vs_FXU.PNG.gnuplot ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.CLUSTERED.FULL_POINTS.Cluster4.csv:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.CLUSTERED.FULL_POINTS.Cluster4.csv ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.FPU_vs_FXU.gnuplot:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.FPU_vs_FXU.gnuplot ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.LD_vs_ST.PNG.gnuplot:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.LD_vs_ST.PNG.gnuplot ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.INST_vs_IPC.gnuplot:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.INST_vs_IPC.gnuplot ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.INST_vs_IPC.PNG.gnuplot:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.INST_vs_IPC.PNG.gnuplot ] \
+                [doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.CLUSTERED.FULL_POINTS.Cluster2.csv:doc/figure_sources/plots_example/GAPGEOFEM.16.mref.ALL_HWC.TIME_SPACE_SHIFTING.chop1.CLUSTERED.FULL_POINTS.Cluster2.csv ] \
+                [doc/figures/plots_example/int_vs_fop_plot.pdf:doc/figures/plots_example/int_vs_fop_plot.pdf ] \
+                [doc/figures/plots_example/inst_vs_ipc_plot.pdf:doc/figures/plots_example/inst_vs_ipc_plot.pdf ] \
+                [doc/figures/plots_example/mainmem_vs_l2_plot.pdf:doc/figures/plots_example/mainmem_vs_l2_plot.pdf ] \
+                [doc/figures/plots_example/int_vs_fop_plot.png:doc/figures/plots_example/int_vs_fop_plot.png ] \
+                [doc/figures/plots_example/inst_vs_ipc_plot.png:doc/figures/plots_example/inst_vs_ipc_plot.png ] \
+                [doc/figures/plots_example/stores_vs_loads_plot.pdf:doc/figures/plots_example/stores_vs_loads_plot.pdf ] \
+                [doc/figures/plots_example/stores_vs_loads_plot.png:doc/figures/plots_example/stores_vs_loads_plot.png ] \
+                [doc/figures/plots_example/mainmem_vs_l2_plot.png:doc/figures/plots_example/mainmem_vs_l2_plot.png ] \
+                [doc/figures/stats_plot/stats_plot.pdf:doc/figures/stats_plot/stats_plot.pdf ] \
+                [doc/figures/refinement_tree/refinement_tree.pdf:doc/figures/refinement_tree/refinement_tree.pdf ] \
+                [doc/figures/clustering_xml/xml_plot_definition.pdf:doc/figures/clustering_xml/xml_plot_definition.pdf ] \
+                [doc/figures/clustering_xml/xml_structure.pdf:doc/figures/clustering_xml/xml_structure.pdf ] \
+                [doc/figures/clustering_xml/xml_single_event_definition.pdf:doc/figures/clustering_xml/xml_single_event_definition.pdf ] \
+                [doc/figures/clustering_xml/xml_mixed_events_definition.pdf:doc/figures/clustering_xml/xml_mixed_events_definition.pdf ] \
+                [doc/figures/clustering_xml/xml_algorithm_definition.pdf:doc/figures/clustering_xml/xml_algorithm_definition.pdf ] \
+                [doc/figures/paraver_example/paraver_clusters_timeline.png:doc/figures/paraver_example/paraver_clusters_timeline.png ] \
+                [doc/figures/paraver_example/paraver_clusters_profile.png:doc/figures/paraver_example/paraver_clusters_profile.png ] \
+                [doc/figures/sequences_example/gromacs_step10_sequences.png:doc/figures/sequences_example/gromacs_step10_sequences.png ] \
+                [doc/figures/sequences_example/sequences_clustalx.png:doc/figures/sequences_example/sequences_clustalx.png ] \
+                [example/README:example/README ] \
+                [example/su3.lat256_2it.16tasks.pcf:example/su3.lat256_2it.16tasks.pcf ] \
+                [example/su3.lat256_2it.16tasks.row:example/su3.lat256_2it.16tasks.row ] \
+                [example/cluster_explained.xml:example/cluster_explained.xml ] \
+                [example/cluster.xml:example/cluster.xml ] \
+                [example/su3.lat256_2it.16tasks.prv:example/su3.lat256_2it.16tasks.prv ] \
+
 )
 
 AC_OUTPUT

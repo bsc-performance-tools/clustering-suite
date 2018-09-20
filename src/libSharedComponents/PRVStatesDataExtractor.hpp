@@ -52,7 +52,7 @@ class Event;
 
 /* Common semantic of Paraver */
 #define RUNNING_STATE 1
-#define HWC_GROUP_CHANGE_TYPE 42009999
+#define HWC_GROUP_CHANGE_TYPE 41999999
 
 
 class PRVStatesDataExtractor: public DataExtractor

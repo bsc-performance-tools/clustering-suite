@@ -541,7 +541,6 @@ PRVStatesDataExtractor::CheckEvent(Event     *CurrentEvent,
         /* Check if there is a HWC change */
         if (CurrentEventType == HWC_GROUP_CHANGE_TYPE)
         { /* Hardware counters change. Future events are not eligible */
-
 #ifdef DEBUG_PARAVER_INPUT
           /*
           printf("Flushing BURST for T%02d:Th%02d (%lld - %lld) - HWC CHANGE\n",
