@@ -1,5 +1,8 @@
 ChangeLog 'ClusteringSuite'
 
+2018-10-16 German Llort <german.llort@bsc.es>
+	* Fixes bug parsing the options to BurstClustering
+
 2018-09-20 German Llort <german.llort@bsc.es> 
 	* Fixes parsing of HWC_CHANGE_EVT from wrong type 42009999 to correct type 41999999
 

@@ -266,7 +266,6 @@ void ReadArgs(int argc, char *argv[])
           break;
 
         case 'o':
-
           if (argv[j][2] == 's')
           {
             PrintOnlyEventsOnOutputTrace = true;
@@ -276,13 +275,17 @@ void ReadArgs(int argc, char *argv[])
             DoNotPrintFilteredEventsOnOutputTrace = true;
           }
 
-          if (argv[j][3] == 'f')
+          // Only parse argv[j][3] if argv[j][2] was 's' or 'f', otherwise we are parsing the first letter of the output file name
+          if (PrintOnlyEventsOnOutputTrace || DoNotPrintFilteredEventsOnOutputTrace)
           {
-            DoNotPrintFilteredEventsOnOutputTrace = true;
-          }
-          else if (argv[j][3] == 's')
-          {
-            PrintOnlyEventsOnOutputTrace = true;
+            if (argv[j][3] == 'f')
+            {
+              DoNotPrintFilteredEventsOnOutputTrace = true;
+            }
+            else if (argv[j][3] == 's')
+            {
+              PrintOnlyEventsOnOutputTrace = true;
+            }
           }
 
           j++;
